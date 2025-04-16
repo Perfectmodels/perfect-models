@@ -9,1156 +9,315 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      app_users: {
+      agency_settings: {
         Row: {
-          city: string | null
-          created_at: string
-          email: string
-          first_name: string
-          id: string
-          last_name: string
-          model_type: string | null
-          password: string
-          phone: string | null
-          user_type: string
-        }
-        Insert: {
-          city?: string | null
-          created_at?: string
-          email: string
-          first_name: string
-          id?: string
-          last_name: string
-          model_type?: string | null
-          password: string
-          phone?: string | null
-          user_type: string
-        }
-        Update: {
-          city?: string | null
-          created_at?: string
-          email?: string
-          first_name?: string
-          id?: string
-          last_name?: string
-          model_type?: string | null
-          password?: string
-          phone?: string | null
-          user_type?: string
-        }
-        Relationships: []
-      }
-      biodiversity: {
-        Row: {
-          category: string
-          conservation_status: string | null
-          created_at: string
-          description: string
-          habitat: string | null
-          id: string
-          image_url: string
-          name: string
-          scientific_name: string | null
-        }
-        Insert: {
-          category: string
-          conservation_status?: string | null
-          created_at?: string
-          description: string
-          habitat?: string | null
-          id?: string
-          image_url: string
-          name: string
-          scientific_name?: string | null
-        }
-        Update: {
-          category?: string
-          conservation_status?: string | null
-          created_at?: string
-          description?: string
-          habitat?: string | null
-          id?: string
-          image_url?: string
-          name?: string
-          scientific_name?: string | null
-        }
-        Relationships: []
-      }
-      cities: {
-        Row: {
-          country_id: number | null
-          id: number
-          name: string
-        }
-        Insert: {
-          country_id?: number | null
-          id?: number
-          name: string
-        }
-        Update: {
-          country_id?: number | null
-          id?: number
-          name?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "cities_country_id_fkey"
-            columns: ["country_id"]
-            isOneToOne: false
-            referencedRelation: "countries"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      cosmetic_categories: {
-        Row: {
-          created_at: string
-          description: string | null
-          id: string
-          image_url: string | null
-          name: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          image_url?: string | null
-          name: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          image_url?: string | null
-          name?: string
-        }
-        Relationships: []
-      }
-      cosmetics: {
-        Row: {
-          brand: string | null
-          category_id: string
-          created_at: string
-          description: string | null
-          id: string
-          image_url: string | null
-          name: string
-          price: number
-          stock: number
-          updated_at: string
-        }
-        Insert: {
-          brand?: string | null
-          category_id: string
-          created_at?: string
-          description?: string | null
-          id?: string
-          image_url?: string | null
-          name: string
-          price: number
-          stock?: number
-          updated_at?: string
-        }
-        Update: {
-          brand?: string | null
-          category_id?: string
-          created_at?: string
-          description?: string | null
-          id?: string
-          image_url?: string | null
-          name?: string
-          price?: number
-          stock?: number
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "cosmetics_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "cosmetic_categories"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      countries: {
-        Row: {
-          code: string
-          id: number
-          name: string
-        }
-        Insert: {
-          code: string
-          id?: number
-          name: string
-        }
-        Update: {
-          code?: string
-          id?: number
-          name?: string
-        }
-        Relationships: []
-      }
-      destinations: {
-        Row: {
-          created_at: string
-          description: string
-          id: string
-          image_url: string | null
-          is_featured: boolean | null
-          location: string
-          name: string
-          popularity: number | null
-          province_id: string | null
-          visit_season: string | null
-        }
-        Insert: {
-          created_at?: string
-          description: string
-          id?: string
-          image_url?: string | null
-          is_featured?: boolean | null
-          location: string
-          name: string
-          popularity?: number | null
-          province_id?: string | null
-          visit_season?: string | null
-        }
-        Update: {
-          created_at?: string
-          description?: string
-          id?: string
-          image_url?: string | null
-          is_featured?: boolean | null
-          location?: string
-          name?: string
-          popularity?: number | null
-          province_id?: string | null
-          visit_season?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "destinations_province_id_fkey"
-            columns: ["province_id"]
-            isOneToOne: false
-            referencedRelation: "provinces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      documents: {
-        Row: {
-          created_at: string
-          data_url: string
-          id: string
-          name: string
-          size: number
-          type: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          data_url: string
-          id?: string
-          name: string
-          size: number
-          type: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          data_url?: string
-          id?: string
-          name?: string
-          size?: number
-          type?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "documents_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "app_users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      editions: {
-        Row: {
-          created_at: string
-          description: string
-          end_date: string
-          id: string
-          start_date: string
-          status: string
-          theme: string
-          title: string
-          year: number
-        }
-        Insert: {
-          created_at?: string
-          description: string
-          end_date: string
-          id?: string
-          start_date: string
-          status: string
-          theme: string
-          title: string
-          year: number
-        }
-        Update: {
-          created_at?: string
-          description?: string
-          end_date?: string
-          id?: string
-          start_date?: string
-          status?: string
-          theme?: string
-          title?: string
-          year?: number
-        }
-        Relationships: []
-      }
-      events: {
-        Row: {
-          created_at: string
-          description: string
-          edition_id: string
-          event_date: string
-          id: string
-          location: string
-          title: string
-        }
-        Insert: {
-          created_at?: string
-          description: string
-          edition_id: string
-          event_date: string
-          id?: string
-          location: string
-          title: string
-        }
-        Update: {
-          created_at?: string
-          description?: string
-          edition_id?: string
-          event_date?: string
-          id?: string
-          location?: string
-          title?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "events_edition_id_fkey"
-            columns: ["edition_id"]
-            isOneToOne: false
-            referencedRelation: "editions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      experiences: {
-        Row: {
-          category: string
-          created_at: string
-          description: string
-          difficulty: string | null
-          duration: string | null
-          id: string
-          image_url: string | null
-          is_featured: boolean | null
-          price: number | null
-          title: string
-        }
-        Insert: {
-          category: string
-          created_at?: string
-          description: string
-          difficulty?: string | null
-          duration?: string | null
-          id?: string
-          image_url?: string | null
-          is_featured?: boolean | null
-          price?: number | null
-          title: string
-        }
-        Update: {
-          category?: string
-          created_at?: string
-          description?: string
-          difficulty?: string | null
-          duration?: string | null
-          id?: string
-          image_url?: string | null
-          is_featured?: boolean | null
-          price?: number | null
-          title?: string
-        }
-        Relationships: []
-      }
-      gabonese_cuisine: {
-        Row: {
-          category: string
-          created_at: string
-          description: string
-          difficulty: string | null
-          id: string
-          image_url: string | null
-          ingredients: string[]
-          name: string
-          preparation: string | null
-          preparation_time: string | null
-        }
-        Insert: {
-          category: string
-          created_at?: string
-          description: string
-          difficulty?: string | null
-          id?: string
-          image_url?: string | null
-          ingredients: string[]
-          name: string
-          preparation?: string | null
-          preparation_time?: string | null
-        }
-        Update: {
-          category?: string
-          created_at?: string
-          description?: string
-          difficulty?: string | null
-          id?: string
-          image_url?: string | null
-          ingredients?: string[]
-          name?: string
-          preparation?: string | null
-          preparation_time?: string | null
-        }
-        Relationships: []
-      }
-      gallery_images: {
-        Row: {
-          created_at: string
-          description: string | null
-          edition_id: string
-          id: string
-          image_url: string
-          title: string | null
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          edition_id: string
-          id?: string
-          image_url: string
-          title?: string | null
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          edition_id?: string
-          id?: string
-          image_url?: string
-          title?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "gallery_images_edition_id_fkey"
-            columns: ["edition_id"]
-            isOneToOne: false
-            referencedRelation: "editions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      media: {
-        Row: {
-          created_at: string
-          data_url: string
-          description: string | null
-          format: string
-          id: string
-          thumbnail_url: string | null
-          title: string
-          type: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          data_url: string
-          description?: string | null
-          format: string
-          id?: string
-          thumbnail_url?: string | null
-          title: string
-          type: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          data_url?: string
-          description?: string | null
-          format?: string
-          id?: string
-          thumbnail_url?: string | null
-          title?: string
-          type?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "media_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "app_users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      medication_categories: {
-        Row: {
-          created_at: string
-          description: string | null
-          id: string
-          image_url: string | null
-          name: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          image_url?: string | null
-          name: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          image_url?: string | null
-          name?: string
-        }
-        Relationships: []
-      }
-      medications: {
-        Row: {
-          category_id: string
-          created_at: string
-          description: string | null
-          id: string
-          image_url: string | null
-          is_prescription_required: boolean
-          name: string
-          price: number
-          stock: number
-          updated_at: string
-        }
-        Insert: {
-          category_id: string
-          created_at?: string
-          description?: string | null
-          id?: string
-          image_url?: string | null
-          is_prescription_required?: boolean
-          name: string
-          price: number
-          stock?: number
-          updated_at?: string
-        }
-        Update: {
-          category_id?: string
-          created_at?: string
-          description?: string | null
-          id?: string
-          image_url?: string | null
-          is_prescription_required?: boolean
-          name?: string
-          price?: number
-          stock?: number
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "medications_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "medication_categories"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      model_applications: {
-        Row: {
-          city: string | null
-          created_at: string | null
-          email: string
-          experience: string | null
-          first_name: string
-          height: number | null
-          id: string
-          last_name: string
-          message: string | null
-          phone: string
-          portfolio_url: string | null
-          status: string | null
-          user_id: string | null
-        }
-        Insert: {
-          city?: string | null
-          created_at?: string | null
-          email: string
-          experience?: string | null
-          first_name: string
-          height?: number | null
-          id?: string
-          last_name: string
-          message?: string | null
-          phone: string
-          portfolio_url?: string | null
-          status?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          city?: string | null
-          created_at?: string | null
-          email?: string
-          experience?: string | null
-          first_name?: string
-          height?: number | null
-          id?: string
-          last_name?: string
-          message?: string | null
-          phone?: string
-          portfolio_url?: string | null
-          status?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "model_applications_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "app_users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      news: {
-        Row: {
-          content: string
-          created_at: string
-          id: string
-          image_url: string | null
-          publication_date: string
-          title: string
-        }
-        Insert: {
-          content: string
-          created_at?: string
-          id?: string
-          image_url?: string | null
-          publication_date?: string
-          title: string
-        }
-        Update: {
-          content?: string
-          created_at?: string
-          id?: string
-          image_url?: string | null
-          publication_date?: string
-          title?: string
-        }
-        Relationships: []
-      }
-      news_feed: {
-        Row: {
-          content: string
-          created_at: string
-          id: string
-          image_url: string | null
-          title: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          content: string
-          created_at?: string
-          id?: string
-          image_url?: string | null
-          title: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          content?: string
-          created_at?: string
-          id?: string
-          image_url?: string | null
-          title?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      nocturne_locations: {
-        Row: {
-          best_time: string | null
-          created_at: string
-          description: string
-          full_description: string | null
-          fun_facts: string[] | null
-          id: string
-          images: string[] | null
-          location: string | null
-          main_image: string | null
-          scientific_name: string | null
-          title: string
-        }
-        Insert: {
-          best_time?: string | null
-          created_at?: string
-          description: string
-          full_description?: string | null
-          fun_facts?: string[] | null
-          id?: string
-          images?: string[] | null
-          location?: string | null
-          main_image?: string | null
-          scientific_name?: string | null
-          title: string
-        }
-        Update: {
-          best_time?: string | null
-          created_at?: string
-          description?: string
-          full_description?: string | null
-          fun_facts?: string[] | null
-          id?: string
-          images?: string[] | null
-          location?: string | null
-          main_image?: string | null
-          scientific_name?: string | null
-          title?: string
-        }
-        Relationships: []
-      }
-      partners: {
-        Row: {
-          category: string
-          created_at: string
-          description: string
-          id: string
-          logo_url: string | null
-          name: string
-          website_url: string | null
-        }
-        Insert: {
-          category: string
-          created_at?: string
-          description: string
-          id?: string
-          logo_url?: string | null
-          name: string
-          website_url?: string | null
-        }
-        Update: {
-          category?: string
-          created_at?: string
-          description?: string
-          id?: string
-          logo_url?: string | null
-          name?: string
-          website_url?: string | null
-        }
-        Relationships: []
-      }
-      pharmacist_advices: {
-        Row: {
-          answer: string | null
-          created_at: string
-          id: string
-          is_public: boolean
-          question: string
-          status: string
-          updated_at: string
-          user_id: string | null
-        }
-        Insert: {
-          answer?: string | null
-          created_at?: string
-          id?: string
-          is_public?: boolean
-          question: string
-          status?: string
-          updated_at?: string
-          user_id?: string | null
-        }
-        Update: {
-          answer?: string | null
-          created_at?: string
-          id?: string
-          is_public?: boolean
-          question?: string
-          status?: string
-          updated_at?: string
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      pharmacists: {
-        Row: {
+          about_text: string | null
+          address: string | null
           contact_email: string | null
+          contact_phone: string | null
           created_at: string
+          facebook_url: string | null
           id: string
-          image_url: string | null
+          instagram_url: string | null
           name: string
-          qualification: string
-          speciality: string | null
-          user_id: string | null
+          updated_at: string
+          youtube_url: string | null
         }
         Insert: {
+          about_text?: string | null
+          address?: string | null
           contact_email?: string | null
+          contact_phone?: string | null
           created_at?: string
+          facebook_url?: string | null
           id?: string
-          image_url?: string | null
-          name: string
-          qualification: string
-          speciality?: string | null
-          user_id?: string | null
+          instagram_url?: string | null
+          name?: string
+          updated_at?: string
+          youtube_url?: string | null
         }
         Update: {
+          about_text?: string | null
+          address?: string | null
           contact_email?: string | null
+          contact_phone?: string | null
           created_at?: string
+          facebook_url?: string | null
           id?: string
-          image_url?: string | null
+          instagram_url?: string | null
           name?: string
-          qualification?: string
-          speciality?: string | null
-          user_id?: string | null
+          updated_at?: string
+          youtube_url?: string | null
         }
         Relationships: []
       }
-      post_comments: {
+      applications: {
+        Row: {
+          bust: number | null
+          created_at: string
+          date_of_birth: string | null
+          email: string
+          experience: string | null
+          first_name: string
+          gender: string
+          height: number
+          hips: number | null
+          id: string
+          image_front_url: string | null
+          image_full_url: string | null
+          image_side_url: string | null
+          instagram_url: string | null
+          last_name: string
+          notes: string | null
+          phone: string
+          status: string | null
+          updated_at: string
+          waist: number | null
+        }
+        Insert: {
+          bust?: number | null
+          created_at?: string
+          date_of_birth?: string | null
+          email: string
+          experience?: string | null
+          first_name: string
+          gender: string
+          height: number
+          hips?: number | null
+          id?: string
+          image_front_url?: string | null
+          image_full_url?: string | null
+          image_side_url?: string | null
+          instagram_url?: string | null
+          last_name: string
+          notes?: string | null
+          phone: string
+          status?: string | null
+          updated_at?: string
+          waist?: number | null
+        }
+        Update: {
+          bust?: number | null
+          created_at?: string
+          date_of_birth?: string | null
+          email?: string
+          experience?: string | null
+          first_name?: string
+          gender?: string
+          height?: number
+          hips?: number | null
+          id?: string
+          image_front_url?: string | null
+          image_full_url?: string | null
+          image_side_url?: string | null
+          instagram_url?: string | null
+          last_name?: string
+          notes?: string | null
+          phone?: string
+          status?: string | null
+          updated_at?: string
+          waist?: number | null
+        }
+        Relationships: []
+      }
+      model_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      model_images: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string
+          is_polaroid: boolean | null
+          is_profile: boolean | null
+          model_id: string
+          order_number: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url: string
+          is_polaroid?: boolean | null
+          is_profile?: boolean | null
+          model_id: string
+          order_number?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string
+          is_polaroid?: boolean | null
+          is_profile?: boolean | null
+          model_id?: string
+          order_number?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "model_images_model_id_fkey"
+            columns: ["model_id"]
+            isOneToOne: false
+            referencedRelation: "models"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      models: {
+        Row: {
+          bust: number | null
+          category_id: string | null
+          created_at: string
+          date_of_birth: string | null
+          eye_color: string | null
+          first_name: string
+          gender: string
+          hair_color: string | null
+          height: number
+          hips: number | null
+          id: string
+          instagram_url: string | null
+          is_featured: boolean | null
+          last_name: string
+          nationality: string | null
+          shoe_size: number | null
+          updated_at: string
+          waist: number | null
+        }
+        Insert: {
+          bust?: number | null
+          category_id?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          eye_color?: string | null
+          first_name: string
+          gender: string
+          hair_color?: string | null
+          height: number
+          hips?: number | null
+          id?: string
+          instagram_url?: string | null
+          is_featured?: boolean | null
+          last_name: string
+          nationality?: string | null
+          shoe_size?: number | null
+          updated_at?: string
+          waist?: number | null
+        }
+        Update: {
+          bust?: number | null
+          category_id?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          eye_color?: string | null
+          first_name?: string
+          gender?: string
+          hair_color?: string | null
+          height?: number
+          hips?: number | null
+          id?: string
+          instagram_url?: string | null
+          is_featured?: boolean | null
+          last_name?: string
+          nationality?: string | null
+          shoe_size?: number | null
+          updated_at?: string
+          waist?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "models_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "model_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      posts: {
         Row: {
           content: string
-          created_at: string | null
+          created_at: string
           id: string
-          post_id: string
-          user_id: string
+          image_url: string | null
+          is_featured: boolean | null
+          published_at: string
+          slug: string
+          title: string
         }
         Insert: {
           content: string
-          created_at?: string | null
+          created_at?: string
           id?: string
-          post_id: string
-          user_id: string
+          image_url?: string | null
+          is_featured?: boolean | null
+          published_at?: string
+          slug: string
+          title: string
         }
         Update: {
           content?: string
-          created_at?: string | null
-          id?: string
-          post_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "post_comments_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "social_posts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "post_comments_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "app_users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      product_categories: {
-        Row: {
-          created_at: string
-          description: string | null
-          id: string
-          is_pharmacy: boolean
-          name: string
-        }
-        Insert: {
           created_at?: string
-          description?: string | null
           id?: string
-          is_pharmacy?: boolean
-          name: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          is_pharmacy?: boolean
-          name?: string
+          image_url?: string | null
+          is_featured?: boolean | null
+          published_at?: string
+          slug?: string
+          title?: string
         }
         Relationships: []
       }
-      profiles: {
+      team_members: {
         Row: {
-          avatar_url: string | null
-          cover_photo_url: string | null
-          created_at: string | null
+          bio: string | null
+          created_at: string
           email: string | null
-          experience: string | null
-          eye_color: string | null
-          hair_color: string | null
-          height: number | null
+          first_name: string
           id: string
-          measurements: string | null
-          name: string | null
-          phone: string | null
-          updated_at: string | null
+          image_url: string | null
+          last_name: string
+          order_number: number | null
+          position: string
         }
         Insert: {
-          avatar_url?: string | null
-          cover_photo_url?: string | null
-          created_at?: string | null
+          bio?: string | null
+          created_at?: string
           email?: string | null
-          experience?: string | null
-          eye_color?: string | null
-          hair_color?: string | null
-          height?: number | null
-          id: string
-          measurements?: string | null
-          name?: string | null
-          phone?: string | null
-          updated_at?: string | null
+          first_name: string
+          id?: string
+          image_url?: string | null
+          last_name: string
+          order_number?: number | null
+          position: string
         }
         Update: {
-          avatar_url?: string | null
-          cover_photo_url?: string | null
-          created_at?: string | null
+          bio?: string | null
+          created_at?: string
           email?: string | null
-          experience?: string | null
-          eye_color?: string | null
-          hair_color?: string | null
-          height?: number | null
-          id?: string
-          measurements?: string | null
-          name?: string | null
-          phone?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_id_fkey"
-            columns: ["id"]
-            isOneToOne: true
-            referencedRelation: "app_users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      provinces: {
-        Row: {
-          capital: string | null
-          created_at: string
-          description: string | null
-          id: string
-          image_url: string | null
-          name: string
-        }
-        Insert: {
-          capital?: string | null
-          created_at?: string
-          description?: string | null
+          first_name?: string
           id?: string
           image_url?: string | null
-          name: string
-        }
-        Update: {
-          capital?: string | null
-          created_at?: string
-          description?: string | null
-          id?: string
-          image_url?: string | null
-          name?: string
+          last_name?: string
+          order_number?: number | null
+          position?: string
         }
         Relationships: []
-      }
-      social_posts: {
-        Row: {
-          comments: number | null
-          content: string | null
-          created_at: string | null
-          id: string
-          image_url: string | null
-          likes: number | null
-          shares: number | null
-          user_id: string | null
-        }
-        Insert: {
-          comments?: number | null
-          content?: string | null
-          created_at?: string | null
-          id?: string
-          image_url?: string | null
-          likes?: number | null
-          shares?: number | null
-          user_id?: string | null
-        }
-        Update: {
-          comments?: number | null
-          content?: string | null
-          created_at?: string | null
-          id?: string
-          image_url?: string | null
-          likes?: number | null
-          shares?: number | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "social_posts_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "app_users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      subscription_plans: {
-        Row: {
-          created_at: string
-          duration: string
-          features: string[]
-          id: string
-          is_popular: boolean | null
-          name: string
-          price: number
-        }
-        Insert: {
-          created_at?: string
-          duration: string
-          features: string[]
-          id?: string
-          is_popular?: boolean | null
-          name: string
-          price: number
-        }
-        Update: {
-          created_at?: string
-          duration?: string
-          features?: string[]
-          id?: string
-          is_popular?: boolean | null
-          name?: string
-          price?: number
-        }
-        Relationships: []
-      }
-      traditional_tales: {
-        Row: {
-          created_at: string
-          description: string
-          ethnicity: string
-          id: string
-          image_url: string | null
-          moral: string | null
-          title: string
-        }
-        Insert: {
-          created_at?: string
-          description: string
-          ethnicity: string
-          id?: string
-          image_url?: string | null
-          moral?: string | null
-          title: string
-        }
-        Update: {
-          created_at?: string
-          description?: string
-          ethnicity?: string
-          id?: string
-          image_url?: string | null
-          moral?: string | null
-          title?: string
-        }
-        Relationships: []
-      }
-      user_subscriptions: {
-        Row: {
-          created_at: string
-          end_date: string
-          id: string
-          payment_status: string | null
-          plan_id: string | null
-          start_date: string
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          end_date: string
-          id?: string
-          payment_status?: string | null
-          plan_id?: string | null
-          start_date?: string
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          end_date?: string
-          id?: string
-          payment_status?: string | null
-          plan_id?: string | null
-          start_date?: string
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_subscriptions_plan_id_fkey"
-            columns: ["plan_id"]
-            isOneToOne: false
-            referencedRelation: "subscription_plans"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      virtual_tours: {
-        Row: {
-          created_at: string
-          description: string
-          destination_id: string | null
-          id: string
-          thumbnail_url: string | null
-          title: string
-          tour_url: string
-        }
-        Insert: {
-          created_at?: string
-          description: string
-          destination_id?: string | null
-          id?: string
-          thumbnail_url?: string | null
-          title: string
-          tour_url: string
-        }
-        Update: {
-          created_at?: string
-          description?: string
-          destination_id?: string | null
-          id?: string
-          thumbnail_url?: string | null
-          title?: string
-          tour_url?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "virtual_tours_destination_id_fkey"
-            columns: ["destination_id"]
-            isOneToOne: false
-            referencedRelation: "destinations"
-            referencedColumns: ["id"]
-          },
-        ]
       }
     }
     Views: {
