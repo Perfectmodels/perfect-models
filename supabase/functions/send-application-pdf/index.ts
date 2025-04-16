@@ -9,7 +9,11 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
+// Initialisation de Resend avec la clé API
+const resendApiKey = Deno.env.get('RESEND_API_KEY');
+console.log('RESEND_API_KEY available:', !!resendApiKey);
+
+const resend = new Resend(resendApiKey);
 const agencyEmail = Deno.env.get('AGENCY_EMAIL') || 'Perfectmodels.ga@gmail.com';
 
 serve(async (req) => {
@@ -134,6 +138,12 @@ function getGenderLabel(gender) {
 
 async function sendEmailWithPDF(application, pdfBuffer) {
   try {
+    console.log('Attempting to send email with application data');
+    
+    if (!resendApiKey) {
+      throw new Error("Resend API key not configured. Please add RESEND_API_KEY to your Supabase secrets.");
+    }
+    
     const result = await resend.emails.send({
       from: 'Perfect Models <noreply@perfectmodels.ga>',
       to: [agencyEmail],
@@ -154,6 +164,7 @@ async function sendEmailWithPDF(application, pdfBuffer) {
       ]
     });
     
+    console.log('Email sent successfully:', JSON.stringify(result));
     return result;
   } catch (error) {
     console.error('Error sending email:', error);
