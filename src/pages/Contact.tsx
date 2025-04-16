@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import { Phone, Mail, MapPin, Facebook, Instagram, Youtube } from 'lucide-react';
+import { TikTokIcon } from '../components/icons/TikTokIcon';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -64,14 +65,11 @@ const Contact = () => {
                   href="https://www.youtube.com/@PMM241" 
                   icon={<Youtube size={20} />} 
                   label="YouTube" />
-                <a
+                <SocialLink
                   href="https://www.tiktok.com/@perfectmodels.ga"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-gray-700 hover:text-model-gold"
-                >
-                  TikTok
-                </a>
+                  icon={<TikTokIcon size={20} />}
+                  label="TikTok"
+                />
               </div>
 
               <h2 className="font-playfair text-2xl mb-4">Événements</h2>

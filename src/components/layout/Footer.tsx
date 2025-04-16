@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Instagram, Facebook, Youtube } from 'lucide-react';
+import { TikTokIcon } from '../icons/TikTokIcon';
 
 const Footer = () => {
   return (
@@ -16,15 +17,10 @@ const Footer = () => {
               <SocialLink href="https://www.facebook.com/perfectmodels.ga?locale=fr_FR" icon={<Facebook size={18} />} />
               <SocialLink href="https://www.instagram.com/perfectmodels.ga/" icon={<Instagram size={18} />} />
               <SocialLink href="https://www.youtube.com/@PMM241" icon={<Youtube size={18} />} />
-              {/* TikTok link remains, just without an icon */}
-              <a 
+              <SocialLink 
                 href="https://www.tiktok.com/@perfectmodels.ga" 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="text-model-white hover:text-model-gold"
-              >
-                TikTok
-              </a>
+                icon={<TikTokIcon size={18} />} 
+              />
             </div>
           </div>
 
