@@ -9,7 +9,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Initialisation de Resend avec la clé API
+// Initialize Resend with the API key
 const resendApiKey = Deno.env.get('RESEND_API_KEY');
 console.log('RESEND_API_KEY available:', !!resendApiKey);
 
@@ -144,6 +144,18 @@ async function sendEmailWithPDF(application, pdfBuffer) {
       throw new Error("Resend API key not configured. Please add RESEND_API_KEY to your Supabase secrets.");
     }
     
+    // Verify we have all required data before sending
+    if (!application || !application.email || !application.first_name || !application.last_name) {
+      throw new Error("Missing required application data for email");
+    }
+    
+    if (!pdfBuffer || pdfBuffer.length === 0) {
+      throw new Error("PDF generation failed or produced empty result");
+    }
+    
+    console.log('Sending email to:', agencyEmail);
+    
+    // Send the email using Resend
     const result = await resend.emails.send({
       from: 'Perfect Models <noreply@perfectmodels.ga>',
       to: [agencyEmail],
