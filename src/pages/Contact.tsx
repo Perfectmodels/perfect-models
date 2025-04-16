@@ -1,8 +1,7 @@
-
 import { useState } from 'react';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
-import { Phone, Mail, MapPin, Facebook, Instagram, Youtube, TikTok } from 'lucide-react';
+import { Phone, Mail, MapPin, Facebook, Instagram, Youtube } from 'lucide-react';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -19,9 +18,7 @@ const Contact = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Placeholder for form submission
     console.log('Form submitted:', formData);
-    // Reset form after submission
     setFormData({ name: '', email: '', subject: '', message: '' });
   };
 
@@ -34,7 +31,6 @@ const Contact = () => {
           <div className="w-24 h-0.5 bg-model-gold mx-auto mb-12"></div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            {/* Contact Information */}
             <div>
               <h2 className="font-playfair text-2xl mb-6">Coordonnées</h2>
               
@@ -68,10 +64,14 @@ const Contact = () => {
                   href="https://www.youtube.com/@PMM241" 
                   icon={<Youtube size={20} />} 
                   label="YouTube" />
-                <SocialLink 
-                  href="https://www.tiktok.com/@perfectmodels.ga" 
-                  icon={<TikTok size={20} />} 
-                  label="TikTok" />
+                <a
+                  href="https://www.tiktok.com/@perfectmodels.ga"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-700 hover:text-model-gold"
+                >
+                  TikTok
+                </a>
               </div>
 
               <h2 className="font-playfair text-2xl mb-4">Événements</h2>
@@ -88,7 +88,6 @@ const Contact = () => {
               </ul>
             </div>
 
-            {/* Contact Form */}
             <div>
               <h2 className="font-playfair text-2xl mb-6">Envoyez-nous un message</h2>
               <form onSubmit={handleSubmit} className="space-y-4">
