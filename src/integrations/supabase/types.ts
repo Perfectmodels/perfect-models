@@ -53,6 +53,7 @@ export type Database = {
       }
       applications: {
         Row: {
+          age: number | null
           bust: number | null
           created_at: string
           date_of_birth: string | null
@@ -73,8 +74,10 @@ export type Database = {
           status: string | null
           updated_at: string
           waist: number | null
+          weight: number | null
         }
         Insert: {
+          age?: number | null
           bust?: number | null
           created_at?: string
           date_of_birth?: string | null
@@ -95,8 +98,10 @@ export type Database = {
           status?: string | null
           updated_at?: string
           waist?: number | null
+          weight?: number | null
         }
         Update: {
+          age?: number | null
           bust?: number | null
           created_at?: string
           date_of_birth?: string | null
@@ -117,6 +122,7 @@ export type Database = {
           status?: string | null
           updated_at?: string
           waist?: number | null
+          weight?: number | null
         }
         Relationships: []
       }

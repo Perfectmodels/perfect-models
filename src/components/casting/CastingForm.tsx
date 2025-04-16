@@ -38,8 +38,21 @@ const CastingForm = ({ onSuccess }: CastingFormProps) => {
   const onSubmit = async (data: ModelApplication) => {
     setIsSubmitting(true);
     try {
+      console.log('Submitting data:', data);
+      
+      // S'assurer que les champs numériques sont bien des nombres
+      const formattedData = {
+        ...data,
+        height: Number(data.height) || 0,
+        age: data.age ? Number(data.age) : null,
+        weight: data.weight ? Number(data.weight) : null,
+        bust: data.bust ? Number(data.bust) : null,
+        waist: data.waist ? Number(data.waist) : null,
+        hips: data.hips ? Number(data.hips) : null,
+      };
+      
       // Insert data into Supabase
-      const { error } = await supabase.from('applications').insert([data]);
+      const { error } = await supabase.from('applications').insert([formattedData]);
       
       if (error) {
         toast.error('Erreur lors de l\'envoi de votre candidature.');
@@ -49,13 +62,14 @@ const CastingForm = ({ onSuccess }: CastingFormProps) => {
       
       // Send data as PDF via email function
       const { error: emailError } = await supabase.functions.invoke('send-application-pdf', {
-        body: { application: data }
+        body: { application: formattedData }
       });
       
       if (emailError) {
         toast.error('Erreur lors de l\'envoi de l\'email.');
         console.error('Error sending email:', emailError);
       } else {
+        toast.success('Votre candidature a été envoyée avec succès !');
         onSuccess();
         form.reset();
       }

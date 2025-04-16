@@ -1,3 +1,4 @@
+
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import * as PDFKit from 'https://esm.sh/pdfkit@0.13.0';
@@ -19,6 +20,7 @@ serve(async (req) => {
 
   try {
     const { application } = await req.json();
+    console.log('Received application data:', JSON.stringify(application));
     
     // Generate PDF
     const pdfBuffer = await generateApplicationPDF(application);
@@ -27,7 +29,11 @@ serve(async (req) => {
     const emailResponse = await sendEmailWithPDF(application, pdfBuffer);
     
     return new Response(
-      JSON.stringify({ success: true, message: 'Application sent via email' }),
+      JSON.stringify({ 
+        success: true, 
+        message: 'Application sent via email',
+        emailResponse 
+      }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
@@ -36,7 +42,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error processing application:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error.message, stack: error.stack }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
