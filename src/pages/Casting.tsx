@@ -25,6 +25,8 @@ const Casting = () => {
       email: '',
       phone: '',
       gender: '',
+      age: null,
+      weight: null,
       height: 0,
       bust: null,
       waist: null,
@@ -37,11 +39,23 @@ const Casting = () => {
   const onSubmit = async (data: ModelApplication) => {
     setIsSubmitting(true);
     try {
+      // Insert data into Supabase
       const { error } = await supabase.from('applications').insert([data]);
       
       if (error) {
         toast.error('Erreur lors de l\'envoi de votre candidature.');
         console.error('Error submitting application:', error);
+        return;
+      }
+      
+      // Send data as PDF via email function
+      const { error: emailError } = await supabase.functions.invoke('send-application-pdf', {
+        body: { application: data }
+      });
+      
+      if (emailError) {
+        toast.error('Erreur lors de l\'envoi de l\'email.');
+        console.error('Error sending email:', emailError);
       } else {
         setShowSuccessDialog(true);
         form.reset();
@@ -139,34 +153,62 @@ const Casting = () => {
                   />
                 </div>
 
-                <FormField
-                  control={form.control}
-                  name="gender"
-                  rules={{ required: "Le genre est requis" }}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Genre</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Sélectionnez un genre" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="women">Femme</SelectItem>
-                          <SelectItem value="men">Homme</SelectItem>
-                          <SelectItem value="children">Enfant</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="gender"
+                    rules={{ required: "Le genre est requis" }}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Genre</FormLabel>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Sélectionnez un genre" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="women">Femme</SelectItem>
+                            <SelectItem value="men">Homme</SelectItem>
+                            <SelectItem value="children">Enfant</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="age"
+                    rules={{ 
+                      min: {
+                        value: 1,
+                        message: "L'âge doit être valide"
+                      }
+                    }}
+                    render={({ field: { onChange, value, ...restField } }) => (
+                      <FormItem>
+                        <FormLabel>Âge</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            placeholder="25"
+                            value={value || ''}
+                            onChange={(e) => onChange(e.target.value ? parseInt(e.target.value) : null)} 
+                            {...restField} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <FormField
                     control={form.control}
                     name="height"
@@ -192,7 +234,29 @@ const Casting = () => {
                       </FormItem>
                     )}
                   />
-                  
+
+                  <FormField
+                    control={form.control}
+                    name="weight"
+                    render={({ field: { onChange, value, ...restField } }) => (
+                      <FormItem>
+                        <FormLabel>Poids (kg)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            placeholder="60" 
+                            value={value || ''}
+                            onChange={(e) => onChange(e.target.value ? parseInt(e.target.value) : null)} 
+                            {...restField} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <FormField
                     control={form.control}
                     name="bust"

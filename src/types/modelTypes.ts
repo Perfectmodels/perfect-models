@@ -6,6 +6,8 @@ export interface ModelApplication {
   email: string;
   phone: string;
   gender: string;
+  age?: number | null;
+  weight?: number | null;
   date_of_birth?: string | null;
   height: number;
   bust?: number | null;
