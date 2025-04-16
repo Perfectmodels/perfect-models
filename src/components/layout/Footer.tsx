@@ -1,6 +1,6 @@
 
 import { Link } from 'react-router-dom';
-import { Instagram, Facebook, Twitter } from 'lucide-react';
+import { Instagram, Facebook, Youtube, TikTok } from 'lucide-react';
 
 const Footer = () => {
   return (
@@ -14,9 +14,10 @@ const Footer = () => {
               Agence de mannequins professionnels pour la haute couture, la publicité et les défilés.
             </p>
             <div className="flex space-x-4">
-              <SocialLink href="https://instagram.com" icon={<Instagram size={18} />} />
-              <SocialLink href="https://facebook.com" icon={<Facebook size={18} />} />
-              <SocialLink href="https://twitter.com" icon={<Twitter size={18} />} />
+              <SocialLink href="https://www.facebook.com/perfectmodels.ga?locale=fr_FR" icon={<Facebook size={18} />} />
+              <SocialLink href="https://www.instagram.com/perfectmodels.ga/" icon={<Instagram size={18} />} />
+              <SocialLink href="https://www.youtube.com/@PMM241" icon={<Youtube size={18} />} />
+              <SocialLink href="https://www.tiktok.com/@perfectmodels.ga" icon={<TikTok size={18} />} />
             </div>
           </div>
 
@@ -36,10 +37,9 @@ const Footer = () => {
           <div>
             <h3 className="font-playfair text-xl mb-4">CONTACTEZ-NOUS</h3>
             <address className="not-italic text-light-gray">
-              <p className="mb-2">123, Avenue des Champs-Élysées</p>
-              <p className="mb-2">75008 Paris, France</p>
-              <p className="mb-2">contact@perfectmodelsmanagement.com</p>
-              <p>+33 1 23 45 67 89</p>
+              <p className="mb-2">Libreville, Gabon</p>
+              <p className="mb-2">Perfectmodels.ga@gmail.com</p>
+              <p>+241 77 50 79 50</p>
             </address>
           </div>
         </div>
