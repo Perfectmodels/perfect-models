@@ -289,6 +289,27 @@ export type Database = {
         }
         Relationships: []
       }
+      resend_api_keys: {
+        Row: {
+          api_key: string
+          created_at: string
+          id: number
+          updated_at: string
+        }
+        Insert: {
+          api_key: string
+          created_at?: string
+          id?: never
+          updated_at?: string
+        }
+        Update: {
+          api_key?: string
+          created_at?: string
+          id?: never
+          updated_at?: string
+        }
+        Relationships: []
+      }
       team_members: {
         Row: {
           bio: string | null
@@ -322,6 +343,33 @@ export type Database = {
           last_name?: string
           order_number?: number | null
           position?: string
+        }
+        Relationships: []
+      }
+      webhooks: {
+        Row: {
+          created_at: string | null
+          event_type: string
+          id: number
+          status: string | null
+          updated_at: string | null
+          url: string
+        }
+        Insert: {
+          created_at?: string | null
+          event_type: string
+          id?: never
+          status?: string | null
+          updated_at?: string | null
+          url: string
+        }
+        Update: {
+          created_at?: string | null
+          event_type?: string
+          id?: never
+          status?: string | null
+          updated_at?: string | null
+          url?: string
         }
         Relationships: []
       }
