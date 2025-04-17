@@ -119,12 +119,12 @@ const Men = () => {
     {
       value: "services",
       label: "NOS SERVICES",
-      content: <ServicesList services={services} />
+      content: <div id="services-section"><ServicesList services={services} /></div>
     },
     {
       value: "events",
       label: "NOS ÉVÉNEMENTS",
-      content: <EventsList events={events} />
+      content: <div id="events-section"><EventsList events={events} /></div>
     }
   ];
 
