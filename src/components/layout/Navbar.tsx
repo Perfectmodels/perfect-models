@@ -1,25 +1,37 @@
-
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, Calendar, ListTodo } from 'lucide-react';
+import { Menu, X, Calendar, ListTodo, User, Users, Home, Phone, Info } from 'lucide-react';
 import {
-  Drawer,
-  DrawerContent,
-  DrawerTrigger,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerFooter,
-} from "@/components/ui/drawer";
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetHeader,
+  SheetTitle,
+  SheetFooter,
+} from "@/components/ui/sheet";
 import { ScrollArea } from '@/components/ui/scroll-area';
-import TabContent from '@/components/common/TabContent';
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import EventsList from '../models/EventsList';
 import ServicesList from '../models/ServicesList';
 import { Event, Service } from '@/types/modelTypes';
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [activeDrawer, setActiveDrawer] = useState<string | null>(null);
+  const [activeNavItem, setActiveNavItem] = useState<string | null>(null);
+  const [openCollapsibles, setOpenCollapsibles] = useState<Record<string, boolean>>({
+    services: false,
+    events: false
+  });
 
   useEffect(() => {
     const handleScroll = () => {
@@ -126,18 +138,16 @@ const Navbar = () => {
     }
   ];
 
-  // Function to scroll to the section when clicked
-  const scrollToSection = (sectionId: string) => {
-    setIsOpen(false);
-    const section = document.getElementById(sectionId);
-    if (section) {
-      section.scrollIntoView({ behavior: 'smooth' });
-    }
+  const toggleCollapsible = (name: string) => {
+    setOpenCollapsibles(prev => ({
+      ...prev,
+      [name]: !prev[name]
+    }));
   };
 
-  // Function to open drawer with specific content
-  const openDrawer = (drawerType: string) => {
-    setActiveDrawer(drawerType);
+  // Function to close the mobile menu
+  const closeMobileMenu = () => {
+    setIsOpen(false);
   };
 
   return (
@@ -149,54 +159,96 @@ const Navbar = () => {
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center space-x-8">
-          <NavLink to="/women" label="FEMMES" />
-          <NavLink to="/men" label="HOMMES" />
-          
-          {/* Services Drawer Trigger */}
-          <Drawer onOpenChange={() => openDrawer('services')}>
-            <DrawerTrigger asChild>
-              <button className="text-model-white text-sm tracking-wider hover-gold flex items-center gap-1.5">
-                <ListTodo className="h-4 w-4" />
-                SERVICES
-              </button>
-            </DrawerTrigger>
-            <DrawerContent className="h-[80vh]">
-              <DrawerHeader>
-                <DrawerTitle className="text-center text-2xl font-playfair">Nos Services</DrawerTitle>
-              </DrawerHeader>
-              <ScrollArea className="h-full px-6 py-4">
-                <ServicesList services={services} />
-              </ScrollArea>
-              <DrawerFooter className="pt-2">
-                <div className="w-24 h-0.5 bg-model-gold mx-auto mb-2"></div>
-              </DrawerFooter>
-            </DrawerContent>
-          </Drawer>
-          
-          {/* Events Drawer Trigger */}
-          <Drawer onOpenChange={() => openDrawer('events')}>
-            <DrawerTrigger asChild>
-              <button className="text-model-white text-sm tracking-wider hover-gold flex items-center gap-1.5">
-                <Calendar className="h-4 w-4" />
-                ÉVÉNEMENTS
-              </button>
-            </DrawerTrigger>
-            <DrawerContent className="h-[80vh]">
-              <DrawerHeader>
-                <DrawerTitle className="text-center text-2xl font-playfair">Nos Événements</DrawerTitle>
-              </DrawerHeader>
-              <ScrollArea className="h-full px-6 py-4">
-                <EventsList events={events} />
-              </ScrollArea>
-              <DrawerFooter className="pt-2">
-                <div className="w-24 h-0.5 bg-model-gold mx-auto mb-2"></div>
-              </DrawerFooter>
-            </DrawerContent>
-          </Drawer>
-          
-          <NavLink to="/casting" label="CASTING" />
-          <NavLink to="/about" label="À PROPOS" />
-          <NavLink to="/contact" label="CONTACT" />
+          <NavigationMenu>
+            <NavigationMenuList>
+              <NavigationMenuItem>
+                <Link to="/" className="text-model-white text-sm tracking-wider hover-gold flex items-center gap-1.5">
+                  <Home className="h-4 w-4" />
+                  ACCUEIL
+                </Link>
+              </NavigationMenuItem>
+              
+              <NavigationMenuItem>
+                <Link to="/women" className="text-model-white text-sm tracking-wider hover-gold flex items-center gap-1.5">
+                  <Users className="h-4 w-4" />
+                  FEMMES
+                </Link>
+              </NavigationMenuItem>
+              
+              <NavigationMenuItem>
+                <Link to="/men" className="text-model-white text-sm tracking-wider hover-gold flex items-center gap-1.5">
+                  <User className="h-4 w-4" />
+                  HOMMES
+                </Link>
+              </NavigationMenuItem>
+
+              {/* Services Sheet Trigger */}
+              <NavigationMenuItem>
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <button className="text-model-white text-sm tracking-wider hover-gold flex items-center gap-1.5">
+                      <ListTodo className="h-4 w-4" />
+                      SERVICES
+                    </button>
+                  </SheetTrigger>
+                  <SheetContent className="w-[350px] sm:w-[450px]" side="right">
+                    <SheetHeader>
+                      <SheetTitle className="text-center text-2xl font-playfair">Nos Services</SheetTitle>
+                    </SheetHeader>
+                    <ScrollArea className="h-[80vh] px-1 py-4">
+                      <ServicesList services={services} />
+                    </ScrollArea>
+                    <SheetFooter className="pt-2">
+                      <div className="w-24 h-0.5 bg-model-gold mx-auto mb-2"></div>
+                    </SheetFooter>
+                  </SheetContent>
+                </Sheet>
+              </NavigationMenuItem>
+              
+              {/* Events Sheet Trigger */}
+              <NavigationMenuItem>
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <button className="text-model-white text-sm tracking-wider hover-gold flex items-center gap-1.5">
+                      <Calendar className="h-4 w-4" />
+                      ÉVÉNEMENTS
+                    </button>
+                  </SheetTrigger>
+                  <SheetContent className="w-[350px] sm:w-[450px]" side="right">
+                    <SheetHeader>
+                      <SheetTitle className="text-center text-2xl font-playfair">Nos Événements</SheetTitle>
+                    </SheetHeader>
+                    <ScrollArea className="h-[80vh] px-1 py-4">
+                      <EventsList events={events} />
+                    </ScrollArea>
+                    <SheetFooter className="pt-2">
+                      <div className="w-24 h-0.5 bg-model-gold mx-auto mb-2"></div>
+                    </SheetFooter>
+                  </SheetContent>
+                </Sheet>
+              </NavigationMenuItem>
+              
+              <NavigationMenuItem>
+                <Link to="/casting" className="text-model-white text-sm tracking-wider hover-gold">
+                  CASTING
+                </Link>
+              </NavigationMenuItem>
+              
+              <NavigationMenuItem>
+                <Link to="/about" className="text-model-white text-sm tracking-wider hover-gold flex items-center gap-1.5">
+                  <Info className="h-4 w-4" />
+                  À PROPOS
+                </Link>
+              </NavigationMenuItem>
+              
+              <NavigationMenuItem>
+                <Link to="/contact" className="text-model-white text-sm tracking-wider hover-gold flex items-center gap-1.5">
+                  <Phone className="h-4 w-4" />
+                  CONTACT
+                </Link>
+              </NavigationMenuItem>
+            </NavigationMenuList>
+          </NavigationMenu>
         </div>
 
         {/* Mobile Menu Button */}
@@ -205,75 +257,104 @@ const Navbar = () => {
         </button>
       </div>
 
-      {/* Mobile Menu */}
-      {isOpen && (
-        <div className="md:hidden bg-model-black absolute top-full left-0 w-full animate-fade-in">
-          <div className="container mx-auto px-6 py-4 flex flex-col space-y-4">
-            <MobileNavLink to="/women" label="FEMMES" onClick={() => setIsOpen(false)} />
-            <MobileNavLink to="/men" label="HOMMES" onClick={() => setIsOpen(false)} />
-            
-            {/* Mobile Services Drawer Trigger */}
-            <Drawer onOpenChange={() => openDrawer('services')}>
-              <DrawerTrigger asChild>
-                <button className="text-model-white text-lg tracking-wider py-2 hover-gold flex items-center gap-2">
-                  <ListTodo className="h-4 w-4" />
-                  SERVICES
-                </button>
-              </DrawerTrigger>
-              <DrawerContent className="h-[80vh]">
-                <DrawerHeader>
-                  <DrawerTitle className="text-center text-2xl font-playfair">Nos Services</DrawerTitle>
-                </DrawerHeader>
-                <ScrollArea className="h-full px-6 py-4">
+      {/* Mobile Menu Sheet */}
+      <Sheet open={isOpen} onOpenChange={setIsOpen}>
+        <SheetContent side="left" className="w-[80vw] max-w-sm pt-16">
+          <SheetHeader>
+            <SheetTitle className="text-center text-2xl font-playfair">Menu</SheetTitle>
+          </SheetHeader>
+          <ScrollArea className="h-full py-4">
+            <div className="flex flex-col space-y-4 px-2">
+              <Link 
+                to="/" 
+                className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-accent text-lg" 
+                onClick={closeMobileMenu}
+              >
+                <Home size={18} />
+                ACCUEIL
+              </Link>
+              
+              <Link 
+                to="/women" 
+                className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-accent text-lg" 
+                onClick={closeMobileMenu}
+              >
+                <Users size={18} />
+                FEMMES
+              </Link>
+              
+              <Link 
+                to="/men" 
+                className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-accent text-lg" 
+                onClick={closeMobileMenu}
+              >
+                <User size={18} />
+                HOMMES
+              </Link>
+              
+              {/* Mobile Collapsible Services */}
+              <Collapsible 
+                open={openCollapsibles.services} 
+                onOpenChange={() => toggleCollapsible('services')}
+              >
+                <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2 rounded-md hover:bg-accent text-lg">
+                  <div className="flex items-center gap-2">
+                    <ListTodo size={18} />
+                    SERVICES
+                  </div>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pl-6 pr-2 py-2 space-y-3">
                   <ServicesList services={services} />
-                </ScrollArea>
-                <DrawerFooter className="pt-2">
-                  <div className="w-24 h-0.5 bg-model-gold mx-auto mb-2"></div>
-                </DrawerFooter>
-              </DrawerContent>
-            </Drawer>
-            
-            {/* Mobile Events Drawer Trigger */}
-            <Drawer onOpenChange={() => openDrawer('events')}>
-              <DrawerTrigger asChild>
-                <button className="text-model-white text-lg tracking-wider py-2 hover-gold flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  ÉVÉNEMENTS
-                </button>
-              </DrawerTrigger>
-              <DrawerContent className="h-[80vh]">
-                <DrawerHeader>
-                  <DrawerTitle className="text-center text-2xl font-playfair">Nos Événements</DrawerTitle>
-                </DrawerHeader>
-                <ScrollArea className="h-full px-6 py-4">
+                </CollapsibleContent>
+              </Collapsible>
+              
+              {/* Mobile Collapsible Events */}
+              <Collapsible 
+                open={openCollapsibles.events} 
+                onOpenChange={() => toggleCollapsible('events')}
+              >
+                <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2 rounded-md hover:bg-accent text-lg">
+                  <div className="flex items-center gap-2">
+                    <Calendar size={18} />
+                    ÉVÉNEMENTS
+                  </div>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pl-6 pr-2 py-2 space-y-3">
                   <EventsList events={events} />
-                </ScrollArea>
-                <DrawerFooter className="pt-2">
-                  <div className="w-24 h-0.5 bg-model-gold mx-auto mb-2"></div>
-                </DrawerFooter>
-              </DrawerContent>
-            </Drawer>
-            
-            <MobileNavLink to="/casting" label="CASTING" onClick={() => setIsOpen(false)} />
-            <MobileNavLink to="/about" label="À PROPOS" onClick={() => setIsOpen(false)} />
-            <MobileNavLink to="/contact" label="CONTACT" onClick={() => setIsOpen(false)} />
-          </div>
-        </div>
-      )}
+                </CollapsibleContent>
+              </Collapsible>
+              
+              <Link 
+                to="/casting" 
+                className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-accent text-lg" 
+                onClick={closeMobileMenu}
+              >
+                CASTING
+              </Link>
+              
+              <Link 
+                to="/about" 
+                className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-accent text-lg" 
+                onClick={closeMobileMenu}
+              >
+                <Info size={18} />
+                À PROPOS
+              </Link>
+              
+              <Link 
+                to="/contact" 
+                className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-accent text-lg" 
+                onClick={closeMobileMenu}
+              >
+                <Phone size={18} />
+                CONTACT
+              </Link>
+            </div>
+          </ScrollArea>
+        </SheetContent>
+      </Sheet>
     </nav>
   );
 };
-
-const NavLink = ({ to, label }: { to: string; label: string }) => (
-  <Link to={to} className="text-model-white text-sm tracking-wider hover-gold">
-    {label}
-  </Link>
-);
-
-const MobileNavLink = ({ to, label, onClick }: { to: string; label: string; onClick: () => void }) => (
-  <Link to={to} className="text-model-white text-lg tracking-wider py-2 hover-gold" onClick={onClick}>
-    {label}
-  </Link>
-);
 
 export default Navbar;
