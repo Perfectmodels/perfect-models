@@ -47,11 +47,9 @@ const PartnersCarousel = () => {
           <CarouselItem key={index} className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/5">
             <div className="flex flex-col items-center">
               <div className="bg-white/10 rounded-md p-2 w-16 h-16 md:w-24 md:h-24 flex items-center justify-center">
-                <img 
-                  src={partner.logo} 
-                  alt={`${partner.name} logo`} 
-                  className="max-w-full max-h-full object-contain opacity-70 hover:opacity-100 transition-opacity"
-                />
+                <div className="w-12 h-12 md:w-16 md:h-16 bg-gray-300/30 flex items-center justify-center rounded-full">
+                  <span className="text-xs md:text-sm text-gray-400">{partner.name.substring(0, 2)}</span>
+                </div>
               </div>
               <p className="mt-2 text-xs text-center text-light-gray">{partner.name}</p>
             </div>
