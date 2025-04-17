@@ -1,3 +1,7 @@
+
+import { Link } from 'react-router-dom';
+import { ArrowRight } from 'lucide-react';
+
 const CallToAction = () => {
   return (
     <section className="py-20 bg-model-black text-model-white relative">
