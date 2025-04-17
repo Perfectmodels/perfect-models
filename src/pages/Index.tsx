@@ -1,21 +1,16 @@
 
-import Navbar from '../components/layout/Navbar';
-import Footer from '../components/layout/Footer';
+import { Layout } from '../components/layout';
 import HeroSlider from '../components/home/HeroSlider';
 import AboutSection from '../components/home/AboutSection';
 import CallToAction from '../components/home/CallToAction';
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      <main className="flex-1">
-        <HeroSlider />
-        <AboutSection />
-        <CallToAction />
-      </main>
-      <Footer />
-    </div>
+    <Layout>
+      <HeroSlider />
+      <AboutSection />
+      <CallToAction />
+    </Layout>
   );
 };
 

@@ -119,7 +119,7 @@ const PartnersCarousel = () => {
   
   // Autoplay functionality
   useEffect(() => {
-    let interval: number | null = null;
+    let interval: number | undefined = undefined;
     
     if (autoplay) {
       interval = window.setInterval(() => {
@@ -128,7 +128,7 @@ const PartnersCarousel = () => {
     }
     
     return () => {
-      if (interval !== null) {
+      if (interval !== undefined) {
         clearInterval(interval);
       }
     };
