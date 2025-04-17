@@ -61,3 +61,18 @@ export interface ModelImage {
   order_number?: number;
   created_at?: string;
 }
+
+export interface Event {
+  id: string;
+  name: string;
+  description: string;
+  location?: string;
+  image?: string;
+}
+
+export interface Service {
+  id: string;
+  name: string;
+  description: string;
+  image?: string;
+}
