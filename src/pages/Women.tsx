@@ -1,4 +1,3 @@
-
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import ModelsList from '../components/models/ModelsList';
@@ -11,33 +10,33 @@ const Women = () => {
   // Données des mannequins féminins
   const femaleModels = [
     { id: 1, name: "Annie Flora", image: "https://i.ibb.co/ShShsp0/DSC-0369.jpg" },
-    { id: 2, name: "Diane Vanessa", image: "https://i.ibb.co/LhxkbmDD/PMM0179.jpg" },
-    { id: 3, name: "Cassandra", image: "https://i.ibb.co/78q5My4/PMM0161.jpg" },
-    { id: 4, name: "Duchesse", image: "https://i.ibb.co/Mkp5TVjf/AJC-1553.jpg" },
-    { id: 5, name: "Lea Danielle", image: "https://images.pexels.com/photos/1689731/pexels-photo-1689731.jpeg" },
-    { id: 6, name: "Aimée Mawili", image: "https://i.ibb.co/6cHHfSn2/476255617-604882875586826-616826477806477607-n.jpg" },
+    { id: 2, name: "Diane Vanessa", image: "https://images.pexels.com/photos/1462637/pexels-photo-1462637.jpeg" },
+    { id: 3, name: "Dickambi Ngoma Horlane", image: "https://images.pexels.com/photos/1587009/pexels-photo-1587009.jpeg" },
+    { id: 4, name: "Duchesse", image: "https://images.pexels.com/photos/1372134/pexels-photo-1372134.jpeg" },
+    { id: 5, name: "Eya Biyoghe Rosly", image: "https://images.pexels.com/photos/1689731/pexels-photo-1689731.jpeg" },
+    { id: 6, name: "Flora", image: "https://images.pexels.com/photos/1321943/pexels-photo-1321943.jpeg" },
     { id: 7, name: "Jodelle Juliana", image: "https://images.pexels.com/photos/1848886/pexels-photo-1848886.jpeg" },
-    { id: 8, name: "Noemi Kim", image: "https://i.ibb.co/pv6kmGnk/DSC-0208.jpg" },
-    { id: 9, name: "Leene Wheeler", image: "https://images.pexels.com/photos/1394499/pexels-photo-1394499.jpeg" },
-    { id: 10, name: "Noé Mak's", image: "https://images.pexels.com/photos/1468379/pexels-photo-1468379.jpeg" },
-    { id: 11, name: "Brie Ballet", image: "https://images.pexels.com/photos/1375849/pexels-photo-1375849.jpeg" },
-    { id: 12, name: "Kendra Mebiame", image: "https://images.pexels.com/photos/1065084/pexels-photo-1065084.jpeg" },
-    { id: 13, name: "Merveille Aworet", image: "https://i.ibb.co/tnMZ3NJ/MG-0666.jpg" },
+    { id: 8, name: "Lea Danielle", image: "https://images.pexels.com/photos/1462637/pexels-photo-1462637.jpeg" },
+    { id: 9, name: "Leene", image: "https://images.pexels.com/photos/1394499/pexels-photo-1394499.jpeg" },
+    { id: 10, name: "Makosso Asseko Marie", image: "https://images.pexels.com/photos/1468379/pexels-photo-1468379.jpeg" },
+    { id: 11, name: "Mbadinga Osée", image: "https://images.pexels.com/photos/1375849/pexels-photo-1375849.jpeg" },
+    { id: 12, name: "Mebiame Ayito Kendra", image: "https://images.pexels.com/photos/1065084/pexels-photo-1065084.jpeg" },
+    { id: 13, name: "Merveille", image: "https://images.pexels.com/photos/1587009/pexels-photo-1587009.jpeg" },
     { id: 14, name: "Mikamona Maurille", image: "https://images.pexels.com/photos/1382734/pexels-photo-1382734.jpeg" },
     { id: 15, name: "Mirabelle Medza", image: "https://images.pexels.com/photos/1702238/pexels-photo-1702238.jpeg", category: "Miss Tourisme Gabon" },
-    { id: 16, name: "Khelany Allogho", image: "https://i.ibb.co/5gZzS0pV/DSC-0457.jpg" },
-    { id: 17, name: "Stecy Glappier", image: "https://images.pexels.com/photos/1572878/pexels-photo-1572878.jpeg" },
-    { id: 18, name: " Lesly Zomo", image: "https://i.ibb.co/PZL0tjD4/DSC-0372.jpg" },
-    { id: 19, name: "Nice Ska", image: "https://scontent.flbv4-1.fna.fbcdn.net/v/t39.30808-6/485907263_640515812030867_7295734330866953028_n.jpg?_nc_cat=104&ccb=1-7&_nc_sid=833d8c&_nc_eui2=AeF0V5Aol5uaId0vuPj6zIhlKYa3LOuP-sIphrcs64_6wiommdr26Dut8vks4FbaErQo4CYX2aN46fHw8HSm6gp9&_nc_ohc=uqDzhDpI23kQ7kNvwHES_8j&_nc_oc=AdmQmg9JVu2XgJybiFmdf-dzDqlj9NNNliGSwDLSLzbbB9l2hBgQID6IE7fKm64dJeE&_nc_zt=23&_nc_ht=scontent.flbv4-1.fna&_nc_gid=7tpO_ViJ0ZBzJ6Mjc5fEuA&oh=00_AfHB-aBL4ScPoUpUb746jfMDq19Cl20CRz9rFwZBtIGY9A&oe=6806358F" },
-    { id: 20, name: "Ruth Jussy", image: "https://i.ibb.co/Cs7RpWCq/482961374-623650043916904-6278220035000086504-n.jpg" },
-    { id: 21, name: "Nynelle Mbazoghe", image: "https://i.ibb.co/j95xqjHT/DSC-0053.jpg" },
-    { id: 22, name: "Aimée Pambou", image: "https://i.ibb.co/ksmky1Sn/DSC01388-Modifier.jpg" },
+    { id: 16, name: "Mouketou Sandra", image: "https://images.pexels.com/photos/1689731/pexels-photo-1689731.jpeg" },
+    { id: 17, name: "N'noh Rebecca Stecy", image: "https://images.pexels.com/photos/1572878/pexels-photo-1572878.jpeg" },
+    { id: 18, name: "Ndoh Zomo Lesly", image: "https://images.pexels.com/photos/1462637/pexels-photo-1462637.jpeg" },
+    { id: 19, name: "Nicole", image: "https://images.pexels.com/photos/1065084/pexels-photo-1065084.jpeg" },
+    { id: 20, name: "Ngnara Chancellia", image: "https://images.pexels.com/photos/1689731/pexels-photo-1689731.jpeg" },
+    { id: 21, name: "Nynelle Mbazoghe", image: "https://images.pexels.com/photos/1382734/pexels-photo-1382734.jpeg" },
+    { id: 22, name: "Pambou Dihiba Aimée", image: "https://images.pexels.com/photos/1321943/pexels-photo-1321943.jpeg" },
     { id: 23, name: "Priscillia Mezui", image: "https://images.pexels.com/photos/1812634/pexels-photo-1812634.jpeg" },
-    { id: 24, name: "Kerenne Hurielle", image: "https://images.pexels.com/photos/1821095/pexels-photo-1821095.jpeg" },
+    { id: 24, name: "Rosnel Ayo", image: "https://images.pexels.com/photos/1821095/pexels-photo-1821095.jpeg" },
     { id: 25, name: "Sadia", image: "https://images.pexels.com/photos/1386604/pexels-photo-1386604.jpeg" },
     { id: 26, name: "Sephora Nawele", image: "https://images.pexels.com/photos/1437912/pexels-photo-1437912.jpeg" },
-    { id: 27, name: "Cegolaine Biye", image: "https://i.ibb.co/fz5jtwfG/448406365-449418894385926-3540828592057987599-n.jpg" },
-    { id: 28, name: "Venusia Olery", image: "https://i.ibb.co/BV1HFbft/MG-0695.jpg" }
+    { id: 27, name: "Talia Viada", image: "https://images.pexels.com/photos/1065084/pexels-photo-1065084.jpeg" },
+    { id: 28, name: "Venusia Olery", image: "https://images.pexels.com/photos/1689731/pexels-photo-1689731.jpeg" }
   ];
 
   // Données des événements

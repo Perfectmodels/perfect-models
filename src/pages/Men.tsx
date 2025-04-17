@@ -1,4 +1,3 @@
-
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import ModelsList from '../components/models/ModelsList';
@@ -10,12 +9,12 @@ import { Event, Service } from '@/types/modelTypes';
 const Men = () => {
   // Données des mannequins masculins
   const maleModels = [
-    { id: 1, name: "Donatien Anani", image: "https://ibb.co/mV7JdS4j" },
-    { id: 2, name: "Davy", image: "https://i.ibb.co/KcWyzrx3/DSC-0163.jpg" },
-    { id: 3, name: "Osée JN", image: "https://ibb.co/1tm1mf68" },
-    { id: 4, name: "Moustapha Nziengui", image: "https://ibb.co/XQHcRS7" },
-    { id: 5, name: "Pablo Zapatero", image: "https://i.ibb.co/tpXDpGGL/DSC-0350.jpg" },
-    { id: 6, name: "Rosly Biyoghe", image: "https://ibb.co/SwhNs2JC" }
+    { id: 1, name: "Donatien Anani", image: "https://images.pexels.com/photos/2887718/pexels-photo-2887718.jpeg" },
+    { id: 2, name: "Davy", image: "https://i.ibb.co/KcWyzrx/DSC-0163.jpg" },
+    { id: 3, name: "Osée JN", image: "https://images.pexels.com/photos/1860367/pexels-photo-1860367.jpeg" },
+    { id: 4, name: "Moustapha Nziengui", image: "https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg" },
+    { id: 5, name: "Pablo Zapatero", image: "https://i.ibb.co/tpXDpGG/DSC-0350.jpg" },
+    { id: 6, name: "Rosly Biyoghe", image: "https://images.pexels.com/photos/1300550/pexels-photo-1300550.jpeg" }
   ];
 
   // Données des événements (mêmes que pour les femmes)
