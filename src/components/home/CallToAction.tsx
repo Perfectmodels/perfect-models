@@ -5,21 +5,14 @@ import { Link } from 'react-router-dom';
 const CallToAction = () => {
   return (
     <section className="py-20 bg-model-black text-model-white relative">
-      {/* Vidéo intégrée */}
-      <div className="absolute inset-0">
-        <iframe
-          width="100%"
-          height="100%"
-          src="https://www.youtube.com/embed/KlzhJYhw_I0"
-          title="Extrait des Passages de nos mannequins au Gala de Charité de la 4e Édition de K'elle Pour Elle."
-          frameBorder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          referrerPolicy="strict-origin-when-cross-origin"
-          allowFullScreen
-          className="w-full h-full"
-        ></iframe>
-      </div>
-
+      {/* Background overlay with image */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center opacity-30"
+        style={{
+          backgroundImage: "url(https://images.pexels.com/photos/4712634/pexels-photo-4712634.jpeg)"
+        }}
+      ></div>
+      
       <div className="container mx-auto px-6 relative z-10">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="font-playfair text-4xl md:text-5xl mb-6">Rejoignez Notre Agence</h2>
