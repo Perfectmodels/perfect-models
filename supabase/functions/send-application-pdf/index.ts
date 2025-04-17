@@ -12,12 +12,8 @@ const corsHeaders = {
 const resendApiKey = Deno.env.get('RESEND_API_KEY');
 console.log('RESEND_API_KEY available:', !!resendApiKey);
 
-// Only initialize Resend if we have an API key
-let resend;
-if (resendApiKey) {
-  resend = new Resend(resendApiKey);
-}
-
+// Initialize Resend
+const resend = new Resend(resendApiKey);
 const agencyEmail = Deno.env.get('AGENCY_EMAIL') || 'Perfectmodels.ga@gmail.com';
 
 serve(async (req) => {
@@ -27,12 +23,6 @@ serve(async (req) => {
   }
 
   try {
-    // Check if Resend is properly initialized
-    if (!resendApiKey || !resend) {
-      console.error('Resend API key is not configured');
-      throw new Error('Resend API key not configured. Please add RESEND_API_KEY to your Supabase secrets.');
-    }
-
     const { application } = await req.json();
     console.log('Received application data:', JSON.stringify(application));
     
@@ -74,10 +64,6 @@ function getGenderLabel(gender) {
 async function sendApplicationEmail(application) {
   try {
     console.log('Attempting to send email with application data');
-    
-    if (!resendApiKey || !resend) {
-      throw new Error("Resend API key not configured. Please add RESEND_API_KEY to your Supabase secrets.");
-    }
     
     // Verify we have all required data before sending
     if (!application || !application.email || !application.first_name || !application.last_name) {
