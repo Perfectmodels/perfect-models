@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X, Calendar, ListTodo, User, Users, Home, Phone, Info } from 'lucide-react';
+import Logo from './Logo';
 import {
   Sheet,
   SheetContent,
@@ -153,9 +154,7 @@ const Navbar = () => {
   return (
     <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-model-black py-2' : 'bg-transparent py-4'}`}>
       <div className="container mx-auto px-6 flex items-center justify-between">
-        <Link to="/" className="font-playfair text-model-white text-2xl md:text-3xl font-bold tracking-wider">
-          PERFECT MODELS
-        </Link>
+        <Logo />
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center space-x-8">
@@ -261,7 +260,9 @@ const Navbar = () => {
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetContent side="left" className="w-[80vw] max-w-sm pt-16">
           <SheetHeader>
-            <SheetTitle className="text-center text-2xl font-playfair">Menu</SheetTitle>
+            <SheetTitle className="text-center text-2xl font-playfair">
+              <Logo className="justify-center" />
+            </SheetTitle>
           </SheetHeader>
           <ScrollArea className="h-full py-4">
             <div className="flex flex-col space-y-4 px-2">
