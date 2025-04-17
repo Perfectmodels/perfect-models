@@ -12,6 +12,7 @@ import Casting from "./pages/Casting";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import ModelDetail from "./pages/ModelDetail";
+import Gallery from "./pages/Gallery";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/women" element={<Women />} />
             <Route path="/men" element={<Men />} />
             <Route path="/casting" element={<Casting />} />
+            <Route path="/gallery" element={<Gallery />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/model/:id" element={<ModelDetail />} />

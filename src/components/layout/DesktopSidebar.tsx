@@ -1,6 +1,6 @@
 
 import { Link } from 'react-router-dom';
-import { Calendar, Home, Info, ListTodo, Phone, User, Users } from 'lucide-react';
+import { Calendar, Home, Image, Info, ListTodo, Phone, User, Users } from 'lucide-react';
 import { useState } from 'react';
 import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -18,7 +18,8 @@ import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarGroupContent,
-  SidebarFooter
+  SidebarFooter,
+  SidebarTrigger
 } from '@/components/ui/sidebar';
 
 const DesktopSidebar = () => {
@@ -27,7 +28,7 @@ const DesktopSidebar = () => {
   
   return (
     <div className="hidden md:block">
-      <Sidebar className="bg-model-black text-model-white">
+      <Sidebar variant="inset" collapsible="offcanvas">
         <SidebarContent>
           <SidebarGroup>
             <SidebarGroupLabel className="text-model-gold">Navigation</SidebarGroupLabel>
@@ -56,6 +57,16 @@ const DesktopSidebar = () => {
                     <Link to="/men" className="flex items-center gap-2">
                       <User size={20} />
                       <span>HOMMES</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                
+                {/* Gallery - New item */}
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild tooltip="Galerie">
+                    <Link to="/gallery" className="flex items-center gap-2">
+                      <Image size={20} />
+                      <span>GALERIE</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
