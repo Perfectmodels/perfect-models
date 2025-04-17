@@ -9,13 +9,13 @@ const AboutAgency = () => {
         <div className="order-2 md:order-1">
           <h2 className="font-playfair text-3xl mb-6">Notre Histoire</h2>
           <p className="text-light-gray mb-6 leading-relaxed">
-            Fondée en 2018, Perfect Models Management est née de la passion pour la mode et de la volonté de créer une agence différente dans l'industrie. Notre fondatrice, avec plus de 15 ans d'expérience dans le secteur, a voulu créer un espace où les talents peuvent s'épanouir sans compromis.
+            Fondée en 2021, Perfect Models Management est née de la passion pour la mode et de la volonté de créer une agence différente dans l'industrie. Notre fondateur, avec aucune d'expérience dans le secteur, a voulu créer un espace où les talents peuvent s'épanouir sans compromis.
           </p>
           <p className="text-light-gray mb-6 leading-relaxed">
-            Depuis notre création, nous avons collaboré avec les plus grandes marques internationales et participé aux Fashion Weeks les plus prestigieuses de Paris, Milan et New York. Notre croissance rapide témoigne de notre engagement envers l'excellence et la qualité de notre travail.
+            Depuis notre création, nous avons collaboré avec les plus grandes marques nationales et participé aux évenements les plus prestigieuses du Gabon et à la Nuit du Textile Africain a Bamako au Mali. Notre croissance rapide témoigne de notre engagement envers l'excellence et la qualité de notre travail.
           </p>
           <p className="text-light-gray leading-relaxed">
-            Aujourd'hui, Perfect Models Management représente plus de 100 mannequins de différentes nationalités et continue d'étendre son influence dans le monde de la mode contemporaine.
+            Aujourd'hui, Perfect Models Management représente plus de 100 mannequins (debutants et professionnels) de différentes nationalités et continue d'étendre son influence dans le monde de la mode au Gabon.
           </p>
         </div>
         <div className="order-1 md:order-2 relative">
