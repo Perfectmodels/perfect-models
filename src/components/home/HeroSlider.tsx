@@ -46,12 +46,6 @@ const HeroSlider = () => {
             <p className="text-model-white text-lg mb-10">Découvrez l'excellence dans le monde du mannequinat</p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <Link 
-                to="/women"
-                className="px-8 py-3 border border-model-gold text-model-white hover:bg-model-gold transition-colors duration-300"
-              >
-                NOS MODÈLES
-              </Link>
-              <Link 
                 to="/casting"
                 className="px-8 py-3 bg-model-gold text-black hover:bg-opacity-90 transition-colors duration-300"
               >
