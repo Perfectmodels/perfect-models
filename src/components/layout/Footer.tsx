@@ -50,10 +50,10 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Partners Carousel */}
+        {/* Partners Carousel - Optimized version */}
         <div className="mt-12 pt-8 border-t border-dark-gray">
           <h3 className="font-playfair text-xl mb-6 text-center">NOS PARTENAIRES</h3>
-          <PartnersCarousel />
+          <SimplifiedPartnersCarousel />
         </div>
 
         <div className="border-t border-dark-gray mt-10 pt-6 flex flex-col md:flex-row justify-between items-center">
@@ -89,10 +89,9 @@ const FooterLink = ({ to, label }: { to: string; label: string }) => (
   </li>
 );
 
-// Partners carousel component
-const PartnersCarousel = () => {
+// Simplified partners carousel component with better performance
+const SimplifiedPartnersCarousel = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [autoplay, setAutoplay] = useState(true);
   
   // Partner list with names and placeholder logos
   const partners = [
@@ -117,40 +116,24 @@ const PartnersCarousel = () => {
   const itemsPerSlide = 5;
   const totalSlides = Math.ceil(partners.length / itemsPerSlide);
   
-  // Autoplay functionality
   useEffect(() => {
-    let interval: number | undefined = undefined;
+    const timer = setTimeout(() => {
+      setCurrentSlide((prev) => (prev + 1) % totalSlides);
+    }, 3000);
     
-    if (autoplay) {
-      interval = window.setInterval(() => {
-        setCurrentSlide((prev) => (prev + 1) % totalSlides);
-      }, 3000);
-    }
-    
-    return () => {
-      if (interval !== undefined) {
-        clearInterval(interval);
-      }
-    };
-  }, [autoplay, totalSlides]);
+    return () => clearTimeout(timer);
+  }, [currentSlide, totalSlides]);
   
-  // Navigation functions
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % totalSlides);
-    setAutoplay(false);
-    // Resume autoplay after 5 seconds of user inactivity
-    setTimeout(() => setAutoplay(true), 5000);
   };
   
   const prevSlide = () => {
     setCurrentSlide((prev) => (prev - 1 + totalSlides) % totalSlides);
-    setAutoplay(false);
-    // Resume autoplay after 5 seconds of user inactivity
-    setTimeout(() => setAutoplay(true), 5000);
   };
 
   return (
-    <div className="relative">
+    <div className="relative px-10">
       {/* Navigation buttons */}
       <button 
         onClick={prevSlide}
@@ -160,26 +143,26 @@ const PartnersCarousel = () => {
         <ChevronLeft size={24} />
       </button>
       
-      {/* Carousel container */}
+      {/* Simplified Carousel */}
       <div className="overflow-hidden">
         <div 
           className="flex transition-transform duration-500 ease-in-out"
           style={{ transform: `translateX(-${currentSlide * 100}%)` }}
         >
           {Array.from({ length: totalSlides }).map((_, slideIndex) => (
-            <div key={slideIndex} className="min-w-full flex justify-center items-center gap-4 md:gap-8">
+            <div key={slideIndex} className="min-w-full flex justify-center items-center gap-4">
               {partners
                 .slice(slideIndex * itemsPerSlide, (slideIndex + 1) * itemsPerSlide)
                 .map((partner, index) => (
                   <div 
                     key={index} 
-                    className="flex flex-col items-center justify-center"
+                    className="flex flex-col items-center"
                   >
-                    <div className="bg-white/10 rounded-md p-2 w-24 h-24 md:w-32 md:h-32 flex items-center justify-center">
+                    <div className="bg-white/10 rounded-md p-2 w-16 h-16 md:w-24 md:h-24 flex items-center justify-center">
                       <img 
                         src={partner.logo} 
                         alt={`${partner.name} logo`} 
-                        className="max-w-full max-h-full object-contain opacity-70 hover:opacity-100 transition-opacity duration-300"
+                        className="max-w-full max-h-full object-contain opacity-70 hover:opacity-100 transition-opacity"
                       />
                     </div>
                     <p className="mt-2 text-xs text-center text-light-gray">{partner.name}</p>
@@ -203,11 +186,7 @@ const PartnersCarousel = () => {
         {Array.from({ length: totalSlides }).map((_, index) => (
           <button
             key={index}
-            onClick={() => {
-              setCurrentSlide(index);
-              setAutoplay(false);
-              setTimeout(() => setAutoplay(true), 5000);
-            }}
+            onClick={() => setCurrentSlide(index)}
             className={cn(
               "w-2 h-2 rounded-full transition-all duration-300",
               currentSlide === index ? "bg-model-gold w-4" : "bg-gray-500"
