@@ -9,12 +9,13 @@ import { Event, Service } from '@/types/modelTypes';
 const Men = () => {
   // Données des mannequins masculins
   const maleModels = [
-    { id: 1, name: "Donatien Anani", image: "https://images.pexels.com/photos/2887718/pexels-photo-2887718.jpeg" },
+    { id: 1, name: "Donatien Anani", image: "https://i.ibb.co/q3wBhxpS/MG-0651.jpg" },
     { id: 2, name: "Davy", image: "https://i.ibb.co/KcWyzrx/DSC-0163.jpg" },
-    { id: 3, name: "Osée JN", image: "https://images.pexels.com/photos/1860367/pexels-photo-1860367.jpeg" },
-    { id: 4, name: "Moustapha Nziengui", image: "https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg" },
+    { id: 3, name: "Osée JN", image: "https://i.ibb.co/7tk4pKvr/474620403-594457843438561-7313394165363117491-n.jpg" },
+    { id: 4, name: "Moustapha Nziengui", image: "https://i.ibb.co/C5Z1N6Zp/481335188-618392171045128-1143329793191383014-n.jpg" },
     { id: 5, name: "Pablo Zapatero", image: "https://i.ibb.co/tpXDpGG/DSC-0350.jpg" },
-    { id: 6, name: "Rosly Biyoghe", image: "https://images.pexels.com/photos/1300550/pexels-photo-1300550.jpeg" }
+    { id: 6, name: "Rosly Biyoghe", image: "https://i.ibb.co/9HtWHDDZ/DSC-0350.jpg" },
+    { id: 6, name: "Rosnel Ayo", image: "https://i.ibb.co/gbb1sBsX/481850366-17957549744909537-119699887645910338-n.jpg" }
   ];
 
   // Données des événements (mêmes que pour les femmes)
