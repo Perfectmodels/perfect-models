@@ -9,7 +9,7 @@ import { Event, Service } from '@/types/modelTypes';
 const Women = () => {
   // Données des mannequins féminins
   const femaleModels = [
-    { id: 1, name: "Annie Flora", image: "https://ibb.co/JfZfBP2" },
+    { id: 1, name: "Annie Flora", image: "https://i.ibb.co/ShShsp0/DSC-0369.jpg" },
     { id: 2, name: "Diane Vanessa", image: "https://images.pexels.com/photos/1462637/pexels-photo-1462637.jpeg" },
     { id: 3, name: "Dickambi Ngoma Horlane", image: "https://images.pexels.com/photos/1587009/pexels-photo-1587009.jpeg" },
     { id: 4, name: "Duchesse", image: "https://images.pexels.com/photos/1372134/pexels-photo-1372134.jpeg" },
