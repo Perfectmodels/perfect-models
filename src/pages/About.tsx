@@ -1,9 +1,12 @@
 
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
+import AboutAgency from '../components/about/AboutAgency';
+import TeamSection from '../components/about/TeamSection';
+import ValuesSection from '../components/about/ValuesSection';
+import { Separator } from '@/components/ui/separator';
 
 const About = () => {
-  // Placeholder for about page
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -12,12 +15,11 @@ const About = () => {
           <h1 className="font-playfair text-4xl md:text-5xl mb-6 text-center">À Propos</h1>
           <div className="w-24 h-0.5 bg-model-gold mx-auto mb-12"></div>
           
-          {/* Placeholder content */}
-          <div className="text-center py-20">
-            <p className="text-lg mb-8">
-              Cette page est en cours de développement.
-            </p>
-          </div>
+          <AboutAgency />
+          <Separator className="my-16 bg-model-gold/20" />
+          <ValuesSection />
+          <Separator className="my-16 bg-model-gold/20" />
+          <TeamSection />
         </div>
       </main>
       <Footer />
