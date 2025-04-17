@@ -24,7 +24,7 @@ const AboutSection = () => {
           </div>
           <div className="relative">
             <img 
-              src="https://images.pexels.com/photos/1036623/pexels-photo-1036623.jpeg" 
+              src="https://i.ibb.co/ksmky1Sn/DSC01388-Modifier.jpg" 
               alt="Perfect Models Management team" 
               className="w-full h-auto"
             />
