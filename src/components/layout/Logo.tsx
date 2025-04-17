@@ -15,7 +15,7 @@ const Logo = ({ className = '' }) => {
         className="h-10 w-10 mr-2"
       />
       <span className="font-playfair text-model-white text-xl md:text-2xl font-bold tracking-wider hidden md:inline">
-        PERFECT MODELS
+        PMM
       </span>
     </Link>
   );
