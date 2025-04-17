@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, Home, Image, Info, ListTodo, Phone, User, Users } from 'lucide-react';
+import { Calendar, Home, Info, ListTodo, Phone, User, Users } from 'lucide-react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
@@ -57,16 +57,6 @@ const MobileSidebar = ({ isOpen, setIsOpen }: MobileSidebarProps) => {
                   <Link to="/men" onClick={() => setIsOpen(false)} className="flex items-center gap-2 text-lg">
                     <User size={20} />
                     <span>HOMMES</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              
-              {/* Gallery - New item */}
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link to="/gallery" onClick={() => setIsOpen(false)} className="flex items-center gap-2 text-lg">
-                    <Image size={20} />
-                    <span>GALERIE</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
