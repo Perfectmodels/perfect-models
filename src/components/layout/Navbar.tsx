@@ -9,7 +9,6 @@ import { events, services } from './navigation/NavbarData';
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [activeNavItem, setActiveNavItem] = useState<string | null>(null);
   const [openCollapsibles, setOpenCollapsibles] = useState<Record<string, boolean>>({
     services: false,
     events: false
@@ -44,7 +43,7 @@ const Navbar = () => {
         <DesktopNavigation events={events} services={services} />
 
         {/* Mobile Menu Button */}
-        <button className="md:hidden" onClick={() => setIsOpen(!isOpen)}>
+        <button className="md:hidden" onClick={() => setIsOpen(!isOpen)} aria-label="Toggle menu">
           {isOpen ? <X className="text-model-white" size={24} /> : <Menu className="text-model-white" size={24} />}
         </button>
       </div>

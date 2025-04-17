@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Event } from '@/types/modelTypes';
+import { Calendar } from 'lucide-react';
 
 interface EventsListProps {
   events: Event[];
@@ -23,6 +24,12 @@ const EventsList: React.FC<EventsListProps> = ({ events }) => {
             {event.location && (
               <p className="text-sm text-gray-600 mb-2">
                 <span className="font-medium">Lieu:</span> {event.location}
+              </p>
+            )}
+            {event.date && (
+              <p className="text-sm text-gray-600 mb-2 flex items-center">
+                <Calendar size={14} className="mr-1" />
+                <span className="font-medium mr-1">Date:</span> {event.date}
               </p>
             )}
             <p className="text-gray-700">{event.description}</p>

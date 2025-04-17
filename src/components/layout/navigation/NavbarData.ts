@@ -18,8 +18,9 @@ export const events: Event[] = [
   {
     id: "3",
     name: "Perfect Fashion Day",
-    description: "Une journée dédiée à la mode avec des défilés et des présentations.",
-    location: "Libreville, Gabon"
+    description: "Notre événement phare organisé le 25 janvier 2025, présentant les dernières collections et tendances de la mode.",
+    location: "Libreville, Gabon",
+    date: "25 janvier 2025"
   },
   {
     id: "4",
