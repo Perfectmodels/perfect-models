@@ -5,36 +5,36 @@ import { Instagram, Linkedin, Mail } from 'lucide-react';
 const TeamSection = () => {
   const teamMembers = [
     {
-      name: "Sophie Laurent",
-      role: "Fondatrice & Directrice",
-      image: "https://i.ibb.co/RQpwCsc/team-1.jpg",
+      name: "Parfait Asseko",
+      role: "Fondateur & Directeur",
+      image: "https://scontent.flbv4-1.fna.fbcdn.net/v/t39.30808-6/486544561_9573230226125952_3761372655484517182_n.jpg?_nc_cat=108&ccb=1-7&_nc_sid=cc71e4&_nc_eui2=AeGtsSsxPZ3ss0bQZI_DNK-_toy3gKm0jzm2jLeAqbSPOZWwx_XnYKSjTTOWEf6-wCECTlVsRNJjFenBETosehBS&_nc_ohc=2_3-zz0Hw08Q7kNvwHkF78t&_nc_oc=AdlQdRw_yyuD_dJDFxo2WWe-fEk0DB1mAtPySBjdk_RbMsDl5yYpFk0kQBw-3SMpZpM&_nc_zt=23&_nc_ht=scontent.flbv4-1.fna&_nc_gid=MFhlyrmLIYexYuInft5VKg&oh=00_AfEFIq3M8EA1r3U3HJaKrpgH67dcu3j3Hp0mSeuHWJVn4g&oe=6806475A",
       instagram: "#",
       linkedin: "#",
-      email: "sophie@perfectmodels.fr"
+      email: "Asseko19@gmail.com"
     },
     {
-      name: "Marc Dubois",
-      role: "Directeur du Développement",
-      image: "https://i.ibb.co/L871CPH/team-2.jpg",
+      name: "Gabrielle Ayatebe",
+      role: "Directrice du Développement",
+      image: "https://scontent.flbv4-1.fna.fbcdn.net/v/t1.6435-9/119631826_114872113690501_3218468596502015912_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=cc71e4&_nc_eui2=AeFgLGPwKrjvyt_pDU7HD_CYBuZPYhLcEBkG5k9iEtwQGVxJr5xcx0CYJ5A_P7xxYSpYgjjIx0oUqVsfaggTJzO5&_nc_ohc=ZJG5UzFNhEoQ7kNvwH3NeOG&_nc_oc=AdlhQFQoucz2JYPI7Acc_fSE6UUAxkdtZa_kx2TMCkj8J-qADSd8LR05D3Gzndu1y4Q&_nc_zt=23&_nc_ht=scontent.flbv4-1.fna&_nc_gid=f-6lNl0MQ5LEUa1XtNQ5Mw&oh=00_AfHPDp17aCNUr724gaz1VIVKXQ_45cIJxYWUbXnH1C9teg&oe=6827F176",
       instagram: "#",
       linkedin: "#",
-      email: "marc@perfectmodels.fr"
+      email: "Gabrielle@perfectmodels.fr"
     },
     {
-      name: "Camille Moreau",
+      name: "Aimée Pambou",
       role: "Directrice du Casting",
-      image: "https://i.ibb.co/59c0T9j/team-3.jpg",
+      image: "https://i.ibb.co/ksmky1Sn/DSC01388-Modifier.jpg",
       instagram: "#",
       linkedin: "#",
-      email: "camille@perfectmodels.fr"
+      email: "aimee@perfectmodels.fr"
     },
     {
-      name: "Thomas Leroy",
+      name: "Donatien Anani",
       role: "Responsable Relations Publiques",
-      image: "https://i.ibb.co/nPrJWpk/team-4.jpg",
+      image: "https://i.ibb.co/KphCBxM6/DSC-0016-Modifier.jpg",
       instagram: "#",
       linkedin: "#",
-      email: "thomas@perfectmodels.fr"
+      email: "donatien@perfectmodels.fr"
     }
   ];
 
