@@ -18,7 +18,12 @@ const ModelsList: React.FC<ModelsListProps> = ({ models }) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
       {models.map((model) => (
-        <div key={model.id} className="group">
+        <Link 
+          key={model.id} 
+          to={`/model/${model.id}`} 
+          state={{ model }}
+          className="group"
+        >
           <div className="overflow-hidden h-[400px] w-full">
             <AspectRatio ratio={3/4} className="h-full">
               <img
@@ -36,7 +41,7 @@ const ModelsList: React.FC<ModelsListProps> = ({ models }) => {
               <p className="text-medium-gray text-sm mt-1">{model.category}</p>
             )}
           </div>
-        </div>
+        </Link>
       ))}
       {models.length === 0 && (
         <div className="col-span-full text-center py-10">

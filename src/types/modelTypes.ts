@@ -76,3 +76,39 @@ export interface Service {
   description: string;
   image?: string;
 }
+
+export interface Collaboration {
+  id: string;
+  name: string;
+  description?: string;
+  image?: string;
+  date?: string;
+}
+
+export interface ModelShowcase {
+  id: string;
+  name: string;
+  date?: string;
+  location?: string;
+  image?: string;
+}
+
+export interface DetailedModel {
+  id: number | string;
+  name: string;
+  image?: string;
+  category?: string;
+  gender?: string;
+  height?: number;
+  bust?: number;
+  waist?: number;
+  hips?: number;
+  shoeSize?: number;
+  hairColor?: string;
+  eyeColor?: string;
+  nationality?: string;
+  biography?: string;
+  instagram?: string;
+  collaborations?: Collaboration[];
+  showcases?: ModelShowcase[];
+}
