@@ -1,4 +1,3 @@
-
 export interface ModelApplication {
   id?: string;
   first_name: string;
@@ -68,6 +67,7 @@ export interface Event {
   description: string;
   location?: string;
   image?: string;
+  date?: string;
 }
 
 export interface Service {
