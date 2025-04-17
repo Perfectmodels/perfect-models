@@ -9,7 +9,10 @@ interface FooterLinkProps {
 
 const FooterLink = ({ to, label }: FooterLinkProps) => (
   <li>
-    <Link to={to} className="text-light-gray hover-gold">
+    <Link 
+      to={to} 
+      className="text-gray-400 hover:text-model-gold transition-colors duration-300"
+    >
       {label}
     </Link>
   </li>
