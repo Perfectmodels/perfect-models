@@ -1,4 +1,6 @@
 
 import { Sidebar } from "./sidebar";
 import { SidebarProvider } from "./sidebar-provider";
-export { Sidebar, SidebarProvider };
+import { useSidebar } from "./use-sidebar";
+
+export { Sidebar, SidebarProvider, useSidebar };
