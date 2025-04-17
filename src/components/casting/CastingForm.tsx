@@ -60,7 +60,7 @@ const CastingForm = ({ onSuccess }: CastingFormProps) => {
         return;
       }
       
-      // Send data as PDF via email function
+      // Send application details via email
       const { error: emailError } = await supabase.functions.invoke('send-application-pdf', {
         body: { application: formattedData }
       });

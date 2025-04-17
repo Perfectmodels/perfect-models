@@ -1,7 +1,6 @@
 
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import * as PDFKit from 'https://esm.sh/pdfkit@0.13.0';
 import { Resend } from 'https://esm.sh/resend@1.0.0';
 
 const corsHeaders = {
@@ -26,11 +25,8 @@ serve(async (req) => {
     const { application } = await req.json();
     console.log('Received application data:', JSON.stringify(application));
     
-    // Generate PDF
-    const pdfBuffer = await generateApplicationPDF(application);
-    
-    // Send email with PDF attachment
-    const emailResponse = await sendEmailWithPDF(application, pdfBuffer);
+    // Send email with application details
+    const emailResponse = await sendApplicationEmail(application);
     
     return new Response(
       JSON.stringify({ 
@@ -55,78 +51,6 @@ serve(async (req) => {
   }
 });
 
-async function generateApplicationPDF(application) {
-  const chunks = [];
-  
-  return new Promise((resolve, reject) => {
-    const doc = new PDFKit();
-    
-    doc.on('data', chunk => chunks.push(chunk));
-    doc.on('end', () => resolve(Buffer.concat(chunks)));
-    doc.on('error', err => reject(err));
-    
-    // Add heading
-    doc.fontSize(20).text('CANDIDATURE PERFECT MODELS', { align: 'center' });
-    doc.moveDown();
-    
-    // Personal info
-    doc.fontSize(16).text('Informations personnelles');
-    doc.moveDown(0.5);
-    doc.fontSize(12).text(`Nom: ${application.first_name} ${application.last_name}`);
-    doc.text(`Email: ${application.email}`);
-    doc.text(`Téléphone: ${application.phone}`);
-    doc.text(`Genre: ${getGenderLabel(application.gender)}`);
-    
-    if (application.age) {
-      doc.text(`Âge: ${application.age} ans`);
-    }
-    
-    doc.moveDown();
-    
-    // Measurements
-    doc.fontSize(16).text('Mensurations');
-    doc.moveDown(0.5);
-    doc.fontSize(12).text(`Taille: ${application.height} cm`);
-    
-    if (application.weight) {
-      doc.text(`Poids: ${application.weight} kg`);
-    }
-    
-    if (application.bust) {
-      doc.text(`Tour de poitrine: ${application.bust} cm`);
-    }
-    
-    if (application.waist) {
-      doc.text(`Tour de taille: ${application.waist} cm`);
-    }
-    
-    if (application.hips) {
-      doc.text(`Tour de hanches: ${application.hips} cm`);
-    }
-    
-    doc.moveDown();
-    
-    // Additional info
-    if (application.instagram_url) {
-      doc.text(`Instagram: ${application.instagram_url}`);
-      doc.moveDown(0.5);
-    }
-    
-    // Experience
-    if (application.experience) {
-      doc.fontSize(16).text('Expérience');
-      doc.moveDown(0.5);
-      doc.fontSize(12).text(application.experience);
-    }
-    
-    // Date
-    doc.moveDown();
-    doc.text(`Date de soumission: ${new Date().toLocaleDateString()}`);
-    
-    doc.end();
-  });
-}
-
 function getGenderLabel(gender) {
   switch (gender) {
     case 'women': return 'Femme';
@@ -136,7 +60,7 @@ function getGenderLabel(gender) {
   }
 }
 
-async function sendEmailWithPDF(application, pdfBuffer) {
+async function sendApplicationEmail(application) {
   try {
     console.log('Attempting to send email with application data');
     
@@ -149,11 +73,32 @@ async function sendEmailWithPDF(application, pdfBuffer) {
       throw new Error("Missing required application data for email");
     }
     
-    if (!pdfBuffer || pdfBuffer.length === 0) {
-      throw new Error("PDF generation failed or produced empty result");
-    }
-    
     console.log('Sending email to:', agencyEmail);
+    
+    // Format application details as HTML
+    const applicationDetailsHtml = `
+      <h2>Informations personnelles</h2>
+      <p><strong>Nom:</strong> ${application.first_name} ${application.last_name}</p>
+      <p><strong>Email:</strong> ${application.email}</p>
+      <p><strong>Téléphone:</strong> ${application.phone}</p>
+      <p><strong>Genre:</strong> ${getGenderLabel(application.gender)}</p>
+      ${application.age ? `<p><strong>Âge:</strong> ${application.age} ans</p>` : ''}
+
+      <h2>Mensurations</h2>
+      <p><strong>Taille:</strong> ${application.height} cm</p>
+      ${application.weight ? `<p><strong>Poids:</strong> ${application.weight} kg</p>` : ''}
+      ${application.bust ? `<p><strong>Tour de poitrine:</strong> ${application.bust} cm</p>` : ''}
+      ${application.waist ? `<p><strong>Tour de taille:</strong> ${application.waist} cm</p>` : ''}
+      ${application.hips ? `<p><strong>Tour de hanches:</strong> ${application.hips} cm</p>` : ''}
+
+      ${application.instagram_url ? `<p><strong>Instagram:</strong> ${application.instagram_url}</p>` : ''}
+
+      ${application.experience ? `
+      <h2>Expérience</h2>
+      <p>${application.experience}</p>` : ''}
+
+      <p><strong>Date de soumission:</strong> ${new Date().toLocaleDateString()}</p>
+    `;
     
     // Send the email using Resend
     const result = await resend.emails.send({
@@ -162,18 +107,8 @@ async function sendEmailWithPDF(application, pdfBuffer) {
       subject: `Nouvelle candidature - ${application.first_name} ${application.last_name}`,
       html: `
         <h1>Nouvelle candidature</h1>
-        <p>Une nouvelle candidature a été soumise.</p>
-        <p><strong>Nom:</strong> ${application.first_name} ${application.last_name}</p>
-        <p><strong>Email:</strong> ${application.email}</p>
-        <p><strong>Téléphone:</strong> ${application.phone}</p>
-        <p>Veuillez trouver tous les détails dans le fichier PDF ci-joint.</p>
+        ${applicationDetailsHtml}
       `,
-      attachments: [
-        {
-          filename: `candidature_${application.last_name.toLowerCase()}_${application.first_name.toLowerCase()}.pdf`,
-          content: pdfBuffer.toString('base64')
-        }
-      ]
     });
     
     console.log('Email sent successfully:', JSON.stringify(result));
