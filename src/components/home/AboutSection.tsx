@@ -24,9 +24,10 @@ const AboutSection = () => {
           </div>
           <div className="relative">
             <img 
-              src="https://i.ibb.co/ksmky1Sn/DSC01388-Modifier.jpg" 
+              src="https://i.ibb.co/5kdDt5D/model-about.jpg" 
               alt="Perfect Models Management team" 
               className="w-full h-auto"
+              loading="lazy"
             />
             <div className="absolute inset-0 border-2 border-model-gold transform translate-x-4 translate-y-4 -z-10"></div>
           </div>

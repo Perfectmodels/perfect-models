@@ -379,7 +379,7 @@ export type Database = {
     }
     Functions: {
       disable_realtime_for_table: {
-        Args: { table_name: string } | Record<PropertyKey, never>
+        Args: Record<PropertyKey, never> | { table_name: string }
         Returns: undefined
       }
       enable_realtime_for_table: {

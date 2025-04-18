@@ -5,22 +5,24 @@ import { Link } from 'react-router-dom';
 const CallToAction = () => {
   return (
     <section className="py-20 bg-model-black text-model-white relative">
-      {/* Vidéo intégrée */}
+      {/* Background overlay to improve contrast with video */}
+      <div className="absolute inset-0 bg-black opacity-60 z-10"></div>
+      
+      {/* Vidéo intégrée with proper parameters */}
       <div className="absolute inset-0">
         <iframe
           width="100%"
           height="100%"
-          src="https://www.youtube.com/embed/KlzhJYhw_I0"
-          title="Extrait des Passages de nos mannequins au Gala de Charité de la 4e Édition de K'elle Pour Elle."
+          src="https://www.youtube.com/embed/KlzhJYhw_I0?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=KlzhJYhw_I0"
+          title="Extrait des Passages de nos mannequins au Gala de Charité"
           frameBorder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          referrerPolicy="strict-origin-when-cross-origin"
-          allowFullScreen
-          className="w-full h-full"
+          allow="autoplay; encrypted-media"
+          loading="lazy"
+          className="w-full h-full object-cover"
         ></iframe>
       </div>
 
-      <div className="container mx-auto px-6 relative z-10">
+      <div className="container mx-auto px-6 relative z-20">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="font-playfair text-4xl md:text-5xl mb-6">Rejoignez Notre Agence</h2>
           <div className="w-24 h-0.5 bg-model-gold mx-auto mb-8"></div>
