@@ -1,3 +1,4 @@
+
 export interface ModelApplication {
   id?: string;
   first_name: string;
@@ -17,6 +18,7 @@ export interface ModelApplication {
   image_front_url?: string | null;
   image_side_url?: string | null;
   image_full_url?: string | null;
+  category_id?: string | null;
   status?: string;
   notes?: string | null;
   created_at?: string;

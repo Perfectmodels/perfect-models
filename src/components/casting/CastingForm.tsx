@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { supabase } from '../../integrations/supabase/client';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { ModelApplication } from '@/types/modelTypes';
+import { WhatsappIcon } from 'lucide-react';
 
 interface CastingFormProps {
   onSuccess: () => void;
@@ -16,6 +17,31 @@ interface CastingFormProps {
 
 const CastingForm = ({ onSuccess }: CastingFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [modelCategories, setModelCategories] = useState<{id: string, name: string}[]>([]);
+  const [emailError, setEmailError] = useState(false);
+  
+  // Fetch model categories on component mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('model_categories')
+          .select('id, name')
+          .order('name');
+          
+        if (error) {
+          console.error('Error fetching model categories:', error);
+          return;
+        }
+        
+        setModelCategories(data || []);
+      } catch (err) {
+        console.error('Error in fetchCategories:', err);
+      }
+    };
+    
+    fetchCategories();
+  }, []);
   
   const form = useForm<ModelApplication>({
     defaultValues: {
@@ -24,6 +50,7 @@ const CastingForm = ({ onSuccess }: CastingFormProps) => {
       email: '',
       phone: '',
       gender: '',
+      category_id: '',
       age: null,
       weight: null,
       height: 0,
@@ -34,9 +61,39 @@ const CastingForm = ({ onSuccess }: CastingFormProps) => {
       instagram_url: '',
     },
   });
+  
+  const createWhatsAppLink = (data: ModelApplication) => {
+    const message = encodeURIComponent(
+      `Nouvelle candidature de mannequin:\n
+Nom: ${data.first_name} ${data.last_name}\n
+Email: ${data.email}\n
+Téléphone: ${data.phone}\n
+Genre: ${data.gender === 'women' ? 'Femme' : data.gender === 'men' ? 'Homme' : 'Enfant'}\n
+Âge: ${data.age || 'Non spécifié'}\n
+Taille: ${data.height}cm\n
+Poids: ${data.weight || 'Non spécifié'}kg\n
+Tour de poitrine: ${data.bust || 'Non spécifié'}cm\n
+Tour de taille: ${data.waist || 'Non spécifié'}cm\n
+Tour de hanches: ${data.hips || 'Non spécifié'}cm\n
+Instagram: ${data.instagram_url || 'Non spécifié'}\n
+Expérience: ${data.experience || 'Non spécifié'}`
+    );
+    
+    return `https://wa.me/24107507950?text=${message}`;
+  };
+
+  const handleWhatsAppSubmit = (data: ModelApplication) => {
+    const whatsappLink = createWhatsAppLink(data);
+    window.open(whatsappLink, '_blank');
+    toast.success('Redirection vers WhatsApp pour envoyer votre candidature');
+    onSuccess();
+    form.reset();
+  };
 
   const onSubmit = async (data: ModelApplication) => {
     setIsSubmitting(true);
+    setEmailError(false);
+    
     try {
       console.log('Submitting data:', data);
       
@@ -66,8 +123,9 @@ const CastingForm = ({ onSuccess }: CastingFormProps) => {
       });
       
       if (emailError) {
-        toast.error('Erreur lors de l\'envoi de l\'email.');
         console.error('Error sending email:', emailError);
+        setEmailError(true);
+        toast.error('Problème avec l\'envoi de l\'email. Essayez via WhatsApp.');
       } else {
         toast.success('Votre candidature a été envoyée avec succès !');
         onSuccess();
@@ -75,7 +133,8 @@ const CastingForm = ({ onSuccess }: CastingFormProps) => {
       }
     } catch (err) {
       console.error('Error submitting form:', err);
-      toast.error('Une erreur s\'est produite. Veuillez réessayer.');
+      setEmailError(true);
+      toast.error('Une erreur s\'est produite. Veuillez essayer via WhatsApp.');
     } finally {
       setIsSubmitting(false);
     }
@@ -184,13 +243,40 @@ const CastingForm = ({ onSuccess }: CastingFormProps) => {
 
           <FormField
             control={form.control}
+            name="category_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Catégorie</FormLabel>
+                <Select 
+                  onValueChange={field.onChange} 
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionnez une catégorie" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {modelCategories.length === 0 && (
+                      <SelectItem value="default" disabled>Chargement des catégories...</SelectItem>
+                    )}
+                    {modelCategories.map(category => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <FormField
+            control={form.control}
             name="age"
-            rules={{ 
-              min: {
-                value: 1,
-                message: "L'âge doit être valide"
-              }
-            }}
             render={({ field: { onChange, value, ...restField } }) => (
               <FormItem>
                 <FormLabel>Âge</FormLabel>
@@ -207,9 +293,7 @@ const CastingForm = ({ onSuccess }: CastingFormProps) => {
               </FormItem>
             )}
           />
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
             control={form.control}
             name="height"
@@ -235,7 +319,9 @@ const CastingForm = ({ onSuccess }: CastingFormProps) => {
               </FormItem>
             )}
           />
+        </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
             control={form.control}
             name="weight"
@@ -250,6 +336,20 @@ const CastingForm = ({ onSuccess }: CastingFormProps) => {
                     onChange={(e) => onChange(e.target.value ? parseInt(e.target.value) : null)} 
                     {...restField} 
                   />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="instagram_url"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Instagram (optionnel)</FormLabel>
+                <FormControl>
+                  <Input placeholder="@votre_instagram" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -321,20 +421,6 @@ const CastingForm = ({ onSuccess }: CastingFormProps) => {
 
         <FormField
           control={form.control}
-          name="instagram_url"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Instagram (optionnel)</FormLabel>
-              <FormControl>
-                <Input placeholder="@votre_instagram" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
           name="experience"
           render={({ field }) => (
             <FormItem>
@@ -351,7 +437,7 @@ const CastingForm = ({ onSuccess }: CastingFormProps) => {
           )}
         />
 
-        <div className="pt-4">
+        <div className="pt-4 flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
           <Button 
             type="submit" 
             className="w-full md:w-auto bg-model-gold hover:bg-model-gold/90 text-white" 
@@ -359,7 +445,24 @@ const CastingForm = ({ onSuccess }: CastingFormProps) => {
           >
             {isSubmitting ? "Envoi en cours..." : "Soumettre ma candidature"}
           </Button>
+          
+          <Button 
+            type="button" 
+            className="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white flex items-center justify-center"
+            onClick={() => handleWhatsAppSubmit(form.getValues())}
+          >
+            <WhatsappIcon className="mr-2 h-5 w-5" />
+            Envoyer via WhatsApp
+          </Button>
         </div>
+        
+        {emailError && (
+          <div className="bg-amber-50 border border-amber-200 p-3 rounded-md">
+            <p className="text-amber-700 text-sm">
+              Problème avec l'envoi de l'email. Vous pouvez utiliser l'option WhatsApp pour envoyer votre candidature directement.
+            </p>
+          </div>
+        )}
       </form>
     </Form>
   );

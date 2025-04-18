@@ -16,6 +16,11 @@ console.log('RESEND_API_KEY available:', !!resendApiKey);
 const resend = new Resend(resendApiKey);
 const agencyEmail = Deno.env.get('AGENCY_EMAIL') || 'Perfectmodels.ga@gmail.com';
 
+// Initialize Supabase client
+const supabaseUrl = Deno.env.get('SUPABASE_URL') as string;
+const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') as string;
+const supabase = createClient(supabaseUrl, supabaseKey);
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -26,8 +31,26 @@ serve(async (req) => {
     const { application } = await req.json();
     console.log('Received application data:', JSON.stringify(application));
     
+    // Fetch the category name if category_id is provided
+    let categoryName = '';
+    if (application.category_id) {
+      try {
+        const { data: category } = await supabase
+          .from('model_categories')
+          .select('name')
+          .eq('id', application.category_id)
+          .single();
+          
+        if (category) {
+          categoryName = category.name;
+        }
+      } catch (error) {
+        console.error('Error fetching category name:', error);
+      }
+    }
+    
     // Send email with application details
-    const emailResponse = await sendApplicationEmail(application);
+    const emailResponse = await sendApplicationEmail(application, categoryName);
     
     return new Response(
       JSON.stringify({ 
@@ -61,7 +84,7 @@ function getGenderLabel(gender) {
   }
 }
 
-async function sendApplicationEmail(application) {
+async function sendApplicationEmail(application, categoryName = '') {
   try {
     console.log('Attempting to send email with application data');
     
@@ -79,6 +102,7 @@ async function sendApplicationEmail(application) {
       <p><strong>Email:</strong> ${application.email}</p>
       <p><strong>Téléphone:</strong> ${application.phone}</p>
       <p><strong>Genre:</strong> ${getGenderLabel(application.gender)}</p>
+      ${categoryName ? `<p><strong>Catégorie:</strong> ${categoryName}</p>` : ''}
       ${application.age ? `<p><strong>Âge:</strong> ${application.age} ans</p>` : ''}
 
       <h2>Mensurations</h2>
