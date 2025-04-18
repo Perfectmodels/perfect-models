@@ -4,7 +4,7 @@ import Footer from '../components/layout/Footer';
 import HeroSlider from '../components/home/HeroSlider';
 import AboutSection from '../components/home/AboutSection';
 import CallToAction from '../components/home/CallToAction';
-import FeaturedModels from '../components/home/FeaturedModels';
+import PerfectFashion from '../components/home/PerfectFashion';
 
 const Index = () => {
   return (
@@ -13,7 +13,7 @@ const Index = () => {
       <main className="flex-1">
         <HeroSlider />
         <AboutSection />
-        <FeaturedModels />
+        <PerfectFashion />
         <CallToAction />
       </main>
       <Footer />
