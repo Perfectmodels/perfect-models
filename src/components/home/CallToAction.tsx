@@ -5,21 +5,16 @@ import { Link } from 'react-router-dom';
 const CallToAction = () => {
   return (
     <section className="py-20 bg-model-black text-model-white relative">
-      {/* Background overlay to improve contrast with video */}
+      {/* Background overlay to improve text readability */}
       <div className="absolute inset-0 bg-black opacity-60 z-10"></div>
       
-      {/* Vidéo intégrée with proper parameters */}
+      {/* Background image */}
       <div className="absolute inset-0">
-        <iframe
-          width="100%"
-          height="100%"
-          src="https://www.youtube.com/embed/KlzhJYhw_I0?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=KlzhJYhw_I0"
-          title="Extrait des Passages de nos mannequins au Gala de Charité"
-          frameBorder="0"
-          allow="autoplay; encrypted-media"
-          loading="lazy"
+        <img
+          src="https://i.ibb.co/jZMn9H0d/482961374-623650043916904-6278220035000086504-n.jpg"
+          alt="Perfect Models Background"
           className="w-full h-full object-cover"
-        ></iframe>
+        />
       </div>
 
       <div className="container mx-auto px-6 relative z-20">
