@@ -22,7 +22,7 @@ const PerfectFashion = () => {
     <section className="py-20 bg-model-white">
       <div className="container mx-auto px-6">
         <div className="mb-12 text-center">
-          <h2 className="font-playfair text-4xl md:text-5xl mb-4">Perfect Fashion</h2>
+          <h2 className="font-playfair text-4xl md:text-5xl mb-4">Perfect Fashion Day </h2>
           <div className="w-24 h-0.5 bg-model-gold mx-auto mb-8"></div>
         </div>
 
