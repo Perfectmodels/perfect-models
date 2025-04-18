@@ -13,8 +13,8 @@ const Men = () => {
     { id: 2, name: "Davy", image: "https://i.ibb.co/KcWyzrx/DSC-0163.jpg" },
     { id: 3, name: "Osée JN", image: "https://i.ibb.co/7tk4pKvr/474620403-594457843438561-7313394165363117491-n.jpg" },
     { id: 4, name: "Moustapha Nziengui", image: "https://i.ibb.co/C5Z1N6Zp/481335188-618392171045128-1143329793191383014-n.jpg" },
-    { id: 5, name: "Pablo Zapatero", image: "https://i.ibb.co/tpXDpGG/DSC-0350.jpg" },
-    { id: 6, name: "Rosly Biyoghe", image: "https://i.ibb.co/9HtWHDDZ/DSC-0350.jpg" },
+    { id: 5, name: "Pablo Zapatero", image: "https://i.ibb.co/9HtWHDDZ/DSC-0350.jpg" },
+    { id: 6, name: "Rosly Biyoghe", image: "https://i.ibb.co/5hNTMd2H/476836105-4020224331539840-2275745508852289673-n.jpg" },
     { id: 6, name: "Rosnel Ayo", image: "https://i.ibb.co/gbb1sBsX/481850366-17957549744909537-119699887645910338-n.jpg" }
   ];
 
