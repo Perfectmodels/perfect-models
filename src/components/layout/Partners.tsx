@@ -1,4 +1,13 @@
 
+import React from 'react';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+
 const partners = [
   { name: "Darain Visual", logo: "/placeholder.svg" },
   { name: "Legrand Product's", logo: "/placeholder.svg" },

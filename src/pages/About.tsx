@@ -1,4 +1,5 @@
 
+import React from 'react';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import AboutAgency from '../components/about/AboutAgency';
@@ -7,31 +8,32 @@ import ValuesSection from '../components/about/ValuesSection';
 import ServicesList from '../components/models/ServicesList';
 import EventsList from '../components/models/EventsList';
 import { Separator } from '@/components/ui/separator';
+import type { Service, Event } from '../types/modelTypes';
 
-const services = [
+const services: Service[] = [
   {
-    id: 1,
+    id: "1",
     name: "Mannequinat",
     description: "Formation et placement de mannequins professionnels",
     image: "https://images.pexels.com/photos/1699161/pexels-photo-1699161.jpeg"
   },
   {
-    id: 2,
+    id: "2",
     name: "Défilés de Mode",
     description: "Organisation et participation à des défilés de mode",
     image: "https://images.pexels.com/photos/1926769/pexels-photo-1926769.jpeg"
   },
   {
-    id: 3,
+    id: "3",
     name: "Shooting Photo",
     description: "Séances photo professionnelles pour books et campagnes",
     image: "https://images.pexels.com/photos/2811087/pexels-photo-2811087.jpeg"
   }
 ];
 
-const events = [
+const events: Event[] = [
   {
-    id: 1,
+    id: "1",
     name: "Perfect Fashion Day",
     description: "Notre événement annuel de mode",
     date: "Juin 2024",
@@ -39,7 +41,7 @@ const events = [
     image: "https://images.pexels.com/photos/1926769/pexels-photo-1926769.jpeg"
   },
   {
-    id: 2,
+    id: "2",
     name: "Fashion Week Gabon",
     description: "Participation à la semaine de la mode",
     date: "Septembre 2024",
