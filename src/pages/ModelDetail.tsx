@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
@@ -56,7 +55,6 @@ const ModelDetail = () => {
   const navigate = useNavigate();
   const { model } = location.state || {};
   
-  // Données fictives des défilés (en production, cela viendrait d'une API)
   const showcases: ModelShowcase[] = [
     { 
       id: '1', 
@@ -81,7 +79,6 @@ const ModelDetail = () => {
     }
   ];
   
-  // Données fictives des collaborations (en production, cela viendrait d'une API)
   const collaborations: Collaboration[] = [
     { 
       id: '1', 
@@ -99,13 +96,11 @@ const ModelDetail = () => {
     }
   ];
 
-  // Si nous n'avons pas les informations du modèle, nous revenons à la page précédente
   if (!model) {
     navigate(-1);
     return null;
   }
 
-  // Complétez les informations détaillées du modèle avec les données fictives
   const detailedModel: DetailedModel = {
     id: model.id,
     first_name: model.first_name,
@@ -118,6 +113,9 @@ const ModelDetail = () => {
       bust: model.gender === 'women' ? 88 : undefined,
       waist: 60,
       hips: model.gender === 'women' ? 90 : undefined,
+      shoe_size: 40,
+      eye_color: 'blue',
+      hair_color: 'brown',
     },
     instagram_url: model.instagram_url,
   };
@@ -141,7 +139,6 @@ const ModelDetail = () => {
           </Button>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Image du modèle */}
             <div className="lg:col-span-1">
               <div className="overflow-hidden h-[600px] w-full bg-gray-100 rounded-lg">
                 <AspectRatio ratio={3/4} className="h-full">
@@ -154,7 +151,6 @@ const ModelDetail = () => {
               </div>
             </div>
 
-            {/* Informations du modèle */}
             <div className="lg:col-span-2 space-y-8">
               <div>
                 <h1 className="font-playfair text-4xl md:text-5xl mb-2">{detailedModel.first_name} {detailedModel.last_name}</h1>
@@ -174,14 +170,13 @@ const ModelDetail = () => {
 
               <Separator />
 
-              {/* Mensurations */}
               <div>
                 <div className="flex items-center mb-4">
                   <Ruler className="mr-2 text-model-gold" />
                   <h2 className="text-2xl font-playfair">Mensurations</h2>
                 </div>
                 
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                   {detailedModel.measurements.height && (
                     <div>
                       <p className="text-sm text-gray-500">Taille</p>
@@ -209,12 +204,32 @@ const ModelDetail = () => {
                       <p className="font-medium">{detailedModel.measurements.hips} cm</p>
                     </div>
                   )}
+
+                  {detailedModel.measurements.shoe_size && (
+                    <div>
+                      <p className="text-sm text-gray-500">Pointure</p>
+                      <p className="font-medium">{detailedModel.measurements.shoe_size}</p>
+                    </div>
+                  )}
+
+                  {detailedModel.measurements.eye_color && (
+                    <div>
+                      <p className="text-sm text-gray-500">Couleur des yeux</p>
+                      <p className="font-medium">{detailedModel.measurements.eye_color}</p>
+                    </div>
+                  )}
+
+                  {detailedModel.measurements.hair_color && (
+                    <div>
+                      <p className="text-sm text-gray-500">Couleur des cheveux</p>
+                      <p className="font-medium">{detailedModel.measurements.hair_color}</p>
+                    </div>
+                  )}
                 </div>
               </div>
 
               <Separator />
 
-              {/* Défilés */}
               {showcases && showcases.length > 0 && (
                 <div>
                   <h2 className="text-2xl font-playfair mb-4">Défilés</h2>
@@ -226,9 +241,6 @@ const ModelDetail = () => {
                 </div>
               )}
 
-              <Separator />
-
-              {/* Collaborations */}
               {collaborations && collaborations.length > 0 && (
                 <div>
                   <h2 className="text-2xl font-playfair mb-4">Collaborations</h2>

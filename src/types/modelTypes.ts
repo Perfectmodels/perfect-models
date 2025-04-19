@@ -1,4 +1,3 @@
-
 export interface Service {
   id: string;
   name: string;
@@ -44,7 +43,11 @@ export interface DetailedModel {
     bust?: number;
     waist?: number;
     hips?: number;
+    shoe_size?: number;
+    eye_color?: string;
+    hair_color?: string;
   };
+  category?: string;
   instagram_url?: string;
 }
 

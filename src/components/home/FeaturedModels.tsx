@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -9,69 +8,142 @@ interface Model {
   image: string;
   category?: string;
   link: string;
+  measurements: {
+    height: number;
+    bust?: number;
+    waist?: number;
+    hips?: number;
+    shoe_size?: number;
+    eye_color?: string;
+    hair_color?: string;
+  };
 }
 
-// Données des mannequins féminins mis en avant
 const femaleModels: Model[] = [
   {
     id: 1,
     name: "ANNIE FLORA",
     image: "https://images.pexels.com/photos/1321943/pexels-photo-1321943.jpeg",
     category: "Haute Couture",
-    link: "/women"
+    link: "/model/1",
+    measurements: {
+      height: 175,
+      bust: 86,
+      waist: 60,
+      hips: 89,
+      shoe_size: 39,
+      eye_color: "Marron",
+      hair_color: "Noir"
+    }
   },
   {
     id: 2,
     name: "Diane Vanessa",
     image: "https://images.pexels.com/photos/1462637/pexels-photo-1462637.jpeg",
     category: "Commercial",
-    link: "/women"
+    link: "/model/2",
+    measurements: {
+      height: 178,
+      bust: 84,
+      waist: 58,
+      hips: 88,
+      shoe_size: 38,
+      eye_color: "Noisette",
+      hair_color: "Noir"
+    }
   },
   {
     id: 3,
     name: "Mirabelle",
     image: "https://images.pexels.com/photos/1587009/pexels-photo-1587009.jpeg",
     category: "Miss Tourisme Gabon",
-    link: "/women"
+    link: "/model/3",
+    measurements: {
+      height: 175,
+      bust: 85,
+      waist: 59,
+      hips: 87,
+      shoe_size: 37,
+      eye_color: "Vert",
+      hair_color: "Noir"
+    }
   },
   {
     id: 4,
     name: "Sephora Nawele",
     image: "https://images.pexels.com/photos/1372134/pexels-photo-1372134.jpeg",
     category: "Éditorial",
-    link: "/women"
+    link: "/model/4",
+    measurements: {
+      height: 177,
+      bust: 83,
+      waist: 57,
+      hips: 86,
+      shoe_size: 40,
+      eye_color: "Bleu",
+      hair_color: "Brun"
+    }
   }
 ];
 
-// Données des mannequins masculins mis en avant
 const maleModels: Model[] = [
   {
     id: 5,
     name: "Donatien Anani",
     image: "https://images.pexels.com/photos/2887718/pexels-photo-2887718.jpeg",
     category: "Commercial",
-    link: "/men"
+    link: "/model/5",
+    measurements: {
+      height: 185,
+      waist: 75,
+      shoe_size: 43,
+      eye_color: "Marron",
+      hair_color: "Noir"
+    }
   },
   {
     id: 6,
     name: "Moustapha",
     image: "https://images.pexels.com/photos/1860367/pexels-photo-1860367.jpeg",
     category: "Éditorial",
-    link: "/men"
+    link: "/model/6",
+    measurements: {
+      height: 180,
+      waist: 70,
+      shoe_size: 42,
+      eye_color: "Noisette",
+      hair_color: "Brun"
+    }
   },
   {
     id: 7,
     name: "Pablo Zapatero",
     image: "https://images.pexels.com/photos/1300550/pexels-photo-1300550.jpeg",
     category: "Haute Couture",
-    link: "/men"
+    link: "/model/7",
+    measurements: {
+      height: 190,
+      bust: 90,
+      waist: 72,
+      hips: 90,
+      shoe_size: 45,
+      eye_color: "Vert",
+      hair_color: "Noir"
+    }
   },
   {
     id: 8,
     name: "Kevin",
     image: "https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg",
     category: "Commercial",
-    link: "/men"
+    link: "/model/8",
+    measurements: {
+      height: 182,
+      waist: 73,
+      shoe_size: 41,
+      eye_color: "Bleu",
+      hair_color: "Brun"
+    }
   }
 ];
 
