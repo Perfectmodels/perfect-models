@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Instagram, Facebook, Youtube } from 'lucide-react';
 import { TikTokIcon } from '../icons/TikTokIcon';
-import Partners from './Partners';
 
 const Footer = () => {
   return (
@@ -47,8 +46,6 @@ const Footer = () => {
             </address>
           </div>
         </div>
-
-        <Partners />
 
         <div className="border-t border-dark-gray mt-10 pt-6 flex flex-col md:flex-row justify-between items-center">
           <p className="text-medium-gray text-sm mb-4 md:mb-0">

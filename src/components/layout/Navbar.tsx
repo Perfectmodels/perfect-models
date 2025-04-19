@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import Logo from './Logo';
-import { ThemeSwitcher } from './ThemeSwitcher';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -23,26 +22,29 @@ const Navbar = () => {
   }, []);
 
   return (
-    <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-model-black py-2' : 'bg-transparent py-4'}`}>
+    <nav 
+      className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 
+      ${isScrolled ? 'bg-model-black/95 shadow-lg py-2' : 'bg-model-black py-4'}`}
+    >
       <div className="container mx-auto px-6">
         <div className="flex items-center justify-between">
           <Logo />
           
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link to="/" className="text-model-white hover:text-model-gold transition-colors">ACCUEIL</Link>
-            <Link to="/women" className="text-model-white hover:text-model-gold transition-colors">FEMMES</Link>
-            <Link to="/men" className="text-model-white hover:text-model-gold transition-colors">HOMMES</Link>
-            <Link to="/gallery" className="text-model-white hover:text-model-gold transition-colors">GALERIE</Link>
-            <Link to="/about" className="text-model-white hover:text-model-gold transition-colors">À PROPOS</Link>
-            <Link to="/contact" className="text-model-white hover:text-model-gold transition-colors">CONTACT</Link>
-            <ThemeSwitcher />
+            <NavLink to="/">ACCUEIL</NavLink>
+            <NavLink to="/women">FEMMES</NavLink>
+            <NavLink to="/men">HOMMES</NavLink>
+            <NavLink to="/gallery">GALERIE</NavLink>
+            <NavLink to="/about">À PROPOS</NavLink>
+            <NavLink to="/contact">CONTACT</NavLink>
           </div>
 
           {/* Mobile Navigation Toggle */}
           <button 
             onClick={() => setIsOpen(!isOpen)}
-            className="md:hidden text-model-white"
+            className="md:hidden text-model-white hover:text-model-gold transition-colors"
+            aria-label={isOpen ? "Fermer le menu" : "Ouvrir le menu"}
           >
             {isOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
@@ -50,17 +52,14 @@ const Navbar = () => {
 
         {/* Mobile Navigation Menu */}
         {isOpen && (
-          <div className="md:hidden absolute top-full left-0 w-full bg-model-black py-4">
+          <div className="md:hidden absolute top-full left-0 w-full bg-model-black/95 backdrop-blur-sm py-4 shadow-lg">
             <div className="container mx-auto px-6 flex flex-col space-y-4">
-              <Link to="/" className="text-model-white hover:text-model-gold transition-colors" onClick={() => setIsOpen(false)}>ACCUEIL</Link>
-              <Link to="/women" className="text-model-white hover:text-model-gold transition-colors" onClick={() => setIsOpen(false)}>FEMMES</Link>
-              <Link to="/men" className="text-model-white hover:text-model-gold transition-colors" onClick={() => setIsOpen(false)}>HOMMES</Link>
-              <Link to="/gallery" className="text-model-white hover:text-model-gold transition-colors" onClick={() => setIsOpen(false)}>GALERIE</Link>
-              <Link to="/about" className="text-model-white hover:text-model-gold transition-colors" onClick={() => setIsOpen(false)}>À PROPOS</Link>
-              <Link to="/contact" className="text-model-white hover:text-model-gold transition-colors" onClick={() => setIsOpen(false)}>CONTACT</Link>
-              <div className="pt-2">
-                <ThemeSwitcher />
-              </div>
+              <MobileNavLink to="/" onClick={() => setIsOpen(false)}>ACCUEIL</MobileNavLink>
+              <MobileNavLink to="/women" onClick={() => setIsOpen(false)}>FEMMES</MobileNavLink>
+              <MobileNavLink to="/men" onClick={() => setIsOpen(false)}>HOMMES</MobileNavLink>
+              <MobileNavLink to="/gallery" onClick={() => setIsOpen(false)}>GALERIE</MobileNavLink>
+              <MobileNavLink to="/about" onClick={() => setIsOpen(false)}>À PROPOS</MobileNavLink>
+              <MobileNavLink to="/contact" onClick={() => setIsOpen(false)}>CONTACT</MobileNavLink>
             </div>
           </div>
         )}
@@ -68,5 +67,32 @@ const Navbar = () => {
     </nav>
   );
 };
+
+const NavLink = ({ to, children }: { to: string; children: React.ReactNode }) => (
+  <Link 
+    to={to} 
+    className="text-model-white hover:text-model-gold transition-colors duration-300 text-sm font-medium tracking-wider"
+  >
+    {children}
+  </Link>
+);
+
+const MobileNavLink = ({ 
+  to, 
+  children, 
+  onClick 
+}: { 
+  to: string; 
+  children: React.ReactNode; 
+  onClick: () => void 
+}) => (
+  <Link 
+    to={to} 
+    className="text-model-white hover:text-model-gold transition-colors duration-300 text-base font-medium tracking-wider"
+    onClick={onClick}
+  >
+    {children}
+  </Link>
+);
 
 export default Navbar;

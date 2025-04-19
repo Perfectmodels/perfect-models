@@ -102,32 +102,38 @@ const Women = () => {
     {
       id: "1",
       name: "Défilés de mode",
-      description: "Organisation et participation à des défilés de mode locaux et internationaux."
+      description: "Organisation et participation à des défilés de mode locaux et internationaux.",
+      image: "/placeholder.svg"
     },
     {
       id: "2",
       name: "Shootings photo",
-      description: "Services de mannequins pour des séances photo professionnelles."
+      description: "Services de mannequins pour des séances photo professionnelles.",
+      image: "/placeholder.svg"
     },
     {
       id: "3",
       name: "Événements VIP",
-      description: "Présence de mannequins lors d'événements exclusifs et lancements."
+      description: "Présence de mannequins lors d'événements exclusifs et lancements.",
+      image: "/placeholder.svg"
     },
     {
       id: "4",
       name: "Campagnes publicitaires",
-      description: "Mannequins pour vos campagnes marketing et publicitaires."
+      description: "Mannequins pour vos campagnes marketing et publicitaires.",
+      image: "/placeholder.svg"
     },
     {
       id: "5",
       name: "Formation de mannequins",
-      description: "Cours et ateliers pour devenir mannequin professionnel."
+      description: "Cours et ateliers pour devenir mannequin professionnel.",
+      image: "/placeholder.svg"
     },
     {
       id: "6",
       name: "Organisation d'événements de mode",
-      description: "Conception et réalisation complète de vos événements de mode."
+      description: "Conception et réalisation complète de vos événements de mode.",
+      image: "/placeholder.svg"
     }
   ];
 
