@@ -12,11 +12,11 @@ export const ThemeSwitcher = () => {
     <div className="flex items-center space-x-2">
       <ToggleGroup type="single" value={theme} onValueChange={(value) => value && setTheme(value as 'light' | 'dark')}>
         <ToggleGroupItem value="light" aria-label="Light mode" className="px-3 py-2">
-          <Sun size={18} className="text-model-gold" />
+          <Sun size={18} className="text-model-gold dark:text-model-gold/90" />
           <span className="ml-2">Light</span>
         </ToggleGroupItem>
         <ToggleGroupItem value="dark" aria-label="Dark mode" className="px-3 py-2">
-          <Moon size={18} className="text-model-gold" />
+          <Moon size={18} className="text-model-gold dark:text-model-gold/90" />
           <span className="ml-2">Dark</span>
         </ToggleGroupItem>
       </ToggleGroup>
@@ -36,9 +36,9 @@ export const MobileThemeSwitcher = () => {
       aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
     >
       {theme === 'light' ? (
-        <Sun size={20} className="text-model-gold" />
+        <Sun size={20} className="text-model-gold dark:text-model-gold/90" />
       ) : (
-        <Moon size={20} className="text-model-gold" />
+        <Moon size={20} className="text-model-gold dark:text-model-gold/90" />
       )}
     </Button>
   );
