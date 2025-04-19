@@ -9,7 +9,89 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      applications: {
+        Row: {
+          age: number | null
+          bust: number | null
+          category_id: string | null
+          created_at: string
+          email: string
+          experience: string | null
+          first_name: string
+          gender: string
+          height: number
+          hips: number | null
+          id: string
+          instagram_url: string | null
+          last_name: string
+          phone: string
+          waist: number | null
+          weight: number | null
+        }
+        Insert: {
+          age?: number | null
+          bust?: number | null
+          category_id?: string | null
+          created_at?: string
+          email: string
+          experience?: string | null
+          first_name: string
+          gender: string
+          height: number
+          hips?: number | null
+          id?: string
+          instagram_url?: string | null
+          last_name: string
+          phone: string
+          waist?: number | null
+          weight?: number | null
+        }
+        Update: {
+          age?: number | null
+          bust?: number | null
+          category_id?: string | null
+          created_at?: string
+          email?: string
+          experience?: string | null
+          first_name?: string
+          gender?: string
+          height?: number
+          hips?: number | null
+          id?: string
+          instagram_url?: string | null
+          last_name?: string
+          phone?: string
+          waist?: number | null
+          weight?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "applications_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "model_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      model_categories: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -9,104 +9,128 @@ import { Event, Service } from '@/types/modelTypes';
 const Men = () => {
   // Données des mannequins masculins
   const maleModels = [
-    { id: 1, name: "Donatien Anani", image: "https://i.ibb.co/q3wBhxpS/MG-0651.jpg" },
-    { id: 2, name: "Davy", image: "https://i.ibb.co/KcWyzrx/DSC-0163.jpg" },
-    { id: 3, name: "Osée JN", image: "https://i.ibb.co/7tk4pKvr/474620403-594457843438561-7313394165363117491-n.jpg" },
-    { id: 4, name: "Moustapha Nziengui", image: "https://i.ibb.co/C5Z1N6Zp/481335188-618392171045128-1143329793191383014-n.jpg" },
-    { id: 5, name: "Pablo Zapatero", image: "https://i.ibb.co/9HtWHDDZ/DSC-0350.jpg" },
-    { id: 6, name: "Rosly Biyoghe", image: "https://i.ibb.co/5hNTMd2H/476836105-4020224331539840-2275745508852289673-n.jpg" },
-    { id: 6, name: "Rosnel Ayo", image: "https://i.ibb.co/gbb1sBsX/481850366-17957549744909537-119699887645910338-n.jpg" }
+    { id: 1, name: "Donatien Anani", image: "https://i.ibb.co/q3wBhxpS/MG-0651.jpg", gender: 'men' },
+    { id: 2, name: "Davy", image: "https://i.ibb.co/KcWyzrx/DSC-0163.jpg", gender: 'men' },
+    { id: 3, name: "Osée JN", image: "https://i.ibb.co/7tk4pKvr/474620403-594457843438561-7313394165363117491-n.jpg", gender: 'men' },
+    { id: 4, name: "Moustapha Nziengui", image: "https://i.ibb.co/C5Z1N6Zp/481335188-618392171045128-1143329793191383014-n.jpg", gender: 'men' },
+    { id: 5, name: "Pablo Zapatero", image: "https://i.ibb.co/9HtWHDDZ/DSC-0350.jpg", gender: 'men' },
+    { id: 6, name: "Rosly Biyoghe", image: "https://i.ibb.co/5hNTMd2H/476836105-4020224331539840-2275745508852289673-n.jpg", gender: 'men' },
+    { id: 7, name: "Rosnel Ayo", image: "https://i.ibb.co/gbb1sBsX/481850366-17957549744909537-119699887645910338-n.jpg", gender: 'men' }
   ];
 
-  // Données des événements (mêmes que pour les femmes)
+  // Données des événements
   const events: Event[] = [
     {
       id: "1",
       name: "CLOFAS 241",
       description: "Un événement majeur de la mode gabonaise mettant en valeur les créateurs locaux.",
-      location: "Libreville, Gabon"
+      location: "Libreville, Gabon",
+      date: undefined,
+      image: undefined
     },
     {
       id: "2",
       name: "Fashion Showchou/Awards de la mode Gabonaise",
       description: "Cérémonie de récompense célébrant les talents de la mode au Gabon.",
-      location: "Libreville, Gabon"
+      location: "Libreville, Gabon",
+      date: undefined,
+      image: undefined
     },
     {
       id: "3",
       name: "Perfect Fashion Day",
       description: "Une journée dédiée à la mode avec des défilés et des présentations.",
-      location: "Libreville, Gabon"
+      location: "Libreville, Gabon",
+      date: "25 janvier 2025",
+      image: undefined
     },
     {
       id: "4",
       name: "K'elle Pour Elle",
       description: "Événement de mode centré sur les créations féminines.",
-      location: "Libreville, Gabon"
+      location: "Libreville, Gabon",
+      date: undefined,
+      image: undefined
     },
     {
       id: "5",
       name: "FEMOGA",
       description: "Festival de la Mode Gabonaise réunissant les acteurs du secteur.",
-      location: "Libreville, Gabon"
+      location: "Libreville, Gabon",
+      date: undefined,
+      image: undefined
     },
     {
       id: "6",
       name: "La semaine de la Mode (UCREATE)",
       description: "Une semaine entière dédiée à la mode et à la création au Gabon.",
-      location: "Libreville, Gabon"
+      location: "Libreville, Gabon",
+      date: undefined,
+      image: undefined
     },
     {
       id: "7",
       name: "Gala Femmes actives du Gabon",
       description: "Un événement célébrant les femmes entreprenantes dans le domaine de la mode.",
-      location: "Libreville, Gabon"
+      location: "Libreville, Gabon",
+      date: undefined,
+      image: undefined
     },
     {
       id: "8",
       name: "Edele A",
       description: "Présentation de collections de mode contemporaine gabonaise.",
-      location: "Libreville, Gabon"
+      location: "Libreville, Gabon",
+      date: undefined,
+      image: undefined
     },
     {
       id: "9",
       name: "La Nuit du Textile Africain à Bamako",
       description: "Célébration des textiles africains avec participation gabonaise.",
-      location: "Bamako, Mali"
+      location: "Bamako, Mali",
+      date: undefined,
+      image: undefined
     }
   ];
 
-  // Données des services (mêmes que pour les femmes)
+  // Données des services
   const services: Service[] = [
     {
       id: "1",
       name: "Défilés de mode",
-      description: "Organisation et participation à des défilés de mode locaux et internationaux."
+      description: "Organisation et participation à des défilés de mode locaux et internationaux.",
+      image: "/placeholder.svg"
     },
     {
       id: "2",
       name: "Shootings photo",
-      description: "Services de mannequins pour des séances photo professionnelles."
+      description: "Services de mannequins pour des séances photo professionnelles.",
+      image: "/placeholder.svg"
     },
     {
       id: "3",
       name: "Événements VIP",
-      description: "Présence de mannequins lors d'événements exclusifs et lancements."
+      description: "Présence de mannequins lors d'événements exclusifs et lancements.",
+      image: "/placeholder.svg"
     },
     {
       id: "4",
       name: "Campagnes publicitaires",
-      description: "Mannequins pour vos campagnes marketing et publicitaires."
+      description: "Mannequins pour vos campagnes marketing et publicitaires.",
+      image: "/placeholder.svg"
     },
     {
       id: "5",
       name: "Formation de mannequins",
-      description: "Cours et ateliers pour devenir mannequin professionnel."
+      description: "Cours et ateliers pour devenir mannequin professionnel.",
+      image: "/placeholder.svg"
     },
     {
       id: "6",
       name: "Organisation d'événements de mode",
-      description: "Conception et réalisation complète de vos événements de mode."
+      description: "Conception et réalisation complète de vos événements de mode.",
+      image: "/placeholder.svg"
     }
   ];
 

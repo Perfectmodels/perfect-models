@@ -10,9 +10,9 @@ export interface Event {
   id: string;
   name: string;
   description: string;
-  date: string;
   location: string;
-  image: string;
+  date?: string;
+  image?: string;
 }
 
 export interface ModelApplication {
@@ -37,24 +37,29 @@ export interface DetailedModel {
   first_name: string;
   last_name: string;
   images: string[];
+  gender: string;
+  category_id?: string;
   measurements: {
     height: number;
     bust?: number;
     waist?: number;
     hips?: number;
   };
+  instagram_url?: string;
 }
 
 export interface Collaboration {
   id: string;
   title: string;
-  description: string;
+  description?: string;
   image: string;
+  date?: string;
 }
 
 export interface ModelShowcase {
   id: string;
   title: string;
-  date: string;
+  date?: string;
   images: string[];
+  location?: string;
 }
