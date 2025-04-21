@@ -1,23 +1,22 @@
 
-import Navbar from '../components/layout/Navbar';
-import Footer from '../components/layout/Footer';
+import { Layout } from '../components/layout';
 import HeroSlider from '../components/home/HeroSlider';
+import FeaturedModels from '../components/home/FeaturedModels';
 import AboutSection from '../components/home/AboutSection';
+import Services from '../components/home/Services';
 import CallToAction from '../components/home/CallToAction';
-import PerfectFashion from '../components/home/PerfectFashion';
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      <main className="flex-1">
+    <Layout>
+      <main className="min-h-screen">
         <HeroSlider />
         <AboutSection />
-        <PerfectFashion />
+        <FeaturedModels />
+        <Services />
         <CallToAction />
       </main>
-      <Footer />
-    </div>
+    </Layout>
   );
 };
 

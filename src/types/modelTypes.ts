@@ -27,8 +27,15 @@ export interface ModelApplication {
   bust: number | null;
   waist: number | null;
   hips: number | null;
+  shoe_size: number | null;
+  hair_color?: string;
+  eye_color?: string;
   experience?: string;
   instagram_url?: string;
+  portfolio_images?: string[];
+  availability: string;
+  languages?: string[];
+  special_skills?: string[];
 }
 
 export interface DetailedModel {
