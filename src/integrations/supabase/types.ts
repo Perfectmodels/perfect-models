@@ -74,6 +74,71 @@ export type Database = {
           },
         ]
       }
+      gallery_images: {
+        Row: {
+          alt: string | null
+          created_at: string
+          id: string
+          sequence: number | null
+          src: string
+          theme_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          alt?: string | null
+          created_at?: string
+          id?: string
+          sequence?: number | null
+          src: string
+          theme_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          alt?: string | null
+          created_at?: string
+          id?: string
+          sequence?: number | null
+          src?: string
+          theme_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gallery_images_theme_id_fkey"
+            columns: ["theme_id"]
+            isOneToOne: false
+            referencedRelation: "gallery_themes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gallery_themes: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          slug: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          slug: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          slug?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       model_categories: {
         Row: {
           created_at: string
