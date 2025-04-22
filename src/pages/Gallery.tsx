@@ -19,18 +19,29 @@ const galleryData = [
     id: "forest",
     title: "L'appel de la forêt",
     images: [
-      { id: "forest-1", src: "https://ibb.co/LzQwRjb7", alt: "Image 1" },
-      { id: "forest-2", src: "https://ibb.co/yBYcQpGf", alt: "Image 2" },
-      { id: "forest-3", src: "https://ibb.co/21LqcM7M", alt: "Image 3" },
-      { id: "forest-4", src: "https://ibb.co/PsXTkgdk", alt: "Image 4" },
-      { id: "forest-5", src: "https://ibb.co/S7vnyRQR", alt: "Image 5" },
-      { id: "forest-6", src: "https://ibb.co/LXxJ1cwX", alt: "Image 6" },
-      { id: "forest-7", src: "https://ibb.co/5XJymsP5", alt: "Image 7" },
-      { id: "forest-8", src: "https://ibb.co/Lhb9FnTL", alt: "Image 8" },
-      { id: "forest-9", src: "https://ibb.co/x87wRjs5", alt: "Image 9" },
-      { id: "forest-10", src: "https://ibb.co/n8CQ7fcW", alt: "Image 10" },
-      // Continuez avec les autres liens ici…
+      { id: "forest-1", src: "https://i.ibb.co/SXQTyYWC/AJC-1596-Modifier.jpg", alt: "Image 1" },
+      { id: "forest-2", src: "https://i.ibb.co/M5GxCfW2/AJC-1598-Modifier.jpg", alt: "Image 2" },
+      { id: "forest-3", src: "https://i.ibb.co/1tpZRXfX/AJC-1605-Modifier.jpg", alt: "Image 3" },
+      { id: "forest-4", src: "https://i.ibb.co/WN8DCfLC/AJC-1608.jpg", alt: "Image 4" },
+      { id: "forest-5", src: "https://i.ibb.co/PzChjwTw/AJC-1609-Modifier.jpg", alt: "Image 5" },
+      { id: "forest-6", src: "https://i.ibb.co/FL50zyvL/AJC-1622.jpg", alt: "Image 6" },
+      { id: "forest-7", src: "https://i.ibb.co/0pzSTYxf/AJC-1626.jpg", alt: "Image 7" },
+      { id: "forest-8", src: "https://i.ibb.co/dJ1kTGNd/AJC-1628.jpg", alt: "Image 8" },
+      { id: "forest-9", src: "https://i.ibb.co/FqDcjwW7/AJC-1631.jpg", alt: "Image 9" },
+      { id: "forest-10", src: "https://i.ibb.co/JFQrv27h/AJC-1633.jpg", alt: "Image 10" },
+      // Ajoutez les autres liens ici si nécessaire…
     ],
+  },
+  {
+    id: "90s",
+    title: "La mode dans les années 90",
+    images: Array.from({ length: 10 }, (_, i) => ({
+      id: `90s-${i}`,
+      src: `https://picsum.photos/seed/90s${i}/800/1000`,
+      alt: `Mode années 90 ${i + 1}`,
+    })),
+  },
+];
   },
   {
     id: "90s",
