@@ -1,66 +1,41 @@
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { UseFormReturn } from 'react-hook-form';
-import { ModelApplication } from '@/types/modelTypes';
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 
-interface PersonalInfoFieldsProps {
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ModelApplication } from "@/types/modelTypes";
+import { UseFormReturn } from "react-hook-form";
+
+export interface PersonalInfoFieldsProps {
   form: UseFormReturn<ModelApplication>;
+  modelCategories: Array<{ id: string; name: string; }>;
 }
 
-const PersonalInfoFields = ({ form }: PersonalInfoFieldsProps) => {
-  const [modelCategories, setModelCategories] = useState<{id: string, name: string}[]>([]);
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('model_categories')
-          .select('id, name')
-          .order('name');
-          
-        if (error) {
-          console.error('Error fetching model categories:', error);
-          return;
-        }
-        
-        setModelCategories(data || []);
-      } catch (err) {
-        console.error('Error in fetchCategories:', err);
-      }
-    };
-    
-    fetchCategories();
-  }, []);
-
+const PersonalInfoFields = ({ form, modelCategories }: PersonalInfoFieldsProps) => {
   return (
-    <>
+    <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <FormField
           control={form.control}
           name="first_name"
-          rules={{ required: "Le prénom est requis" }}
           render={({ field }) => (
             <FormItem>
               <FormLabel>Prénom</FormLabel>
               <FormControl>
-                <Input placeholder="Votre prénom" {...field} />
+                <Input {...field} required />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={form.control}
           name="last_name"
-          rules={{ required: "Le nom est requis" }}
           render={({ field }) => (
             <FormItem>
               <FormLabel>Nom</FormLabel>
               <FormControl>
-                <Input placeholder="Votre nom" {...field} />
+                <Input {...field} required />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -72,33 +47,25 @@ const PersonalInfoFields = ({ form }: PersonalInfoFieldsProps) => {
         <FormField
           control={form.control}
           name="email"
-          rules={{ 
-            required: "L'email est requis",
-            pattern: {
-              value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-              message: "Adresse email invalide"
-            }
-          }}
           render={({ field }) => (
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input type="email" placeholder="votre@email.com" {...field} />
+                <Input type="email" {...field} required />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={form.control}
           name="phone"
-          rules={{ required: "Le téléphone est requis" }}
           render={({ field }) => (
             <FormItem>
               <FormLabel>Téléphone</FormLabel>
               <FormControl>
-                <Input placeholder="+33 6 12 34 56 78" {...field} />
+                <Input type="tel" {...field} required />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -110,23 +77,19 @@ const PersonalInfoFields = ({ form }: PersonalInfoFieldsProps) => {
         <FormField
           control={form.control}
           name="gender"
-          rules={{ required: "Le genre est requis" }}
           render={({ field }) => (
             <FormItem>
               <FormLabel>Genre</FormLabel>
-              <Select 
-                onValueChange={field.onChange} 
-                defaultValue={field.value}
-              >
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Sélectionnez un genre" />
+                    <SelectValue placeholder="Sélectionnez votre genre" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="women">Femme</SelectItem>
-                  <SelectItem value="men">Homme</SelectItem>
-                  <SelectItem value="children">Enfant</SelectItem>
+                  <SelectItem value="male">Homme</SelectItem>
+                  <SelectItem value="female">Femme</SelectItem>
+                  <SelectItem value="other">Autre</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -137,24 +100,17 @@ const PersonalInfoFields = ({ form }: PersonalInfoFieldsProps) => {
         <FormField
           control={form.control}
           name="category_id"
-          rules={{ required: "La catégorie est requise" }}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Catégorie de mannequin</FormLabel>
-              <Select 
-                onValueChange={field.onChange} 
-                defaultValue={field.value}
-              >
+              <FormLabel>Catégorie</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionnez une catégorie" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {modelCategories.length === 0 && (
-                    <SelectItem value="default" disabled>Chargement des catégories...</SelectItem>
-                  )}
-                  {modelCategories.map(category => (
+                  {modelCategories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
                       {category.name}
                     </SelectItem>
@@ -166,7 +122,7 @@ const PersonalInfoFields = ({ form }: PersonalInfoFieldsProps) => {
           )}
         />
       </div>
-    </>
+    </div>
   );
 };
 
