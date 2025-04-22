@@ -1,141 +1,128 @@
-
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { Resend } from 'https://esm.sh/resend@1.0.0';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-// Initialize Resend with the API key
-const resendApiKey = Deno.env.get('RESEND_API_KEY');
-console.log('RESEND_API_KEY available:', !!resendApiKey);
-
-// Initialize Resend
-const resend = new Resend(resendApiKey);
-const agencyEmail = Deno.env.get('AGENCY_EMAIL') || 'Perfectmodels.ga@gmail.com';
-
-// Initialize Supabase client
-const supabaseUrl = Deno.env.get('SUPABASE_URL') as string;
-const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') as string;
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { PDFDocument, rgb, StandardFonts } from 'https://cdn.skypack.dev/pdf-lib@^1.17.1';
+import { corsHeaders } from '../_shared/cors.ts';
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { application } = await req.json();
-    console.log('Received application data:', JSON.stringify(application));
+    const { application, categoryName } = await req.json();
+
+    // Créer un nouveau document PDF
+    const pdfDoc = await PDFDocument.create();
+    const page = pdfDoc.addPage([595.28, 841.89]); // A4
+
+    // Charger le logo
+    const logoUrl = 'https://i.ibb.co/your-logo-url.png'; // Remplacez par l'URL de votre logo
+    const logoBytes = await fetch(logoUrl).then(res => res.arrayBuffer());
+    const logoImage = await pdfDoc.embedPng(logoBytes);
     
-    // Fetch the category name if category_id is provided
-    let categoryName = '';
-    if (application.category_id) {
-      try {
-        const { data: category } = await supabase
-          .from('model_categories')
-          .select('name')
-          .eq('id', application.category_id)
-          .single();
-          
-        if (category) {
-          categoryName = category.name;
-        }
-      } catch (error) {
-        console.error('Error fetching category name:', error);
-      }
+    // Définir les marges et les dimensions
+    const margin = 50;
+    const pageWidth = page.getWidth();
+    const pageHeight = page.getHeight();
+
+    // Ajouter le logo
+    const logoDims = logoImage.scale(0.2);
+    page.drawImage(logoImage, {
+      x: pageWidth / 2 - logoDims.width / 2,
+      y: pageHeight - margin - logoDims.height,
+      width: logoDims.width,
+      height: logoDims.height,
+    });
+
+    // Charger la police
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+    // Titre
+    page.drawText('CANDIDATURE MANNEQUIN', {
+      x: margin,
+      y: pageHeight - margin - 100,
+      size: 24,
+      font: boldFont,
+      color: rgb(0, 0, 0),
+    });
+
+    // Informations personnelles
+    let y = pageHeight - margin - 150;
+    const lineHeight = 20;
+
+    const drawSection = (title: string, content: string) => {
+      page.drawText(title, {
+        x: margin,
+        y,
+        size: 12,
+        font: boldFont,
+        color: rgb(0, 0, 0),
+      });
+      y -= lineHeight;
+      page.drawText(content, {
+        x: margin + 20,
+        y,
+        size: 12,
+        font: font,
+        color: rgb(0, 0, 0),
+      });
+      y -= lineHeight * 1.5;
+    };
+
+    // Informations personnelles
+    drawSection('Informations personnelles:', '');
+    drawSection('Nom:', `${application.first_name} ${application.last_name}`);
+    drawSection('Email:', application.email);
+    drawSection('Téléphone:', application.phone);
+    drawSection('Genre:', application.gender === 'male' ? 'Homme' : application.gender === 'female' ? 'Femme' : 'Autre');
+    drawSection('Catégorie:', categoryName || 'Non spécifiée');
+
+    // Mensurations
+    y -= lineHeight;
+    drawSection('Mensurations:', '');
+    drawSection('Âge:', application.age ? `${application.age} ans` : 'Non spécifié');
+    drawSection('Taille:', `${application.height} cm`);
+    if (application.weight) drawSection('Poids:', `${application.weight} kg`);
+    if (application.bust) drawSection('Tour de poitrine:', `${application.bust} cm`);
+    if (application.waist) drawSection('Tour de taille:', `${application.waist} cm`);
+    if (application.hips) drawSection('Tour de hanches:', `${application.hips} cm`);
+
+    // Informations supplémentaires
+    if (application.experience || application.instagram_url) {
+      y -= lineHeight;
+      drawSection('Informations supplémentaires:', '');
+      if (application.experience) drawSection('Expérience:', application.experience);
+      if (application.instagram_url) drawSection('Instagram:', application.instagram_url);
     }
-    
-    // Send email with application details
-    const emailResponse = await sendApplicationEmail(application, categoryName);
-    
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: 'Application sent via email',
-        emailResponse 
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      }
-    );
+
+    // Pied de page
+    const footerText = 'Perfect Models Management - www.perfectmodels.ga';
+    const footerWidth = font.widthOfTextAtSize(footerText, 10);
+    page.drawText(footerText, {
+      x: pageWidth / 2 - footerWidth / 2,
+      y: margin,
+      size: 10,
+      font: font,
+      color: rgb(0.5, 0.5, 0.5),
+    });
+
+    // Sauvegarder le PDF
+    const pdfBytes = await pdfDoc.save();
+
+    return new Response(pdfBytes, {
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': 'attachment; filename="candidature.pdf"',
+      },
+    });
   } catch (error) {
-    console.error('Error processing application:', error);
     return new Response(
-      JSON.stringify({ error: error.message, stack: error.stack }),
+      JSON.stringify({ error: error.message }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
       }
     );
   }
-});
-
-function getGenderLabel(gender) {
-  switch (gender) {
-    case 'women': return 'Femme';
-    case 'men': return 'Homme';
-    case 'children': return 'Enfant';
-    default: return gender;
-  }
-}
-
-async function sendApplicationEmail(application, categoryName = '') {
-  try {
-    console.log('Attempting to send email with application data');
-    
-    // Verify we have all required data before sending
-    if (!application || !application.email || !application.first_name || !application.last_name) {
-      throw new Error("Missing required application data for email");
-    }
-    
-    console.log('Sending email to:', agencyEmail);
-    
-    // Format application details as HTML
-    const applicationDetailsHtml = `
-      <h2>Informations personnelles</h2>
-      <p><strong>Nom:</strong> ${application.first_name} ${application.last_name}</p>
-      <p><strong>Email:</strong> ${application.email}</p>
-      <p><strong>Téléphone:</strong> ${application.phone}</p>
-      <p><strong>Genre:</strong> ${getGenderLabel(application.gender)}</p>
-      ${categoryName ? `<p><strong>Catégorie:</strong> ${categoryName}</p>` : ''}
-      ${application.age ? `<p><strong>Âge:</strong> ${application.age} ans</p>` : ''}
-
-      <h2>Mensurations</h2>
-      <p><strong>Taille:</strong> ${application.height} cm</p>
-      ${application.weight ? `<p><strong>Poids:</strong> ${application.weight} kg</p>` : ''}
-      ${application.bust ? `<p><strong>Tour de poitrine:</strong> ${application.bust} cm</p>` : ''}
-      ${application.waist ? `<p><strong>Tour de taille:</strong> ${application.waist} cm</p>` : ''}
-      ${application.hips ? `<p><strong>Tour de hanches:</strong> ${application.hips} cm</p>` : ''}
-
-      ${application.instagram_url ? `<p><strong>Instagram:</strong> ${application.instagram_url}</p>` : ''}
-
-      ${application.experience ? `
-      <h2>Expérience</h2>
-      <p>${application.experience}</p>` : ''}
-
-      <p><strong>Date de soumission:</strong> ${new Date().toLocaleDateString()}</p>
-    `;
-    
-    // Send the email using Resend
-    const result = await resend.emails.send({
-      from: 'Perfect Models <noreply@perfectmodels.ga>',
-      to: [agencyEmail],
-      subject: `Nouvelle candidature - ${application.first_name} ${application.last_name}`,
-      html: `
-        <h1>Nouvelle candidature</h1>
-        ${applicationDetailsHtml}
-      `,
-    });
-    
-    console.log('Email sent successfully:', JSON.stringify(result));
-    return result;
-  } catch (error) {
-    console.error('Error sending email:', error);
-    throw error;
-  }
-}
+}); 
