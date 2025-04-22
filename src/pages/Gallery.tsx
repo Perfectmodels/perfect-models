@@ -72,11 +72,11 @@ const galleryData = [
   },
   {
     id: "90s",
-    title: "La mode dans les années 90",
+    title: "Perfect Fashion Day",
     images: Array.from({ length: 10 }, (_, i) => ({
       id: `90s-${i}`,
       src: `https://picsum.photos/seed/90s${i}/800/1000`,
-      alt: `Mode années 90 ${i + 1}`,
+      alt: `Défilé de Mode ${i + 1}`,
     })),
   },
 ];
