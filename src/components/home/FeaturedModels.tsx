@@ -22,12 +22,12 @@ interface Model {
 const femaleModels: Model[] = [
   {
     id: 1,
-    name: "ANNIE FLORA",
-    image: "https://images.pexels.com/photos/1321943/pexels-photo-1321943.jpeg",
+    name: "Annie Flora",
+    image: "https://i.ibb.co/chwm33Lv/DSC-0199.jpg",
     category: "Haute Couture",
     link: "/model/1",
     measurements: {
-      height: 175,
+      height: 177,
       bust: 86,
       waist: 60,
       hips: 89,
@@ -39,7 +39,7 @@ const femaleModels: Model[] = [
   {
     id: 2,
     name: "Diane Vanessa",
-    image: "https://images.pexels.com/photos/1462637/pexels-photo-1462637.jpeg",
+    image: "https://i.ibb.co/Pzcm3Kss/PMM0179.jpg",
     category: "Commercial",
     link: "/model/2",
     measurements: {
@@ -55,7 +55,7 @@ const femaleModels: Model[] = [
   {
     id: 3,
     name: "Mirabelle",
-    image: "https://images.pexels.com/photos/1587009/pexels-photo-1587009.jpeg",
+    image: "https://i.ibb.co/RpkcngtM/484178713-631586356392376-6790495192437511142-n.jpg",
     category: "Miss Tourisme Gabon",
     link: "/model/3",
     measurements: {
@@ -71,11 +71,11 @@ const femaleModels: Model[] = [
   {
     id: 4,
     name: "Sephora Nawele",
-    image: "https://images.pexels.com/photos/1372134/pexels-photo-1372134.jpeg",
+    image: "https://i.ibb.co/rGWYNNDc/DSC01394-Modifier.jpg",
     category: "Éditorial",
     link: "/model/4",
     measurements: {
-      height: 177,
+      height: 166,
       bust: 83,
       waist: 57,
       hips: 86,
