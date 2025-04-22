@@ -1,16 +1,39 @@
-
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { UseFormReturn } from 'react-hook-form';
 import { ModelApplication } from '@/types/modelTypes';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface PersonalInfoFieldsProps {
   form: UseFormReturn<ModelApplication>;
-  modelCategories: { id: string; name: string }[];
 }
 
-const PersonalInfoFields = ({ form, modelCategories }: PersonalInfoFieldsProps) => {
+const PersonalInfoFields = ({ form }: PersonalInfoFieldsProps) => {
+  const [modelCategories, setModelCategories] = useState<{id: string, name: string}[]>([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('model_categories')
+          .select('id, name')
+          .order('name');
+          
+        if (error) {
+          console.error('Error fetching model categories:', error);
+          return;
+        }
+        
+        setModelCategories(data || []);
+      } catch (err) {
+        console.error('Error in fetchCategories:', err);
+      }
+    };
+    
+    fetchCategories();
+  }, []);
+
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -114,9 +137,10 @@ const PersonalInfoFields = ({ form, modelCategories }: PersonalInfoFieldsProps) 
         <FormField
           control={form.control}
           name="category_id"
+          rules={{ required: "La catégorie est requise" }}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Catégorie</FormLabel>
+              <FormLabel>Catégorie de mannequin</FormLabel>
               <Select 
                 onValueChange={field.onChange} 
                 defaultValue={field.value}
