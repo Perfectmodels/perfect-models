@@ -62,18 +62,18 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-                // Custom colors for Perfect Models Management
-                'model-black': '#000000',
-                'model-white': '#FFFFFF',
-                'model-gold': '#D4AF37',
-                'dark-gray': '#222222',
-                'medium-gray': '#999999',
-                'light-gray': '#CCCCCC'
+				// Custom colors for Perfect Models Management
+				'model-black': '#000000',
+				'model-white': '#FFFFFF',
+				'model-gold': '#D4AF37',
+				'dark-gray': '#222222',
+				'medium-gray': '#999999',
+				'light-gray': '#CCCCCC'
 			},
-            fontFamily: {
-                'playfair': ['Playfair Display', 'serif'],
-                'montserrat': ['Montserrat', 'sans-serif'],
-            },
+			fontFamily: {
+				playfair: ['Playfair Display', 'serif'],
+				montserrat: ['Montserrat', 'sans-serif'],
+			},
 			borderRadius: {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',

@@ -1,0 +1,24 @@
+{
+  "name": "Perfect Models Management",
+  "short_name": "Perfect Models",
+  "description": "Agence de mannequins professionnels",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "lang": "fr-FR",
+  "dir": "ltr"
+} 
