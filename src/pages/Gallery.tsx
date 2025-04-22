@@ -18,11 +18,19 @@ const galleryData = [
   {
     id: "forest",
     title: "L'appel de la forêt",
-    images: Array.from({ length: 10 }, (_, i) => ({
-      id: `forest-${i}`,
-      src: `https://picsum.photos/seed/forest${i}/800/1000`,
-      alt: `L'appel de la forêt ${i+1}`
-    }))
+    images: [
+      { id: "forest-1", src: "https://ibb.co/LzQwRjb7", alt: "Image 1" },
+      { id: "forest-2", src: "https://ibb.co/yBYcQpGf", alt: "Image 2" },
+      { id: "forest-3", src: "https://ibb.co/21LqcM7M", alt: "Image 3" },
+      { id: "forest-4", src: "https://ibb.co/PsXTkgdk", alt: "Image 4" },
+      { id: "forest-5", src: "https://ibb.co/S7vnyRQR", alt: "Image 5" },
+      { id: "forest-6", src: "https://ibb.co/LXxJ1cwX", alt: "Image 6" },
+      { id: "forest-7", src: "https://ibb.co/5XJymsP5", alt: "Image 7" },
+      { id: "forest-8", src: "https://ibb.co/Lhb9FnTL", alt: "Image 8" },
+      { id: "forest-9", src: "https://ibb.co/x87wRjs5", alt: "Image 9" },
+      { id: "forest-10", src: "https://ibb.co/n8CQ7fcW", alt: "Image 10" },
+      // Continuez avec les autres liens ici…
+    ],
   },
   {
     id: "90s",
@@ -30,9 +38,9 @@ const galleryData = [
     images: Array.from({ length: 10 }, (_, i) => ({
       id: `90s-${i}`,
       src: `https://picsum.photos/seed/90s${i}/800/1000`,
-      alt: `Mode années 90 ${i+1}`
-    }))
-  }
+      alt: `Mode années 90 ${i + 1}`,
+    })),
+  },
 ];
 
 const PhotoGallery = () => {
