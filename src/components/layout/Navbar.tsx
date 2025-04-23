@@ -36,6 +36,7 @@ const Navbar = () => {
             <NavLink to="/women">FEMMES</NavLink>
             <NavLink to="/men">HOMMES</NavLink>
             <NavLink to="/gallery">GALERIE</NavLink>
+            <NavLink to="/casting">CASTING</NavLink>
             <NavLink to="/about">À PROPOS</NavLink>
             <NavLink to="/contact">CONTACT</NavLink>
           </div>
@@ -58,6 +59,7 @@ const Navbar = () => {
               <MobileNavLink to="/women" onClick={() => setIsOpen(false)}>FEMMES</MobileNavLink>
               <MobileNavLink to="/men" onClick={() => setIsOpen(false)}>HOMMES</MobileNavLink>
               <MobileNavLink to="/gallery" onClick={() => setIsOpen(false)}>GALERIE</MobileNavLink>
+              <MobileNavLink to="/casting" onClick={() => setIsOpen(false)}>CASTING</MobileNavLink>
               <MobileNavLink to="/about" onClick={() => setIsOpen(false)}>À PROPOS</MobileNavLink>
               <MobileNavLink to="/contact" onClick={() => setIsOpen(false)}>CONTACT</MobileNavLink>
             </div>
