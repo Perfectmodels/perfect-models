@@ -1,4 +1,3 @@
-
 import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -14,7 +13,7 @@ const LatestNews = () => {
     {
       id: 2,
       title: "Ouverture des Inscriptions",
-      date: "Mai 2025"
+      date: "Mai 2025", // Ajout de la virgule ici
       image: "https://images.pexels.com/photos/1699161/pexels-photo-1699161.jpeg",
       description: "Les inscriptions pour la nouvelle saison de formation sont maintenant ouvertes."
     },
