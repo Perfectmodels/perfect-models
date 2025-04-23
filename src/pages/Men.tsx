@@ -1,7 +1,6 @@
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import ModelsList from '../components/models/ModelsList';
-import TabContent from '../components/common/TabContent';
 
 const Men = () => {
   // Données des mannequins masculins
@@ -15,15 +14,6 @@ const Men = () => {
     { id: 7, name: "Rosnel Ayo", image: "https://i.ibb.co/gbb1sBsX/481850366-17957549744909537-119699887645910338-n.jpg", gender: 'men' }
   ];
 
-  // Tabs configuration
-  const tabs = [
-    {
-      value: "models",
-      label: "NOS MODÈLES",
-      content: <ModelsList models={maleModels} />
-    }
-  ];
-
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -31,8 +21,9 @@ const Men = () => {
         <div className="container mx-auto px-6">
           <h1 className="font-playfair text-4xl md:text-5xl mb-6 text-center">Nos Modèles Hommes</h1>
           <div className="w-24 h-0.5 bg-model-gold mx-auto mb-12"></div>
-          
-          <TabContent tabs={tabs} defaultValue="models" />
+
+          {/* Liste des mannequins */}
+          <ModelsList models={maleModels} />
         </div>
       </main>
       <Footer />
