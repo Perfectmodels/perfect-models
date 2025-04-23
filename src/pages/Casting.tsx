@@ -24,7 +24,7 @@ const modelCategories = [
   { id: "17", name: "Mannequin alternatif / Alternative model" },
   { id: "18", name: "Mannequin ethnique / Ethnic model" },
   { id: "19", name: "Mannequin androgynes" },
-];
+]
 
 const Casting = () => {
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
@@ -54,7 +54,7 @@ const Casting = () => {
 
             <CastingForm onSuccess={handleFormSuccess} modelCategories={modelCategories} />
 
-            <SuccessDialog 
+            <SuccessDialog
               open={showSuccessDialog}
               onOpenChange={setShowSuccessDialog}
             />
