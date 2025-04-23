@@ -1,6 +1,7 @@
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import ModelsList from '../components/models/ModelsList';
+import TabContent from '../components/common/TabContent';
 
 const Men = () => {
   // Données des mannequins masculins
