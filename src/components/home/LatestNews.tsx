@@ -6,7 +6,7 @@ const LatestNews = () => {
   const news = [
     {
       id: 1,
-      title: "Double succes aux Awards de la mode Gabonaise 2022-2024",
+      title: "Double succès aux Awards de la mode Gabonaise 2022-2024",
       date: "15 Mai 2024",
       image: "https://images.pexels.com/photos/1926769/pexels-photo-1926769.jpeg",
       description: "Les Mannequins Kendra Mebiame et Ruth Jussy remportent l'une apres l'autre le trophé de meilleure mannequin espoir du gabon."
