@@ -35,15 +35,6 @@ const Women = () => {
     { id: 28, name: "Val De Mays", image: "https://i.ibb.co/1G0FZkkG/480261062-612919161592429-831797797968609645-n.jpg" }
   ];
 
-  // Tabs configuration
-  const tabs = [
-    {
-      value: "models",
-      label: "NOS MODÈLES",
-      content: <ModelsList models={femaleModels} />
-    }
-  ];
-
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -51,8 +42,8 @@ const Women = () => {
         <div className="container mx-auto px-6">
           <h1 className="font-playfair text-4xl md:text-5xl mb-6 text-center">Nos Modèles Femmes</h1>
           <div className="w-24 h-0.5 bg-model-gold mx-auto mb-12"></div>
-          
-          <TabContent tabs={tabs} defaultValue="models" />
+
+          <ModelsList models={femaleModels} />
         </div>
       </main>
       <Footer />
