@@ -34,8 +34,8 @@ const BenefitCard = ({
       <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-model-gold/10 text-model-gold mb-6">
         {icon}
       </div>
-      <h3 className="text-xl font-playfair mb-4">{title}</h3>
-      <p className="text-gray-600">{description}</p>
+      <h3 className="font-playfair mb-4 text-2xl text-center text-zinc-950">{title}</h3>
+      <p className="text-center text-yellow-900">{description}</p>
     </div>;
 };
 export default Benefits;
