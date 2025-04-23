@@ -8,7 +8,7 @@ const AboutAgency = () => {
             Fondée en 2021, Perfect Models Management est née de la passion pour la mode et de la volonté de créer une agence différente dans l'industrie. Notre fondateur, avec aucune d'expérience préalable, a transformé une vision en réalité.
           </p>
           <p className="text-light-gray mb-6 leading-relaxed text-slate-900">
-            Depuis notre création, nous avons collaboré avec les plus grandes marques nationales et participé aux événements les plus prestigieux du Gabon et à la Nuit du Textile Africain à Abidjan.
+            Depuis notre création, nous avons collaboré avec les plus grandes marques nationales et participé aux événements les plus prestigieux du Gabon et à la Nuit du Textile Africain à Bamako.
           </p>
           <p className="text-light-gray leading-relaxed text-gray-900">
             Aujourd'hui, Perfect Models Management représente plus de 100 mannequins (débutants et professionnels) de différentes nationalités et continue d'étendre son influence dans le monde.
