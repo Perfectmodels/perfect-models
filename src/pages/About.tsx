@@ -36,18 +36,11 @@ const events: Event[] = [
     id: "1",
     name: "Perfect Fashion Day",
     description: "Notre événement annuel de mode",
-    date: "Juin 2024",
+    date: "Janvier 2025",
     location: "Libreville",
-    image: "https://images.pexels.com/photos/1926769/pexels-photo-1926769.jpeg"
+    image: "https://i.ibb.co/LDzx7JgX/470506390-575121368705542-822202287511994230-n.jpg"
   },
-  {
-    id: "2",
-    name: "Fashion Week Gabon",
-    description: "Participation à la semaine de la mode",
-    date: "Septembre 2024",
-    location: "Libreville",
-    image: "https://images.pexels.com/photos/1699161/pexels-photo-1699161.jpeg"
-  }
+
 ];
 
 const About = () => {
