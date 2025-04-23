@@ -6,24 +6,24 @@ const LatestNews = () => {
   const news = [
     {
       id: 1,
-      title: "Fashion Week Gabon 2024",
+      title: "Double succes aux Awards de la mode Gabonaise 2022-2024",
       date: "15 Mai 2024",
       image: "https://images.pexels.com/photos/1926769/pexels-photo-1926769.jpeg",
-      description: "Perfect Models Management présentera sa nouvelle collection lors de la Fashion Week Gabon 2024."
+      description: "Les Mannequins Kendra Mebiame et Ruth Jussy remportent l'une apres l'autre le trophé de meilleure mannequin espoir du gabon."
     },
     {
       id: 2,
       title: "Ouverture des Inscriptions",
-      date: "1 Juin 2024",
+      date: "Mai 2025"
       image: "https://images.pexels.com/photos/1699161/pexels-photo-1699161.jpeg",
       description: "Les inscriptions pour la nouvelle saison de formation sont maintenant ouvertes."
     },
     {
       id: 3,
       title: "Collaboration Internationale",
-      date: "20 Juin 2024",
+      date: "14 Mai 2024",
       image: "https://images.pexels.com/photos/2811087/pexels-photo-2811087.jpeg",
-      description: "Nouvelle collaboration avec des agences internationales pour des opportunités à l'étranger."
+      description: "La Nuit du Textile Africain a Bamako."
     }
   ];
 
