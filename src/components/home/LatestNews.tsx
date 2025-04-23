@@ -22,7 +22,7 @@ const LatestNews = () => {
       id: 3,
       title: "Collaboration Internationale",
       date: "14 Mai 2024",
-      image: "https://images.pexels.com/photos/2811087/pexels-photo-2811087.jpeg",
+      image: "https://scontent.flbv4-1.fna.fbcdn.net/v/t39.30808-6/448406365_449418894385926_3540828592057987599_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeGjZJCfEh6lSGo7dwMT94iaqbFQnVq-z86psVCdWr7PzuiXCAJT_Jmegfr6y5vr8sXwPgZNhVRLYLAz1As8SJGI&_nc_ohc=5QIH03xRRVIQ7kNvwGXF0_d&_nc_oc=Adl_CJRdMDMwQX2YVnboGLJZNmK58s6eOUqOJetQamvNJs_n6Yn4Pu8_gebdbJiwOUA&_nc_zt=23&_nc_ht=scontent.flbv4-1.fna&_nc_gid=Q4AlFujuaIrb_uZ0xV0D_Q&oh=00_AfFMKys9YW8DwImkXRgZGgd_iKAb97jGTcDaFVLUZl0r5w&oe=680F1C52",
       description: "La Nuit du Textile Africain a Bamako."
     }
   ];
