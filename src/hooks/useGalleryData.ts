@@ -26,28 +26,19 @@ export const useGalleryData = () => {
         .select("*")
         .order("created_at");
 
-      if (themesError) {
-        console.error("Error fetching themes:", themesError);
-        throw themesError;
-      }
+      if (themesError) throw themesError;
 
       const { data: images, error: imagesError } = await supabase
         .from("gallery_images")
         .select("*")
         .order("sequence");
 
-      if (imagesError) {
-        console.error("Error fetching images:", imagesError);
-        throw imagesError;
-      }
+      if (imagesError) throw imagesError;
 
-      // Ensure we have at least the themes data even if there are no images
       return {
-        themes: (themes as GalleryTheme[]) || [],
-        images: (images as GalleryImage[]) || [],
+        themes: themes as GalleryTheme[],
+        images: images as GalleryImage[],
       };
     },
-    // Add refetch on window focus to ensure updated data
-    refetchOnWindowFocus: true,
   });
 };

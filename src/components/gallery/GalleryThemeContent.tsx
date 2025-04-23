@@ -3,7 +3,6 @@ import React from 'react';
 import { TabsContent } from "@/components/ui/tabs";
 import { GalleryTheme, GalleryImage } from '@/hooks/useGalleryData';
 import GalleryCarousel from './GalleryCarousel';
-import GalleryFallback from './GalleryFallback';
 
 interface GalleryThemeContentProps {
   theme: GalleryTheme;
@@ -12,7 +11,6 @@ interface GalleryThemeContentProps {
 
 const GalleryThemeContent = ({ theme, images }: GalleryThemeContentProps) => {
   const themeImages = images.filter(img => img.theme_id === theme.id);
-  const hasImages = themeImages.length > 0;
 
   return (
     <TabsContent value={theme.slug} className="p-4">
@@ -21,12 +19,7 @@ const GalleryThemeContent = ({ theme, images }: GalleryThemeContentProps) => {
         {theme.description && (
           <p className="text-center text-muted-foreground mb-6">{theme.description}</p>
         )}
-        
-        {hasImages ? (
-          <GalleryCarousel images={themeImages} themeTitle={theme.title} />
-        ) : (
-          <GalleryFallback themeTitle={theme.title} />
-        )}
+        <GalleryCarousel images={themeImages} themeTitle={theme.title} />
       </div>
     </TabsContent>
   );

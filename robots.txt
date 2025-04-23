@@ -1,7 +1,0 @@
-User-agent: *
-Allow: /
-Disallow: /admin/
-Disallow: /private/
-Disallow: /api/
-
-Sitemap: https://perfectmodels-ga.com/sitemap.xml 
