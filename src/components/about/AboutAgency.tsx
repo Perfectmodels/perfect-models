@@ -1,18 +1,16 @@
 import React from 'react';
-
 const AboutAgency = () => {
-  return (
-    <section className="mb-12">
+  return <section className="mb-12">
       <div className="grid grid-cols-1 gap-12">
-        <div>
+        <div className="bg-slate-50">
           <h2 className="font-playfair text-3xl mb-6">Notre Histoire</h2>
-          <p className="text-light-gray mb-6 leading-relaxed">
+          <p className="text-light-gray mb-6 leading-relaxed text-slate-900">
             Fondée en 2021, Perfect Models Management est née de la passion pour la mode et de la volonté de créer une agence différente dans l'industrie. Notre fondateur, avec aucune d'expérience préalable, a transformé une vision en réalité.
           </p>
-          <p className="text-light-gray mb-6 leading-relaxed">
+          <p className="text-light-gray mb-6 leading-relaxed text-slate-900">
             Depuis notre création, nous avons collaboré avec les plus grandes marques nationales et participé aux événements les plus prestigieux du Gabon et à la Nuit du Textile Africain à Abidjan.
           </p>
-          <p className="text-light-gray leading-relaxed">
+          <p className="text-light-gray leading-relaxed text-gray-900">
             Aujourd'hui, Perfect Models Management représente plus de 100 mannequins (débutants et professionnels) de différentes nationalités et continue d'étendre son influence dans le monde.
           </p>
         </div>
@@ -23,26 +21,24 @@ const AboutAgency = () => {
         <div className="grid grid-cols-1 gap-8">
           <div>
             <h3 className="text-xl font-medium mb-2 text-model-gold">Découverte de Talents</h3>
-            <p className="text-light-gray">
+            <p className="text-light-gray text-slate-950">
               Nous recherchons et développons les talents les plus prometteurs du monde entier, en accordant une attention particulière à la diversité et à l'unicité.
             </p>
           </div>
           <div>
             <h3 className="text-xl font-medium mb-2 text-model-gold">Développement de Carrière</h3>
-            <p className="text-light-gray">
+            <p className="text-light-gray text-slate-900">
               Nous accompagnons nos mannequins dans chaque étape de leur carrière, en leur fournissant des conseils professionnels et un soutien personnalisé.
             </p>
           </div>
           <div>
             <h3 className="text-xl font-medium mb-2 text-model-gold">Excellence Créative</h3>
-            <p className="text-light-gray">
+            <p className="text-light-gray text-slate-900">
               Nous nous efforçons de maintenir les plus hauts standards de créativité et de professionnalisme dans tous nos projets et collaborations.
             </p>
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default AboutAgency;
