@@ -38,8 +38,8 @@ const Contact = () => {
               <div className="space-y-4 mb-8">
                 <ContactItem icon={<Mail className="text-model-gold" />} 
                   label="Email" 
-                  value="Perfectmodels.ga@gmail.com"
-                  href="mailto:Perfectmodels.ga@gmail.com" />
+                  value="Contact@perfectmodels.ga"
+                  href="mailto:Contact@perfectmodels.ga" />
                 
                 <ContactItem icon={<Phone className="text-model-gold" />} 
                   label="WhatsApp & Téléphone" 
