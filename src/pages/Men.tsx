@@ -6,7 +6,7 @@ const Men = () => {
   // Données des mannequins masculins
   const maleModels = [
     { id: 1, name: "Donatien Anani", image: "https://i.ibb.co/q3wBhxpS/MG-0651.jpg", gender: 'men' },
-    { id: 2, name: "Davy", image: "https://i.ibb.co/KcWyzrx/DSC-0163.jpg", gender: 'men' },
+    { id: 2, name: "Davy", image: "https://i.ibb.co/p6TkcS2g/DSC-0163.jpg", gender: 'men' },
     { id: 3, name: "Osée JN", image: "https://i.ibb.co/7tk4pKvr/474620403-594457843438561-7313394165363117491-n.jpg", gender: 'men' },
     { id: 4, name: "Moustapha Nziengui", image: "https://i.ibb.co/C5Z1N6Zp/481335188-618392171045128-1143329793191383014-n.jpg", gender: 'men' },
     { id: 5, name: "Pablo Zapatero", image: "https://i.ibb.co/9HtWHDDZ/DSC-0350.jpg", gender: 'men' },
