@@ -22,12 +22,12 @@ const Casting = () => {
           
           <div className="max-w-3xl mx-auto">
             <p className="text-center mb-10">
-              Vous souhaitez rejoindre notre agence ? Remplissez le formulaire ci-dessous et notre équipe vous recontactera dans les plus brefs délais.
+              Vous souhaitez rejoindre notre agence ? Remplissez le formulaire ci-dessous et envoyez votre candidature directement via WhatsApp.
             </p>
             
-            <div className="bg-amber-50 border border-amber-200 rounded-md p-4 mb-8">
-              <p className="text-amber-800 font-medium">
-                Complétez le formulaire ci-dessous et soumettez votre candidature par email ou directement via WhatsApp.
+            <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-8">
+              <p className="text-green-800 font-medium">
+                Complétez le formulaire ci-dessous pour soumettre votre candidature via WhatsApp.
               </p>
             </div>
 
