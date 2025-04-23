@@ -1,27 +1,26 @@
 
-import { Layout } from '../components/layout';
-import HeroSlider from '../components/home/HeroSlider';
-import FeaturedModels from '../components/home/FeaturedModels';
-import AboutSection from '../components/home/AboutSection';
-import Services from '../components/home/Services';
-import CallToAction from '../components/home/CallToAction';
-import PerfectFashion from '../components/home/PerfectFashion';
-import Testimonials from '../components/home/Testimonials';
-import Benefits from '../components/home/Benefits';
+import React from 'react';
+import { Layout } from '@/components/layout';
+import HeroSlider from '@/components/home/HeroSlider';
+import AboutSection from '@/components/home/AboutSection';
+import Services from '@/components/home/Services';
+import Benefits from '@/components/home/Benefits';
+import FeaturedModels from '@/components/home/FeaturedModels';
+import LatestNews from '@/components/home/LatestNews';
+import StatsSection from '@/components/home/StatsSection';
+import Testimonials from '@/components/home/Testimonials';
 
 const Index = () => {
   return (
     <Layout>
-      <main className="min-h-screen">
-        <HeroSlider />
-        <AboutSection />
-        <FeaturedModels />
-        <Services />
-        <Benefits />
-        <PerfectFashion />
-        <Testimonials />
-        <CallToAction />
-      </main>
+      <HeroSlider />
+      <AboutSection />
+      <Services />
+      <StatsSection />
+      <FeaturedModels />
+      <Benefits />
+      <LatestNews />
+      <Testimonials />
     </Layout>
   );
 };
