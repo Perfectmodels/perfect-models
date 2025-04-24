@@ -1,6 +1,6 @@
 
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { UseFormReturn } from 'react-hook-form';
 import { ModelApplication } from '@/types/modelTypes';
 
@@ -9,26 +9,37 @@ interface MeasurementsFieldsProps {
 }
 
 const MeasurementsFields = ({ form }: MeasurementsFieldsProps) => {
+  // Generate arrays for measurement options
+  const ageOptions = Array.from({ length: 41 }, (_, i) => i + 10);
+  const heightOptions = Array.from({ length: 171 }, (_, i) => i + 50);
+  const bustOptions = Array.from({ length: 91 }, (_, i) => i + 60);
+  const waistOptions = Array.from({ length: 81 }, (_, i) => i + 40);
+  const hipsOptions = Array.from({ length: 91 }, (_, i) => i + 60);
+
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <FormField
           control={form.control}
           name="age"
-          render={({ field: { onChange, value, ...restField } }) => (
+          rules={{ required: "L'âge est requis" }}
+          render={({ field }) => (
             <FormItem>
               <FormLabel>Âge</FormLabel>
-              <FormControl>
-                <Input 
-                  type="number" 
-                  placeholder="25"
-                  value={value || ''}
-                  onChange={(e) => onChange(e.target.value ? parseInt(e.target.value) : null)} 
-                  min="10"
-                  max="50"
-                  {...restField} 
-                />
-              </FormControl>
+              <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionnez votre âge" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {ageOptions.map((age) => (
+                    <SelectItem key={age} value={age.toString()}>
+                      {age} ans
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
@@ -37,30 +48,24 @@ const MeasurementsFields = ({ form }: MeasurementsFieldsProps) => {
         <FormField
           control={form.control}
           name="height"
-          rules={{ 
-            required: "La taille est requise",
-            min: {
-              value: 50,
-              message: "La taille doit être valide"
-            },
-            max: {
-              value: 220,
-              message: "La taille doit être valide"
-            }
-          }}
-          render={({ field: { onChange, ...restField } }) => (
+          rules={{ required: "La taille est requise" }}
+          render={({ field }) => (
             <FormItem>
               <FormLabel>Taille (cm)</FormLabel>
-              <FormControl>
-                <Input 
-                  type="number" 
-                  placeholder="175" 
-                  onChange={(e) => onChange(parseInt(e.target.value) || 0)}
-                  min="50" 
-                  max="220"
-                  {...restField} 
-                />
-              </FormControl>
+              <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionnez votre taille" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {heightOptions.map((height) => (
+                    <SelectItem key={height} value={height.toString()}>
+                      {height} cm
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
@@ -71,20 +76,24 @@ const MeasurementsFields = ({ form }: MeasurementsFieldsProps) => {
         <FormField
           control={form.control}
           name="bust"
-          render={({ field: { onChange, value, ...restField } }) => (
+          rules={{ required: "Le tour de poitrine est requis" }}
+          render={({ field }) => (
             <FormItem>
               <FormLabel>Tour de poitrine (cm)</FormLabel>
-              <FormControl>
-                <Input 
-                  type="number" 
-                  placeholder="85" 
-                  value={value || ''} 
-                  onChange={(e) => onChange(e.target.value ? parseInt(e.target.value) : null)}
-                  min="60"
-                  max="150" 
-                  {...restField} 
-                />
-              </FormControl>
+              <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionnez une valeur" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {bustOptions.map((bust) => (
+                    <SelectItem key={bust} value={bust.toString()}>
+                      {bust} cm
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
@@ -93,20 +102,24 @@ const MeasurementsFields = ({ form }: MeasurementsFieldsProps) => {
         <FormField
           control={form.control}
           name="waist"
-          render={({ field: { onChange, value, ...restField } }) => (
+          rules={{ required: "Le tour de taille est requis" }}
+          render={({ field }) => (
             <FormItem>
               <FormLabel>Tour de taille (cm)</FormLabel>
-              <FormControl>
-                <Input 
-                  type="number" 
-                  placeholder="60" 
-                  value={value || ''}
-                  onChange={(e) => onChange(e.target.value ? parseInt(e.target.value) : null)}
-                  min="40"
-                  max="120"
-                  {...restField} 
-                />
-              </FormControl>
+              <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionnez une valeur" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {waistOptions.map((waist) => (
+                    <SelectItem key={waist} value={waist.toString()}>
+                      {waist} cm
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
@@ -115,20 +128,24 @@ const MeasurementsFields = ({ form }: MeasurementsFieldsProps) => {
         <FormField
           control={form.control}
           name="hips"
-          render={({ field: { onChange, value, ...restField } }) => (
+          rules={{ required: "Le tour de hanches est requis" }}
+          render={({ field }) => (
             <FormItem>
               <FormLabel>Tour de hanches (cm)</FormLabel>
-              <FormControl>
-                <Input 
-                  type="number" 
-                  placeholder="90" 
-                  value={value || ''}
-                  onChange={(e) => onChange(e.target.value ? parseInt(e.target.value) : null)}
-                  min="60"
-                  max="150"
-                  {...restField} 
-                />
-              </FormControl>
+              <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionnez une valeur" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {hipsOptions.map((hips) => (
+                    <SelectItem key={hips} value={hips.toString()}>
+                      {hips} cm
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}

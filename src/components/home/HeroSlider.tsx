@@ -21,7 +21,7 @@ const HeroSlider = () => {
       {/* Background image */}
       <div className={`absolute inset-0 ${isLoading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-1000`}>
         <img 
-          src="https://i.ibb.co/WvL6vKpX/AJC-1694-Modifier.jpg"
+          src="https://i.ibb.co/Rk3QYqDw/AJC-1697-Modifier.jpg"
           alt="Perfect Fashion Day"
           className="absolute w-full h-full object-cover"
           loading="eager"
