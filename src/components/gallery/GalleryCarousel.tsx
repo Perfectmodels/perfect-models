@@ -21,7 +21,7 @@ const GalleryCarousel = ({ images, themeTitle }: GalleryCarouselProps) => {
     <div className="mx-auto max-w-5xl">
       <Carousel opts={{ align: "start" }} className="w-full">
         <CarouselContent>
-          {images.map((image) => (
+          {images.map((image, index) => (
             <CarouselItem key={image.id} className="md:basis-1/2 lg:basis-1/3">
               <div className="p-1">
                 <Card>
@@ -31,6 +31,9 @@ const GalleryCarousel = ({ images, themeTitle }: GalleryCarouselProps) => {
                         src={image.src}
                         alt={image.alt || themeTitle}
                         className="w-full h-full object-cover rounded-md"
+                        loading={index < 3 ? "eager" : "lazy"}
+                        decoding="async"
+                        fetchpriority={index < 3 ? "high" : "auto"}
                       />
                     </AspectRatio>
                   </CardContent>

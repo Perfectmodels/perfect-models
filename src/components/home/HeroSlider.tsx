@@ -6,10 +6,9 @@ const HeroSlider = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Set loading to false after a short delay to ensure smooth transition
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 1500);
+    }, 500);
     
     return () => clearTimeout(timer);
   }, []);
@@ -19,21 +18,18 @@ const HeroSlider = () => {
       {/* Loading placeholder */}
       <div className={`absolute inset-0 bg-black ${isLoading ? 'opacity-100' : 'opacity-0'} transition-opacity duration-1000 z-10`}></div>
       
-      {/* YouTube video background with improved parameters */}
-      <div className="absolute inset-0 w-full h-full">
-        <div className={`absolute inset-0 ${isLoading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-1000`}>
-          <iframe 
-            src="https://www.youtube.com/embed/LaYmpru5zh4?autoplay=1&mute=1&loop=1&playlist=LaYmpru5zh4&controls=0&showinfo=0&rel=0&modestbranding=1" 
-            title="Perfect Fashion Day"
-            className="absolute w-full h-full top-0 left-0 object-cover"
-            frameBorder="0"
-            allow="autoplay; encrypted-media"
-            loading="lazy"
-          ></iframe>
-        </div>
+      {/* Background image */}
+      <div className={`absolute inset-0 ${isLoading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-1000`}>
+        <img 
+          src="https://i.ibb.co/WvL6vKpX/AJC-1694-Modifier.jpg"
+          alt="Perfect Fashion Day"
+          className="absolute w-full h-full object-cover"
+          loading="eager"
+          fetchpriority="high"
+        />
       </div>
       
-      {/* Overlay with gradient for better text visibility */}
+      {/* Overlay with gradient */}
       <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-70 z-20"></div>
       
       {/* Content */}
