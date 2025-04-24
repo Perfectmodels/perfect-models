@@ -9,12 +9,16 @@ interface MeasurementsFieldsProps {
 }
 
 const MeasurementsFields = ({ form }: MeasurementsFieldsProps) => {
-  // Generate arrays for measurement options
+  // Arrays for measurement options with meaningful ranges
   const ageOptions = Array.from({ length: 41 }, (_, i) => i + 10);
   const heightOptions = Array.from({ length: 171 }, (_, i) => i + 50);
   const bustOptions = Array.from({ length: 91 }, (_, i) => i + 60);
   const waistOptions = Array.from({ length: 81 }, (_, i) => i + 40);
   const hipsOptions = Array.from({ length: 91 }, (_, i) => i + 60);
+  
+  // Get the gender value to conditionally display appropriate labels
+  const gender = form.watch("gender");
+  const isMale = gender === "male";
 
   return (
     <>
@@ -76,10 +80,10 @@ const MeasurementsFields = ({ form }: MeasurementsFieldsProps) => {
         <FormField
           control={form.control}
           name="bust"
-          rules={{ required: "Le tour de poitrine est requis" }}
+          rules={{ required: isMale ? "Le tour de poitrine est requis" : "Le tour de poitrine est requis" }}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Tour de poitrine (cm)</FormLabel>
+              <FormLabel>{isMale ? "Tour de poitrine (cm)" : "Tour de poitrine (cm)"}</FormLabel>
               <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
                 <FormControl>
                   <SelectTrigger>

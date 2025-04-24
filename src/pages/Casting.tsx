@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
@@ -26,7 +27,7 @@ const Casting = () => {
 
             <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-8">
               <p className="text-green-800 font-medium">
-                Complétez le formulaire ci-dessous pour soumettre votre candidature via WhatsApp.
+                Complétez tous les champs obligatoires du formulaire ci-dessous pour soumettre votre candidature via WhatsApp.
               </p>
             </div>
 

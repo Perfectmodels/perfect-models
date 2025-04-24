@@ -95,7 +95,7 @@ const PersonalInfoFields = ({ form }: PersonalInfoFieldsProps) => {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Genre</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value} required>
+              <Select onValueChange={field.onChange} value={field.value} required>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionnez votre genre" />
@@ -119,7 +119,7 @@ const PersonalInfoFields = ({ form }: PersonalInfoFieldsProps) => {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Catégorie</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value} required>
+              <Select onValueChange={field.onChange} value={field.value} required>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionnez une catégorie" />
