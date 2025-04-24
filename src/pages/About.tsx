@@ -9,7 +9,7 @@ import ServicesList from '../components/models/ServicesList';
 import EventsList from '../components/models/EventsList';
 import { Separator } from '@/components/ui/separator';
 import type { Service, Event } from '../types/modelTypes';
-
+import { services, events } from '../components/layout/navigation/NavbarData';
 
 const About = () => {
   return (

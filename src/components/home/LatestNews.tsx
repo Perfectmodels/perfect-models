@@ -1,3 +1,4 @@
+
 import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -7,14 +8,13 @@ const LatestNews = () => {
       id: 1,
       title: "Double succès aux Awards de la mode Gabonaise 2022-2024",
       date: "15 Mai 2024",
-      image: "https://i.ibb.co/s9RB3KL7/476860403-1135943161655103-823567436486785042-n.jpg",
       image: "https://i.ibb.co/Txv7x23g/485119951-1165969115319174-7070669252660737028-n.jpg",
       description: "Les Mannequins Kendra Mebiame et Ruth Jussy remportent l'une apres l'autre le trophé de meilleure mannequin espoir du gabon."
     },
     {
       id: 2,
       title: "Ouverture des Inscriptions",
-      date: "Mai 2025", // Ajout de la virgule ici
+      date: "Mai 2025",
       image: "https://i.ibb.co/LDzx7JgX/470506390-575121368705542-822202287511994230-n.jpg",
       description: "Les inscriptions pour la nouvelle saison de formation sont maintenant ouvertes."
     },
