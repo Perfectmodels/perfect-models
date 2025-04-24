@@ -24,7 +24,9 @@ const AdditionalInfoFields = ({ form }: AdditionalInfoFieldsProps) => {
                   type="number" 
                   placeholder="60" 
                   value={value || ''}
-                  onChange={(e) => onChange(e.target.value ? parseInt(e.target.value) : null)} 
+                  onChange={(e) => onChange(e.target.value ? parseInt(e.target.value) : null)}
+                  min="30"
+                  max="120"
                   {...restField} 
                 />
               </FormControl>
@@ -40,7 +42,7 @@ const AdditionalInfoFields = ({ form }: AdditionalInfoFieldsProps) => {
             <FormItem>
               <FormLabel>Instagram (optionnel)</FormLabel>
               <FormControl>
-                <Input placeholder="@votre_instagram" {...field} />
+                <Input placeholder="@votre_instagram" {...field} maxLength={50} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -58,7 +60,8 @@ const AdditionalInfoFields = ({ form }: AdditionalInfoFieldsProps) => {
               <Textarea 
                 placeholder="Décrivez votre expérience dans le mannequinat"
                 className="min-h-[100px]"
-                {...field} 
+                {...field}
+                maxLength={1000}
               />
             </FormControl>
             <FormMessage />

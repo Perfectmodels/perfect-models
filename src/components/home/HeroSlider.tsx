@@ -25,7 +25,7 @@ const HeroSlider = () => {
           alt="Perfect Fashion Day"
           className="absolute w-full h-full object-cover"
           loading="eager"
-          fetchpriority="high"
+          fetchPriority="high"
         />
       </div>
       

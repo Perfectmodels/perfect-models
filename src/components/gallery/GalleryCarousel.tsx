@@ -33,7 +33,7 @@ const GalleryCarousel = ({ images, themeTitle }: GalleryCarouselProps) => {
                         className="w-full h-full object-cover rounded-md"
                         loading={index < 3 ? "eager" : "lazy"}
                         decoding="async"
-                        fetchpriority={index < 3 ? "high" : "auto"}
+                        fetchPriority={index < 3 ? "high" : "auto"}
                       />
                     </AspectRatio>
                   </CardContent>

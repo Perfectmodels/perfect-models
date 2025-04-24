@@ -24,6 +24,8 @@ const MeasurementsFields = ({ form }: MeasurementsFieldsProps) => {
                   placeholder="25"
                   value={value || ''}
                   onChange={(e) => onChange(e.target.value ? parseInt(e.target.value) : null)} 
+                  min="10"
+                  max="50"
                   {...restField} 
                 />
               </FormControl>
@@ -40,6 +42,10 @@ const MeasurementsFields = ({ form }: MeasurementsFieldsProps) => {
             min: {
               value: 50,
               message: "La taille doit être valide"
+            },
+            max: {
+              value: 220,
+              message: "La taille doit être valide"
             }
           }}
           render={({ field: { onChange, ...restField } }) => (
@@ -49,7 +55,9 @@ const MeasurementsFields = ({ form }: MeasurementsFieldsProps) => {
                 <Input 
                   type="number" 
                   placeholder="175" 
-                  onChange={(e) => onChange(parseInt(e.target.value) || 0)} 
+                  onChange={(e) => onChange(parseInt(e.target.value) || 0)}
+                  min="50" 
+                  max="220"
                   {...restField} 
                 />
               </FormControl>
@@ -71,7 +79,9 @@ const MeasurementsFields = ({ form }: MeasurementsFieldsProps) => {
                   type="number" 
                   placeholder="85" 
                   value={value || ''} 
-                  onChange={(e) => onChange(e.target.value ? parseInt(e.target.value) : null)} 
+                  onChange={(e) => onChange(e.target.value ? parseInt(e.target.value) : null)}
+                  min="60"
+                  max="150" 
                   {...restField} 
                 />
               </FormControl>
@@ -91,7 +101,9 @@ const MeasurementsFields = ({ form }: MeasurementsFieldsProps) => {
                   type="number" 
                   placeholder="60" 
                   value={value || ''}
-                  onChange={(e) => onChange(e.target.value ? parseInt(e.target.value) : null)} 
+                  onChange={(e) => onChange(e.target.value ? parseInt(e.target.value) : null)}
+                  min="40"
+                  max="120"
                   {...restField} 
                 />
               </FormControl>
@@ -111,7 +123,9 @@ const MeasurementsFields = ({ form }: MeasurementsFieldsProps) => {
                   type="number" 
                   placeholder="90" 
                   value={value || ''}
-                  onChange={(e) => onChange(e.target.value ? parseInt(e.target.value) : null)} 
+                  onChange={(e) => onChange(e.target.value ? parseInt(e.target.value) : null)}
+                  min="60"
+                  max="150"
                   {...restField} 
                 />
               </FormControl>
