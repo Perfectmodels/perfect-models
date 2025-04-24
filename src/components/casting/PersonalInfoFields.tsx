@@ -1,16 +1,17 @@
-
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ModelApplication } from "@/types/modelTypes";
 import { UseFormReturn } from "react-hook-form";
+import { MODEL_CATEGORIES, getModelCategoriesByGroup } from "@/constants/modelCategories";
 
 export interface PersonalInfoFieldsProps {
   form: UseFormReturn<ModelApplication>;
-  modelCategories: Array<{ id: string; name: string; }>;
 }
 
-const PersonalInfoFields = ({ form, modelCategories }: PersonalInfoFieldsProps) => {
+const PersonalInfoFields = ({ form }: PersonalInfoFieldsProps) => {
+  const groupedCategories = getModelCategoriesByGroup();
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -109,11 +110,16 @@ const PersonalInfoFields = ({ form, modelCategories }: PersonalInfoFieldsProps) 
                     <SelectValue placeholder="Sélectionnez une catégorie" />
                   </SelectTrigger>
                 </FormControl>
-                <SelectContent>
-                  {modelCategories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
-                    </SelectItem>
+                <SelectContent className="max-h-[300px]">
+                  {Object.entries(groupedCategories).map(([group, categories]) => (
+                    <SelectGroup key={group}>
+                      <SelectLabel>{group}</SelectLabel>
+                      {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
                   ))}
                 </SelectContent>
               </Select>

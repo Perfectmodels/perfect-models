@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
-import { supabase } from '../../integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
 import { ModelApplication } from '@/types/modelTypes';
@@ -18,7 +17,6 @@ interface CastingFormProps {
 
 const CastingForm = ({ onSuccess }: CastingFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [modelCategories, setModelCategories] = useState<{id: string, name: string}[]>([]);
   
   const form = useForm<ModelApplication>({
     defaultValues: {
@@ -58,7 +56,7 @@ const CastingForm = ({ onSuccess }: CastingFormProps) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleWhatsAppSubmit)} className="space-y-6">
-        <PersonalInfoFields form={form} modelCategories={modelCategories} />
+        <PersonalInfoFields form={form} />
         <MeasurementsFields form={form} />
         <AdditionalInfoFields form={form} />
 
@@ -78,3 +76,4 @@ const CastingForm = ({ onSuccess }: CastingFormProps) => {
 };
 
 export default CastingForm;
+
