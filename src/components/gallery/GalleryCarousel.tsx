@@ -10,7 +10,6 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { GalleryImage } from '@/hooks/useGalleryData';
-import { convertIbbLinkToDirectImageUrl } from '@/utils/imageUtils';
 
 interface GalleryCarouselProps {
   images: GalleryImage[];
@@ -29,7 +28,7 @@ const GalleryCarousel = ({ images, themeTitle }: GalleryCarouselProps) => {
                   <CardContent className="flex aspect-[3/4] items-center justify-center p-0">
                     <AspectRatio ratio={3/4}>
                       <img
-                        src={convertIbbLinkToDirectImageUrl(image.src)}
+                        src={image.src}
                         alt={image.alt || themeTitle}
                         className="w-full h-full object-cover rounded-md"
                         loading={index < 3 ? "eager" : "lazy"}
