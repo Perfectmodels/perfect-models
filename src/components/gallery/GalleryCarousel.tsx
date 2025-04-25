@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Carousel,
   CarouselContent,
@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/carousel";
 import { Card, CardContent } from "@/components/ui/card";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { Skeleton } from "@/components/ui/skeleton";
 import { GalleryImage } from '@/hooks/useGalleryData';
 
 interface GalleryCarouselProps {
@@ -17,6 +18,12 @@ interface GalleryCarouselProps {
 }
 
 const GalleryCarousel = ({ images, themeTitle }: GalleryCarouselProps) => {
+  const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
+
+  const handleImageLoad = (imageId: string) => {
+    setLoadedImages(prev => ({ ...prev, [imageId]: true }));
+  };
+  
   return (
     <div className="mx-auto max-w-5xl">
       <Carousel opts={{ align: "start" }} className="w-full">
@@ -25,15 +32,25 @@ const GalleryCarousel = ({ images, themeTitle }: GalleryCarouselProps) => {
             <CarouselItem key={image.id} className="md:basis-1/2 lg:basis-1/3">
               <div className="p-1">
                 <Card>
-                  <CardContent className="flex aspect-[3/4] items-center justify-center p-0">
+                  <CardContent className="flex aspect-[3/4] items-center justify-center p-0 relative">
                     <AspectRatio ratio={3/4}>
+                      {!loadedImages[image.id] && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <Skeleton className="w-full h-full absolute" />
+                        </div>
+                      )}
                       <img
                         src={image.src}
                         alt={image.alt || themeTitle}
-                        className="w-full h-full object-cover rounded-md"
-                        loading={index < 3 ? "eager" : "lazy"}
+                        className={`w-full h-full object-cover rounded-md transition-opacity duration-300 ${loadedImages[image.id] ? 'opacity-100' : 'opacity-0'}`}
+                        loading={index < 4 ? "eager" : "lazy"}
                         decoding="async"
-                        fetchPriority={index < 3 ? "high" : "auto"}
+                        fetchPriority={index < 4 ? "high" : "auto"}
+                        onLoad={() => handleImageLoad(image.id)}
+                        onError={() => {
+                          console.error(`Failed to load image: ${image.src}`);
+                          handleImageLoad(image.id); // Remove skeleton even if error
+                        }}
                       />
                     </AspectRatio>
                   </CardContent>

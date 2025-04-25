@@ -21,6 +21,24 @@ export const useGalleryData = () => {
   return useQuery({
     queryKey: ["gallery-themes"],
     queryFn: async () => {
+      // Vérifier que le slug "appel-de-la-foret" existe, sinon le mettre à jour
+      const { data: themeCheck, error: checkError } = await supabase
+        .from("gallery_themes")
+        .select("id, slug")
+        .eq("slug", "forest");
+      
+      if (checkError) throw checkError;
+      
+      // Si le thème existe et a slug "forest", mettez à jour pour correspondre au nom utilisé dans la requête SQL
+      if (themeCheck && themeCheck.length > 0) {
+        const { error: updateError } = await supabase
+          .from("gallery_themes")
+          .update({ slug: "appel-de-la-foret" })
+          .eq("slug", "forest");
+        
+        if (updateError) console.error("Erreur lors de la mise à jour du slug:", updateError);
+      }
+
       const { data: themes, error: themesError } = await supabase
         .from("gallery_themes")
         .select("*")
@@ -35,10 +53,18 @@ export const useGalleryData = () => {
 
       if (imagesError) throw imagesError;
 
+      // Validez que les images ont des URLs valides
+      const validImages = images.map(img => ({
+        ...img,
+        src: img.src && img.src.startsWith('http') ? img.src : `https://i.ibb.co/${img.src.split('/').pop()}`
+      }));
+
       return {
         themes: themes as GalleryTheme[],
-        images: images as GalleryImage[],
+        images: validImages as GalleryImage[],
       };
     },
+    retry: 2,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 };
