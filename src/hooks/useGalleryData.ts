@@ -31,7 +31,7 @@ export const useGalleryData = () => {
       const { data: images, error: imagesError } = await supabase
         .from("gallery_images")
         .select("*")
-        .order("sequence", { ascending: true, nullsLast: true });
+        .order("sequence", { ascending: true });
 
       if (imagesError) throw imagesError;
 
