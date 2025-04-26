@@ -1,14 +1,34 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
 
 User-agent: *
 Allow: /
+
+# Sitemaps
+Sitemap: https://perfectmodels.ga/sitemap.xml
+
+# Primary routes
+Allow: /women
+Allow: /men
+Allow: /gallery
+Allow: /casting
+Allow: /about
+Allow: /contact
+
+# Prevent access to admin areas (if they exist)
+Disallow: /admin/
+Disallow: /dashboard/
+
+# Social Media Crawlers
+User-agent: Twitterbot
+Allow: /
+User-agent: facebookexternalhit
+Allow: /
+
+# Prevent media scraping
+User-agent: *
+Disallow: /*.jpg$
+Disallow: /*.jpeg$
+Disallow: /*.gif$
+Disallow: /*.png$
+
+# Rate limiting
+Crawl-delay: 10
