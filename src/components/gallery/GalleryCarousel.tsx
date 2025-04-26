@@ -26,7 +26,7 @@ const GalleryCarousel = ({ images, themeTitle }: GalleryCarouselProps) => {
   
   return (
     <div className="mx-auto max-w-5xl">
-      <Carousel opts={{ align: "start" }} className="w-full">
+      <Carousel opts={{ loop: true, align: "start" }} className="w-full">
         <CarouselContent>
           {images.map((image, index) => (
             <CarouselItem key={image.id} className="md:basis-1/2 lg:basis-1/3">
@@ -43,13 +43,16 @@ const GalleryCarousel = ({ images, themeTitle }: GalleryCarouselProps) => {
                         src={image.src}
                         alt={image.alt || themeTitle}
                         className={`w-full h-full object-cover rounded-md transition-opacity duration-300 ${loadedImages[image.id] ? 'opacity-100' : 'opacity-0'}`}
-                        loading={index < 4 ? "eager" : "lazy"}
+                        loading={index < 3 ? "eager" : "lazy"}
                         decoding="async"
-                        fetchPriority={index < 4 ? "high" : "auto"}
+                        fetchPriority={index < 3 ? "high" : "auto"}
                         onLoad={() => handleImageLoad(image.id)}
-                        onError={() => {
+                        onError={(e) => {
                           console.error(`Failed to load image: ${image.src}`);
                           handleImageLoad(image.id); // Remove skeleton even if error
+                          // Fallback for broken images
+                          const target = e.target as HTMLImageElement;
+                          target.src = '/placeholder.svg';
                         }}
                       />
                     </AspectRatio>
