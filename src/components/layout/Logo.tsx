@@ -6,7 +6,7 @@ const Logo = ({ className = '' }) => {
   return (
     <Link 
       to="/" 
-      className={`flex items-center ${className}`}
+      className={`flex items-center gap-3 ${className}`}
       aria-label="Perfect Model Management Home"
     >
       <img 
@@ -14,6 +14,11 @@ const Logo = ({ className = '' }) => {
         alt="Perfect Model Management Logo" 
         className="h-10 w-auto"
       />
+      <div className="hidden md:block">
+        <span className="text-model-white text-lg font-playfair font-medium">
+          Perfect Model Management
+        </span>
+      </div>
     </Link>
   );
 };
