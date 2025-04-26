@@ -12,19 +12,24 @@ interface GalleryThemeContentProps {
 const GalleryThemeContent = ({ theme, images }: GalleryThemeContentProps) => {
   const themeImages = images.filter(img => img.theme_id === theme.id);
 
-  // Préchargez les premières images pour améliorer l'expérience utilisateur
+  // Préchargez les 6 premières images pour une meilleure expérience utilisateur
   useEffect(() => {
-    const preloadImages = themeImages.slice(0, 3).map(img => {
+    const preloadImages = themeImages.slice(0, 6).map(img => {
       const image = new Image();
       image.src = img.src;
       return image;
     });
     
     return () => {
-      // Nettoyer les références si nécessaire
+      // Nettoyage des références si nécessaire
       preloadImages.forEach(img => img.onload = null);
     };
   }, [themeImages]);
+
+  // Si le thème est "L'appel de la Foret", on trie les images par sequence
+  const sortedImages = theme.slug === 'appel-de-la-foret' 
+    ? [...themeImages].sort((a, b) => (a.sequence || 0) - (b.sequence || 0))
+    : themeImages;
 
   return (
     <TabsContent value={theme.slug} className="p-4">
@@ -34,8 +39,8 @@ const GalleryThemeContent = ({ theme, images }: GalleryThemeContentProps) => {
           <p className="text-center text-muted-foreground mb-6">{theme.description}</p>
         )}
         
-        {themeImages.length > 0 ? (
-          <GalleryCarousel images={themeImages} themeTitle={theme.title} />
+        {sortedImages.length > 0 ? (
+          <GalleryCarousel images={sortedImages} themeTitle={theme.title} />
         ) : (
           <p className="text-center text-muted-foreground">
             Pas d'images disponibles pour cette section
