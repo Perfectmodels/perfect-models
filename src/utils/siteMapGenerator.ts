@@ -11,15 +11,50 @@ interface SitemapURL {
 export const generateSitemap = (baseURL: string): string => {
   const today = new Date().toISOString();
   
-  const sitemapUrls: SitemapURL[] = [
-    { loc: '/', lastmod: today, changefreq: 'weekly', priority: 1.0 },
-    { loc: '/women', lastmod: today, changefreq: 'daily', priority: 0.9 },
-    { loc: '/men', lastmod: today, changefreq: 'daily', priority: 0.9 },
-    { loc: '/gallery', lastmod: today, changefreq: 'weekly', priority: 0.8 },
-    { loc: '/casting', lastmod: today, changefreq: 'monthly', priority: 0.7 },
-    { loc: '/about', lastmod: today, changefreq: 'monthly', priority: 0.6 },
-    { loc: '/contact', lastmod: today, changefreq: 'yearly', priority: 0.5 },
-  ];
+  // Map routes to sitemap URLs with appropriate metadata
+  const sitemapUrls: SitemapURL[] = routes.map(route => {
+    // Assign different priorities and change frequencies based on the route
+    let priority = 0.5;
+    let changefreq: SitemapURL['changefreq'] = 'monthly';
+    
+    // Home page gets highest priority
+    if (route.path === '/') {
+      priority = 1.0;
+      changefreq = 'weekly';
+    } 
+    // Model pages updated frequently
+    else if (route.path === '/women' || route.path === '/men') {
+      priority = 0.9;
+      changefreq = 'daily';
+    }
+    // Gallery updated regularly
+    else if (route.path === '/gallery') {
+      priority = 0.8;
+      changefreq = 'weekly';
+    }
+    // Casting page
+    else if (route.path === '/casting') {
+      priority = 0.7;
+      changefreq = 'monthly';
+    }
+    // About page
+    else if (route.path === '/about') {
+      priority = 0.6;
+      changefreq = 'monthly';
+    }
+    // Contact page rarely changes
+    else if (route.path === '/contact') {
+      priority = 0.5;
+      changefreq = 'yearly';
+    }
+    
+    return {
+      loc: route.path,
+      lastmod: today,
+      changefreq,
+      priority
+    };
+  });
 
   const xmlContent = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
