@@ -9,7 +9,7 @@ interface SitemapURL {
 }
 
 export const generateSitemap = (baseURL: string): string => {
-  const today = new Date().toISOString();
+  const today = new Date().toISOString().split('T')[0];
   
   // Map routes to sitemap URLs with appropriate metadata
   const sitemapUrls: SitemapURL[] = routes.map(route => {
@@ -57,7 +57,9 @@ export const generateSitemap = (baseURL: string): string => {
   });
 
   const xmlContent = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+        xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
   ${sitemapUrls
     .map(
       (url) => `

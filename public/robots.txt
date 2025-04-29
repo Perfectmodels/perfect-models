@@ -17,18 +17,20 @@ Allow: /contact
 Disallow: /admin/
 Disallow: /dashboard/
 
-# Social Media Crawlers
+# Social Media Crawlers - Permettre l'indexation complète pour les réseaux sociaux
 User-agent: Twitterbot
 Allow: /
 User-agent: facebookexternalhit
 Allow: /
 
-# Prevent media scraping
+# Prevent direct media scraping but allow for SEO preview
 User-agent: *
-Disallow: /*.jpg$
-Disallow: /*.jpeg$
-Disallow: /*.gif$
-Disallow: /*.png$
+Allow: /*.jpg$
+Allow: /*.jpeg$
+Allow: /*.gif$
+Allow: /*.png$
+Disallow: /wp-admin/
 
 # Rate limiting
-Crawl-delay: 10
+Crawl-delay: 5
+
