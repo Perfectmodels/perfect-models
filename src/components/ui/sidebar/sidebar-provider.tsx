@@ -1,5 +1,6 @@
+
 import * as React from "react"
-import { TooltipProvider } from "@/components/ui/tooltip"
+import { TooltipProvider } from "@radix-ui/react-tooltip"
 import { cn } from "@/lib/utils"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { SidebarContext } from "./sidebar-context"
@@ -82,7 +83,7 @@ const SidebarProvider = React.forwardRef<
 
     return (
       <SidebarContext.Provider value={contextValue}>
-        <TooltipProvider delayDuration={0}>
+        <TooltipProvider>
           <div
             style={
               {
