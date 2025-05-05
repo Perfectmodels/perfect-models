@@ -39,6 +39,8 @@ export interface ModelApplication {
   special_skills?: string[];
   portrait_images?: File[];
   full_body_images?: File[];
+  portrait_image_urls?: string[];
+  full_body_image_urls?: string[];
 }
 
 export interface DetailedModel {

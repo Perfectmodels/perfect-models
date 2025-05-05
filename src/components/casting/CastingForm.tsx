@@ -11,6 +11,8 @@ import MeasurementsFields from './MeasurementsFields';
 import AdditionalInfoFields from './AdditionalInfoFields';
 import PhotosUploadFields from './PhotosUploadFields';
 import { createWhatsAppLink } from '@/utils/whatsappUtils';
+import { supabase } from '@/integrations/supabase/client';
+import { uploadModelApplicationImages } from '@/utils/uploadUtils';
 
 interface CastingFormProps {
   onSuccess: () => void;
@@ -37,23 +39,86 @@ const CastingForm = ({ onSuccess }: CastingFormProps) => {
       instagram_url: '',
       portrait_images: [],
       full_body_images: [],
+      portrait_image_urls: [],
+      full_body_image_urls: [],
     },
   });
 
-  const handleWhatsAppSubmit = (data: ModelApplication) => {
+  const handleSubmit = async (data: ModelApplication) => {
     try {
       setIsLoading(true);
+      
+      // 1. Enregistrer les informations de base dans la base de données
+      const { data: applicationData, error: applicationError } = await supabase
+        .from('applications')
+        .insert({
+          first_name: data.first_name,
+          last_name: data.last_name,
+          email: data.email,
+          phone: data.phone,
+          gender: data.gender,
+          category_id: data.category_id,
+          age: data.age,
+          height: data.height,
+          weight: data.weight,
+          bust: data.bust,
+          waist: data.waist,
+          hips: data.hips,
+          instagram_url: data.instagram_url,
+          experience: data.experience
+        })
+        .select('id')
+        .single();
+
+      if (applicationError || !applicationData) {
+        console.error('Erreur d\'enregistrement de la candidature:', applicationError);
+        toast.error('Erreur lors de l\'enregistrement de la candidature');
+        return;
+      }
+
+      const applicationId = applicationData.id;
+
+      // 2. Téléverser les images si elles existent
+      let portraitUrls: string[] = [];
+      let fullBodyUrls: string[] = [];
+
+      if (data.portrait_images && data.portrait_images.length > 0) {
+        portraitUrls = await uploadModelApplicationImages(
+          data.portrait_images,
+          'portrait',
+          applicationId
+        );
+      }
+
+      if (data.full_body_images && data.full_body_images.length > 0) {
+        fullBodyUrls = await uploadModelApplicationImages(
+          data.full_body_images,
+          'full_body',
+          applicationId
+        );
+      }
+
+      // 3. Mettre à jour l'objet data avec les URLs des images téléversées
+      data.portrait_image_urls = portraitUrls;
+      data.full_body_image_urls = fullBodyUrls;
+
+      // 4. Créer et ouvrir le lien WhatsApp
       const whatsappLink = createWhatsAppLink(data);
       window.open(whatsappLink, '_blank');
-      toast.success('Redirection vers WhatsApp pour envoyer votre candidature');
+      
+      toast.success('Candidature enregistrée avec succès');
       onSuccess();
       form.reset();
     } catch (err) {
-      console.error('Error creating WhatsApp link:', err);
+      console.error('Erreur lors de la soumission de la candidature:', err);
       toast.error('Une erreur s\'est produite. Veuillez réessayer.');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleWhatsAppSubmit = (data: ModelApplication) => {
+    handleSubmit(data);
   };
 
   return (
