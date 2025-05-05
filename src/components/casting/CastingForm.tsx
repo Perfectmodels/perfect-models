@@ -48,6 +48,9 @@ const CastingForm = ({ onSuccess }: CastingFormProps) => {
     try {
       setIsLoading(true);
       
+      // Vérifier que la catégorie est un UUID valide ou null
+      const categoryId = data.category_id ? data.category_id : null;
+      
       // 1. Enregistrer les informations de base dans la base de données
       const { data: applicationData, error: applicationError } = await supabase
         .from('applications')
@@ -57,7 +60,7 @@ const CastingForm = ({ onSuccess }: CastingFormProps) => {
           email: data.email,
           phone: data.phone,
           gender: data.gender,
-          category_id: data.category_id,
+          category_id: categoryId,
           age: data.age,
           height: data.height,
           weight: data.weight,

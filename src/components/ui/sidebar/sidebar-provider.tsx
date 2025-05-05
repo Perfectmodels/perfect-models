@@ -1,6 +1,6 @@
 
 import * as React from "react"
-import { TooltipProvider } from "@radix-ui/react-tooltip"
+import { TooltipProvider } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { SidebarContext } from "./sidebar-context"
