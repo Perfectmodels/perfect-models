@@ -1,3 +1,4 @@
+
 export interface Service {
   id: string;
   name: string;
@@ -36,6 +37,8 @@ export interface ModelApplication {
   availability: string;
   languages?: string[];
   special_skills?: string[];
+  portrait_images?: File[];
+  full_body_images?: File[];
 }
 
 export interface DetailedModel {

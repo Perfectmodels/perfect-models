@@ -21,7 +21,9 @@ Tour de poitrine: ${data.bust || 'Non spécifié'} cm\n
 Tour de taille: ${data.waist || 'Non spécifié'} cm\n
 Tour de hanches: ${data.hips || 'Non spécifié'} cm\n
 Instagram: ${data.instagram_url || 'Non spécifié'}\n
-Expérience: ${data.experience || 'Non spécifié'}`
+Expérience: ${data.experience || 'Non spécifié'}\n
+Photos jointes: ${(data.portrait_images?.length || 0) + (data.full_body_images?.length || 0)} photos\n
+(${data.portrait_images?.length || 0} portraits, ${data.full_body_images?.length || 0} corps entier)`
   );
   
   return `https://wa.me/24107507950?text=${message}`;
