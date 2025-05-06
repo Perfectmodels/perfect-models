@@ -9,10 +9,8 @@ import { MessageSquare } from 'lucide-react';
 import PersonalInfoFields from './PersonalInfoFields';
 import MeasurementsFields from './MeasurementsFields';
 import AdditionalInfoFields from './AdditionalInfoFields';
-import PhotosUploadFields from './PhotosUploadFields';
 import { createWhatsAppLink } from '@/utils/whatsappUtils';
 import { supabase } from '@/integrations/supabase/client';
-import { uploadModelApplicationImages } from '@/utils/uploadUtils';
 
 interface CastingFormProps {
   onSuccess: () => void;
@@ -37,10 +35,6 @@ const CastingForm = ({ onSuccess }: CastingFormProps) => {
       hips: null,
       experience: '',
       instagram_url: '',
-      portrait_images: [],
-      full_body_images: [],
-      portrait_image_urls: [],
-      full_body_image_urls: [],
     },
   });
 
@@ -79,33 +73,7 @@ const CastingForm = ({ onSuccess }: CastingFormProps) => {
         return;
       }
 
-      const applicationId = applicationData.id;
-
-      // 2. Téléverser les images si elles existent
-      let portraitUrls: string[] = [];
-      let fullBodyUrls: string[] = [];
-
-      if (data.portrait_images && data.portrait_images.length > 0) {
-        portraitUrls = await uploadModelApplicationImages(
-          data.portrait_images,
-          'portrait',
-          applicationId
-        );
-      }
-
-      if (data.full_body_images && data.full_body_images.length > 0) {
-        fullBodyUrls = await uploadModelApplicationImages(
-          data.full_body_images,
-          'full_body',
-          applicationId
-        );
-      }
-
-      // 3. Mettre à jour l'objet data avec les URLs des images téléversées
-      data.portrait_image_urls = portraitUrls;
-      data.full_body_image_urls = fullBodyUrls;
-
-      // 4. Créer et ouvrir le lien WhatsApp
+      // 2. Créer et ouvrir le lien WhatsApp
       const whatsappLink = createWhatsAppLink(data);
       window.open(whatsappLink, '_blank');
       
@@ -120,17 +88,12 @@ const CastingForm = ({ onSuccess }: CastingFormProps) => {
     }
   };
 
-  const handleWhatsAppSubmit = (data: ModelApplication) => {
-    handleSubmit(data);
-  };
-
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleWhatsAppSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <PersonalInfoFields form={form} />
         <MeasurementsFields form={form} />
         <AdditionalInfoFields form={form} />
-        <PhotosUploadFields form={form} />
 
         <div className="pt-4">
           <Button 
