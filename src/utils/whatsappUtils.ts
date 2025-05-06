@@ -21,7 +21,7 @@ Tour de poitrine: ${data.bust || 'Non spécifié'} cm\n
 Tour de taille: ${data.waist || 'Non spécifié'} cm\n
 Tour de hanches: ${data.hips || 'Non spécifié'} cm\n
 Instagram: ${data.instagram_url || 'Non spécifié'}\n
-Expérience: ${data.experience || 'Non spécifié'}\n`
+Expérience: ${data.experience || 'Non spécifié'}`
   );
   
   return `https://wa.me/24107507950?text=${message}`;

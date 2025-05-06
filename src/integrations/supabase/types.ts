@@ -9,38 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      application_images: {
-        Row: {
-          application_id: string | null
-          created_at: string | null
-          id: string
-          image_type: string
-          image_url: string
-        }
-        Insert: {
-          application_id?: string | null
-          created_at?: string | null
-          id?: string
-          image_type: string
-          image_url: string
-        }
-        Update: {
-          application_id?: string | null
-          created_at?: string | null
-          id?: string
-          image_type?: string
-          image_url?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "application_images_application_id_fkey"
-            columns: ["application_id"]
-            isOneToOne: false
-            referencedRelation: "applications"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       applications: {
         Row: {
           age: number | null

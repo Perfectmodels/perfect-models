@@ -1,4 +1,3 @@
-
 import * as React from "react"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
@@ -83,7 +82,7 @@ const SidebarProvider = React.forwardRef<
 
     return (
       <SidebarContext.Provider value={contextValue}>
-        <TooltipProvider>
+        <TooltipProvider delayDuration={0}>
           <div
             style={
               {
