@@ -32,8 +32,14 @@ const CastingForm = ({ onSuccess }: CastingFormProps) => {
       bust: null,
       waist: null,
       hips: null,
+      shoe_size: null,
+      hair_color: '',
+      eye_color: '',
       experience: '',
       instagram_url: '',
+      availability: '',
+      languages: [],
+      special_skills: [],
     },
   });
 
@@ -76,4 +82,3 @@ const CastingForm = ({ onSuccess }: CastingFormProps) => {
 };
 
 export default CastingForm;
-
