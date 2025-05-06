@@ -44,55 +44,73 @@ export type Database = {
       applications: {
         Row: {
           age: number | null
+          availability: string | null
           bust: number | null
           category_id: string | null
           created_at: string
           email: string
           experience: string | null
+          eye_color: string | null
           first_name: string
           gender: string
+          hair_color: string | null
           height: number
           hips: number | null
           id: string
           instagram_url: string | null
+          languages: string[] | null
           last_name: string
           phone: string
+          shoe_size: number | null
+          special_skills: string[] | null
           waist: number | null
           weight: number | null
         }
         Insert: {
           age?: number | null
+          availability?: string | null
           bust?: number | null
           category_id?: string | null
           created_at?: string
           email: string
           experience?: string | null
+          eye_color?: string | null
           first_name: string
           gender: string
+          hair_color?: string | null
           height: number
           hips?: number | null
           id?: string
           instagram_url?: string | null
+          languages?: string[] | null
           last_name: string
           phone: string
+          shoe_size?: number | null
+          special_skills?: string[] | null
           waist?: number | null
           weight?: number | null
         }
         Update: {
           age?: number | null
+          availability?: string | null
           bust?: number | null
           category_id?: string | null
           created_at?: string
           email?: string
           experience?: string | null
+          eye_color?: string | null
           first_name?: string
           gender?: string
+          hair_color?: string | null
           height?: number
           hips?: number | null
           id?: string
           instagram_url?: string | null
+          languages?: string[] | null
           last_name?: string
           phone?: string
+          shoe_size?: number | null
+          special_skills?: string[] | null
           waist?: number | null
           weight?: number | null
         }
