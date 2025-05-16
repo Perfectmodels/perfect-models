@@ -17,6 +17,11 @@ export const createWhatsAppLink = (data: ModelApplication) => {
     ? data.special_skills.join(', ') 
     : 'Non spécifié';
   
+  // Note about images
+  const imagesText = data.portfolio_images && data.portfolio_images.length > 0
+    ? `${data.portfolio_images.length} photo(s) incluse(s) en base64`
+    : 'Aucune photo incluse';
+  
   const message = encodeURIComponent(
     `Nouvelle candidature de mannequin:\n
 Nom: ${data.first_name} ${data.last_name}\n
@@ -36,7 +41,8 @@ Disponibilité: ${data.availability || 'Non spécifié'}\n
 Langues: ${languagesText}\n
 Compétences: ${skillsText}\n
 Instagram: ${data.instagram_url || 'Non spécifié'}\n
-Expérience: ${data.experience || 'Non spécifié'}`
+Expérience: ${data.experience || 'Non spécifié'}\n
+Images: ${imagesText}`
   );
   
   return `https://wa.me/24107507950?text=${message}`;
