@@ -9,7 +9,6 @@ import { MessageSquare } from 'lucide-react';
 import PersonalInfoFields from './PersonalInfoFields';
 import MeasurementsFields from './MeasurementsFields';
 import AdditionalInfoFields from './AdditionalInfoFields';
-import PhotoUploader from './PhotoUploader';
 import { createWhatsAppLink } from '@/utils/whatsappUtils';
 
 interface CastingFormProps {
@@ -41,7 +40,7 @@ const CastingForm = ({ onSuccess }: CastingFormProps) => {
       availability: '',
       languages: [],
       special_skills: [],
-      portfolio_images: [],
+      events_participated: [],
     },
   });
 
@@ -67,12 +66,6 @@ const CastingForm = ({ onSuccess }: CastingFormProps) => {
         <PersonalInfoFields form={form} />
         <MeasurementsFields form={form} />
         <AdditionalInfoFields form={form} />
-        
-        {/* New Photo Uploader Component */}
-        <div className="border border-gray-200 rounded-md p-6 bg-gray-50">
-          <h3 className="text-lg font-medium mb-4">Photos</h3>
-          <PhotoUploader form={form} />
-        </div>
 
         <div className="pt-4">
           <Button 

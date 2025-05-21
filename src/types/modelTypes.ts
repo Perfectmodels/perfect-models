@@ -1,3 +1,4 @@
+
 export interface Service {
   id: string;
   name: string;
@@ -32,7 +33,7 @@ export interface ModelApplication {
   eye_color?: string;
   experience?: string;
   instagram_url?: string;
-  portfolio_images?: string[];
+  events_participated?: string[];
   availability: string;
   languages?: string[];
   special_skills?: string[];
