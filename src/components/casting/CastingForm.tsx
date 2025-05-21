@@ -21,6 +21,7 @@ const CastingForm = ({ onSuccess }: CastingFormProps) => {
       phone: '',
       gender: '',
       category_id: '',
+      date_of_birth: undefined,
       age: null,
       weight: null,
       height: 0,
