@@ -28,7 +28,7 @@ const Casting = () => {
             <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-8">
               <p className="text-green-800 font-medium">
                 Complétez tous les champs obligatoires du formulaire ci-dessous pour soumettre votre candidature via WhatsApp. 
-                Vous pouvez également ajouter jusqu'à 3 photos de votre portfolio.
+                Vous pouvez également ajouter jusqu'à 3 photos de votre portfolio pour augmenter vos chances d'être sélectionné(e).
               </p>
             </div>
 
