@@ -40,7 +40,9 @@ const PhotoGallery = () => {
       <Layout>
         <div className="container mx-auto py-8 px-4 text-center">
           <h1 className="text-3xl md:text-4xl font-playfair text-center mb-8">Galerie Photo</h1>
-          <p className="text-muted-foreground">Aucun thème n'est disponible pour le moment.</p>
+          <p className="text-muted-foreground">
+            {error ? "Une erreur s'est produite lors du chargement de la galerie." : "Aucun thème n'est disponible pour le moment."}
+          </p>
         </div>
       </Layout>
     );

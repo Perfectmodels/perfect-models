@@ -30,7 +30,7 @@ const GalleryCarousel = ({ images, themeTitle }: GalleryCarouselProps) => {
     console.error(`Échec de chargement de l'image: ${src}`);
     setErrorImages(prev => ({ ...prev, [imageId]: true }));
     setLoadedImages(prev => ({ ...prev, [imageId]: true })); // Retirer le skeleton
-    toast.error(`Impossible de charger une image: ${src.substring(0, 30)}...`);
+    toast.error(`Image non disponible: ${src.substring(0, 30)}${src.length > 30 ? '...' : ''}`);
   };
   
   return (
@@ -60,7 +60,7 @@ const GalleryCarousel = ({ images, themeTitle }: GalleryCarouselProps) => {
                         ) : (
                           <img
                             src={image.src}
-                            alt={image.alt || themeTitle}
+                            alt={image.alt || `Image ${index + 1} - ${themeTitle}`}
                             className={`w-full h-full object-cover rounded-md transition-opacity duration-300 ${loadedImages[image.id] ? 'opacity-100' : 'opacity-0'}`}
                             loading={index < 3 ? "eager" : "lazy"}
                             decoding="async"
