@@ -11,11 +11,11 @@ interface MeasurementsFieldsProps {
 
 const MeasurementsFields = ({ form }: MeasurementsFieldsProps) => {
   return (
-    <>
+    <div className="space-y-6">
       <AgeHeightFields form={form} />
       <BodyMeasurements form={form} />
       <AppearanceFields form={form} />
-    </>
+    </div>
   );
 };
 
