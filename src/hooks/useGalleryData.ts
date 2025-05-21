@@ -35,8 +35,8 @@ export const useGalleryData = () => {
 
       if (imagesError) throw imagesError;
 
-      // Validez que les images ont des URLs valides
-      const validImages = images.map(img => ({
+      // Validate that images have valid URLs
+      const validImages = images.map((img: any) => ({
         ...img,
         src: img.src && img.src.startsWith('http') ? img.src : `https://i.ibb.co/${img.src.split('/').pop()}`
       }));
