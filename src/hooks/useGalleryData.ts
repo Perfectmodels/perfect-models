@@ -35,11 +35,14 @@ export const useGalleryData = () => {
 
       if (imagesError) throw imagesError;
 
-      // Validate that images have valid URLs
+      // Assurons-nous que les URLs sont valides sans les modifier
       const validImages = images.map((img: any) => ({
         ...img,
-        src: img.src && img.src.startsWith('http') ? img.src : `https://i.ibb.co/${img.src.split('/').pop()}`
+        // Ne pas modifier les URLs car elles sont déjà complètes
+        src: img.src
       }));
+
+      console.log("Images chargées:", validImages);
 
       return {
         themes: themes as GalleryTheme[],

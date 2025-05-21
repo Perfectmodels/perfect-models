@@ -12,9 +12,9 @@ interface GalleryThemeContentProps {
 const GalleryThemeContent = ({ theme, images }: GalleryThemeContentProps) => {
   const themeImages = images.filter(img => img.theme_id === theme.id);
 
-  // Préchargez les 6 premières images pour une meilleure expérience utilisateur
+  // Préchargez les 3 premières images pour une meilleure expérience utilisateur
   useEffect(() => {
-    const preloadImages = themeImages.slice(0, 6).map(img => {
+    const preloadImages = themeImages.slice(0, 3).map(img => {
       const image = new Image();
       image.src = img.src;
       return image;
@@ -39,13 +39,7 @@ const GalleryThemeContent = ({ theme, images }: GalleryThemeContentProps) => {
           <p className="text-center text-muted-foreground mb-6">{theme.description}</p>
         )}
         
-        {sortedImages.length > 0 ? (
-          <GalleryCarousel images={sortedImages} themeTitle={theme.title} />
-        ) : (
-          <p className="text-center text-muted-foreground">
-            Pas d'images disponibles pour cette section
-          </p>
-        )}
+        <GalleryCarousel images={sortedImages} themeTitle={theme.title} />
       </div>
     </TabsContent>
   );
