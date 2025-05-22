@@ -23,7 +23,7 @@ export const useCastingSubmit = ({ form, onSuccess }: UseCastingSubmitProps) => 
         data.date_of_birth.toISOString().split('T')[0] : null;
       
       // Sauvegarde des données dans la base de données
-      const { error: applicationError } = await supabase
+      const { data: applicationData, error: applicationError } = await supabase
         .from('model_applications')
         .insert({
           first_name: data.first_name,
@@ -45,76 +45,71 @@ export const useCastingSubmit = ({ form, onSuccess }: UseCastingSubmitProps) => 
           experience: data.experience,
           instagram_url: data.instagram_url,
           availability: data.availability
-        });
+        })
+        .select('id')
+        .single();
 
       if (applicationError) {
         console.error('Erreur lors de l\'enregistrement de la candidature:', applicationError);
         throw new Error('Erreur lors de l\'enregistrement de la candidature');
       }
 
-      // Récupération de l'ID de la candidature
-      const { data: applications, error: fetchError } = await supabase
-        .from('model_applications')
-        .select('id')
-        .eq('email', data.email)
-        .order('created_at', { ascending: false })
-        .limit(1);
-
-      if (fetchError) {
-        console.error('Erreur lors de la récupération de l\'ID de candidature:', fetchError);
-        throw new Error('Erreur lors de la récupération de l\'ID de candidature');
+      if (!applicationData || !applicationData.id) {
+        throw new Error('Impossible de récupérer l\'ID de la candidature');
       }
 
-      if (applications && applications.length > 0) {
-        const applicationId = applications[0].id;
+      const applicationId = applicationData.id;
+      console.log('Application ID:', applicationId);
 
-        // Enregistrement des langues
-        if (data.languages && data.languages.length > 0) {
-          const languageEntries = data.languages.map(language => ({
-            application_id: applicationId,
-            language
-          }));
+      // Enregistrement des langues
+      if (data.languages && data.languages.length > 0) {
+        const languageEntries = data.languages.map(language => ({
+          application_id: applicationId,
+          language
+        }));
 
-          const { error: languagesError } = await supabase
-            .from('model_languages')
-            .insert(languageEntries);
+        const { error: languagesError } = await supabase
+          .from('model_languages')
+          .insert(languageEntries);
 
-          if (languagesError) {
-            console.error('Erreur lors de l\'enregistrement des langues:', languagesError);
-          }
+        if (languagesError) {
+          console.error('Erreur lors de l\'enregistrement des langues:', languagesError);
         }
+      }
 
-        // Enregistrement des compétences
-        if (data.special_skills && data.special_skills.length > 0) {
-          const skillEntries = data.special_skills.map(skill => ({
-            application_id: applicationId,
-            skill
-          }));
+      // Enregistrement des compétences
+      if (data.special_skills && data.special_skills.length > 0) {
+        const skillEntries = data.special_skills.map(skill => ({
+          application_id: applicationId,
+          skill
+        }));
 
-          const { error: skillsError } = await supabase
-            .from('model_skills')
-            .insert(skillEntries);
+        const { error: skillsError } = await supabase
+          .from('model_skills')
+          .insert(skillEntries);
 
-          if (skillsError) {
-            console.error('Erreur lors de l\'enregistrement des compétences:', skillsError);
-          }
+        if (skillsError) {
+          console.error('Erreur lors de l\'enregistrement des compétences:', skillsError);
         }
+      }
 
-        // Enregistrement des événements - Amélioration du traitement des événements
-        if (data.events_participated && data.events_participated.length > 0) {
-          console.log('Enregistrement des événements:', data.events_participated);
-          const eventEntries = data.events_participated.map(event_name => ({
-            application_id: applicationId,
-            event_name
-          }));
+      // Enregistrement des événements
+      if (data.events_participated && data.events_participated.length > 0) {
+        console.log('Événements à enregistrer:', data.events_participated);
+        
+        const eventEntries = data.events_participated.map(event_name => ({
+          application_id: applicationId,
+          event_name
+        }));
 
-          const { error: eventsError } = await supabase
-            .from('model_events')
-            .insert(eventEntries);
+        const { error: eventsError } = await supabase
+          .from('model_events')
+          .insert(eventEntries);
 
-          if (eventsError) {
-            console.error('Erreur lors de l\'enregistrement des événements:', eventsError);
-          }
+        if (eventsError) {
+          console.error('Erreur lors de l\'enregistrement des événements:', eventsError);
+        } else {
+          console.log('Événements enregistrés avec succès');
         }
       }
 

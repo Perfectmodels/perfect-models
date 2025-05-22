@@ -4,7 +4,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { UseFormReturn } from 'react-hook-form';
 import { ModelApplication } from '@/types/modelTypes';
 import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 
 interface EventsSelectorProps {
   form: UseFormReturn<ModelApplication>;
@@ -46,8 +45,10 @@ const EventsSelector = ({ form }: EventsSelectorProps) => {
               <div className="space-y-3">
                 <Select 
                   onValueChange={(value) => {
-                    const newValues = [...events, value];
-                    field.onChange(newValues);
+                    if (!events.includes(value)) {
+                      const newValues = [...events, value];
+                      field.onChange(newValues);
+                    }
                   }}
                   value=""
                 >
