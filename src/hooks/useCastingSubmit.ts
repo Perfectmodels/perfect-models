@@ -100,8 +100,9 @@ export const useCastingSubmit = ({ form, onSuccess }: UseCastingSubmitProps) => 
           }
         }
 
-        // Enregistrement des événements
+        // Enregistrement des événements - Amélioration du traitement des événements
         if (data.events_participated && data.events_participated.length > 0) {
+          console.log('Enregistrement des événements:', data.events_participated);
           const eventEntries = data.events_participated.map(event_name => ({
             application_id: applicationId,
             event_name
