@@ -9,6 +9,65 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      gallery_images: {
+        Row: {
+          alt: string | null
+          created_at: string
+          id: string
+          sequence: number | null
+          src: string
+          theme_id: string
+        }
+        Insert: {
+          alt?: string | null
+          created_at?: string
+          id?: string
+          sequence?: number | null
+          src: string
+          theme_id: string
+        }
+        Update: {
+          alt?: string | null
+          created_at?: string
+          id?: string
+          sequence?: number | null
+          src?: string
+          theme_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gallery_images_theme_id_fkey"
+            columns: ["theme_id"]
+            isOneToOne: false
+            referencedRelation: "gallery_themes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gallery_themes: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          slug: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          slug: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          slug?: string
+          title?: string
+        }
+        Relationships: []
+      }
       model_applications: {
         Row: {
           age: number | null

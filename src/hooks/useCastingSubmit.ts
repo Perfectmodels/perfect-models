@@ -18,6 +18,10 @@ export const useCastingSubmit = ({ form, onSuccess }: UseCastingSubmitProps) => 
     try {
       setIsLoading(true);
       
+      // Convertir date_of_birth en string pour la compatibilité avec Supabase
+      const formattedDate = data.date_of_birth ? 
+        data.date_of_birth.toISOString().split('T')[0] : null;
+      
       // Sauvegarde des données dans la base de données
       const { error: applicationError } = await supabase
         .from('model_applications')
@@ -28,7 +32,7 @@ export const useCastingSubmit = ({ form, onSuccess }: UseCastingSubmitProps) => 
           phone: data.phone,
           gender: data.gender,
           category_id: data.category_id,
-          date_of_birth: data.date_of_birth ? data.date_of_birth : null,
+          date_of_birth: formattedDate,
           age: data.age,
           weight: data.weight,
           height: data.height,
