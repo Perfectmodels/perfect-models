@@ -18,8 +18,25 @@ const EventsSelector = ({ form }: EventsSelectorProps) => {
   ]);
 
   useEffect(() => {
-    // Récupération des événements depuis la base de données pourrait être ajoutée ici
-    // Pour l'instant, on utilise les valeurs par défaut
+    // Cette fonction pourrait être utilisée pour récupérer des événements depuis Supabase
+    const fetchEvents = async () => {
+      try {
+        // Exemple de comment récupérer des événements depuis Supabase dans le futur
+        // const { data, error } = await supabase
+        //   .from('events')
+        //   .select('name')
+        //   .order('name', { ascending: true });
+        
+        // if (!error && data) {
+        //   setEventOptions(data.map(event => event.name));
+        // }
+      } catch (error) {
+        console.error('Erreur lors de la récupération des événements:', error);
+      }
+    };
+    
+    // Désactivé pour l'instant car nous utilisons des valeurs statiques
+    // fetchEvents();
   }, []);
 
   return (

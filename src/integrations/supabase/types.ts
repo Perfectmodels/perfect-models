@@ -9,7 +9,168 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      model_applications: {
+        Row: {
+          age: number | null
+          availability: string | null
+          bust: number | null
+          category_id: string
+          created_at: string
+          date_of_birth: string | null
+          email: string
+          experience: string | null
+          eye_color: string | null
+          first_name: string
+          gender: string
+          hair_color: string | null
+          height: number
+          hips: number | null
+          id: string
+          instagram_url: string | null
+          last_name: string
+          phone: string
+          shoe_size: number | null
+          updated_at: string
+          waist: number | null
+          weight: number | null
+        }
+        Insert: {
+          age?: number | null
+          availability?: string | null
+          bust?: number | null
+          category_id: string
+          created_at?: string
+          date_of_birth?: string | null
+          email: string
+          experience?: string | null
+          eye_color?: string | null
+          first_name: string
+          gender: string
+          hair_color?: string | null
+          height: number
+          hips?: number | null
+          id?: string
+          instagram_url?: string | null
+          last_name: string
+          phone: string
+          shoe_size?: number | null
+          updated_at?: string
+          waist?: number | null
+          weight?: number | null
+        }
+        Update: {
+          age?: number | null
+          availability?: string | null
+          bust?: number | null
+          category_id?: string
+          created_at?: string
+          date_of_birth?: string | null
+          email?: string
+          experience?: string | null
+          eye_color?: string | null
+          first_name?: string
+          gender?: string
+          hair_color?: string | null
+          height?: number
+          hips?: number | null
+          id?: string
+          instagram_url?: string | null
+          last_name?: string
+          phone?: string
+          shoe_size?: number | null
+          updated_at?: string
+          waist?: number | null
+          weight?: number | null
+        }
+        Relationships: []
+      }
+      model_events: {
+        Row: {
+          application_id: string
+          created_at: string
+          event_name: string
+          id: string
+        }
+        Insert: {
+          application_id: string
+          created_at?: string
+          event_name: string
+          id?: string
+        }
+        Update: {
+          application_id?: string
+          created_at?: string
+          event_name?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "model_events_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "model_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      model_languages: {
+        Row: {
+          application_id: string
+          created_at: string
+          id: string
+          language: string
+        }
+        Insert: {
+          application_id: string
+          created_at?: string
+          id?: string
+          language: string
+        }
+        Update: {
+          application_id?: string
+          created_at?: string
+          id?: string
+          language?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "model_languages_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "model_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      model_skills: {
+        Row: {
+          application_id: string
+          created_at: string
+          id: string
+          skill: string
+        }
+        Insert: {
+          application_id: string
+          created_at?: string
+          id?: string
+          skill: string
+        }
+        Update: {
+          application_id?: string
+          created_at?: string
+          id?: string
+          skill?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "model_skills_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "model_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

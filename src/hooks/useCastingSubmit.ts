@@ -28,7 +28,7 @@ export const useCastingSubmit = ({ form, onSuccess }: UseCastingSubmitProps) => 
           phone: data.phone,
           gender: data.gender,
           category_id: data.category_id,
-          date_of_birth: data.date_of_birth,
+          date_of_birth: data.date_of_birth ? data.date_of_birth : null,
           age: data.age,
           weight: data.weight,
           height: data.height,
@@ -49,12 +49,17 @@ export const useCastingSubmit = ({ form, onSuccess }: UseCastingSubmitProps) => 
       }
 
       // Récupération de l'ID de la candidature
-      const { data: applications } = await supabase
+      const { data: applications, error: fetchError } = await supabase
         .from('model_applications')
         .select('id')
         .eq('email', data.email)
         .order('created_at', { ascending: false })
         .limit(1);
+
+      if (fetchError) {
+        console.error('Erreur lors de la récupération de l\'ID de candidature:', fetchError);
+        throw new Error('Erreur lors de la récupération de l\'ID de candidature');
+      }
 
       if (applications && applications.length > 0) {
         const applicationId = applications[0].id;
