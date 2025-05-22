@@ -14,8 +14,14 @@ const EventsSelector = ({ form }: EventsSelectorProps) => {
   const [eventOptions, setEventOptions] = useState<string[]>([
     "Fashion Week Paris", "Fashion Week Milan", "Fashion Week New York",
     "Défilé Haute Couture", "Shooting Editorial", "Campagne Publicitaire",
-    "Salon du Mariage", "Salon de la Mode", "CLOFAS 241", "K'elle Pour Elle", 
-    "Fashion Week Gabonaise", "Autre"
+    "Salon du Mariage", "Salon de la Mode", 
+    // Événements ajoutés selon la demande
+    "K'elle Pour Elle", "FEMOGA", "Fashion ShowChou", "CLOFAS 241", 
+    "Perfect Fashion Day", "Sabo Fashion", "Défilé Edele A", 
+    "Défilé Ecole de Mode de Nzeng Ayong", "Kultur Fashion Show", 
+    "Issée Fashion Show", "EMPREINTE", "Femmes Actives du Gabon", 
+    "Festival de l'Independance", "Défile Olga'O", "Pink Women Show",
+    "Autre"
   ]);
 
   // S'assurer que le champ events_participated est initialisé comme un tableau vide s'il est undefined
