@@ -7,5 +7,6 @@ export const routes = [
   { path: '/gallery', label: 'Gallery' },
   { path: '/casting', label: 'Casting' },
   { path: '/about', label: 'About Us' },
-  { path: '/contact', label: 'Contact' }
+  { path: '/contact', label: 'Contact' },
+  { path: '*', label: 'Not Found' }
 ];

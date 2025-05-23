@@ -2,10 +2,15 @@
 import { Link } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
+import MetaTags from '../components/seo/MetaTags';
 
 const NotFound = () => {
   return (
     <div className="min-h-screen flex flex-col">
+      <MetaTags 
+        title="Page non trouvée - Perfect Models Management"
+        description="La page que vous recherchez ne semble pas exister."
+      />
       <Navbar />
       <main className="flex-grow flex items-center justify-center bg-model-white">
         <div className="text-center px-6">
