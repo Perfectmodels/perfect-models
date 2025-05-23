@@ -23,5 +23,7 @@ export default defineConfig(({ mode }) => ({
   build: {
     // Ensure we don't try to modify any read-only files during build
     emptyOutDir: false,
+    // Add this to ensure we use local dependencies
+    cssTarget: 'chrome61'
   }
 }));
