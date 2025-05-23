@@ -12,16 +12,16 @@ const NotFound = () => {
         description="La page que vous recherchez ne semble pas exister."
       />
       <Navbar />
-      <main className="flex-grow flex items-center justify-center bg-model-white">
+      <main className="flex-grow flex items-center justify-center bg-white">
         <div className="text-center px-6">
           <h1 className="font-playfair text-6xl md:text-8xl mb-6">404</h1>
-          <div className="w-16 h-0.5 bg-model-gold mx-auto mb-6"></div>
+          <div className="w-16 h-0.5 bg-black mx-auto mb-6"></div>
           <p className="text-lg mb-8">
             La page que vous recherchez ne semble pas exister.
           </p>
           <Link 
             to="/"
-            className="inline-block px-8 py-3 border border-model-black text-model-black hover:bg-model-black hover:text-model-white transition-colors duration-300"
+            className="inline-block px-8 py-3 border border-black text-black hover:bg-black hover:text-white transition-colors duration-300"
           >
             RETOUR À L'ACCUEIL
           </Link>

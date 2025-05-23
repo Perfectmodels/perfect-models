@@ -64,7 +64,6 @@ const EventsSelector = ({ form }: EventsSelectorProps) => {
                   </SelectContent>
                 </Select>
 
-                {/* Affichage des événements sélectionnés */}
                 {events.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-2">
                     {events.map((event, index) => (
