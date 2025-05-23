@@ -18,7 +18,7 @@ const TeamSection = () => {
       image: "https://scontent.flbv4-1.fna.fbcdn.net/v/t1.6435-9/119631826_114872113690501_3218468596502015912_n.jpg?_nc_cat=103&ccb=1-7&_nc_sid=cc71e4&_nc_eui2=AeFgLGPwKrjvyt_pDU7HD_CYBuZPYhLcEBkG5k9iEtwQGVxJr5xcx0CYJ5A_P7xxYSpYgjjIx0oUqVsfaggTJzO5&_nc_ohc=ZJG5UzFNhEoQ7kNvwH3NeOG&_nc_oc=AdlhQFQoucz2JYPI7Acc_fSE6UUAxkdtZa_kx2TMCkj8J-qADSd8LR05D3Gzndu1y4Q&_nc_zt=23&_nc_ht=scontent.flbv4-1.fna&_nc_gid=f-6lNl0MQ5LEUa1XtNQ5Mw&oh=00_AfHPDp17aCNUr724gaz1VIVKXQ_45cIJxYWUbXnH1C9teg&oe=6827F176",
       instagram: "#",
       linkedin: "#",
-      email: "Gabrielle@perfectmodels.fr"
+      email: "Gabrielleayatebe@gmail.com"
     },
     {
       name: "Aimée Pambou",
@@ -26,7 +26,7 @@ const TeamSection = () => {
       image: "https://i.ibb.co/ksmky1Sn/DSC01388-Modifier.jpg",
       instagram: "#",
       linkedin: "#",
-      email: "aimee@perfectmodels.fr"
+      email: "jeanliciadihiba@gmail.com"
     },
     {
       name: "Donatien Anani",
@@ -34,7 +34,7 @@ const TeamSection = () => {
       image: "https://i.ibb.co/KphCBxM6/DSC-0016-Modifier.jpg",
       instagram: "#",
       linkedin: "#",
-      email: "donatien@perfectmodels.fr"
+      email: "donatienanani@gmail.com"
     }
   ];
 
