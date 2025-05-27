@@ -1,12 +1,13 @@
+
 import { Link } from 'react-router-dom';
-import { Instagram, Facebook, Youtube } from 'lucide-react';
+import { Instagram, Facebook, Youtube, Settings } from 'lucide-react';
 import { TikTokIcon } from '../icons/TikTokIcon';
 
 const Footer = () => {
   return (
     <footer className="bg-model-black text-model-white py-12">
       <div className="container mx-auto px-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
           {/* Agency Info */}
           <div>
             <h3 className="font-playfair text-xl mb-4">PERFECT MODELS</h3>
@@ -31,6 +32,7 @@ const Footer = () => {
               <FooterLink to="/women" label="Femmes" />
               <FooterLink to="/men" label="Hommes" />
               <FooterLink to="/casting" label="Casting" />
+              <FooterLink to="/classroom" label="Formation" />
               <FooterLink to="/about" label="À Propos" />
               <FooterLink to="/contact" label="Contact" />
             </ul>
@@ -44,6 +46,21 @@ const Footer = () => {
               <p className="mb-2">Perfectmodels.ga@gmail.com</p>
               <p>+241 77 50 79 50</p>
             </address>
+          </div>
+
+          {/* Admin Access */}
+          <div>
+            <h3 className="font-playfair text-xl mb-4">ADMINISTRATION</h3>
+            <p className="text-light-gray text-sm mb-4">
+              Espace réservé à l'équipe administrative pour la gestion du contenu.
+            </p>
+            <Link 
+              to="/admin" 
+              className="inline-flex items-center text-model-gold hover:text-amber-400 transition-colors text-sm"
+            >
+              <Settings size={16} className="mr-2" />
+              Panneau Admin
+            </Link>
           </div>
         </div>
 
