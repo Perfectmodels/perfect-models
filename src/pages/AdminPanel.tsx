@@ -38,9 +38,9 @@ const AdminPanel = () => {
   const [contentForm, setContentForm] = useState({
     title: '',
     description: '',
-    content_type: 'video' as const,
-    model_category: 'femme' as const,
-    course_type: 'theorique' as const,
+    content_type: 'video' as 'video' | 'pdf' | 'document',
+    model_category: 'femme' as 'femme' | 'homme' | 'enfant' | 'senior',
+    course_type: 'theorique' as 'theorique' | 'pratique',
     duration: ''
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -51,7 +51,7 @@ const AdminPanel = () => {
 
   const { data: contents, refetch: refetchContents } = useQuery({
     queryKey: ['admin-classroom-content'],
-    queryFn: async () => {
+    queryFn: async (): Promise<ClassroomContent[]> => {
       const response = await fetch('/functions/v1/admin-content', {
         method: 'GET',
         headers: {
@@ -61,7 +61,7 @@ const AdminPanel = () => {
       });
       
       if (!response.ok) throw new Error('Failed to fetch contents');
-      return response.json() as ClassroomContent[];
+      return response.json();
     },
     enabled: !!adminSession
   });
@@ -182,7 +182,10 @@ const AdminPanel = () => {
   if (!adminSession) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-6">
-        <MetaTags title="Administration - Perfect Models Management" />
+        <MetaTags 
+          title="Administration - Perfect Models Management" 
+          description="Panneau d'administration pour la gestion du contenu de formation"
+        />
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Administration</CardTitle>
@@ -220,7 +223,10 @@ const AdminPanel = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <MetaTags title="Panneau d'Administration - Perfect Models Management" />
+      <MetaTags 
+        title="Panneau d'Administration - Perfect Models Management" 
+        description="Gestion du contenu de formation pour mannequins"
+      />
       <div className="container mx-auto px-6">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Panneau d'Administration</h1>
