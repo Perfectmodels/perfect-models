@@ -13,6 +13,8 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import ModelDetail from "./pages/ModelDetail";
 import Gallery from "./pages/Gallery";
+import Classroom from "./pages/Classroom";
+import AdminPanel from "./pages/AdminPanel";
 import NotFound from "./pages/NotFound";
 import Sitemap from "./pages/Sitemap";
 
@@ -31,6 +33,8 @@ const App = () => (
             <Route path="/men" element={<Men />} />
             <Route path="/casting" element={<Casting />} />
             <Route path="/gallery" element={<Gallery />} />
+            <Route path="/classroom" element={<Classroom />} />
+            <Route path="/admin" element={<AdminPanel />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/model/:id" element={<ModelDetail />} />

@@ -9,6 +9,78 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_users: {
+        Row: {
+          created_at: string
+          id: string
+          last_login: string | null
+          password_hash: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_login?: string | null
+          password_hash: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_login?: string | null
+          password_hash?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      classroom_content: {
+        Row: {
+          content_type: Database["public"]["Enums"]["content_type"]
+          course_type: Database["public"]["Enums"]["course_type"]
+          created_at: string
+          description: string | null
+          duration: number | null
+          file_size: number | null
+          file_url: string
+          id: string
+          is_published: boolean | null
+          model_category: Database["public"]["Enums"]["model_category"]
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content_type: Database["public"]["Enums"]["content_type"]
+          course_type: Database["public"]["Enums"]["course_type"]
+          created_at?: string
+          description?: string | null
+          duration?: number | null
+          file_size?: number | null
+          file_url: string
+          id?: string
+          is_published?: boolean | null
+          model_category: Database["public"]["Enums"]["model_category"]
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content_type?: Database["public"]["Enums"]["content_type"]
+          course_type?: Database["public"]["Enums"]["course_type"]
+          created_at?: string
+          description?: string | null
+          duration?: number | null
+          file_size?: number | null
+          file_url?: string
+          id?: string
+          is_published?: boolean | null
+          model_category?: Database["public"]["Enums"]["model_category"]
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gallery_images: {
         Row: {
           alt: string | null
@@ -238,7 +310,9 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      content_type: "video" | "pdf" | "document"
+      course_type: "theorique" | "pratique"
+      model_category: "femme" | "homme" | "enfant" | "senior"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -353,6 +427,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      content_type: ["video", "pdf", "document"],
+      course_type: ["theorique", "pratique"],
+      model_category: ["femme", "homme", "enfant", "senior"],
+    },
   },
 } as const
