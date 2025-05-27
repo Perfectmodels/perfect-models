@@ -1,333 +1,262 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectItem } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Trash2, Upload } from 'lucide-react';
 import MetaTags from '@/components/seo/MetaTags';
+import { Trash2, Upload } from 'lucide-react';
 
-// Modal de confirmation simple
+// Modal de confirmation
 function ConfirmModal({ open, onConfirm, onCancel, message }) {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center">
-      <div className="bg-white p-6 rounded shadow-lg w-full max-w-sm">
-        <div className="mb-4">{message}</div>
-        <div className="flex gap-2 justify-end">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+      <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
+        <div className="mb-4 font-semibold text-center">{message}</div>
+        <div className="flex gap-3 justify-center">
           <Button variant="outline" onClick={onCancel}>Annuler</Button>
-          <Button variant="destructive" onClick={onConfirm}>Confirmer</Button>
+          <Button variant="destructive" onClick={onConfirm}>Supprimer</Button>
         </div>
       </div>
     </div>
   );
 }
 
-interface ClassroomContent {
-  id: string;
-  title: string;
-  description: string;
-  content_type: 'video' | 'pdf' | 'document';
-  model_category: 'femme' | 'homme' | 'enfant' | 'senior';
-  course_type: 'theorique' | 'pratique';
-  file_url: string;
-  file_size: number;
-  duration: number;
-  thumbnail_url: string;
-  is_published: boolean;
-  created_at: string;
-}
+const DEFAULT_FORM = {
+  title: '',
+  description: '',
+  content_type: 'video',
+  model_category: 'femme',
+  course_type: 'theorique',
+  duration: ''
+};
 
-const AdminPanel = () => {
-  const [contentForm, setContentForm] = useState({
-    title: '',
-    description: '',
-    content_type: 'video',
-    model_category: 'femme',
-    course_type: 'theorique',
-    duration: ''
-  });
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+export default function AdminPanel() {
+  const [form, setForm] = useState(DEFAULT_FORM);
+  const [file, setFile] = useState<File | null>(null);
+  const [showDelete, setShowDelete] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: contents, refetch: refetchContents, isFetching: isFetchingContents } = useQuery({
-    queryKey: ['admin-classroom-content'],
-    queryFn: async (): Promise<ClassroomContent[]> => {
-      const response = await fetch('/functions/v1/admin-content', {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
-      });
-      if (!response.ok) throw new Error('Échec du chargement des contenus');
-      return response.json();
-    }
+  // Récupération des contenus existants
+  const { data: contents = [], isFetching } = useQuery({
+    queryKey: ['admin-content'],
+    queryFn: async () => {
+      const res = await fetch('/functions/v1/admin-content');
+      if (!res.ok) throw new Error('Erreur chargement contenus');
+      return res.json();
+    },
   });
 
+  // Ajout de contenu
   const uploadMutation = useMutation({
     mutationFn: async (formData: FormData) => {
       setIsUploading(true);
-      const response = await fetch('/functions/v1/admin-upload', {
+      const res = await fetch('/functions/v1/admin-upload', {
         method: 'POST',
-        body: formData
+        body: formData,
       });
       setIsUploading(false);
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error || 'Échec de l’upload');
-      }
-      return response.json();
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
     },
     onSuccess: () => {
-      toast({ title: 'Upload réussi', description: 'Le contenu a été ajouté avec succès' });
-      setContentForm({
-        title: '',
-        description: '',
-        content_type: 'video',
-        model_category: 'femme',
-        course_type: 'theorique',
-        duration: ''
-      });
-      setSelectedFile(null);
-      refetchContents();
+      toast({ title: 'Ajout réussi', description: 'Le contenu a été ajouté.' });
+      setForm(DEFAULT_FORM);
+      setFile(null);
+      queryClient.invalidateQueries(['admin-content']);
     },
-    onError: (error: Error) => {
-      toast({ 
-        title: 'Erreur d\'upload', 
-        description: error.message,
-        variant: 'destructive' 
-      });
+    onError: (err: Error) => {
+      toast({ title: 'Erreur ajout', description: err.message, variant: 'destructive' });
     }
   });
 
+  // Suppression de contenu
   const deleteMutation = useMutation({
-    mutationFn: async (contentId: string) => {
-      const response = await fetch('/functions/v1/admin-delete', {
+    mutationFn: async (id: string) => {
+      const res = await fetch('/functions/v1/admin-delete', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contentId })
+        body: JSON.stringify({ contentId: id }),
       });
-      if (!response.ok) throw new Error('Échec de la suppression');
+      if (!res.ok) throw new Error('Erreur suppression');
     },
     onSuccess: () => {
-      toast({ title: 'Suppression réussie', description: 'Le contenu a été supprimé' });
-      refetchContents();
+      toast({ title: 'Suppression', description: 'Le contenu a été supprimé.' });
+      queryClient.invalidateQueries(['admin-content']);
     },
-    onError: (error: Error) => {
-      toast({
-        title: 'Erreur de suppression',
-        description: error.message,
-        variant: 'destructive'
-      });
+    onError: (err: Error) => {
+      toast({ title: 'Erreur suppression', description: err.message, variant: 'destructive' });
     }
   });
 
-  const handleUpload = (e: React.FormEvent) => {
+  // Soumission formulaire
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedFile) {
-      toast({ title: 'Erreur', description: 'Veuillez sélectionner un fichier.', variant: 'destructive' });
+    if (!file) {
+      toast({ title: 'Fichier manquant', description: 'Ajoute un fichier.', variant: 'destructive' });
       return;
     }
-    const allowedTypes = contentForm.content_type === 'video'
+    const allowedTypes = form.content_type === 'video'
       ? ['video/mp4', 'video/avi', 'video/webm', 'video/mov']
       : ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-    if (!allowedTypes.includes(selectedFile.type)) {
-      toast({ title: 'Type de fichier non autorisé', description: 'Veuillez sélectionner un fichier valide.', variant: 'destructive' });
+    if (!allowedTypes.includes(file.type)) {
+      toast({ title: 'Type invalide', description: 'Fichier non autorisé.', variant: 'destructive' });
       return;
     }
-    if (selectedFile.size > 50 * 1024 * 1024) {
-      toast({ title: 'Fichier trop volumineux', description: 'Taille limite : 50 Mo.', variant: 'destructive' });
+    if (file.size > 50 * 1024 * 1024) {
+      toast({ title: 'Fichier trop volumineux', description: 'Max 50 Mo.', variant: 'destructive' });
       return;
     }
-    const formData = new FormData();
-    formData.append('file', selectedFile);
-    formData.append('title', contentForm.title);
-    formData.append('description', contentForm.description);
-    formData.append('content_type', contentForm.content_type);
-    formData.append('model_category', contentForm.model_category);
-    formData.append('course_type', contentForm.course_type);
-    if (contentForm.duration) {
-      formData.append('duration', contentForm.duration);
-    }
-    uploadMutation.mutate(formData);
+    const fd = new FormData();
+    Object.entries(form).forEach(([k, v]) => fd.append(k, v));
+    fd.append('file', file);
+    uploadMutation.mutate(fd);
   };
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <MetaTags 
-        title="Panneau d'Administration - Perfect Models Management" 
-        description="Gestion du contenu de formation pour mannequins"
-      />
-      <div className="container mx-auto px-6">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Panneau d'Administration</h1>
-        </div>
+      <MetaTags title="Admin - Perfect Models" description="Gestion des contenus de formation" />
+      <div className="container mx-auto max-w-3xl px-6">
+        {/* Header */}
+        <header className="mb-10 text-center">
+          <h1 className="text-4xl font-extrabold mb-2">Panneau d'administration</h1>
+          <p className="text-gray-500">Ajoute, modifie ou supprime le contenu de formation.</p>
+        </header>
 
-        {/* Upload Form */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Ajouter du contenu</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleUpload} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input
-                  placeholder="Titre"
-                  value={contentForm.title}
-                  onChange={(e) => setContentForm(prev => ({ ...prev, title: e.target.value }))}
-                  required
-                  disabled={isUploading}
-                />
-                
-                <Select
-                  value={contentForm.content_type}
-                  onValueChange={(value: 'video' | 'pdf' | 'document') => 
-                    setContentForm(prev => ({ ...prev, content_type: value }))
-                  }
-                  disabled={isUploading}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="video">Vidéo</SelectItem>
-                    <SelectItem value="pdf">PDF</SelectItem>
-                    <SelectItem value="document">Document</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select
-                  value={contentForm.model_category}
-                  onValueChange={(value: 'femme' | 'homme' | 'enfant' | 'senior') => 
-                    setContentForm(prev => ({ ...prev, model_category: value }))
-                  }
-                  disabled={isUploading}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="femme">Femme</SelectItem>
-                    <SelectItem value="homme">Homme</SelectItem>
-                    <SelectItem value="enfant">Enfant</SelectItem>
-                    <SelectItem value="senior">Senior</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select
-                  value={contentForm.course_type}
-                  onValueChange={(value: 'theorique' | 'pratique') => 
-                    setContentForm(prev => ({ ...prev, course_type: value }))
-                  }
-                  disabled={isUploading}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="theorique">Théorique</SelectItem>
-                    <SelectItem value="pratique">Pratique</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <Textarea
-                placeholder="Description"
-                value={contentForm.description}
-                onChange={(e) => setContentForm(prev => ({ ...prev, description: e.target.value }))}
-                disabled={isUploading}
-              />
-
-              {contentForm.content_type === 'video' && (
-                <Input
-                  type="number"
-                  placeholder="Durée en secondes"
-                  value={contentForm.duration}
-                  onChange={(e) => setContentForm(prev => ({ ...prev, duration: e.target.value }))}
-                  disabled={isUploading}
-                />
-              )}
-
+        {/* Formulaire d'ajout */}
+        <section className="mb-12">
+          <form
+            className="bg-white rounded-lg shadow-md p-6 grid gap-6"
+            onSubmit={handleSubmit}
+          >
+            <div className="grid md:grid-cols-2 gap-4">
               <Input
-                type="file"
-                accept={contentForm.content_type === 'video' ? 'video/*' : '.pdf,.doc,.docx'}
-                onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                label="Titre"
+                placeholder="Titre du contenu"
+                value={form.title}
+                onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
                 required
                 disabled={isUploading}
               />
-
-              <Button 
-                type="submit" 
-                disabled={isUploading || uploadMutation.isPending}
-                className="w-full"
+              <Select
+                value={form.content_type}
+                onValueChange={value => setForm(f => ({ ...f, content_type: value }))}
+                disabled={isUploading}
+                label="Type de contenu"
               >
-                <Upload className="w-4 h-4 mr-2" />
-                {isUploading || uploadMutation.isPending ? 'Upload en cours...' : 'Ajouter le contenu'}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-
-        {/* Content List */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Contenu existant</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isFetchingContents ? (
-              <div>Chargement des contenus...</div>
-            ) : (
-              <div className="space-y-4">
-                {contents?.length === 0 && (
-                  <div>Aucun contenu pour le moment.</div>
-                )}
-                {contents?.map((content) => (
-                  <div key={content.id} className="flex items-center justify-between p-4 border rounded">
-                    <div className="flex-1">
-                      <h3 className="font-semibold">{content.title}</h3>
-                      <p className="text-sm text-gray-600">{content.description}</p>
-                      <div className="flex gap-2 mt-2">
-                        <Badge>{content.content_type}</Badge>
-                        <Badge variant="outline">{content.model_category}</Badge>
-                        <Badge variant="outline">{content.course_type}</Badge>
-                        <Badge variant={content.is_published ? 'default' : 'secondary'}>
-                          {content.is_published ? 'Publié' : 'Brouillon'}
-                        </Badge>
-                      </div>
-                    </div>
-                    <Button
-                      onClick={() => setDeleteId(content.id)}
-                      variant="destructive"
-                      size="sm"
-                      disabled={deleteMutation.isPending}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
+                <SelectItem value="video">Vidéo</SelectItem>
+                <SelectItem value="pdf">PDF</SelectItem>
+                <SelectItem value="document">Document</SelectItem>
+              </Select>
+              <Select
+                value={form.model_category}
+                onValueChange={value => setForm(f => ({ ...f, model_category: value }))}
+                disabled={isUploading}
+                label="Catégorie"
+              >
+                <SelectItem value="femme">Femme</SelectItem>
+                <SelectItem value="homme">Homme</SelectItem>
+                <SelectItem value="enfant">Enfant</SelectItem>
+                <SelectItem value="senior">Senior</SelectItem>
+              </Select>
+              <Select
+                value={form.course_type}
+                onValueChange={value => setForm(f => ({ ...f, course_type: value }))}
+                disabled={isUploading}
+                label="Type de cours"
+              >
+                <SelectItem value="theorique">Théorique</SelectItem>
+                <SelectItem value="pratique">Pratique</SelectItem>
+              </Select>
+            </div>
+            <Textarea
+              label="Description"
+              placeholder="Description du contenu"
+              value={form.description}
+              onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+              disabled={isUploading}
+            />
+            {form.content_type === 'video' && (
+              <Input
+                type="number"
+                min={0}
+                label="Durée en secondes"
+                placeholder="Durée (secondes)"
+                value={form.duration}
+                onChange={e => setForm(f => ({ ...f, duration: e.target.value }))}
+                disabled={isUploading}
+              />
             )}
-          </CardContent>
-        </Card>
+            <Input
+              type="file"
+              accept={form.content_type === 'video' ? 'video/*' : '.pdf,.doc,.docx'}
+              onChange={e => setFile(e.target.files?.[0] || null)}
+              required
+              disabled={isUploading}
+              label="Fichier"
+            />
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isUploading || uploadMutation.isPending}
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              {isUploading || uploadMutation.isPending ? 'Ajout en cours...' : 'Ajouter'}
+            </Button>
+          </form>
+        </section>
 
-        {/* Modal confirmation suppression */}
+        {/* Liste des contenus */}
+        <section>
+          <h2 className="text-2xl font-bold mb-4">Contenus existants</h2>
+          {isFetching ? (
+            <div>Chargement...</div>
+          ) : (
+            <div className="space-y-4">
+              {contents.length === 0 && <div>Aucun contenu.</div>}
+              {contents.map(content => (
+                <div key={content.id} className="bg-white rounded shadow flex items-center justify-between p-4">
+                  <div>
+                    <span className="block font-semibold">{content.title}</span>
+                    <span className="block text-gray-400 text-sm mb-2">{content.description}</span>
+                    <div className="flex gap-2">
+                      <Badge>{content.content_type}</Badge>
+                      <Badge variant="outline">{content.model_category}</Badge>
+                      <Badge variant="outline">{content.course_type}</Badge>
+                      <Badge variant={content.is_published ? 'default' : 'secondary'}>
+                        {content.is_published ? 'Publié' : 'Brouillon'}
+                      </Badge>
+                    </div>
+                  </div>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => setShowDelete(content.id)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Modal suppression */}
         <ConfirmModal
-          open={!!deleteId}
+          open={!!showDelete}
           onConfirm={() => {
-            if (deleteId) deleteMutation.mutate(deleteId);
-            setDeleteId(null);
+            if (showDelete) deleteMutation.mutate(showDelete);
+            setShowDelete(null);
           }}
-          onCancel={() => setDeleteId(null)}
-          message="Êtes-vous sûr de vouloir supprimer ce contenu ? Cette action est irréversible."
+          onCancel={() => setShowDelete(null)}
+          message="Confirmer la suppression de ce contenu ? Cette action est irréversible."
         />
       </div>
     </div>
   );
-};
-
-export default AdminPanel;
+}
