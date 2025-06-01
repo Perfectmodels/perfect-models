@@ -1,7 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Button, Input, Textarea, Select, SelectItem, Badge } from '@/components/ui';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 import { Trash2, Upload, LogOut, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -189,7 +192,7 @@ export default function AdminPanel() {
       toast({ title: 'Ajout réussi', description: 'Le contenu a été ajouté.' });
       setForm(DEFAULT_FORM);
       setFile(null);
-      queryClient.invalidateQueries(['admin-content']);
+      queryClient.invalidateQueries({ queryKey: ['admin-content'] });
     },
     onError: (err: Error) => {
       toast({ title: 'Erreur ajout', description: err.message, variant: 'destructive' });
@@ -210,7 +213,7 @@ export default function AdminPanel() {
     },
     onSuccess: () => {
       toast({ title: 'Suppression', description: 'Le contenu a été supprimé.' });
-      queryClient.invalidateQueries(['admin-content']);
+      queryClient.invalidateQueries({ queryKey: ['admin-content'] });
     },
     onError: (err: Error) => {
       toast({ title: 'Erreur suppression', description: err.message, variant: 'destructive' });
@@ -268,27 +271,33 @@ export default function AdminPanel() {
               onValueChange={value => setForm(f => ({ ...f, content_type: value }))}
               disabled={isUploading}
             >
-              <SelectItem value="video">Vidéo</SelectItem>
-              <SelectItem value="pdf">PDF</SelectItem>
-              <SelectItem value="document">Document</SelectItem>
+              <SelectContent>
+                <SelectItem value="video">Vidéo</SelectItem>
+                <SelectItem value="pdf">PDF</SelectItem>
+                <SelectItem value="document">Document</SelectItem>
+              </SelectContent>
             </Select>
             <Select
               value={form.model_category}
               onValueChange={value => setForm(f => ({ ...f, model_category: value }))}
               disabled={isUploading}
             >
-              <SelectItem value="femme">Femme</SelectItem>
-              <SelectItem value="homme">Homme</SelectItem>
-              <SelectItem value="enfant">Enfant</SelectItem>
-              <SelectItem value="senior">Senior</SelectItem>
+              <SelectContent>
+                <SelectItem value="femme">Femme</SelectItem>
+                <SelectItem value="homme">Homme</SelectItem>
+                <SelectItem value="enfant">Enfant</SelectItem>
+                <SelectItem value="senior">Senior</SelectItem>
+              </SelectContent>
             </Select>
             <Select
               value={form.course_type}
               onValueChange={value => setForm(f => ({ ...f, course_type: value }))}
               disabled={isUploading}
             >
-              <SelectItem value="theorique">Théorique</SelectItem>
-              <SelectItem value="pratique">Pratique</SelectItem>
+              <SelectContent>
+                <SelectItem value="theorique">Théorique</SelectItem>
+                <SelectItem value="pratique">Pratique</SelectItem>
+              </SelectContent>
             </Select>
           </div>
           <Textarea
