@@ -23,91 +23,82 @@ serve(async (req) => {
 
     console.log('Login attempt for username:', username);
 
-    // Verify admin credentials using crypt function
+    // First, try to verify admin credentials directly with the database
     const { data: adminUser, error } = await supabase
-      .rpc('verify_admin_login', {
-        input_username: username,
-        input_password: password
-      });
+      .from('admin_users')
+      .select('id, username, password_hash')
+      .eq('username', username)
+      .single();
 
-    if (error) {
-      console.error('Database error:', error);
-      
-      // Create the verification function if it doesn't exist
-      const { error: createFunctionError } = await supabase.rpc('exec', {
-        sql: `
-          CREATE OR REPLACE FUNCTION verify_admin_login(input_username TEXT, input_password TEXT)
-          RETURNS TABLE(id UUID, username TEXT)
-          LANGUAGE plpgsql
-          SECURITY DEFINER
-          AS $$
-          BEGIN
-            RETURN QUERY
-            SELECT au.id, au.username
-            FROM admin_users au
-            WHERE au.username = input_username
-            AND au.password_hash = crypt(input_password, au.password_hash);
-          END;
-          $$;
-        `
-      });
-
-      if (createFunctionError) {
-        console.error('Failed to create function:', createFunctionError);
-        return new Response(
-          JSON.stringify({ error: 'Database configuration error' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      // Retry the login
-      const { data: retryAdminUser, error: retryError } = await supabase
-        .rpc('verify_admin_login', {
-          input_username: username,
-          input_password: password
-        });
-
-      if (retryError || !retryAdminUser || retryAdminUser.length === 0) {
-        return new Response(
-          JSON.stringify({ error: 'Invalid credentials' }),
-          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      // Update last login
-      await supabase
-        .from('admin_users')
-        .update({ last_login: new Date().toISOString() })
-        .eq('id', retryAdminUser[0].id);
-
-      return new Response(
-        JSON.stringify({ 
-          id: retryAdminUser[0].id, 
-          username: retryAdminUser[0].username 
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    if (!adminUser || adminUser.length === 0) {
+    if (error || !adminUser) {
+      console.log('Admin user not found:', error);
       return new Response(
         JSON.stringify({ error: 'Invalid credentials' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('Login successful for user:', adminUser[0].username);
+    // Verify password using the crypt function
+    const { data: passwordCheck, error: passwordError } = await supabase
+      .rpc('verify_password', {
+        stored_hash: adminUser.password_hash,
+        input_password: password
+      });
+
+    if (passwordError) {
+      console.error('Password verification error:', passwordError);
+      
+      // If the function doesn't exist, create it and retry
+      const { error: createFunctionError } = await supabase.rpc('exec', {
+        sql: `
+          CREATE OR REPLACE FUNCTION verify_password(stored_hash TEXT, input_password TEXT)
+          RETURNS BOOLEAN
+          LANGUAGE sql
+          SECURITY DEFINER
+          AS $$
+            SELECT stored_hash = crypt(input_password, stored_hash);
+          $$;
+        `
+      });
+
+      if (!createFunctionError) {
+        const { data: retryPasswordCheck } = await supabase
+          .rpc('verify_password', {
+            stored_hash: adminUser.password_hash,
+            input_password: password
+          });
+
+        if (!retryPasswordCheck) {
+          return new Response(
+            JSON.stringify({ error: 'Invalid credentials' }),
+            { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      } else {
+        return new Response(
+          JSON.stringify({ error: 'Authentication system error' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    } else if (!passwordCheck) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid credentials' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log('Login successful for user:', adminUser.username);
 
     // Update last login
     await supabase
       .from('admin_users')
       .update({ last_login: new Date().toISOString() })
-      .eq('id', adminUser[0].id);
+      .eq('id', adminUser.id);
 
     return new Response(
       JSON.stringify({ 
-        id: adminUser[0].id, 
-        username: adminUser[0].username 
+        id: adminUser.id, 
+        username: adminUser.username 
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

@@ -308,7 +308,9 @@ export type Database = {
     }
     Functions: {
       verify_admin_login: {
-        Args: { input_username: string; input_password: string }
+        Args:
+          | Record<PropertyKey, never>
+          | { input_username: string; input_password: string }
         Returns: {
           id: string
           username: string

@@ -23,20 +23,22 @@ function ConfirmModal({ open, onConfirm, onCancel, message }) {
   );
 }
 
-function LoginForm({ onLogin, isLoading }) {
+function LoginForm({ onLogin, isLoading, error }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [localError, setLocalError] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setLocalError('');
     if (!username || !password) {
-      setError('Nom d\'utilisateur et mot de passe requis');
+      setLocalError('Nom d\'utilisateur et mot de passe requis');
       return;
     }
     onLogin(username, password);
   };
+
+  const displayError = error || localError;
 
   return (
     <div className="min-h-screen bg-[#F6F8FB] flex items-center justify-center">
@@ -69,8 +71,10 @@ function LoginForm({ onLogin, isLoading }) {
             />
           </div>
           
-          {error && (
-            <div className="text-red-600 text-sm text-center">{error}</div>
+          {displayError && (
+            <div className="text-red-600 text-sm text-center bg-red-50 p-3 rounded">
+              {displayError}
+            </div>
           )}
           
           <Button
@@ -82,8 +86,10 @@ function LoginForm({ onLogin, isLoading }) {
           </Button>
         </form>
         
-        <div className="mt-4 text-xs text-gray-500 text-center">
-          Identifiants par défaut: admin / admin123
+        <div className="mt-6 text-xs text-gray-500 text-center bg-gray-50 p-3 rounded">
+          <div className="font-semibold mb-1">Identifiants par défaut:</div>
+          <div>Nom d'utilisateur: <strong>admin</strong></div>
+          <div>Mot de passe: <strong>admin123</strong></div>
         </div>
       </div>
     </div>
@@ -105,7 +111,7 @@ export default function AdminPanel() {
   const [file, setFile] = useState<File | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [loginError, setLoginError] = useState('');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -123,35 +129,55 @@ export default function AdminPanel() {
 
   const loginMutation = useMutation({
     mutationFn: async ({ username, password }: { username: string; password: string }) => {
-      setIsLoggingIn(true);
+      console.log('Attempting login with:', username);
       const res = await fetch('/functions/v1/admin-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       });
-      setIsLoggingIn(false);
+      
+      const responseText = await res.text();
+      console.log('Login response status:', res.status);
+      console.log('Login response text:', responseText);
       
       if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(errorText || 'Erreur de connexion');
+        let errorMessage = 'Erreur de connexion';
+        try {
+          const errorData = JSON.parse(responseText);
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          errorMessage = responseText || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
-      return res.json();
+      
+      try {
+        return JSON.parse(responseText);
+      } catch (e) {
+        throw new Error('Réponse invalide du serveur');
+      }
     },
     onSuccess: (adminData) => {
+      console.log('Login successful:', adminData);
       setAdmin(adminData);
+      setLoginError('');
       localStorage.setItem('adminUser', JSON.stringify(adminData));
       toast({ title: 'Connexion réussie', description: `Bienvenue ${adminData.username}!` });
     },
     onError: (err: Error) => {
+      console.error('Login error:', err);
+      const errorMessage = err.message || 'Identifiants incorrects';
+      setLoginError(errorMessage);
       toast({ 
         title: 'Erreur de connexion', 
-        description: err.message || 'Identifiants incorrects', 
+        description: errorMessage, 
         variant: 'destructive' 
       });
     }
   });
 
   const handleLogin = (username: string, password: string) => {
+    setLoginError('');
     loginMutation.mutate({ username, password });
   };
 
@@ -234,7 +260,13 @@ export default function AdminPanel() {
 
   // Si pas connecté, afficher le formulaire de connexion
   if (!admin) {
-    return <LoginForm onLogin={handleLogin} isLoading={isLoggingIn} />;
+    return (
+      <LoginForm 
+        onLogin={handleLogin} 
+        isLoading={loginMutation.isPending} 
+        error={loginError}
+      />
+    );
   }
 
   return (
@@ -271,6 +303,9 @@ export default function AdminPanel() {
               onValueChange={value => setForm(f => ({ ...f, content_type: value }))}
               disabled={isUploading}
             >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="video">Vidéo</SelectItem>
                 <SelectItem value="pdf">PDF</SelectItem>
@@ -282,6 +317,9 @@ export default function AdminPanel() {
               onValueChange={value => setForm(f => ({ ...f, model_category: value }))}
               disabled={isUploading}
             >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="femme">Femme</SelectItem>
                 <SelectItem value="homme">Homme</SelectItem>
@@ -294,6 +332,9 @@ export default function AdminPanel() {
               onValueChange={value => setForm(f => ({ ...f, course_type: value }))}
               disabled={isUploading}
             >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="theorique">Théorique</SelectItem>
                 <SelectItem value="pratique">Pratique</SelectItem>
