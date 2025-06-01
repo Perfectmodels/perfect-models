@@ -130,17 +130,22 @@ export default function AdminPanel() {
   const loginMutation = useMutation({
     mutationFn: async ({ username, password }: { username: string; password: string }) => {
       console.log('Attempting login with:', username);
-      const res = await fetch('/functions/v1/admin-login', {
+      
+      const response = await fetch('https://bjluydkyuhrhnlsewdsj.supabase.co/functions/v1/admin-login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJqbHV5ZGt5dWhyaG5sc2V3ZHNqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc5MTU4MzksImV4cCI6MjA2MzQ5MTgzOX0._BKw6702XEXbpelj4hmQNhJxlOOvU5PeBvrQOuUA4_s',
+          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJqbHV5ZGt5dWhyaG5sc2V3ZHNqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc5MTU4MzksImV4cCI6MjA2MzQ5MTgzOX0._BKw6702XEXbpelj4hmQNhJxlOOvU5PeBvrQOuUA4_s'
+        },
         body: JSON.stringify({ username, password }),
       });
       
-      const responseText = await res.text();
-      console.log('Login response status:', res.status);
+      const responseText = await response.text();
+      console.log('Login response status:', response.status);
       console.log('Login response text:', responseText);
       
-      if (!res.ok) {
+      if (!response.ok) {
         let errorMessage = 'Erreur de connexion';
         try {
           const errorData = JSON.parse(responseText);
@@ -191,9 +196,10 @@ export default function AdminPanel() {
     queryKey: ['admin-content'],
     queryFn: async () => {
       if (!admin?.id) return [];
-      const res = await fetch('/functions/v1/admin-content', {
+      const res = await fetch('https://bjluydkyuhrhnlsewdsj.supabase.co/functions/v1/admin-content', {
         headers: {
           'Authorization': `Bearer ${admin.id}`,
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJqbHV5ZGt5dWhyaG5sc2V3ZHNqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc5MTU4MzksImV4cCI6MjA2MzQ5MTgzOX0._BKw6702XEXbpelj4hmQNhJxlOOvU5PeBvrQOuUA4_s'
         },
       });
       if (!res.ok) throw new Error('Erreur chargement contenus');
@@ -206,8 +212,11 @@ export default function AdminPanel() {
     mutationFn: async (formData: FormData) => {
       setIsUploading(true);
       formData.append('adminId', admin.id);
-      const res = await fetch('/functions/v1/admin-upload', {
+      const res = await fetch('https://bjluydkyuhrhnlsewdsj.supabase.co/functions/v1/admin-upload', {
         method: 'POST',
+        headers: {
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJqbHV5ZGt5dWhyaG5sc2V3ZHNqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc5MTU4MzksImV4cCI6MjA2MzQ5MTgzOX0._BKw6702XEXbpelj4hmQNhJxlOOvU5PeBvrQOuUA4_s'
+        },
         body: formData,
       });
       setIsUploading(false);
@@ -227,11 +236,12 @@ export default function AdminPanel() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch('/functions/v1/admin-delete', {
+      const res = await fetch('https://bjluydkyuhrhnlsewdsj.supabase.co/functions/v1/admin-delete', {
         method: 'DELETE',
         headers: { 
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${admin.id}`,
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJqbHV5ZGt5dWhyaG5sc2V3ZHNqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc5MTU4MzksImV4cCI6MjA2MzQ5MTgzOX0._BKw6702XEXbpelj4hmQNhJxlOOvU5PeBvrQOuUA4_s'
         },
         body: JSON.stringify({ contentId: id }),
       });

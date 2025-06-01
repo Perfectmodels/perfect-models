@@ -23,7 +23,7 @@ serve(async (req) => {
 
     console.log('Login attempt for username:', username);
 
-    // First, try to verify admin credentials directly with the database
+    // Query the admin_users table
     const { data: adminUser, error } = await supabase
       .from('admin_users')
       .select('id, username, password_hash')
@@ -33,56 +33,23 @@ serve(async (req) => {
     if (error || !adminUser) {
       console.log('Admin user not found:', error);
       return new Response(
-        JSON.stringify({ error: 'Invalid credentials' }),
+        JSON.stringify({ error: 'Identifiants incorrects' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Verify password using the crypt function
-    const { data: passwordCheck, error: passwordError } = await supabase
-      .rpc('verify_password', {
-        stored_hash: adminUser.password_hash,
+    // For now, use simple password comparison (in production, use proper hashing)
+    // Check if password matches (assuming stored password is hashed with crypt)
+    const { data: passwordMatch } = await supabase
+      .rpc('verify_admin_login', {
+        input_username: username,
         input_password: password
       });
 
-    if (passwordError) {
-      console.error('Password verification error:', passwordError);
-      
-      // If the function doesn't exist, create it and retry
-      const { error: createFunctionError } = await supabase.rpc('exec', {
-        sql: `
-          CREATE OR REPLACE FUNCTION verify_password(stored_hash TEXT, input_password TEXT)
-          RETURNS BOOLEAN
-          LANGUAGE sql
-          SECURITY DEFINER
-          AS $$
-            SELECT stored_hash = crypt(input_password, stored_hash);
-          $$;
-        `
-      });
-
-      if (!createFunctionError) {
-        const { data: retryPasswordCheck } = await supabase
-          .rpc('verify_password', {
-            stored_hash: adminUser.password_hash,
-            input_password: password
-          });
-
-        if (!retryPasswordCheck) {
-          return new Response(
-            JSON.stringify({ error: 'Invalid credentials' }),
-            { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
-      } else {
-        return new Response(
-          JSON.stringify({ error: 'Authentication system error' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-    } else if (!passwordCheck) {
+    if (!passwordMatch || passwordMatch.length === 0) {
+      console.log('Password verification failed');
       return new Response(
-        JSON.stringify({ error: 'Invalid credentials' }),
+        JSON.stringify({ error: 'Identifiants incorrects' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -106,7 +73,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Login error:', error);
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
+      JSON.stringify({ error: 'Erreur serveur interne' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
