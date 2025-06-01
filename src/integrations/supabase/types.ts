@@ -307,7 +307,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      verify_admin_login: {
+        Args: { input_username: string; input_password: string }
+        Returns: {
+          id: string
+          username: string
+        }[]
+      }
     }
     Enums: {
       content_type: "video" | "pdf" | "document"

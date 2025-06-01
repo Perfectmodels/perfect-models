@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -15,44 +16,56 @@ serve(async (req) => {
   try {
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+      console.error('Missing Supabase environment variables');
       return new Response(
-        JSON.stringify({ error: 'Supabase env variables not set' }),
+        JSON.stringify({ error: 'Configuration serveur manquante' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const supabase = createClient(
-      SUPABASE_URL,
-      SUPABASE_SERVICE_ROLE_KEY
-    );
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Verify admin session
+    // Vérifier l'authentification admin
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
+      console.log('No authorization header provided');
       return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
+        JSON.stringify({ error: 'Authorization header manquant' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     const adminId = authHeader.replace('Bearer ', '').trim();
+    console.log('Checking admin with ID:', adminId);
 
-    // Verify admin exists
+    // Vérifier que l'admin existe
     const { data: admin, error: adminError } = await supabase
       .from('admin_users')
-      .select('id')
+      .select('id, username')
       .eq('id', adminId)
       .single();
 
-    if (adminError || !admin) {
+    if (adminError) {
+      console.error('Admin verification error:', adminError);
       return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
+        JSON.stringify({ error: 'Admin non trouvé' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Get all content for admin
+    if (!admin) {
+      console.log('Admin not found for ID:', adminId);
+      return new Response(
+        JSON.stringify({ error: 'Accès non autorisé' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log('Admin verified:', admin.username);
+
+    // Récupérer tous les contenus pour l'admin
     const { data: contents, error } = await supabase
       .from('classroom_content')
       .select('*')
@@ -61,20 +74,22 @@ serve(async (req) => {
     if (error) {
       console.error('Database error:', error);
       return new Response(
-        JSON.stringify({ error: 'Failed to fetch content' }),
+        JSON.stringify({ error: 'Erreur lors de la récupération des contenus' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
+    console.log(`Found ${contents?.length || 0} contents`);
+
     return new Response(
-      JSON.stringify(contents),
+      JSON.stringify(contents || []),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
-    console.error('Content fetch error:', error);
+    console.error('Unexpected error:', error);
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
+      JSON.stringify({ error: 'Erreur serveur interne' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

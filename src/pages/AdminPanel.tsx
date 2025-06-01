@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button, Input, Textarea, Select, SelectItem, Badge } from '@/components/ui';
-import { Trash2, Upload } from 'lucide-react';
+import { Trash2, Upload, LogOut, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 function ConfirmModal({ open, onConfirm, onCancel, message }) {
@@ -19,6 +20,73 @@ function ConfirmModal({ open, onConfirm, onCancel, message }) {
   );
 }
 
+function LoginForm({ onLogin, isLoading }) {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    if (!username || !password) {
+      setError('Nom d\'utilisateur et mot de passe requis');
+      return;
+    }
+    onLogin(username, password);
+  };
+
+  return (
+    <div className="min-h-screen bg-[#F6F8FB] flex items-center justify-center">
+      <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
+        <div className="text-center mb-6">
+          <User className="w-12 h-12 text-[#22223B] mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-[#22223B]">Connexion Admin</h1>
+          <p className="text-[#4A4E69] mt-2">Accédez au panneau d'administration</p>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Input
+              type="text"
+              placeholder="Nom d'utilisateur"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              disabled={isLoading}
+              required
+            />
+          </div>
+          <div>
+            <Input
+              type="password"
+              placeholder="Mot de passe"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={isLoading}
+              required
+            />
+          </div>
+          
+          {error && (
+            <div className="text-red-600 text-sm text-center">{error}</div>
+          )}
+          
+          <Button
+            type="submit"
+            className="w-full bg-[#22223B] text-white font-semibold py-2 rounded hover:bg-[#343a55] transition"
+            disabled={isLoading}
+          >
+            {isLoading ? 'Connexion...' : 'Se connecter'}
+          </Button>
+        </form>
+        
+        <div className="mt-4 text-xs text-gray-500 text-center">
+          Identifiants par défaut: admin / admin123
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const DEFAULT_FORM = {
   title: '',
   description: '',
@@ -29,25 +97,86 @@ const DEFAULT_FORM = {
 };
 
 export default function AdminPanel() {
+  const [admin, setAdmin] = useState(null);
   const [form, setForm] = useState(DEFAULT_FORM);
   const [file, setFile] = useState<File | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Vérifier si admin déjà connecté au chargement
+  useEffect(() => {
+    const savedAdmin = localStorage.getItem('adminUser');
+    if (savedAdmin) {
+      try {
+        setAdmin(JSON.parse(savedAdmin));
+      } catch (e) {
+        localStorage.removeItem('adminUser');
+      }
+    }
+  }, []);
+
+  const loginMutation = useMutation({
+    mutationFn: async ({ username, password }: { username: string; password: string }) => {
+      setIsLoggingIn(true);
+      const res = await fetch('/functions/v1/admin-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+      setIsLoggingIn(false);
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(errorText || 'Erreur de connexion');
+      }
+      return res.json();
+    },
+    onSuccess: (adminData) => {
+      setAdmin(adminData);
+      localStorage.setItem('adminUser', JSON.stringify(adminData));
+      toast({ title: 'Connexion réussie', description: `Bienvenue ${adminData.username}!` });
+    },
+    onError: (err: Error) => {
+      toast({ 
+        title: 'Erreur de connexion', 
+        description: err.message || 'Identifiants incorrects', 
+        variant: 'destructive' 
+      });
+    }
+  });
+
+  const handleLogin = (username: string, password: string) => {
+    loginMutation.mutate({ username, password });
+  };
+
+  const handleLogout = () => {
+    setAdmin(null);
+    localStorage.removeItem('adminUser');
+    toast({ title: 'Déconnexion', description: 'Vous avez été déconnecté.' });
+  };
 
   const { data: contents = [], isFetching } = useQuery({
     queryKey: ['admin-content'],
     queryFn: async () => {
-      const res = await fetch('/functions/v1/admin-content');
+      if (!admin?.id) return [];
+      const res = await fetch('/functions/v1/admin-content', {
+        headers: {
+          'Authorization': `Bearer ${admin.id}`,
+        },
+      });
       if (!res.ok) throw new Error('Erreur chargement contenus');
       return res.json();
     },
+    enabled: !!admin?.id,
   });
 
   const uploadMutation = useMutation({
     mutationFn: async (formData: FormData) => {
       setIsUploading(true);
+      formData.append('adminId', admin.id);
       const res = await fetch('/functions/v1/admin-upload', {
         method: 'POST',
         body: formData,
@@ -71,7 +200,10 @@ export default function AdminPanel() {
     mutationFn: async (id: string) => {
       const res = await fetch('/functions/v1/admin-delete', {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${admin.id}`,
+        },
         body: JSON.stringify({ contentId: id }),
       });
       if (!res.ok) throw new Error('Erreur suppression');
@@ -97,12 +229,27 @@ export default function AdminPanel() {
     uploadMutation.mutate(fd);
   };
 
+  // Si pas connecté, afficher le formulaire de connexion
+  if (!admin) {
+    return <LoginForm onLogin={handleLogin} isLoading={isLoggingIn} />;
+  }
+
   return (
     <div className="min-h-screen bg-[#F6F8FB] py-10">
-      {/* Header */}
-      <header className="mb-10 text-center">
-        <h1 className="text-3xl font-bold text-[#22223B]">Panneau d’administration</h1>
-        <p className="text-[#4A4E69] mt-2">Gérez vos contenus de formation</p>
+      {/* Header avec déconnexion */}
+      <header className="mb-10 text-center relative">
+        <div className="absolute top-0 right-6">
+          <Button
+            variant="outline"
+            onClick={handleLogout}
+            className="flex items-center gap-2"
+          >
+            <LogOut className="w-4 h-4" />
+            Déconnexion
+          </Button>
+        </div>
+        <h1 className="text-3xl font-bold text-[#22223B]">Panneau d'administration</h1>
+        <p className="text-[#4A4E69] mt-2">Bienvenue {admin.username} - Gérez vos contenus de formation</p>
       </header>
 
       {/* Formulaire d'ajout */}
@@ -224,7 +371,7 @@ export default function AdminPanel() {
           setDeleteId(null);
         }}
         onCancel={() => setDeleteId(null)}
-        message="Confirmer la suppression de ce contenu ? Cette action est irréversible."
+        message="Confirmer la suppression de ce contenu ? Cette action est irréversible."
       />
     </div>
   );
