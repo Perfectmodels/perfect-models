@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Check, Star, Phone, Mail, Calendar } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Check, Star, Phone, Mail, Calendar, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface ServiceTarif {
@@ -22,12 +23,20 @@ interface ServiceTarif {
   recommended?: boolean;
 }
 
+interface Model {
+  id: string;
+  name: string;
+  category: string;
+  experience: string;
+  image?: string;
+}
+
 const serviceTarifs: ServiceTarif[] = [
   {
     id: 'shooting-basic',
     name: 'Shooting Photo Basique',
     description: 'Séance photo professionnelle en studio',
-    basePrice: 150,
+    basePrice: 75000,
     duration: '2-3 heures',
     features: ['1 mannequin', 'Studio inclus', '20 photos retouchées', 'Éclairage professionnel'],
     category: 'shooting'
@@ -36,7 +45,7 @@ const serviceTarifs: ServiceTarif[] = [
     id: 'shooting-premium',
     name: 'Shooting Photo Premium',
     description: 'Séance photo avec mannequin expérimenté et décors multiples',
-    basePrice: 300,
+    basePrice: 150000,
     duration: '4-6 heures',
     features: ['1 mannequin expérimenté', 'Multiple décors', '50 photos retouchées', 'Maquillage inclus', 'Styling conseil'],
     category: 'shooting',
@@ -46,7 +55,7 @@ const serviceTarifs: ServiceTarif[] = [
     id: 'defile-local',
     name: 'Défilé Local',
     description: 'Participation à un défilé de mode local',
-    basePrice: 200,
+    basePrice: 100000,
     duration: '1 journée',
     features: ['1 mannequin', 'Répétitions incluses', 'Maquillage/coiffure', 'Transport local'],
     category: 'defile'
@@ -55,7 +64,7 @@ const serviceTarifs: ServiceTarif[] = [
     id: 'defile-fashion-week',
     name: 'Fashion Week',
     description: 'Défilé haute couture pour événement majeur',
-    basePrice: 800,
+    basePrice: 400000,
     duration: '2-3 jours',
     features: ['Mannequin professionnel', 'Formation intensive', 'Hébergement inclus', 'Équipe styling complète'],
     category: 'defile',
@@ -65,7 +74,7 @@ const serviceTarifs: ServiceTarif[] = [
     id: 'evenement-corporate',
     name: 'Événement Corporate',
     description: 'Présence lors d\'événements d\'entreprise',
-    basePrice: 250,
+    basePrice: 125000,
     duration: '4-8 heures',
     features: ['Mannequin expérimenté', 'Tenue fournie', 'Formation protocole', 'Disponibilité flexible'],
     category: 'evenement'
@@ -74,7 +83,7 @@ const serviceTarifs: ServiceTarif[] = [
     id: 'publicite-campagne',
     name: 'Campagne Publicitaire',
     description: 'Tournage pour spot publicitaire ou campagne marketing',
-    basePrice: 500,
+    basePrice: 250000,
     duration: '1-2 jours',
     features: ['Mannequin professionnel', 'Droits d\'image inclus', 'Multiple prises', 'Post-production'],
     category: 'publicite',
@@ -82,8 +91,23 @@ const serviceTarifs: ServiceTarif[] = [
   }
 ];
 
+// Mannequins disponibles (en réalité, ces données viendraient d'une base de données)
+const availableModels: Model[] = [
+  { id: '1', name: 'Sophie Martin', category: 'Femme', experience: 'Expérimentée', image: '/lovable-uploads/AJC_1598-Modifier.jpg' },
+  { id: '2', name: 'Marie Dubois', category: 'Femme', experience: 'Professionnelle', image: '/lovable-uploads/AJC_1626.jpg' },
+  { id: '3', name: 'Claire Petit', category: 'Femme', experience: 'Débutante', image: '/lovable-uploads/AJC_1633.jpg' },
+  { id: '4', name: 'Émilie Moreau', category: 'Femme', experience: 'Expérimentée', image: '/lovable-uploads/AJC_1634.jpg' },
+  { id: '5', name: 'Julie Bernard', category: 'Femme', experience: 'Professionnelle', image: '/lovable-uploads/AJC_1642.jpg' },
+  { id: '6', name: 'Laura Rousseau', category: 'Femme', experience: 'Expérimentée', image: '/lovable-uploads/AJC_1653.jpg' },
+  { id: '7', name: 'Alexandre Durand', category: 'Homme', experience: 'Professionnel' },
+  { id: '8', name: 'Thomas Laurent', category: 'Homme', experience: 'Expérimenté' },
+  { id: '9', name: 'Nicolas Blanc', category: 'Homme', experience: 'Débutant' },
+  { id: '10', name: 'Pierre Michel', category: 'Homme', experience: 'Professionnel' }
+];
+
 const MannequinOrder = () => {
   const [selectedService, setSelectedService] = useState<ServiceTarif | null>(null);
+  const [selectedModels, setSelectedModels] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     clientName: '',
     email: '',
@@ -92,7 +116,6 @@ const MannequinOrder = () => {
     eventDate: '',
     eventLocation: '',
     mannequinGender: '',
-    mannequinCategory: '',
     additionalRequests: '',
     budget: ''
   });
@@ -100,6 +123,14 @@ const MannequinOrder = () => {
 
   const handleServiceSelect = (service: ServiceTarif) => {
     setSelectedService(service);
+  };
+
+  const handleModelSelection = (modelId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedModels(prev => [...prev, modelId]);
+    } else {
+      setSelectedModels(prev => prev.filter(id => id !== modelId));
+    }
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -111,7 +142,13 @@ const MannequinOrder = () => {
 
   const calculateTotal = () => {
     if (!selectedService) return 0;
-    let total = selectedService.basePrice;
+    
+    let baseTotal = selectedService.basePrice;
+    
+    // Tarif par mannequin supplémentaire (50% du tarif de base)
+    if (selectedModels.length > 1) {
+      baseTotal += (selectedModels.length - 1) * (selectedService.basePrice * 0.5);
+    }
     
     // Réduction pour réservation anticipée
     const eventDate = new Date(formData.eventDate);
@@ -119,12 +156,19 @@ const MannequinOrder = () => {
     const daysInAdvance = Math.ceil((eventDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
     
     if (daysInAdvance > 30) {
-      total *= 0.85; // 15% de réduction
+      baseTotal *= 0.85; // 15% de réduction
     } else if (daysInAdvance > 14) {
-      total *= 0.9; // 10% de réduction
+      baseTotal *= 0.9; // 10% de réduction
     }
     
-    return Math.round(total);
+    return Math.round(baseTotal);
+  };
+
+  const getSelectedModelsInfo = () => {
+    return selectedModels.map(id => {
+      const model = availableModels.find(m => m.id === id);
+      return model ? `${model.name} (${model.category} - ${model.experience})` : '';
+    }).filter(Boolean);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -139,9 +183,19 @@ const MannequinOrder = () => {
       return;
     }
 
+    if (selectedModels.length === 0) {
+      toast({
+        title: "Mannequin requis",
+        description: "Veuillez sélectionner au moins un mannequin.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     // Créer le message WhatsApp
     const total = calculateTotal();
-    const discount = selectedService.basePrice - total;
+    const discount = (selectedService.basePrice * selectedModels.length) - total;
+    const selectedModelsInfo = getSelectedModelsInfo();
     
     const message = `🎭 COMMANDE MANNEQUIN 🎭
 
@@ -156,15 +210,19 @@ const MannequinOrder = () => {
 📝 ${selectedService.description}
 ⏰ Durée: ${selectedService.duration}
 
+👥 MANNEQUINS SÉLECTIONNÉS (${selectedModels.length}):
+${selectedModelsInfo.map(info => `• ${info}`).join('\n')}
+
 📅 DÉTAILS ÉVÉNEMENT:
 📆 Date: ${formData.eventDate}
 📍 Lieu: ${formData.eventLocation}
-👥 Profil mannequin: ${formData.mannequinGender} - ${formData.mannequinCategory}
+👥 Préférence genre: ${formData.mannequinGender || 'Aucune'}
 
 💰 TARIFICATION:
-💵 Prix de base: ${selectedService.basePrice}€
-${discount > 0 ? `🎉 Réduction: -${discount}€` : ''}
-💳 TOTAL: ${total}€
+💵 Prix de base: ${selectedService.basePrice.toLocaleString('fr-FR')} FCFA
+${selectedModels.length > 1 ? `👥 Mannequins supplémentaires (${selectedModels.length - 1}): ${((selectedModels.length - 1) * selectedService.basePrice * 0.5).toLocaleString('fr-FR')} FCFA` : ''}
+${discount > 0 ? `🎉 Réduction: -${discount.toLocaleString('fr-FR')} FCFA` : ''}
+💳 TOTAL: ${total.toLocaleString('fr-FR')} FCFA
 
 📝 Demandes spéciales:
 ${formData.additionalRequests || 'Aucune'}
@@ -172,7 +230,7 @@ ${formData.additionalRequests || 'Aucune'}
 🎁 Avantages inclus:
 ${selectedService.features.map(feature => `✅ ${feature}`).join('\n')}`;
 
-    const whatsappUrl = `https://wa.me/24177123456?text=${encodeURIComponent(message)}`;
+    const whatsappUrl = `https://wa.me/24107507950?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
 
     toast({
@@ -184,6 +242,12 @@ ${selectedService.features.map(feature => `✅ ${feature}`).join('\n')}`;
   const getServicesByCategory = (category: string) => {
     return serviceTarifs.filter(service => service.category === category);
   };
+
+  const filteredModels = formData.mannequinGender && formData.mannequinGender !== 'mixte' 
+    ? availableModels.filter(model => 
+        model.category.toLowerCase() === formData.mannequinGender.toLowerCase()
+      )
+    : availableModels;
 
   return (
     <Layout>
@@ -201,7 +265,7 @@ ${selectedService.features.map(feature => `✅ ${feature}`).join('\n')}`;
 
           {/* Tarifs avantageux */}
           <div className="bg-model-gold/10 border border-model-gold/30 rounded-lg p-6 mb-8 text-center">
-            <h2 className="text-2xl font-bold text-model-gold mb-2">🎉 Tarifs Avantageux 🎉</h2>
+            <h2 className="text-2xl font-bold text-model-gold mb-2">🎉 Tarifs Avantageux en FCFA 🎉</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-model-white">
               <div>
                 <div className="text-lg font-semibold">📅 Réservation anticipée</div>
@@ -209,8 +273,8 @@ ${selectedService.features.map(feature => `✅ ${feature}`).join('\n')}`;
                 <div className="text-sm">+14 jours: <span className="text-model-gold">-10%</span></div>
               </div>
               <div>
-                <div className="text-lg font-semibold">🎁 Services inclus</div>
-                <div className="text-sm">Maquillage, styling, transport</div>
+                <div className="text-lg font-semibold">👥 Mannequins multiples</div>
+                <div className="text-sm">2ème mannequin: <span className="text-model-gold">50% du tarif</span></div>
               </div>
               <div>
                 <div className="text-lg font-semibold">⭐ Qualité garantie</div>
@@ -296,14 +360,21 @@ ${selectedService.features.map(feature => `✅ ${feature}`).join('\n')}`;
                   <p className="text-sm text-gray-600">{selectedService.description}</p>
                   <div className="mt-2">
                     <span className="text-lg font-bold text-model-gold">
-                      {calculateTotal()}€
+                      {calculateTotal().toLocaleString('fr-FR')} FCFA
                     </span>
-                    {calculateTotal() < selectedService.basePrice && (
+                    {calculateTotal() < (selectedService.basePrice * Math.max(1, selectedModels.length)) && (
                       <span className="ml-2 text-sm line-through text-gray-500">
-                        {selectedService.basePrice}€
+                        {(selectedService.basePrice * Math.max(1, selectedModels.length)).toLocaleString('fr-FR')} FCFA
                       </span>
                     )}
                   </div>
+                  {selectedModels.length > 0 && (
+                    <div className="mt-2">
+                      <span className="text-sm text-gray-600">
+                        {selectedModels.length} mannequin(s) sélectionné(s)
+                      </span>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -372,33 +443,62 @@ ${selectedService.features.map(feature => `✅ ${feature}`).join('\n')}`;
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="mannequinGender">Genre souhaité</Label>
-                    <Select value={formData.mannequinGender} onValueChange={(value) => handleInputChange('mannequinGender', value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="femme">Femme</SelectItem>
-                        <SelectItem value="homme">Homme</SelectItem>
-                        <SelectItem value="mixte">Mixte</SelectItem>
-                      </SelectContent>
-                    </Select>
+                <div>
+                  <Label htmlFor="mannequinGender">Préférence de genre</Label>
+                  <Select value={formData.mannequinGender} onValueChange={(value) => handleInputChange('mannequinGender', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="femme">Femme</SelectItem>
+                      <SelectItem value="homme">Homme</SelectItem>
+                      <SelectItem value="mixte">Mixte</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Sélection des mannequins */}
+                <div>
+                  <Label className="text-base font-semibold flex items-center gap-2 mb-3">
+                    <Users className="w-4 h-4" />
+                    Sélectionner les mannequins *
+                  </Label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-60 overflow-y-auto border rounded-lg p-3">
+                    {filteredModels.map((model) => (
+                      <div key={model.id} className="flex items-center space-x-3 p-2 border rounded-lg hover:bg-gray-50">
+                        {model.image && (
+                          <img 
+                            src={model.image} 
+                            alt={model.name}
+                            className="w-12 h-12 rounded-full object-cover"
+                          />
+                        )}
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`model-${model.id}`}
+                              checked={selectedModels.includes(model.id)}
+                              onCheckedChange={(checked) => handleModelSelection(model.id, checked as boolean)}
+                            />
+                            <label 
+                              htmlFor={`model-${model.id}`}
+                              className="text-sm font-medium cursor-pointer"
+                            >
+                              {model.name}
+                            </label>
+                          </div>
+                          <p className="text-xs text-gray-500">
+                            {model.category} • {model.experience}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  <div>
-                    <Label htmlFor="mannequinCategory">Catégorie</Label>
-                    <Select value={formData.mannequinCategory} onValueChange={(value) => handleInputChange('mannequinCategory', value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="debutant">Débutant</SelectItem>
-                        <SelectItem value="experimente">Expérimenté</SelectItem>
-                        <SelectItem value="professionnel">Professionnel</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  {selectedModels.length > 0 && (
+                    <p className="text-sm text-green-600 mt-2">
+                      {selectedModels.length} mannequin(s) sélectionné(s)
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -415,7 +515,7 @@ ${selectedService.features.map(feature => `✅ ${feature}`).join('\n')}`;
                 <Button 
                   type="submit" 
                   className="w-full bg-model-gold hover:bg-model-gold/90 text-model-black font-semibold"
-                  disabled={!selectedService}
+                  disabled={!selectedService || selectedModels.length === 0}
                 >
                   Envoyer la Commande via WhatsApp
                 </Button>
@@ -425,7 +525,7 @@ ${selectedService.features.map(feature => `✅ ${feature}`).join('\n')}`;
                 <div className="flex items-center gap-4 text-sm text-gray-600">
                   <div className="flex items-center gap-1">
                     <Phone className="w-4 h-4" />
-                    <span>+241 77 12 34 56</span>
+                    <span>+241 07 50 79 50</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <Mail className="w-4 h-4" />
@@ -469,7 +569,9 @@ const ServiceCard = ({ service, isSelected, onSelect }: ServiceCardProps) => {
       </CardHeader>
       <CardContent>
         <div className="flex items-center justify-between mb-3">
-          <span className="text-2xl font-bold text-model-gold">{service.basePrice}€</span>
+          <span className="text-2xl font-bold text-model-gold">
+            {service.basePrice.toLocaleString('fr-FR')} FCFA
+          </span>
           <span className="text-sm text-gray-500">{service.duration}</span>
         </div>
         <div className="space-y-1">
