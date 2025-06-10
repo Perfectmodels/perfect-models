@@ -5,7 +5,7 @@ export const routes = [
   { path: '/women', label: 'Women Models' },
   { path: '/men', label: 'Men Models' },
   { path: '/gallery', label: 'Gallery' },
-  { path: '/classroom', label: 'Classroom' },
+  { path: '/mannequin-order', label: 'Mannequin Order' },
   { path: '/casting', label: 'Casting' },
   { path: '/about', label: 'About Us' },
   { path: '/contact', label: 'Contact' },
