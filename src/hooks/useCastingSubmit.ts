@@ -20,7 +20,10 @@ export const useCastingSubmit = ({ form, onSuccess }: UseCastingSubmitProps) => 
       
       // Convertir date_of_birth en string pour la compatibilité avec Supabase
       const formattedDate = data.date_of_birth ? 
-        data.date_of_birth.toISOString().split('T')[0] : null;
+        (data.date_of_birth instanceof Date ? 
+          data.date_of_birth.toISOString().split('T')[0] : 
+          new Date(data.date_of_birth).toISOString().split('T')[0]
+        ) : null;
       
       // Sauvegarde des données dans la base de données
       const { data: applicationData, error: applicationError } = await supabase

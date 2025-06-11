@@ -33,7 +33,7 @@ const DateOfBirthField = ({ form }: DateOfBirthFieldProps) => {
                   )}
                 >
                   {field.value ? (
-                    format(field.value, "dd MMMM yyyy", { locale: fr })
+                    format(typeof field.value === 'string' ? new Date(field.value) : field.value, "dd MMMM yyyy", { locale: fr })
                   ) : (
                     <span>Sélectionnez votre date de naissance</span>
                   )}
@@ -44,7 +44,7 @@ const DateOfBirthField = ({ form }: DateOfBirthFieldProps) => {
             <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
-                selected={field.value}
+                selected={typeof field.value === 'string' ? new Date(field.value) : field.value}
                 onSelect={field.onChange}
                 disabled={(date) => 
                   date > new Date() || 

@@ -35,34 +35,50 @@ export type ModelApplication = z.infer<typeof modelApplicationSchema>;
 // Types pour les autres composants
 export interface Event {
   id: string;
+  name: string;
   title: string;
   description: string;
-  link: string;
+  link?: string;
+  location?: string;
+  date?: string;
+  image?: string;
 }
 
 export interface Service {
   id: string;
+  name: string;
   title: string;
   description: string;
-  link: string;
+  link?: string;
+  image?: string;
 }
 
 export interface DetailedModel {
   id: string;
   name: string;
+  first_name: string;
+  last_name: string;
   image: string;
+  images: string[];
   measurements: any;
   category?: string;
+  gender?: string;
+  category_id?: string;
+  instagram_url?: string;
 }
 
 export interface Collaboration {
   id: string;
   title: string;
   description: string;
+  date?: string;
+  image?: string;
 }
 
 export interface ModelShowcase {
   id: string;
   title: string;
   images: string[];
+  date?: string;
+  location?: string;
 }

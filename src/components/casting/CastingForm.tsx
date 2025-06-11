@@ -1,7 +1,8 @@
+
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form } from '@/components/ui/form';
-import { ModelApplication, modelApplicationSchema } from '@/types/modelTypes'; // Ajoute un schéma Zod ici
+import { ModelApplication, modelApplicationSchema } from '@/types/modelTypes';
 import PersonalInfoFields from './PersonalInfoFields';
 import MeasurementsFields from './MeasurementsFields';
 import AdditionalInfoFields from './AdditionalInfoFields';
@@ -14,7 +15,7 @@ interface CastingFormProps {
 
 const CastingForm = ({ onSuccess }: CastingFormProps) => {
   const form = useForm<ModelApplication>({
-    resolver: zodResolver(modelApplicationSchema), // Utilise Zod pour la validation
+    resolver: zodResolver(modelApplicationSchema),
     defaultValues: {
       first_name: '',
       last_name: '',
@@ -39,13 +40,13 @@ const CastingForm = ({ onSuccess }: CastingFormProps) => {
       special_skills: [],
       events_participated: [],
     },
-    mode: 'onBlur', // Validation au blur pour UX
+    mode: 'onBlur',
   });
 
   const { isLoading, handleWhatsAppSubmit } = useCastingSubmit({
     form,
     onSuccess: () => {
-      form.reset(); // Remettre à zéro le formulaire après succès
+      form.reset();
       onSuccess();
     },
   });
@@ -70,7 +71,7 @@ const CastingForm = ({ onSuccess }: CastingFormProps) => {
         )}
 
         <div className="pt-4">
-          <SubmitButton isLoading={isLoading} disabled={!form.formState.isValid || isLoading} />
+          <SubmitButton isLoading={isLoading} disabled={!form.formState.isValid} />
         </div>
       </form>
     </Form>
