@@ -2,8 +2,7 @@
 // Define application routes for sitemap generation
 export const routes = [
   { path: '/', label: 'Home' },
-  { path: '/women', label: 'Women Models' },
-  { path: '/men', label: 'Men Models' },
+  { path: '/models', label: 'Our Models' },
   { path: '/gallery', label: 'Gallery' },
   { path: '/mannequin-order', label: 'Mannequin Order' },
   { path: '/casting', label: 'Casting' },

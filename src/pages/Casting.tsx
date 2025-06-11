@@ -4,8 +4,6 @@ import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import CastingForm from '@/components/casting/CastingForm';
 import SuccessDialog from '@/components/casting/SuccessDialog';
-import ModelsGrid from '@/components/models/ModelsGrid';
-import { availableModels } from '@/data/availableModels';
 
 const Casting = () => {
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
@@ -40,19 +38,6 @@ const Casting = () => {
               open={showSuccessDialog}
               onOpenChange={setShowSuccessDialog}
             />
-          </div>
-
-          {/* Section des mannequins existants */}
-          <div className="mt-20">
-            <div className="text-center mb-12">
-              <h2 className="font-playfair text-3xl md:text-4xl mb-4">Nos Mannequins</h2>
-              <div className="w-20 h-0.5 bg-model-gold mx-auto mb-6"></div>
-              <p className="text-gray-600 max-w-2xl mx-auto">
-                Découvrez les mannequins qui font partie de notre agence et qui participent régulièrement à nos événements de mode.
-              </p>
-            </div>
-            
-            <ModelsGrid models={availableModels} />
           </div>
         </div>
       </main>
