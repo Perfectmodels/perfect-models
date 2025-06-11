@@ -1,3 +1,4 @@
+
 import { z } from "zod";
 
 export const modelApplicationSchema = z.object({
@@ -30,3 +31,38 @@ export const modelApplicationSchema = z.object({
 
 // Type TypeScript associé
 export type ModelApplication = z.infer<typeof modelApplicationSchema>;
+
+// Types pour les autres composants
+export interface Event {
+  id: string;
+  title: string;
+  description: string;
+  link: string;
+}
+
+export interface Service {
+  id: string;
+  title: string;
+  description: string;
+  link: string;
+}
+
+export interface DetailedModel {
+  id: string;
+  name: string;
+  image: string;
+  measurements: any;
+  category?: string;
+}
+
+export interface Collaboration {
+  id: string;
+  title: string;
+  description: string;
+}
+
+export interface ModelShowcase {
+  id: string;
+  title: string;
+  images: string[];
+}

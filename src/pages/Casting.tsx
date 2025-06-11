@@ -4,7 +4,7 @@ import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import CastingForm from '@/components/casting/CastingForm';
 import SuccessDialog from '@/components/casting/SuccessDialog';
-import ModelsList from '@/components/models/ModelsList';
+import ModelsGrid from '@/components/models/ModelsGrid';
 import { availableModels } from '@/data/availableModels';
 
 const Casting = () => {
@@ -52,7 +52,7 @@ const Casting = () => {
               </p>
             </div>
             
-            <ModelsList models={availableModels} />
+            <ModelsGrid models={availableModels} />
           </div>
         </div>
       </main>
