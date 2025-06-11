@@ -1,76 +1,32 @@
+import { z } from "zod";
 
-export interface ModelApplication {
-  first_name: string;
-  last_name: string;
-  email: string;
-  phone: string;
-  gender: string;
-  category_id: string;
-  date_of_birth?: Date;
-  age: number | null;
-  height: number;
-  weight: number | null;
-  bust: number | null;
-  waist: number | null;
-  hips: number | null;
-  shoe_size: number | null;
-  hair_color: string;
-  eye_color: string;
-  experience: string;
-  instagram_url: string;
-  availability: string;
-  languages: string[];
-  special_skills: string[];
-  events_participated: string[];
-}
+export const modelApplicationSchema = z.object({
+  first_name: z.string().min(1, "Le prénom est requis"),
+  last_name: z.string().min(1, "Le nom est requis"),
+  email: z.string().email("Email invalide"),
+  phone: z.string().min(6, "Téléphone requis"),
+  gender: z.string().min(1, "Genre requis"),
+  category_id: z.string().min(1, "Catégorie requise"),
+  date_of_birth: z.union([
+    z.string().min(1, "Date de naissance requise"),
+    z.date(),
+  ]),
+  age: z.number().int().min(0).nullable(),
+  weight: z.number().min(0, "Poids requis").nullable(),
+  height: z.number().min(0, "Taille requise"),
+  bust: z.number().min(0).nullable(),
+  waist: z.number().min(0).nullable(),
+  hips: z.number().min(0).nullable(),
+  shoe_size: z.number().min(0).nullable(),
+  hair_color: z.string().optional(),
+  eye_color: z.string().optional(),
+  experience: z.string().optional(),
+  instagram_url: z.string().url("Lien Instagram invalide").optional().or(z.literal("")),
+  availability: z.string().optional(),
+  languages: z.array(z.string()).optional(),
+  special_skills: z.array(z.string()).optional(),
+  events_participated: z.array(z.string()).optional(),
+});
 
-export interface Service {
-  id: string;
-  name: string;
-  description: string;
-  image?: string;
-}
-
-export interface Event {
-  id: string;
-  name: string;
-  description: string;
-  location?: string;
-  date?: string;
-  image?: string;
-}
-
-export interface DetailedModel {
-  id: string;
-  first_name: string;
-  last_name: string;
-  images: string[];
-  gender: string;
-  category_id: string;
-  measurements: {
-    height?: number;
-    bust?: number;
-    waist?: number;
-    hips?: number;
-    shoe_size?: number;
-    eye_color?: string;
-    hair_color?: string;
-  };
-  instagram_url?: string;
-}
-
-export interface Collaboration {
-  id: string;
-  title: string;
-  description?: string;
-  date?: string;
-  image?: string;
-}
-
-export interface ModelShowcase {
-  id: string;
-  title: string;
-  date?: string;
-  location?: string;
-  images: string[];
-}
+// Type TypeScript associé
+export type ModelApplication = z.infer<typeof modelApplicationSchema>;
