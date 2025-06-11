@@ -9,7 +9,7 @@ type TeamMember = {
 
 const teamMembers: TeamMember[] = [
   {
-    name: "Nom Prénom",
+    name: "Parfait ",
     role: "Fondateur",
     imageUrl: "https://lien-de-ton-image.jpg",
     bio: "Quelques mots sur ce membre."
