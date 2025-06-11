@@ -103,10 +103,13 @@ const ModelDetail = () => {
 
   const detailedModel: DetailedModel = {
     id: model.id,
-    first_name: model.first_name,
-    last_name: model.last_name,
+    name: model.name,
+    first_name: model.first_name || model.name.split(' ')[0] || '',
+    last_name: model.last_name || model.name.split(' ').slice(1).join(' ') || '',
+    image: model.image || "https://via.placeholder.com/400x600?text=Photo+à+venir",
     images: [model.image || "https://via.placeholder.com/400x600?text=Photo+à+venir"],
     gender: model.gender,
+    category: model.category,
     category_id: model.category_id,
     measurements: {
       height: 175,
