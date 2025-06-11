@@ -29,10 +29,8 @@ export const modelApplicationSchema = z.object({
   events_participated: z.array(z.string()).optional(),
 });
 
-// Type TypeScript associé
 export type ModelApplication = z.infer<typeof modelApplicationSchema>;
 
-// Types pour les autres composants
 export interface Event {
   id: string;
   name: string;
@@ -60,7 +58,15 @@ export interface DetailedModel {
   last_name: string;
   image: string;
   images: string[];
-  measurements: any;
+  measurements: {
+    height?: number;
+    bust?: number;
+    waist?: number;
+    hips?: number;
+    shoe_size?: number;
+    eye_color?: string;
+    hair_color?: string;
+  };
   category?: string;
   gender?: string;
   category_id?: string;
