@@ -308,14 +308,19 @@ export type Database = {
     }
     Functions: {
       log_admin_action: {
-        Args: { admin_username: string; action: string }
+        Args:
+          | Record<PropertyKey, never>
+          | { admin_username: string; action: string }
         Returns: undefined
       }
       verify_admin_login: {
         Args:
           | Record<PropertyKey, never>
           | { input_username: string; input_password: string }
-        Returns: undefined
+        Returns: {
+          id: string
+          username: string
+        }[]
       }
     }
     Enums: {
