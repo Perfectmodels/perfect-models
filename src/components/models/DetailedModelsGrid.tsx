@@ -35,7 +35,7 @@ const DetailedModelsGrid: React.FC<DetailedModelsGridProps> = ({
               key={model.id} 
               className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300"
             >
-              <div className="relative h-80">
+              <div className="relative h-48">
                 <AspectRatio ratio={3/4} className="h-full">
                   <img
                     src={model.image || "https://via.placeholder.com/400x600?text=Photo+à+venir"}
