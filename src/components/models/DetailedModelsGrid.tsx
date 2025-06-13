@@ -35,89 +35,89 @@ const DetailedModelsGrid: React.FC<DetailedModelsGridProps> = ({
               key={model.id} 
               className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300"
             >
-              <div className="relative h-64">
+              <div className="relative h-96">
                 <AspectRatio ratio={3/4} className="h-full">
                   <img
                     src={model.image || "https://via.placeholder.com/400x600?text=Photo+à+venir"}
                     alt={model.name}
                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                   />
-                </AspectRatio>
-              </div>
-              
-              <div className="p-4">
-                <h3 className="font-playfair text-xl font-semibold mb-3 text-center text-model-gold">
-                  {model.name}
-                </h3>
-                
-                {showAllInfo && (
-                  <div className="space-y-2 text-sm">
-                    {model.category && (
-                      <div className="text-center">
-                        <span className="font-medium text-gray-600">Catégorie: </span>
-                        <span className="text-model-gold font-semibold">{model.category}</span>
-                      </div>
-                    )}
+                  
+                  {/* Overlay avec dégradé et informations */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-4">
+                    {/* Nom du modèle */}
+                    <h3 className="font-playfair text-xl font-semibold mb-3 text-center text-white">
+                      {model.name}
+                    </h3>
                     
-                    {model.experience && (
-                      <div className="text-center mb-3">
-                        <span className="font-medium text-gray-600">Expérience: </span>
-                        <span className="text-gray-800">{model.experience}</span>
-                      </div>
-                    )}
-
-                    {/* Mensurations en format compact */}
-                    <div className="bg-gray-50 p-3 rounded-lg">
-                      <h4 className="font-medium text-gray-700 mb-2 text-center text-xs">MENSURATIONS</h4>
-                      <div className="grid grid-cols-2 gap-1 text-xs">
-                        <div className="text-center">
-                          <span className="text-gray-500">Taille</span>
-                          <div className="font-medium">175 cm</div>
-                        </div>
-                        <div className="text-center">
-                          <span className="text-gray-500">Pointure</span>
-                          <div className="font-medium">40</div>
-                        </div>
-                        {model.category === 'Femme' && (
-                          <>
-                            <div className="text-center">
-                              <span className="text-gray-500">Poitrine</span>
-                              <div className="font-medium">88 cm</div>
-                            </div>
-                            <div className="text-center">
-                              <span className="text-gray-500">Hanches</span>
-                              <div className="font-medium">90 cm</div>
-                            </div>
-                          </>
+                    {showAllInfo && (
+                      <div className="space-y-2 text-white">
+                        {model.category && (
+                          <div className="text-center mb-2">
+                            <span className="text-model-gold font-semibold text-sm">{model.category}</span>
+                          </div>
                         )}
-                        <div className="text-center col-span-2">
-                          <span className="text-gray-500">Tour de taille</span>
-                          <div className="font-medium">60 cm</div>
-                        </div>
-                      </div>
-                    </div>
+                        
+                        {model.experience && (
+                          <div className="text-center mb-3">
+                            <span className="text-xs opacity-90">{model.experience}</span>
+                          </div>
+                        )}
 
-                    {/* Apparence */}
-                    <div className="bg-gray-50 p-2 rounded-lg">
-                      <div className="grid grid-cols-2 gap-1 text-xs text-center">
-                        <div>
-                          <span className="text-gray-500">Yeux</span>
-                          <div className="font-medium">Marron</div>
+                        {/* Mensurations en format compact */}
+                        <div className="bg-black/40 backdrop-blur-sm p-2 rounded-lg">
+                          <h4 className="font-medium text-model-gold mb-2 text-center text-xs">MENSURATIONS</h4>
+                          <div className="grid grid-cols-2 gap-1 text-xs">
+                            <div className="text-center">
+                              <span className="text-gray-300">Taille</span>
+                              <div className="font-medium text-white">175 cm</div>
+                            </div>
+                            <div className="text-center">
+                              <span className="text-gray-300">Pointure</span>
+                              <div className="font-medium text-white">40</div>
+                            </div>
+                            {model.category === 'Femme' && (
+                              <>
+                                <div className="text-center">
+                                  <span className="text-gray-300">Poitrine</span>
+                                  <div className="font-medium text-white">88 cm</div>
+                                </div>
+                                <div className="text-center">
+                                  <span className="text-gray-300">Hanches</span>
+                                  <div className="font-medium text-white">90 cm</div>
+                                </div>
+                              </>
+                            )}
+                            <div className="text-center col-span-2">
+                              <span className="text-gray-300">Tour de taille</span>
+                              <div className="font-medium text-white">60 cm</div>
+                            </div>
+                          </div>
                         </div>
-                        <div>
-                          <span className="text-gray-500">Cheveux</span>
-                          <div className="font-medium">Noir</div>
+
+                        {/* Apparence */}
+                        <div className="bg-black/40 backdrop-blur-sm p-2 rounded-lg">
+                          <div className="grid grid-cols-2 gap-1 text-xs text-center">
+                            <div>
+                              <span className="text-gray-300">Yeux</span>
+                              <div className="font-medium text-white">Marron</div>
+                            </div>
+                            <div>
+                              <span className="text-gray-300">Cheveux</span>
+                              <div className="font-medium text-white">Noir</div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="mt-2 pt-2 border-t border-white/20">
+                          <p className="text-center text-xs text-model-gold font-medium">
+                            Disponible pour castings
+                          </p>
                         </div>
                       </div>
-                    </div>
-                    
-                    <div className="mt-2 pt-2 border-t border-gray-200">
-                      <p className="text-center text-xs text-model-gold font-medium">
-                        Disponible pour castings et événements
-                      </p>
-                    </div>
+                    )}
                   </div>
-                )}
+                </AspectRatio>
               </div>
             </div>
           ))}
