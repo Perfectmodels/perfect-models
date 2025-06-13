@@ -1,11 +1,17 @@
 
 import { useState } from 'react';
+import { UseFormReturn } from 'react-hook-form';
 import { ModelApplication } from '@/types/modelTypes';
 
-export const useCastingSubmit = () => {
+interface UseCastingSubmitProps {
+  form: UseFormReturn<ModelApplication>;
+  onSuccess: () => void;
+}
+
+export const useCastingSubmit = ({ form, onSuccess }: UseCastingSubmitProps) => {
   const [isLoading, setIsLoading] = useState(false);
 
-  const submitApplication = async (data: ModelApplication) => {
+  const handleWhatsAppSubmit = async (data: ModelApplication) => {
     setIsLoading(true);
     
     try {
@@ -23,6 +29,9 @@ export const useCastingSubmit = () => {
       
       // Ouvrir WhatsApp
       window.open(whatsappUrl, '_blank');
+      
+      // Appeler onSuccess pour réinitialiser le formulaire et afficher le succès
+      onSuccess();
       
       return { success: true };
     } catch (error) {
@@ -69,5 +78,5 @@ Instagram: ${data.instagram_url || 'Non renseigné'}
 Candidature envoyée depuis le site Perfect Models Management`;
   };
 
-  return { submitApplication, isLoading };
+  return { handleWhatsAppSubmit, isLoading };
 };
