@@ -5,7 +5,6 @@ import HeroSlider from '@/components/home/HeroSlider';
 import AboutSection from '@/components/home/AboutSection';
 import Services from '@/components/home/Services';
 import Benefits from '@/components/home/Benefits';
-import FeaturedModels from '@/components/home/FeaturedModels';
 import LatestNews from '@/components/home/LatestNews';
 import StatsSection from '@/components/home/StatsSection';
 import Testimonials from '@/components/home/Testimonials';
@@ -17,7 +16,6 @@ const Index = () => {
       <AboutSection />
       <Services />
       <StatsSection />
-      <FeaturedModels />
       <Benefits />
       <LatestNews />
       <Testimonials />
