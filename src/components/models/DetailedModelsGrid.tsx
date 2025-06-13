@@ -35,7 +35,7 @@ const DetailedModelsGrid: React.FC<DetailedModelsGridProps> = ({
               key={model.id} 
               className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300"
             >
-              <div className="relative h-48">
+              <div className="relative h-64">
                 <AspectRatio ratio={3/4} className="h-full">
                   <img
                     src={model.image || "https://via.placeholder.com/400x600?text=Photo+à+venir"}
@@ -51,67 +51,67 @@ const DetailedModelsGrid: React.FC<DetailedModelsGridProps> = ({
                 </h3>
                 
                 {showAllInfo && (
-                  <div className="space-y-3 text-sm">
+                  <div className="space-y-2 text-sm">
                     {model.category && (
-                      <div className="flex justify-between">
-                        <span className="font-medium text-gray-600">Catégorie:</span>
-                        <span className="text-model-gold">{model.category}</span>
+                      <div className="text-center">
+                        <span className="font-medium text-gray-600">Catégorie: </span>
+                        <span className="text-model-gold font-semibold">{model.category}</span>
                       </div>
                     )}
                     
                     {model.experience && (
-                      <div className="flex justify-between">
-                        <span className="font-medium text-gray-600">Expérience:</span>
+                      <div className="text-center mb-3">
+                        <span className="font-medium text-gray-600">Expérience: </span>
                         <span className="text-gray-800">{model.experience}</span>
                       </div>
                     )}
 
-                    {/* Informations de contact et mensurations */}
-                    <div className="pt-3 border-t border-gray-200">
-                      <h4 className="font-medium text-gray-700 mb-2 text-center">Mensurations</h4>
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">Taille:</span>
-                          <span className="font-medium">175 cm</span>
+                    {/* Mensurations en format compact */}
+                    <div className="bg-gray-50 p-3 rounded-lg">
+                      <h4 className="font-medium text-gray-700 mb-2 text-center text-xs">MENSURATIONS</h4>
+                      <div className="grid grid-cols-2 gap-1 text-xs">
+                        <div className="text-center">
+                          <span className="text-gray-500">Taille</span>
+                          <div className="font-medium">175 cm</div>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">Pointure:</span>
-                          <span className="font-medium">40</span>
+                        <div className="text-center">
+                          <span className="text-gray-500">Pointure</span>
+                          <div className="font-medium">40</div>
                         </div>
                         {model.category === 'Femme' && (
                           <>
-                            <div className="flex justify-between">
-                              <span className="text-gray-500">Poitrine:</span>
-                              <span className="font-medium">88 cm</span>
+                            <div className="text-center">
+                              <span className="text-gray-500">Poitrine</span>
+                              <div className="font-medium">88 cm</div>
                             </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-500">Hanches:</span>
-                              <span className="font-medium">90 cm</span>
+                            <div className="text-center">
+                              <span className="text-gray-500">Hanches</span>
+                              <div className="font-medium">90 cm</div>
                             </div>
                           </>
                         )}
-                        <div className="flex justify-between col-span-2">
-                          <span className="text-gray-500">Tour de taille:</span>
-                          <span className="font-medium">60 cm</span>
+                        <div className="text-center col-span-2">
+                          <span className="text-gray-500">Tour de taille</span>
+                          <div className="font-medium">60 cm</div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Informations supplémentaires */}
-                    <div className="pt-3 border-t border-gray-200">
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">Yeux:</span>
-                          <span className="font-medium">Marron</span>
+                    {/* Apparence */}
+                    <div className="bg-gray-50 p-2 rounded-lg">
+                      <div className="grid grid-cols-2 gap-1 text-xs text-center">
+                        <div>
+                          <span className="text-gray-500">Yeux</span>
+                          <div className="font-medium">Marron</div>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">Cheveux:</span>
-                          <span className="font-medium">Noir</span>
+                        <div>
+                          <span className="text-gray-500">Cheveux</span>
+                          <div className="font-medium">Noir</div>
                         </div>
                       </div>
                     </div>
                     
-                    <div className="mt-3 pt-3 border-t border-gray-200">
+                    <div className="mt-2 pt-2 border-t border-gray-200">
                       <p className="text-center text-xs text-model-gold font-medium">
                         Disponible pour castings et événements
                       </p>
