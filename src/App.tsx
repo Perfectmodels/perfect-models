@@ -13,7 +13,8 @@ import Contact from "./pages/Contact";
 import ModelDetail from "./pages/ModelDetail";
 import Gallery from "./pages/Gallery";
 import MannequinOrder from "./pages/MannequinOrder";
-import AdminPanel from "./pages/AdminPanel";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 import NotFound from "./pages/NotFound";
 import Sitemap from "./pages/Sitemap";
 
@@ -32,10 +33,11 @@ const App = () => (
             <Route path="/casting" element={<Casting />} />
             <Route path="/gallery" element={<Gallery />} />
             <Route path="/mannequin-order" element={<MannequinOrder />} />
-            <Route path="/admin" element={<AdminPanel />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/model/:id" element={<ModelDetail />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsOfService />} />
             <Route path="/sitemap.xml" element={<Sitemap />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
