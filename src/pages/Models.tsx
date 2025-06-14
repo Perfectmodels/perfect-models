@@ -2,7 +2,7 @@
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import DetailedModelsGrid from '@/components/models/DetailedModelsGrid';
-import { availableModels } from '@/data/availableModels';
+import { detailedModels } from '@/data/modelDetails';
 
 const Models = () => {
   return (
@@ -10,7 +10,7 @@ const Models = () => {
       <Navbar />
       <main className="flex-grow pt-24">
         <DetailedModelsGrid 
-          models={availableModels} 
+          models={detailedModels} 
           title="Nos Mannequins"
           showAllInfo={true}
         />

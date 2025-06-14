@@ -1,5 +1,5 @@
-import React from 'react';
-import { useParams, useLocation, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import { Button } from '@/components/ui/button';
@@ -7,7 +7,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, Instagram, Ruler } from 'lucide-react';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
-import { DetailedModel, Collaboration, ModelShowcase } from '@/types/modelTypes';
+import { Collaboration, ModelShowcase } from '@/types/modelTypes';
+import { detailedModels } from '@/data/modelDetails';
+import NotFound from './NotFound';
 
 const CollaborationCard = ({ collaboration }: { collaboration: Collaboration }) => (
   <Card className="overflow-hidden group">
@@ -51,77 +53,20 @@ const ShowcaseCard = ({ showcase }: { showcase: ModelShowcase }) => (
 
 const ModelDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const location = useLocation();
   const navigate = useNavigate();
-  const { model } = location.state || {};
-  
-  const showcases: ModelShowcase[] = [
-    { 
-      id: '1', 
-      title: 'CLOFAS 241 2024', 
-      date: 'Mars 2024', 
-      location: 'Libreville, Gabon', 
-      images: ['https://i.ibb.co/BV1HFbft/MG-0695.jpg'] 
-    },
-    { 
-      id: '2', 
-      title: 'Fashion Week Gabonaise', 
-      date: 'Décembre 2023', 
-      location: 'Libreville, Gabon', 
-      images: ['https://i.ibb.co/yc1fYcqB/DSC-0261.jpg'] 
-    },
-    { 
-      id: '3', 
-      title: 'K\'elle Pour Elle', 
-      date: 'Octobre 2023', 
-      location: 'Libreville, Gabon', 
-      images: ['https://i.ibb.co/78q5My4/PMM0161.jpg'] 
-    }
-  ];
-  
-  const collaborations: Collaboration[] = [
-    { 
-      id: '1', 
-      title: 'Campagne Azur Gabon', 
-      description: 'Campagne publicitaire pour la marque de cosmétiques Azur', 
-      date: 'Février 2024', 
-      image: 'https://i.ibb.co/fz5jtwfG/448406365-449418894385926-3540828592057987599-n.jpg' 
-    },
-    { 
-      id: '2', 
-      title: 'Magazine Elle Afrique', 
-      description: 'Shooting photo pour le magazine Elle Afrique', 
-      date: 'Janvier 2024', 
-      image: 'https://i.ibb.co/7thKmdTt/DSC-0445.jpg' 
-    }
-  ];
+  const [selectedImage, setSelectedImage] = useState<string | undefined>();
 
+  const model = detailedModels.find(m => m.id === id);
+
+  useEffect(() => {
+    if (model) {
+      setSelectedImage(model.images[0]);
+    }
+  }, [model]);
+  
   if (!model) {
-    navigate(-1);
-    return null;
+    return <NotFound />;
   }
-
-  const detailedModel: DetailedModel = {
-    id: model.id,
-    name: model.name,
-    first_name: model.first_name || model.name.split(' ')[0] || '',
-    last_name: model.last_name || model.name.split(' ').slice(1).join(' ') || '',
-    image: model.image || "https://via.placeholder.com/400x600?text=Photo+à+venir",
-    images: [model.image || "https://via.placeholder.com/400x600?text=Photo+à+venir"],
-    gender: model.gender,
-    category: model.category,
-    category_id: model.category_id,
-    measurements: {
-      height: 175,
-      bust: model.gender === 'women' ? 88 : undefined,
-      waist: 60,
-      hips: model.gender === 'women' ? 90 : undefined,
-      shoe_size: 40,
-      eye_color: 'blue',
-      hair_color: 'brown',
-    },
-    instagram_url: model.instagram_url,
-  };
 
   const goBack = () => {
     navigate(-1);
@@ -142,25 +87,42 @@ const ModelDetail = () => {
           </Button>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-1">
-              <div className="overflow-hidden h-[600px] w-full bg-gray-100 rounded-lg">
+            <div className="lg:col-span-1 space-y-4">
+              <div className="overflow-hidden h-[600px] w-full bg-gray-100 rounded-lg shadow-lg">
                 <AspectRatio ratio={3/4} className="h-full">
                   <img
-                    src={detailedModel.images[0]}
-                    alt={`${detailedModel.first_name} ${detailedModel.last_name}`}
-                    className="w-full h-full object-cover"
+                    src={selectedImage}
+                    alt={`${model.first_name} ${model.last_name}`}
+                    className="w-full h-full object-cover transition-opacity duration-300"
                   />
                 </AspectRatio>
               </div>
+              
+              {/* Image thumbnails */}
+              {model.images.length > 1 && (
+                <div className="grid grid-cols-4 gap-2">
+                  {model.images.map((img, index) => (
+                    <div 
+                      key={index} 
+                      className={`cursor-pointer rounded-md overflow-hidden border-2 ${selectedImage === img ? 'border-model-gold' : 'border-transparent'} hover:border-model-gold/50 transition-all`}
+                      onClick={() => setSelectedImage(img)}
+                    >
+                      <AspectRatio ratio={1}>
+                        <img src={img} alt={`Thumbnail ${index + 1}`} className="w-full h-full object-cover" />
+                      </AspectRatio>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="lg:col-span-2 space-y-8">
               <div>
-                <h1 className="font-playfair text-4xl md:text-5xl mb-2">{detailedModel.first_name} {detailedModel.last_name}</h1>
+                <h1 className="font-playfair text-4xl md:text-5xl mb-2">{model.first_name} {model.last_name}</h1>
                 
-                {detailedModel.instagram_url && (
+                {model.instagram_url && (
                   <a 
-                    href={detailedModel.instagram_url} 
+                    href={model.instagram_url} 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="mt-4 inline-flex items-center text-model-gold hover:text-gray-800 transition-colors"
@@ -180,52 +142,52 @@ const ModelDetail = () => {
                 </div>
                 
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                  {detailedModel.measurements.height && (
+                  {model.measurements.height && (
                     <div>
                       <p className="text-sm text-gray-500">Taille</p>
-                      <p className="font-medium">{detailedModel.measurements.height} cm</p>
+                      <p className="font-medium">{model.measurements.height} cm</p>
                     </div>
                   )}
                   
-                  {detailedModel.measurements.bust && (
+                  {model.measurements.bust && (
                     <div>
                       <p className="text-sm text-gray-500">Poitrine</p>
-                      <p className="font-medium">{detailedModel.measurements.bust} cm</p>
+                      <p className="font-medium">{model.measurements.bust} cm</p>
                     </div>
                   )}
                   
-                  {detailedModel.measurements.waist && (
+                  {model.measurements.waist && (
                     <div>
                       <p className="text-sm text-gray-500">Tour de taille</p>
-                      <p className="font-medium">{detailedModel.measurements.waist} cm</p>
+                      <p className="font-medium">{model.measurements.waist} cm</p>
                     </div>
                   )}
                   
-                  {detailedModel.measurements.hips && (
+                  {model.measurements.hips && (
                     <div>
                       <p className="text-sm text-gray-500">Tour de hanches</p>
-                      <p className="font-medium">{detailedModel.measurements.hips} cm</p>
+                      <p className="font-medium">{model.measurements.hips} cm</p>
                     </div>
                   )}
 
-                  {detailedModel.measurements.shoe_size && (
+                  {model.measurements.shoe_size && (
                     <div>
                       <p className="text-sm text-gray-500">Pointure</p>
-                      <p className="font-medium">{detailedModel.measurements.shoe_size}</p>
+                      <p className="font-medium">{model.measurements.shoe_size}</p>
                     </div>
                   )}
 
-                  {detailedModel.measurements.eye_color && (
+                  {model.measurements.eye_color && (
                     <div>
                       <p className="text-sm text-gray-500">Couleur des yeux</p>
-                      <p className="font-medium">{detailedModel.measurements.eye_color}</p>
+                      <p className="font-medium">{model.measurements.eye_color}</p>
                     </div>
                   )}
 
-                  {detailedModel.measurements.hair_color && (
+                  {model.measurements.hair_color && (
                     <div>
                       <p className="text-sm text-gray-500">Couleur des cheveux</p>
-                      <p className="font-medium">{detailedModel.measurements.hair_color}</p>
+                      <p className="font-medium">{model.measurements.hair_color}</p>
                     </div>
                   )}
                 </div>
@@ -233,22 +195,22 @@ const ModelDetail = () => {
 
               <Separator />
 
-              {showcases && showcases.length > 0 && (
+              {model.showcases && model.showcases.length > 0 && (
                 <div>
                   <h2 className="text-2xl font-playfair mb-4">Défilés</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {showcases.map((showcase) => (
+                    {model.showcases.map((showcase) => (
                       <ShowcaseCard key={showcase.id} showcase={showcase} />
                     ))}
                   </div>
                 </div>
               )}
 
-              {collaborations && collaborations.length > 0 && (
+              {model.collaborations && model.collaborations.length > 0 && (
                 <div>
                   <h2 className="text-2xl font-playfair mb-4">Collaborations</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {collaborations.map((collaboration) => (
+                    {model.collaborations.map((collaboration) => (
                       <CollaborationCard key={collaboration.id} collaboration={collaboration} />
                     ))}
                   </div>

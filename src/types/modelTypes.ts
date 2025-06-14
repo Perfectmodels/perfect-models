@@ -71,6 +71,8 @@ export interface DetailedModel {
   gender?: string;
   category_id?: string;
   instagram_url?: string;
+  collaborations?: Collaboration[];
+  showcases?: ModelShowcase[];
 }
 
 export interface Collaboration {
