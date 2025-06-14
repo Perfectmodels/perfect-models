@@ -7,12 +7,13 @@ interface ModelMeasurementsProps {
 }
 
 const ModelMeasurements = ({ model }: ModelMeasurementsProps) => {
-  const { measurements } = model;
+  const { measurements, gender } = model;
 
   if (!measurements) return null;
 
   const measurementItems = [
     { label: 'Taille', value: measurements.height, unit: 'cm' },
+    { label: 'Épaules', value: measurements.shoulder, unit: 'cm' },
     { label: 'Poitrine', value: measurements.bust, unit: 'cm' },
     { label: 'Tour de taille', value: measurements.waist, unit: 'cm' },
     { label: 'Tour de hanches', value: measurements.hips, unit: 'cm' },
@@ -21,7 +22,19 @@ const ModelMeasurements = ({ model }: ModelMeasurementsProps) => {
     { label: 'Couleur des cheveux', value: measurements.hair_color, unit: '' },
   ];
 
-  const availableMeasurements = measurementItems.filter(item => item.value || item.value === 0);
+  if (gender === 'men') {
+    measurementItems.push(
+      { label: 'Tour de manche', value: measurements.sleeve, unit: 'cm' },
+      { label: 'Longueur de manche', value: measurements.sleeve_length, unit: 'cm' },
+      { label: 'Tour de cuisse', value: measurements.thigh, unit: 'cm' },
+      { label: 'Longueur de pantalon', value: measurements.pants_length, unit: 'cm' },
+      { label: 'Taille de confection', value: measurements.size, unit: '' }
+    );
+  }
+
+  const availableMeasurements = measurementItems.filter(
+    (item) => item.value !== undefined && item.value !== null && item.value !== ''
+  );
 
   if (availableMeasurements.length === 0) return null;
 
@@ -34,12 +47,10 @@ const ModelMeasurements = ({ model }: ModelMeasurementsProps) => {
       
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
         {availableMeasurements.map(item => (
-          item.value ? (
-            <div key={item.label}>
-              <p className="text-sm text-gray-500">{item.label}</p>
-              <p className="font-medium">{item.value}{item.unit && ` ${item.unit}`}</p>
-            </div>
-          ) : null
+          <div key={item.label}>
+            <p className="text-sm text-gray-500">{item.label}</p>
+            <p className="font-medium">{item.value}{item.unit && ` ${item.unit}`}</p>
+          </div>
         ))}
       </div>
     </div>

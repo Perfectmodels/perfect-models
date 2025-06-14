@@ -66,6 +66,12 @@ export interface DetailedModel {
     shoe_size?: number;
     eye_color?: string;
     hair_color?: string;
+    shoulder?: number;
+    sleeve?: number;
+    sleeve_length?: number;
+    thigh?: number;
+    pants_length?: number;
+    size?: string;
   };
   category?: string;
   gender?: string;
