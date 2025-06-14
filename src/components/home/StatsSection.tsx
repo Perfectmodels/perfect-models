@@ -31,7 +31,7 @@ const StatsSection = () => {
 
   return (
     <section className="py-20 bg-model-black text-model-white relative">
-      <div className="absolute inset-0 bg-[url('https://images.pexels.com/photos/1926769/pexels-photo-1926769.jpeg')] bg-cover bg-center opacity-10"></div>
+      <div className="absolute inset-0 bg-[url('https://images.pexels.com/photos/1926769/pexels-photo-1926769.jpeg')] bg-cover bg-center opacity-10 bg-fixed"></div>
       <div className="container mx-auto px-6 relative z-10">
         <div className="text-center mb-12">
           <h2 className="font-playfair text-4xl md:text-5xl mb-4">Perfect Models en Chiffres</h2>

@@ -4,6 +4,13 @@ import { Link } from 'react-router-dom';
 
 const HeroSlider = () => {
   const [isLoading, setIsLoading] = useState(true);
+  const [offsetY, setOffsetY] = useState(0);
+  const handleScroll = () => setOffsetY(window.pageYOffset);
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -19,7 +26,10 @@ const HeroSlider = () => {
       <div className={`absolute inset-0 bg-black ${isLoading ? 'opacity-100' : 'opacity-0'} transition-opacity duration-1000 z-10`}></div>
       
       {/* Background image */}
-      <div className={`absolute inset-0 ${isLoading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-1000`}>
+      <div 
+        className={`absolute inset-0 ${isLoading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-1000`}
+        style={{ transform: `translateY(${offsetY * 0.5}px)` }}
+      >
         <img 
           src="https://i.ibb.co/Rk3QYqDw/AJC-1697-Modifier.jpg"
           alt="Perfect Fashion Day"
