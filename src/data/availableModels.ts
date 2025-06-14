@@ -8,7 +8,7 @@ export const availableModels: Model[] = [
   { id: '4', name: "Duchesse", category: 'Femme', experience: 'Professionnelle', image: "https://i.ibb.co/gMYnh7Mz/AJC-1549.jpg" },
   { id: '5', name: "Aimée Mawili", category: 'Femme', experience: 'Expérimentée', image: "https://i.ibb.co/CpmMPQ8b/476223692-604882878920159-1798037705929760559-n.jpg" },
   { id: '6', name: "Cegolaine Biye", category: 'Femme', experience: 'Expérimentée', image: "https://i.ibb.co/fz5jtwfG/448406365-449418894385926-3540828592057987599-n.jpg" },
-  { id: '7', name: "Barbie Black", category: 'Femme', experience: 'Professionnelle', image: "https://i.ibb.co/78q5My4/PMM0161.jpg" },
+  { id: '7', name: "Cassandra Viera", category: 'Femme', experience: 'Professionnelle', image: "https://i.ibb.co/78q5My4/PMM0161.jpg" },
   { id: '8', name: "Sephora Nawelle", category: 'Femme', experience: 'Expérimentée', image: "https://i.ibb.co/kgdjvvN9/DSC01394-Modifier.jpg" },
   { id: '9', name: "AJ Caramela", category: 'Femme', experience: 'Professionnelle', image: "https://i.ibb.co/Kcq2dMW7/DSC01379-Modifier.jpg" },
   { id: '10', name: "Nynelle Mbazogho", category: 'Femme', experience: 'Expérimentée', image: "https://i.ibb.co/j95xqjHT/DSC-0053.jpg" },
@@ -30,7 +30,6 @@ export const availableModels: Model[] = [
   { id: '26', name: "Maurille Mikamona", category: 'Femme', experience: 'Professionnelle', image: "https://i.ibb.co/7ddhchhx/477796995-609018678649144-702919669220791660-n.jpg" },
   { id: '27', name: "Noé Mak's", category: 'Femme', experience: 'Expérimentée', image: "https://i.ibb.co/4ncX4Brk/481054309-617829164434762-185712014482056867-n.jpg" },
   { id: '28', name: "Val De Mays", category: 'Femme', experience: 'Professionnelle', image: "https://i.ibb.co/1G0FZkkG/480261062-612919161592429-831797797968609645-n.jpg" },
-  { id: '36', name: "Cassandra Viera", category: 'Femme', experience: 'Expérimentée', image: "https://i.ibb.co/3QGcXdb/DSC-0124.jpg" },
   { id: '37', name: "Eunice Moreau", category: 'Femme', experience: 'Expérimentée', image: "https://i.ibb.co/RpkcngtM/484178713-631586356392376-6790495192437511142-n.jpg" },
   
   // Mannequins masculins de la page Men
