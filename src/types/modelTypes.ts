@@ -76,6 +76,7 @@ export interface DetailedModel {
   category?: string;
   gender?: string;
   category_id?: string;
+  experience?: string;
   instagram_url?: string;
   collaborations?: Collaboration[];
   showcases?: ModelShowcase[];

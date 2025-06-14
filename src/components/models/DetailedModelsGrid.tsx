@@ -1,17 +1,11 @@
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { AspectRatio } from "@/components/ui/aspect-ratio";
-
-interface ModelItem {
-  id: number | string;
-  name: string;
-  image?: string;
-  category?: string;
-  experience?: string;
-}
+import { DetailedModel } from '@/types/modelTypes';
 
 interface DetailedModelsGridProps {
-  models: ModelItem[];
+  models: DetailedModel[];
   title?: string;
   showAllInfo?: boolean;
 }
@@ -31,16 +25,17 @@ const DetailedModelsGrid: React.FC<DetailedModelsGridProps> = ({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {models.map((model) => (
-            <div 
+            <Link 
               key={model.id} 
-              className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300"
+              to={`/model/${model.id}`}
+              className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 group"
             >
               <div className="relative">
                 <AspectRatio ratio={3/4} className="h-full">
                   <img
                     src={model.image || "https://via.placeholder.com/400x600?text=Photo+à+venir"}
                     alt={model.name}
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   
                   {/* Overlay avec dégradé et informations */}
@@ -72,25 +67,25 @@ const DetailedModelsGrid: React.FC<DetailedModelsGridProps> = ({
                           <div className="grid grid-cols-2 gap-2 text-sm">
                             <div className="text-center">
                               <div className="text-gray-300 text-xs mb-1">Taille</div>
-                              <div className="font-semibold text-white">175 cm</div>
+                              <div className="font-semibold text-white">{model.measurements?.height ? `${model.measurements.height} cm` : '-'}</div>
                             </div>
                             <div className="text-center">
                               <div className="text-gray-300 text-xs mb-1">Pointure</div>
-                              <div className="font-semibold text-white">40</div>
+                              <div className="font-semibold text-white">{model.measurements?.shoe_size || '-'}</div>
                             </div>
                             <div className="text-center">
                               <div className="text-gray-300 text-xs mb-1">Poitrine</div>
-                              <div className="font-semibold text-white">88 cm</div>
+                              <div className="font-semibold text-white">{model.measurements?.bust ? `${model.measurements.bust} cm` : '-'}</div>
                             </div>
                             <div className="text-center">
                               <div className="text-gray-300 text-xs mb-1">Hanches</div>
-                              <div className="font-semibold text-white">90 cm</div>
+                              <div className="font-semibold text-white">{model.measurements?.hips ? `${model.measurements.hips} cm` : '-'}</div>
                             </div>
                           </div>
                           <div className="mt-2 pt-2 border-t border-white/20">
                             <div className="text-center">
                               <div className="text-gray-300 text-xs mb-1">Tour de taille</div>
-                              <div className="font-semibold text-white">60 cm</div>
+                              <div className="font-semibold text-white">{model.measurements?.waist ? `${model.measurements.waist} cm` : '-'}</div>
                             </div>
                           </div>
                         </div>
@@ -100,11 +95,11 @@ const DetailedModelsGrid: React.FC<DetailedModelsGridProps> = ({
                           <div className="grid grid-cols-2 gap-2 text-sm">
                             <div className="text-center">
                               <div className="text-gray-300 text-xs mb-1">Yeux</div>
-                              <div className="font-medium text-white">Marron</div>
+                              <div className="font-medium text-white">{model.measurements?.eye_color || '-'}</div>
                             </div>
                             <div className="text-center">
                               <div className="text-gray-300 text-xs mb-1">Cheveux</div>
-                              <div className="font-medium text-white">Noir</div>
+                              <div className="font-medium text-white">{model.measurements?.hair_color || '-'}</div>
                             </div>
                           </div>
                         </div>
@@ -120,7 +115,7 @@ const DetailedModelsGrid: React.FC<DetailedModelsGridProps> = ({
                   </div>
                 </AspectRatio>
               </div>
-            </div>
+            </Link>
           ))}
           
           {models.length === 0 && (
