@@ -46,6 +46,12 @@ const HeroSlider = () => {
               >
                 POSTULER
               </Link>
+              <Link 
+                to="/mannequin-order"
+                className="px-8 py-3 bg-transparent border border-model-gold text-model-white hover:bg-model-gold hover:text-black transition-colors duration-300"
+              >
+                COMMANDEZ VOTRE MANNEQUIN
+              </Link>
             </div>
           </div>
         </div>
