@@ -7,6 +7,8 @@ export const routes = [
   { path: '/casting', label: 'Casting' },
   { path: '/about', label: 'About Us' },
   { path: '/contact', label: 'Contact' },
+  { path: '/women', label: 'Women Models' },
+  { path: '/men', label: 'Men Models' },
   { path: '/privacy', label: 'Privacy Policy' },
   { path: '/terms', label: 'Terms of Service' },
   { path: '*', label: 'Not Found' }

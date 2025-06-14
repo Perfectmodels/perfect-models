@@ -16,6 +16,8 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import NotFound from "./pages/NotFound";
 import Sitemap from "./pages/Sitemap";
+import Women from "./pages/Women";
+import Men from "./pages/Men";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +39,8 @@ const App = () => (
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/sitemap.xml" element={<Sitemap />} />
+            <Route path="/women" element={<Women />} />
+            <Route path="/men" element={<Men />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
