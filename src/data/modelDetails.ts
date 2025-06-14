@@ -1,3 +1,4 @@
+
 import { DetailedModel } from "@/types/modelTypes";
 
 const showcases = [
@@ -63,6 +64,42 @@ export const detailedModels: DetailedModel[] = [
   { id: '10', name: "Nynelle Mbazogho", first_name: "Nynelle", last_name: "Mbazogho", gender: 'women', image: "https://i.ibb.co/j95xqjHT/DSC-0053.jpg", images: ["https://i.ibb.co/j95xqjHT/DSC-0053.jpg"], measurements: { height: 173, bust: 83, waist: 65, hips: 88, shoe_size: 39, eye_color: 'Noir', hair_color: 'Noir', shoulder: 42 } },
   { id: '11', name: "Khellany Allogho", first_name: "Khellany", last_name: "Allogho", gender: 'women', image: "https://i.ibb.co/jPtxQN0F/DSC-0457.jpg", images: ["https://i.ibb.co/jPtxQN0F/DSC-0457.jpg"], measurements: { height: 176, bust: 86, waist: 61, hips: 92, shoe_size: 40, eye_color: 'Marron', hair_color: 'Noir' } },
   { id: '12', name: "Mebiame Ayito Kendra", first_name: "Mebiame", last_name: "Ayito Kendra", gender: 'women', image: "https://i.ibb.co/ksdXSfpY/474134983-590912627126416-4665446951991920838-n.jpg", images: ["https://i.ibb.co/ksdXSfpY/474134983-590912627126416-4665446951991920838-n.jpg"], measurements: { height: 175, bust: 88, waist: 60, hips: 90, shoe_size: 40, eye_color: 'Marron', hair_color: 'Noir' } },
+  {
+    id: '14', name: "Stecy Glappier", first_name: "Stecy", last_name: "Glappier", gender: 'women',
+    image: "https://i.ibb.co/fdKk7PQL/PMM0249.jpg",
+    images: ["https://i.ibb.co/fdKk7PQL/PMM0249.jpg"],
+    measurements: { height: 176, shoulder: 46, bust: 85, waist: 72, hips: 97, shoe_size: 40, eye_color: 'Noir', hair_color: 'Brun' }
+  },
+  {
+    id: '17', name: "Jodelle Juliana", first_name: "Jodelle", last_name: "Juliana", gender: 'women',
+    image: "https://i.ibb.co/HT252kvW/MG-9959.jpg",
+    images: ["https://i.ibb.co/HT252kvW/MG-9959.jpg"],
+    measurements: { height: 177, shoulder: 44, bust: 86, waist: 72, hips: 97, shoe_size: 40, eye_color: 'Marron', hair_color: 'Noir' }
+  },
+  {
+    id: '21', name: "Merveille Aworet", first_name: "Merveille", last_name: "Aworet", gender: 'women',
+    image: "https://i.ibb.co/fYNh5b7v/485747370-636810719203273-4287383373947579383-n.jpg",
+    images: ["https://i.ibb.co/fYNh5b7v/485747370-636810719203273-4287383373947579383-n.jpg"],
+    measurements: { height: 172, shoulder: 46, bust: 84, waist: 66, hips: 96, shoe_size: 39, eye_color: 'Marron', hair_color: 'Noir' }
+  },
+  {
+    id: '25', name: "Sadia", first_name: "Sadia", last_name: "", gender: 'women',
+    image: "https://i.ibb.co/1t6zbJm3/484135904-630949926456019-7069478021622378576-n.jpg",
+    images: ["https://i.ibb.co/1t6zbJm3/484135904-630949926456019-7069478021622378576-n.jpg"],
+    measurements: { height: 173, shoulder: 47, bust: 96, waist: 65, hips: 88, shoe_size: 38, eye_color: 'Marron', hair_color: 'Noir' }
+  },
+  {
+    id: '36', name: "Cassandra Viera", first_name: "Cassandra", last_name: "Viera", gender: 'women',
+    image: "https://i.ibb.co/3QGcXdb/DSC-0124.jpg",
+    images: ["https://i.ibb.co/3QGcXdb/DSC-0124.jpg"],
+    measurements: { height: 174, shoulder: 43, bust: 82, waist: 70, hips: 95, shoe_size: 39, eye_color: 'Marron', hair_color: 'Noir' }
+  },
+  {
+    id: '37', name: "Eunice Moreau", first_name: "Eunice", last_name: "Moreau", gender: 'women',
+    image: "https://i.ibb.co/RpkcngtM/484178713-631586356392376-6790495192437511142-n.jpg",
+    images: ["https://i.ibb.co/RpkcngtM/484178713-631586356392376-6790495192437511142-n.jpg"],
+    measurements: { height: 175, shoulder: 44, bust: 84, waist: 68, hips: 94, shoe_size: 40, eye_color: 'Noir', hair_color: 'Châtain' }
+  },
 
   // Men
   { 

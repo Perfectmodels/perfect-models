@@ -1,4 +1,3 @@
-
 import { Model } from '@/types/mannequinOrder';
 
 export const availableModels: Model[] = [
@@ -31,6 +30,8 @@ export const availableModels: Model[] = [
   { id: '26', name: "Maurille Mikamona", category: 'Femme', experience: 'Professionnelle', image: "https://i.ibb.co/7ddhchhx/477796995-609018678649144-702919669220791660-n.jpg" },
   { id: '27', name: "Noé Mak's", category: 'Femme', experience: 'Expérimentée', image: "https://i.ibb.co/4ncX4Brk/481054309-617829164434762-185712014482056867-n.jpg" },
   { id: '28', name: "Val De Mays", category: 'Femme', experience: 'Professionnelle', image: "https://i.ibb.co/1G0FZkkG/480261062-612919161592429-831797797968609645-n.jpg" },
+  { id: '36', name: "Cassandra Viera", category: 'Femme', experience: 'Expérimentée', image: "https://i.ibb.co/3QGcXdb/DSC-0124.jpg" },
+  { id: '37', name: "Eunice Moreau", category: 'Femme', experience: 'Expérimentée', image: "https://i.ibb.co/RpkcngtM/484178713-631586356392376-6790495192437511142-n.jpg" },
   
   // Mannequins masculins de la page Men
   { id: '29', name: "Donatien Anani", category: 'Homme', experience: 'Professionnel', image: "https://i.ibb.co/q3wBhxpS/MG-0651.jpg" },
