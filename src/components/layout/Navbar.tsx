@@ -1,7 +1,7 @@
 
 import { useState, useEffect, forwardRef, ElementRef, ComponentPropsWithoutRef } from 'react';
-import { Link } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Menu, X, User } from 'lucide-react';
 import Logo from './Logo';
 import {
   NavigationMenu,
@@ -10,12 +10,37 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
-} from "@/components/ui/navigation-menu"
+} from "@/components/ui/navigation-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+import { Session } from '@supabase/supabase-js';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [session, setSession] = useState<Session | null>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -29,6 +54,11 @@ const Navbar = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate('/');
+  };
 
   return (
     <nav 
@@ -66,6 +96,33 @@ const Navbar = () => {
             <NavLink to="/casting">CASTING</NavLink>
             <NavLink to="/about">À PROPOS</NavLink>
             <NavLink to="/contact">CONTACT</NavLink>
+
+            {session ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full text-model-white hover:bg-model-gold/20 hover:text-model-gold focus-visible:ring-0 focus-visible:ring-offset-0">
+                    <User className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56 bg-model-black text-model-white border-model-gold/20" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">Mon Compte</p>
+                      <p className="text-xs leading-none text-gray-400">
+                        {session.user.email}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-model-gold/20" />
+                  <DropdownMenuItem onSelect={handleLogout} className="cursor-pointer focus:bg-model-gold/20 focus:text-model-gold">
+                    Déconnexion
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <NavLink to="/auth">CONNEXION</NavLink>
+            )}
+
             <Link 
               to="/mannequin-order"
               className="px-4 py-2 bg-model-gold text-black rounded-md hover:bg-opacity-90 transition-colors duration-300 text-sm font-medium"
@@ -89,6 +146,16 @@ const Navbar = () => {
           <div className="md:hidden absolute top-full left-0 w-full bg-model-black/95 backdrop-blur-sm py-4 shadow-lg">
             <div className="container mx-auto px-6 flex flex-col space-y-4">
               <MobileNavLink to="/" onClick={() => setIsOpen(false)}>ACCUEIL</MobileNavLink>
+              {session ? (
+                <>
+                  <p className="text-model-white/50 px-3">{session.user.email}</p>
+                  <button onClick={() => { handleLogout(); setIsOpen(false); }} className="text-left text-model-white hover:text-model-gold transition-colors duration-300 text-base font-medium tracking-wider">
+                    DÉCONNEXION
+                  </button>
+                </>
+              ) : (
+                <MobileNavLink to="/auth" onClick={() => setIsOpen(false)}>CONNEXION</MobileNavLink>
+              )}
               <MobileNavLink to="/women" onClick={() => setIsOpen(false)}>FEMMES</MobileNavLink>
               <MobileNavLink to="/men" onClick={() => setIsOpen(false)}>HOMMES</MobileNavLink>
               <MobileNavLink to="/mannequin-order" onClick={() => setIsOpen(false)}>COMMANDER</MobileNavLink>

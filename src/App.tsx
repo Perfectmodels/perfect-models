@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -18,6 +17,7 @@ import NotFound from "./pages/NotFound";
 import Sitemap from "./pages/Sitemap";
 import Women from "./pages/Women";
 import Men from "./pages/Men";
+import Auth from "./pages/Auth";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +35,7 @@ const App = () => (
             <Route path="/mannequin-order" element={<MannequinOrder />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/auth" element={<Auth />} />
             <Route path="/model/:id" element={<ModelDetail />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<TermsOfService />} />
