@@ -42,15 +42,9 @@ const HeroSlider = () => {
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <Link 
                 to="/casting"
-                className="px-8 py-3 bg-model-gold text-black hover:bg-opacity-90 transition-colors duration-300"
+                className="px-8 py-3 bg-model-gold text-black hover:bg-opacity-90 transition-colors duration-300 animate-pulse"
               >
                 POSTULER
-              </Link>
-              <Link 
-                to="/mannequin-order"
-                className="px-8 py-3 bg-transparent border border-model-gold text-model-white hover:bg-model-gold hover:text-black transition-colors duration-300"
-              >
-                COMMANDEZ VOTRE MANNEQUIN
               </Link>
             </div>
           </div>

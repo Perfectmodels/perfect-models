@@ -1,3 +1,4 @@
+
 import { useState, useEffect, forwardRef, ElementRef, ComponentPropsWithoutRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
@@ -39,7 +40,7 @@ const Navbar = () => {
           <Logo />
           
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden md:flex items-center space-x-6">
             <NavLink to="/">ACCUEIL</NavLink>
             
             <NavigationMenu>
@@ -62,10 +63,15 @@ const Navbar = () => {
               </NavigationMenuList>
             </NavigationMenu>
 
-            <NavLink to="/mannequin-order">COMMANDE</NavLink>
             <NavLink to="/casting">CASTING</NavLink>
             <NavLink to="/about">À PROPOS</NavLink>
             <NavLink to="/contact">CONTACT</NavLink>
+            <Link 
+              to="/mannequin-order"
+              className="px-4 py-2 bg-model-gold text-black rounded-md hover:bg-opacity-90 transition-colors duration-300 text-sm font-medium"
+            >
+              COMMANDER
+            </Link>
           </div>
 
           {/* Mobile Navigation Toggle */}
@@ -85,7 +91,7 @@ const Navbar = () => {
               <MobileNavLink to="/" onClick={() => setIsOpen(false)}>ACCUEIL</MobileNavLink>
               <MobileNavLink to="/women" onClick={() => setIsOpen(false)}>FEMMES</MobileNavLink>
               <MobileNavLink to="/men" onClick={() => setIsOpen(false)}>HOMMES</MobileNavLink>
-              <MobileNavLink to="/mannequin-order" onClick={() => setIsOpen(false)}>COMMANDE</MobileNavLink>
+              <MobileNavLink to="/mannequin-order" onClick={() => setIsOpen(false)}>COMMANDER</MobileNavLink>
               <MobileNavLink to="/casting" onClick={() => setIsOpen(false)}>CASTING</MobileNavLink>
               <MobileNavLink to="/about" onClick={() => setIsOpen(false)}>À PROPOS</MobileNavLink>
               <MobileNavLink to="/contact" onClick={() => setIsOpen(false)}>CONTACT</MobileNavLink>
