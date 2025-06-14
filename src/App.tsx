@@ -11,7 +11,6 @@ import Casting from "./pages/Casting";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import ModelDetail from "./pages/ModelDetail";
-import Gallery from "./pages/Gallery";
 import MannequinOrder from "./pages/MannequinOrder";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
@@ -31,7 +30,6 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/models" element={<Models />} />
             <Route path="/casting" element={<Casting />} />
-            <Route path="/gallery" element={<Gallery />} />
             <Route path="/mannequin-order" element={<MannequinOrder />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />

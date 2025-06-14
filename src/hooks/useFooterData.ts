@@ -85,10 +85,9 @@ export const useFooterData = () => {
         { id: '3', section_name: 'LIENS RAPIDES', link_text: 'Casting', link_url: '/casting', display_order: 3, is_active: true },
         { id: '4', section_name: 'LIENS RAPIDES', link_text: 'À Propos', link_url: '/about', display_order: 5, is_active: true },
         { id: '5', section_name: 'LIENS RAPIDES', link_text: 'Contact', link_url: '/contact', display_order: 6, is_active: true },
-        { id: '6', section_name: 'SERVICES', link_text: 'Galerie', link_url: '/gallery', display_order: 1, is_active: true },
-        { id: '7', section_name: 'SERVICES', link_text: 'Commander un Mannequin', link_url: '/mannequin-order', display_order: 2, is_active: true },
-        { id: '8', section_name: 'LÉGAL', link_text: 'Politique de Confidentialité', link_url: '/privacy', display_order: 1, is_active: true },
-        { id: '9', section_name: 'LÉGAL', link_text: 'Conditions d\'Utilisation', link_url: '/terms', display_order: 2, is_active: true }
+        { id: '6', section_name: 'SERVICES', link_text: 'Commander un Mannequin', link_url: '/mannequin-order', display_order: 2, is_active: true },
+        { id: '7', section_name: 'LÉGAL', link_text: 'Politique de Confidentialité', link_url: '/privacy', display_order: 1, is_active: true },
+        { id: '8', section_name: 'LÉGAL', link_text: 'Conditions d\'Utilisation', link_url: '/terms', display_order: 2, is_active: true }
       ];
 
       return {

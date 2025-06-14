@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
@@ -34,7 +33,6 @@ const Navbar = () => {
           <div className="hidden md:flex items-center space-x-8">
             <NavLink to="/">ACCUEIL</NavLink>
             <NavLink to="/models">NOS MANNEQUINS</NavLink>
-            <NavLink to="/gallery">GALERIE</NavLink>
             <NavLink to="/mannequin-order">COMMANDE</NavLink>
             <NavLink to="/casting">CASTING</NavLink>
             <NavLink to="/about">À PROPOS</NavLink>
@@ -57,7 +55,6 @@ const Navbar = () => {
             <div className="container mx-auto px-6 flex flex-col space-y-4">
               <MobileNavLink to="/" onClick={() => setIsOpen(false)}>ACCUEIL</MobileNavLink>
               <MobileNavLink to="/models" onClick={() => setIsOpen(false)}>NOS MANNEQUINS</MobileNavLink>
-              <MobileNavLink to="/gallery" onClick={() => setIsOpen(false)}>GALERIE</MobileNavLink>
               <MobileNavLink to="/mannequin-order" onClick={() => setIsOpen(false)}>COMMANDE</MobileNavLink>
               <MobileNavLink to="/casting" onClick={() => setIsOpen(false)}>CASTING</MobileNavLink>
               <MobileNavLink to="/about" onClick={() => setIsOpen(false)}>À PROPOS</MobileNavLink>
