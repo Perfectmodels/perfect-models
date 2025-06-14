@@ -1,20 +1,14 @@
+
 import React, { useState } from 'react';
 import { Layout } from '@/components/layout';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { Phone, Mail } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ServiceTarif, OrderFormData } from '@/types/mannequinOrder';
-import { serviceTarifs } from '@/data/serviceTarifs';
 import { useModels } from '@/hooks/useModels';
-import ServiceCard from '@/components/mannequin-order/ServiceCard';
-import ModelSelection from '@/components/mannequin-order/ModelSelection';
-import PricingInfo from '@/components/mannequin-order/PricingInfo';
 import { createMannequinWhatsAppMessage } from '@/utils/mannequinWhatsApp';
-import { Skeleton } from '@/components/ui/skeleton';
+import MannequinOrderHeader from '@/components/mannequin-order/MannequinOrderHeader';
+import AdvantageousPricing from '@/components/mannequin-order/AdvantageousPricing';
+import ServiceSelectionList from '@/components/mannequin-order/ServiceSelectionList';
+import OrderForm from '@/components/mannequin-order/OrderForm';
 
 const MannequinOrder = () => {
   const [selectedService, setSelectedService] = useState<ServiceTarif | null>(null);
@@ -122,10 +116,6 @@ const MannequinOrder = () => {
     });
   };
 
-  const getServicesByCategory = (category: string) => {
-    return serviceTarifs.filter(service => service.category === category);
-  };
-
   const filteredModels = React.useMemo(() => {
     if (!allModels) return [];
     if (!formData.mannequinGender || formData.mannequinGender === 'mixte') {
@@ -144,238 +134,25 @@ const MannequinOrder = () => {
     <Layout>
       <div className="min-h-screen bg-gradient-to-br from-model-black via-gray-900 to-model-black py-12">
         <div className="container mx-auto px-4">
-          {/* Header */}
-          <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold text-model-white mb-4">
-              Commande de <span className="text-model-gold">Mannequin</span>
-            </h1>
-            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-              Réservez nos mannequins professionnels pour vos événements, shootings et campagnes
-            </p>
-          </div>
-
-          {/* Tarifs avantageux */}
-          <div className="bg-model-gold/10 border border-model-gold/30 rounded-lg p-6 mb-8 text-center">
-            <h2 className="text-2xl font-bold text-model-gold mb-2">🎉 Tarifs Avantageux en FCFA 🎉</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-model-white">
-              <div>
-                <div className="text-lg font-semibold">📅 Réservation anticipée</div>
-                <div className="text-sm">+30 jours: <span className="text-model-gold">-15%</span></div>
-                <div className="text-sm">+14 jours: <span className="text-model-gold">-10%</span></div>
-              </div>
-              <div>
-                <div className="text-lg font-semibold">👥 Mannequins multiples</div>
-                <div className="text-sm">2ème mannequin: <span className="text-model-gold">50% du tarif</span></div>
-              </div>
-              <div>
-                <div className="text-lg font-semibold">⭐ Qualité garantie</div>
-                <div className="text-sm">Mannequins professionnels certifiés</div>
-              </div>
-            </div>
-          </div>
+          <MannequinOrderHeader />
+          <AdvantageousPricing />
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Services Selection */}
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-model-white mb-6">Nos Services</h2>
-              
-              {/* Shooting */}
-              <div>
-                <h3 className="text-lg font-semibold text-model-gold mb-3">📸 Shooting Photo</h3>
-                <div className="space-y-3">
-                  {getServicesByCategory('shooting').map(service => (
-                    <ServiceCard 
-                      key={service.id} 
-                      service={service} 
-                      isSelected={selectedService?.id === service.id}
-                      onSelect={() => handleServiceSelect(service)}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* Défilé */}
-              <div>
-                <h3 className="text-lg font-semibold text-model-gold mb-3">👗 Défilé de Mode</h3>
-                <div className="space-y-3">
-                  {getServicesByCategory('defile').map(service => (
-                    <ServiceCard 
-                      key={service.id} 
-                      service={service} 
-                      isSelected={selectedService?.id === service.id}
-                      onSelect={() => handleServiceSelect(service)}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* Événement */}
-              <div>
-                <h3 className="text-lg font-semibold text-model-gold mb-3">🎉 Événements</h3>
-                <div className="space-y-3">
-                  {getServicesByCategory('evenement').map(service => (
-                    <ServiceCard 
-                      key={service.id} 
-                      service={service} 
-                      isSelected={selectedService?.id === service.id}
-                      onSelect={() => handleServiceSelect(service)}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* Publicité */}
-              <div>
-                <h3 className="text-lg font-semibold text-model-gold mb-3">📺 Publicité</h3>
-                <div className="space-y-3">
-                  {getServicesByCategory('publicite').map(service => (
-                    <ServiceCard 
-                      key={service.id} 
-                      service={service} 
-                      isSelected={selectedService?.id === service.id}
-                      onSelect={() => handleServiceSelect(service)}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Order Form */}
-            <div className="bg-white rounded-lg shadow-xl p-6">
-              <h2 className="text-2xl font-bold text-model-black mb-6">Formulaire de Commande</h2>
-              
-              <PricingInfo 
-                selectedService={selectedService}
-                selectedModelsCount={selectedModels.length}
-                eventDate={formData.eventDate}
-                calculateTotal={calculateTotal}
-              />
-
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="clientName">Nom complet *</Label>
-                    <Input
-                      id="clientName"
-                      value={formData.clientName}
-                      onChange={(e) => handleInputChange('clientName', e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="email">Email *</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => handleInputChange('email', e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="phone">Téléphone *</Label>
-                    <Input
-                      id="phone"
-                      value={formData.phone}
-                      onChange={(e) => handleInputChange('phone', e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="company">Entreprise</Label>
-                    <Input
-                      id="company"
-                      value={formData.company}
-                      onChange={(e) => handleInputChange('company', e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="eventDate">Date de l'événement *</Label>
-                    <Input
-                      id="eventDate"
-                      type="date"
-                      value={formData.eventDate}
-                      onChange={(e) => handleInputChange('eventDate', e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="eventLocation">Lieu *</Label>
-                    <Input
-                      id="eventLocation"
-                      value={formData.eventLocation}
-                      onChange={(e) => handleInputChange('eventLocation', e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="mannequinGender">Préférence de genre</Label>
-                  <Select value={formData.mannequinGender} onValueChange={(value) => handleInputChange('mannequinGender', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="femme">Femme</SelectItem>
-                      <SelectItem value="homme">Homme</SelectItem>
-                      <SelectItem value="mixte">Mixte (tous)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {isLoadingModels ? (
-                  <div className="space-y-3 p-3">
-                    <Skeleton className="h-16 w-full" />
-                    <Skeleton className="h-16 w-full" />
-                  </div>
-                ) : (
-                  <ModelSelection 
-                    models={filteredModels}
-                    selectedModels={selectedModels}
-                    onModelSelection={handleModelSelection}
-                  />
-                )}
-
-                <div>
-                  <Label htmlFor="additionalRequests">Demandes spéciales</Label>
-                  <Textarea
-                    id="additionalRequests"
-                    value={formData.additionalRequests}
-                    onChange={(e) => handleInputChange('additionalRequests', e.target.value)}
-                    placeholder="Décrivez vos besoins spécifiques..."
-                    rows={3}
-                  />
-                </div>
-
-                <Button 
-                  type="submit" 
-                  className="w-full bg-model-gold hover:bg-model-gold/90 text-model-black font-semibold"
-                  disabled={!selectedService || selectedModels.length === 0 || isLoadingModels}
-                >
-                  Envoyer la Commande via WhatsApp
-                </Button>
-              </form>
-
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <div className="flex items-center gap-4 text-sm text-gray-600">
-                  <div className="flex items-center gap-1">
-                    <Phone className="w-4 h-4" />
-                    <span>+241 07 50 79 50</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Mail className="w-4 h-4" />
-                    <span>info@agencemannequin.ga</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <ServiceSelectionList
+              selectedService={selectedService}
+              onServiceSelect={handleServiceSelect}
+            />
+            <OrderForm
+              formData={formData}
+              handleInputChange={handleInputChange}
+              handleSubmit={handleSubmit}
+              selectedService={selectedService}
+              selectedModels={selectedModels}
+              handleModelSelection={handleModelSelection}
+              calculateTotal={calculateTotal}
+              isLoadingModels={isLoadingModels}
+              filteredModels={filteredModels}
+            />
           </div>
         </div>
       </div>
