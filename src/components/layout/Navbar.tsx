@@ -1,4 +1,3 @@
-
 import { useState, useEffect, forwardRef, ElementRef, ComponentPropsWithoutRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
@@ -57,9 +56,6 @@ const Navbar = () => {
                       <ListItem to="/men" title="Hommes">
                         Découvrez nos mannequins hommes.
                       </ListItem>
-                       <ListItem to="/models" title="Tous les mannequins">
-                        Voir tous nos mannequins.
-                      </ListItem>
                     </ul>
                   </NavigationMenuContent>
                 </NavigationMenuItem>
@@ -89,7 +85,6 @@ const Navbar = () => {
               <MobileNavLink to="/" onClick={() => setIsOpen(false)}>ACCUEIL</MobileNavLink>
               <MobileNavLink to="/women" onClick={() => setIsOpen(false)}>FEMMES</MobileNavLink>
               <MobileNavLink to="/men" onClick={() => setIsOpen(false)}>HOMMES</MobileNavLink>
-              <MobileNavLink to="/models" onClick={() => setIsOpen(false)}>TOUS LES MANNEQUINS</MobileNavLink>
               <MobileNavLink to="/mannequin-order" onClick={() => setIsOpen(false)}>COMMANDE</MobileNavLink>
               <MobileNavLink to="/casting" onClick={() => setIsOpen(false)}>CASTING</MobileNavLink>
               <MobileNavLink to="/about" onClick={() => setIsOpen(false)}>À PROPOS</MobileNavLink>
