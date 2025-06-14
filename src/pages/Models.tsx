@@ -1,12 +1,31 @@
 
+import React, { useState, useMemo } from 'react';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import DetailedModelsGrid from '@/components/models/DetailedModelsGrid';
 import { useModels } from '@/hooks/useModels';
 import { Skeleton } from '@/components/ui/skeleton';
+import ModelFilters from '@/components/models/ModelFilters';
 
 const Models = () => {
   const { data: models, isLoading, isError } = useModels();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [genderFilter, setGenderFilter] = useState('all');
+  const [experienceFilter, setExperienceFilter] = useState('all');
+
+  const filteredModels = useMemo(() => {
+    if (!models) return [];
+    
+    return models.filter(model => {
+      const nameMatch = model.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const genderMatch = genderFilter === 'all' || model.gender === genderFilter;
+      const experienceMatch = experienceFilter === 'all' || model.experience === experienceFilter;
+      
+      return nameMatch && genderMatch && experienceMatch;
+    });
+  }, [models, searchQuery, genderFilter, experienceFilter]);
+
+  const isFiltering = searchQuery || genderFilter !== 'all' || experienceFilter !== 'all';
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -23,11 +42,22 @@ const Models = () => {
             <p className="text-red-500">Erreur lors du chargement des mannequins.</p>
           </div>
         ) : (
-          <DetailedModelsGrid 
-            models={models || []} 
-            title="Nos Mannequins"
-            showAllInfo={true}
-          />
+          <>
+            <ModelFilters 
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              genderFilter={genderFilter}
+              onGenderChange={setGenderFilter}
+              experienceFilter={experienceFilter}
+              onExperienceChange={setExperienceFilter}
+              models={models || []}
+            />
+            <DetailedModelsGrid 
+              models={filteredModels} 
+              title={isFiltering ? "Résultats de la recherche" : "Nos Mannequins"}
+              showAllInfo={true}
+            />
+          </>
         )}
       </main>
       <Footer />
