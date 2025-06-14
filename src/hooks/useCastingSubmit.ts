@@ -16,22 +16,35 @@ export const useCastingSubmit = ({ form, onSuccess }: UseCastingSubmitProps) => 
     setIsLoading(true);
     
     try {
-      // 1. Séparer les données principales des tableaux (langues, compétences, etc.)
-      const { languages, special_skills, events_participated, ...applicationData } = data;
+      // 1. Extraire les données relationnelles
+      const { languages, special_skills, events_participated } = data;
 
-      // 2. Préparer les données pour l'insertion
-      const processedData = {
-        ...applicationData,
-        date_of_birth: applicationData.date_of_birth instanceof Date 
-          ? applicationData.date_of_birth.toISOString().split('T')[0] 
-          : applicationData.date_of_birth,
-        instagram_url: applicationData.instagram_url || null,
-      };
-
-      // 3. Insérer la candidature principale dans la table 'model_applications'
+      // 2. Insérer la candidature principale dans la table 'model_applications'
       const { data: newApplication, error: applicationError } = await supabase
         .from('model_applications')
-        .insert(processedData)
+        .insert({
+          first_name: data.first_name,
+          last_name: data.last_name,
+          email: data.email,
+          phone: data.phone,
+          gender: data.gender,
+          category_id: data.category_id,
+          date_of_birth: data.date_of_birth instanceof Date 
+            ? data.date_of_birth.toISOString().split('T')[0] 
+            : data.date_of_birth,
+          age: data.age,
+          weight: data.weight,
+          height: data.height,
+          bust: data.bust,
+          waist: data.waist,
+          hips: data.hips,
+          shoe_size: data.shoe_size,
+          hair_color: data.hair_color,
+          eye_color: data.eye_color,
+          experience: data.experience,
+          instagram_url: data.instagram_url || null,
+          availability: data.availability,
+        })
         .select()
         .single();
 
@@ -39,7 +52,7 @@ export const useCastingSubmit = ({ form, onSuccess }: UseCastingSubmitProps) => 
 
       const applicationId = newApplication.id;
 
-      // 4. Insérer les données relationnelles (langues, compétences, événements)
+      // 3. Insérer les données relationnelles (langues, compétences, événements)
       if (languages && languages.length > 0) {
         const languagesToInsert = languages.map(lang => ({ application_id: applicationId, language: lang }));
         const { error } = await supabase.from('model_languages').insert(languagesToInsert);
