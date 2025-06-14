@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Layout } from '@/components/layout';
 import { Button } from '@/components/ui/button';
@@ -10,11 +9,12 @@ import { Phone, Mail } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ServiceTarif, OrderFormData } from '@/types/mannequinOrder';
 import { serviceTarifs } from '@/data/serviceTarifs';
-import { availableModels } from '@/data/availableModels';
+import { useModels } from '@/hooks/useModels';
 import ServiceCard from '@/components/mannequin-order/ServiceCard';
 import ModelSelection from '@/components/mannequin-order/ModelSelection';
 import PricingInfo from '@/components/mannequin-order/PricingInfo';
 import { createMannequinWhatsAppMessage } from '@/utils/mannequinWhatsApp';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const MannequinOrder = () => {
   const [selectedService, setSelectedService] = useState<ServiceTarif | null>(null);
@@ -31,6 +31,7 @@ const MannequinOrder = () => {
     budget: ''
   });
   const { toast } = useToast();
+  const { data: allModels, isLoading: isLoadingModels } = useModels();
 
   const handleServiceSelect = (service: ServiceTarif) => {
     setSelectedService(service);
@@ -95,12 +96,21 @@ const MannequinOrder = () => {
       });
       return;
     }
+    
+    if (!allModels) {
+        toast({
+            title: "Erreur",
+            description: "Les mannequins ne sont pas encore chargés. Veuillez patienter.",
+            variant: "destructive"
+        });
+        return;
+    }
 
     const whatsappUrl = createMannequinWhatsAppMessage(
       selectedService,
       selectedModels,
       formData,
-      availableModels,
+      allModels,
       calculateTotal()
     );
 
@@ -116,11 +126,19 @@ const MannequinOrder = () => {
     return serviceTarifs.filter(service => service.category === category);
   };
 
-  const filteredModels = formData.mannequinGender && formData.mannequinGender !== 'mixte' 
-    ? availableModels.filter(model => 
-        model.category.toLowerCase() === formData.mannequinGender.toLowerCase()
-      )
-    : availableModels;
+  const filteredModels = React.useMemo(() => {
+    if (!allModels) return [];
+    if (!formData.mannequinGender || formData.mannequinGender === 'mixte') {
+      return allModels;
+    }
+    const genderMap = {
+      femme: 'women',
+      homme: 'men',
+    };
+    return allModels.filter(
+      model => model.gender === genderMap[formData.mannequinGender as keyof typeof genderMap]
+    );
+  }, [allModels, formData.mannequinGender]);
 
   return (
     <Layout>
@@ -307,16 +325,23 @@ const MannequinOrder = () => {
                     <SelectContent>
                       <SelectItem value="femme">Femme</SelectItem>
                       <SelectItem value="homme">Homme</SelectItem>
-                      <SelectItem value="mixte">Mixte</SelectItem>
+                      <SelectItem value="mixte">Mixte (tous)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
-                <ModelSelection 
-                  models={filteredModels}
-                  selectedModels={selectedModels}
-                  onModelSelection={handleModelSelection}
-                />
+                {isLoadingModels ? (
+                  <div className="space-y-3 p-3">
+                    <Skeleton className="h-16 w-full" />
+                    <Skeleton className="h-16 w-full" />
+                  </div>
+                ) : (
+                  <ModelSelection 
+                    models={filteredModels}
+                    selectedModels={selectedModels}
+                    onModelSelection={handleModelSelection}
+                  />
+                )}
 
                 <div>
                   <Label htmlFor="additionalRequests">Demandes spéciales</Label>
@@ -332,7 +357,7 @@ const MannequinOrder = () => {
                 <Button 
                   type="submit" 
                   className="w-full bg-model-gold hover:bg-model-gold/90 text-model-black font-semibold"
-                  disabled={!selectedService || selectedModels.length === 0}
+                  disabled={!selectedService || selectedModels.length === 0 || isLoadingModels}
                 >
                   Envoyer la Commande via WhatsApp
                 </Button>

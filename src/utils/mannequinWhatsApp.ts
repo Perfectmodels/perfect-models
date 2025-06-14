@@ -1,17 +1,18 @@
 
-import { ServiceTarif, Model, OrderFormData } from '@/types/mannequinOrder';
+import { ServiceTarif, OrderFormData } from '@/types/mannequinOrder';
+import { DetailedModel } from '@/types/modelTypes';
 
 export const createMannequinWhatsAppMessage = (
   selectedService: ServiceTarif,
   selectedModels: string[],
   formData: OrderFormData,
-  models: Model[],
+  models: DetailedModel[],
   total: number
 ) => {
   const discount = (selectedService.basePrice * selectedModels.length) - total;
   const selectedModelsInfo = selectedModels.map(id => {
     const model = models.find(m => m.id === id);
-    return model ? `${model.name} (${model.category} - ${model.experience})` : '';
+    return model ? `${model.name} (${model.category} - ${model.experience || 'N/A'})` : '';
   }).filter(Boolean);
   
   const message = `🎭 COMMANDE MANNEQUIN 🎭

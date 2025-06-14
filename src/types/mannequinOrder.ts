@@ -10,14 +10,6 @@ export interface ServiceTarif {
   recommended?: boolean;
 }
 
-export interface Model {
-  id: string;
-  name: string;
-  category: string;
-  experience: string;
-  image?: string;
-}
-
 export interface OrderFormData {
   clientName: string;
   email: string;
