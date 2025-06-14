@@ -84,7 +84,10 @@ const DateOfBirthField: React.FC<DateOfBirthFieldProps> = ({ form }) => {
                       }
                     }
                   }}
-                  disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                  captionLayout="dropdown-buttons"
+                  fromYear={1940}
+                  toYear={new Date().getFullYear()}
+                  disabled={(date) => date > new Date() || date < new Date("1940-01-01")}
                   initialFocus
                 />
               </PopoverContent>
