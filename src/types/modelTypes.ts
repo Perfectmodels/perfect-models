@@ -52,11 +52,12 @@ export interface Service {
 }
 
 export interface DetailedModel {
-  id: string;
+  id: string; // This will be the slug
+  uuid: string; // This will be the db uuid
   name: string;
   first_name: string;
-  last_name: string;
-  image: string;
+  last_name: string | null;
+  image: string | null;
   images: string[];
   measurements: {
     height?: number;

@@ -9,7 +9,7 @@ interface ModelHeaderProps {
 const ModelHeader = ({ model }: ModelHeaderProps) => {
   return (
     <div>
-      <h1 className="font-playfair text-4xl md:text-5xl mb-2">{model.first_name} {model.last_name}</h1>
+      <h1 className="font-playfair text-4xl md:text-5xl mb-2">{model.first_name} {model.last_name || ''}</h1>
       
       {model.instagram_url && (
         <a 

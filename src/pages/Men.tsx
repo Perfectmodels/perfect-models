@@ -2,11 +2,14 @@
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import ModelsList from '../components/models/ModelsList';
-import { detailedModels } from '@/data/modelDetails';
-
-const maleModels = detailedModels.filter(model => model.gender === 'men');
+import { useModels } from '@/hooks/useModels';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const Men = () => {
+  const { data: models, isLoading, isError } = useModels();
+
+  const maleModels = models?.filter(model => model.gender === 'men');
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -15,8 +18,17 @@ const Men = () => {
           <h1 className="font-playfair text-4xl md:text-5xl mb-6 text-center">Nos Modèles Hommes</h1>
           <div className="w-24 h-0.5 bg-model-gold mx-auto mb-12"></div>
 
-          {/* Liste des mannequins */}
-          <ModelsList models={maleModels} />
+          {isLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-[400px] w-full rounded-lg" />)}
+            </div>
+          ) : isError ? (
+            <div className="text-center py-10">
+              <p className="text-red-500">Erreur lors du chargement des modèles.</p>
+            </div>
+          ) : (
+            <ModelsList models={maleModels || []} />
+          )}
         </div>
       </main>
       <Footer />

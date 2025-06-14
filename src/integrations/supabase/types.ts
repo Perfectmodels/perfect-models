@@ -302,6 +302,57 @@ export type Database = {
           },
         ]
       }
+      models: {
+        Row: {
+          category: string
+          created_at: string
+          experience: string | null
+          first_name: string
+          gender: string
+          id: string
+          image: string | null
+          images: string[] | null
+          instagram_url: string | null
+          is_active: boolean | null
+          last_name: string | null
+          measurements: Json | null
+          name: string
+          slug: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          experience?: string | null
+          first_name: string
+          gender: string
+          id?: string
+          image?: string | null
+          images?: string[] | null
+          instagram_url?: string | null
+          is_active?: boolean | null
+          last_name?: string | null
+          measurements?: Json | null
+          name: string
+          slug: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          experience?: string | null
+          first_name?: string
+          gender?: string
+          id?: string
+          image?: string | null
+          images?: string[] | null
+          instagram_url?: string | null
+          is_active?: boolean | null
+          last_name?: string | null
+          measurements?: Json | null
+          name?: string
+          slug?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
