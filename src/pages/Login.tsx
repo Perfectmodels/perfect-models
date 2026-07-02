@@ -40,6 +40,9 @@ const Login: React.FC = () => {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRecoveryModalOpen, setIsRecoveryModalOpen] = useState(false);
+  const [showAdminReset, setShowAdminReset] = useState(false);
+  const [resetMessage, setResetMessage] = useState('');
+  const [isResetting, setIsResetting] = useState(false);
   const [migration, setMigration] = useState<ModelMigrationRequest | null>(null);
   const [migrationEmail, setMigrationEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -49,7 +52,7 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { data, isInitialized, saveData } = useData();
-  const { login, migrateModelToAuth, user, loading } = useAuth();
+  const { login, migrateModelToAuth, resetPassword, user, loading } = useAuth();
 
   // Redirect destination après login
   const from = (location.state as any)?.from?.pathname;
@@ -74,6 +77,8 @@ const Login: React.FC = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setResetMessage('');
+    setShowAdminReset(false);
     setIsSubmitting(true);
 
     const result = await login(identifier.trim(), password);
@@ -86,6 +91,9 @@ const Login: React.FC = () => {
         return;
       }
       setError(result.error || 'Identifiant ou mot de passe incorrect.');
+      setShowAdminReset(
+        Boolean(result.error?.startsWith('Compte administrateur reconnu'))
+      );
       setPassword('');
       setIsSubmitting(false);
       return;
@@ -96,6 +104,18 @@ const Login: React.FC = () => {
     // (géré dans le useEffect via onAuthStateChanged → AuthContext)
     // Ici on peut juste laisser le flux se faire naturellement.
     // Note: isSubmitting reste true jusqu'à la redirection automatique.
+  };
+
+  const handleAdminPasswordReset = async () => {
+    setIsResetting(true);
+    setResetMessage('');
+    const result = await resetPassword('admin@perfectmodels.online');
+    setResetMessage(
+      result.success
+        ? 'Un email de réinitialisation a été envoyé au compte administrateur.'
+        : result.error || "Impossible d'envoyer l'email de réinitialisation."
+    );
+    setIsResetting(false);
   };
 
   const handleMigration = async (e: React.FormEvent) => {
@@ -208,6 +228,21 @@ const Login: React.FC = () => {
               </div>
 
               {error && <p className="text-red-400 text-sm !mt-4">{error}</p>}
+              {showAdminReset && (
+                <button
+                  type="button"
+                  onClick={handleAdminPasswordReset}
+                  disabled={isResetting}
+                  className="text-xs text-pm-gold hover:text-white hover:underline disabled:opacity-50"
+                >
+                  {isResetting
+                    ? 'Envoi en cours…'
+                    : 'Réinitialiser le mot de passe administrateur'}
+                </button>
+              )}
+              {resetMessage && (
+                <p className="text-green-400 text-xs !mt-3">{resetMessage}</p>
+              )}
 
               <button
                 type="submit"

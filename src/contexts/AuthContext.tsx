@@ -83,6 +83,16 @@ export const useAuth = () => {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const ACCOUNT_ROLES: UserRole[] = ['admin', 'student', 'jury', 'registration', 'jury-contest'];
+const ADMIN_AUTH_EMAIL =
+  import.meta.env.VITE_FIREBASE_ADMIN_EMAIL?.trim().toLowerCase() ||
+  'admin@perfectmodels.online';
+const ADMIN_IDENTIFIERS = new Set([
+  'admin',
+  ADMIN_AUTH_EMAIL,
+  'contact@perfectmodels.online',
+  'contact@perfectmodels.ga',
+  'perfectmodels.ga@gmail.com',
+]);
 
 const isUserRole = (value: unknown): value is UserRole =>
   typeof value === 'string' && ACCOUNT_ROLES.includes(value as UserRole);
@@ -343,7 +353,7 @@ async function resolveUserRole(firebaseUser: FirebaseUser): Promise<AuthUser | n
     }
 
     // admin par email dédié
-    if (email === 'admin@perfectmodels.online') {
+    if (email === ADMIN_AUTH_EMAIL) {
       await set(ref(rtdb, `users/${firebaseUser.uid}`), {
         role: 'admin',
         profileId: 'admin',
@@ -386,8 +396,8 @@ async function resolveEmailFromIdentifier(identifier: string): Promise<{
   const lower = identifier.toLowerCase().trim();
 
   // Admin
-  if (lower === 'admin') {
-    return { email: 'admin@perfectmodels.online', profileId: 'admin', role: 'admin', name: 'Admin' };
+  if (ADMIN_IDENTIFIERS.has(lower)) {
+    return { email: ADMIN_AUTH_EMAIL, profileId: 'admin', role: 'admin', name: 'Admin' };
   }
 
   // Si l'identifiant est déjà un email valide, on cherche directement dans les collections
@@ -501,7 +511,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const resolved = await resolveEmailFromIdentifier(identifier);
 
       if (!resolved) {
-        return { success: false, error: 'Identifiant introuvable. Vérifiez votre nom ou matricule.' };
+        return {
+          success: false,
+          error: identifier.includes('@')
+            ? 'Aucun compte ne correspond à cette adresse email.'
+            : 'Identifiant introuvable. Vérifiez votre nom ou matricule.',
+        };
       }
 
       if (resolved.role === 'student' && !resolved.firebaseUid) {
@@ -531,7 +546,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error: any) {
       const msg =
         error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential'
-          ? 'Mot de passe incorrect.'
+          ? identifier.trim().toLowerCase() === 'admin' ||
+            ADMIN_IDENTIFIERS.has(identifier.trim().toLowerCase())
+            ? 'Compte administrateur reconnu, mais le mot de passe Firebase est incorrect.'
+            : 'Mot de passe incorrect.'
           : error.code === 'auth/user-not-found'
           ? 'Aucun compte Firebase trouvé. Contactez l\'administrateur.'
           : error.code === 'auth/too-many-requests'
