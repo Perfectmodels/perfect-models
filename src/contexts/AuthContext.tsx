@@ -575,6 +575,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         password
       );
       createdUser = userCredential.user;
+      if (!createdUser) throw new Error("Firebase Auth n'a pas retourné le compte créé.");
 
       const accountProfile: AccountProfile = {
         uid: createdUser.uid,
@@ -608,6 +609,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
       }
 
+      if (provisioningAuth === auth) {
+        setUser(await resolveUserRole(createdUser));
+      }
       if (provisioningAuth !== auth) await signOut(provisioningAuth);
       return { success: true };
     } catch (error: any) {
@@ -669,6 +673,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         );
         accountUser = credential.user;
       }
+      if (!accountUser) throw new Error("Firebase Auth n'a pas retourné le compte migré.");
 
       const existingAccount = await getDoc(doc(db, 'accounts', accountUser.uid));
       if (
@@ -701,6 +706,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         migratedAt: new Date().toISOString(),
       });
 
+      if (provisioningAuth === auth) {
+        setUser(await resolveUserRole(accountUser));
+      }
       if (provisioningAuth !== auth) await signOut(provisioningAuth);
       return { success: true };
     } catch (error: any) {
