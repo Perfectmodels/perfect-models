@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronLeftIcon, EyeIcon, EyeSlashIcon, KeyIcon, ArrowPathIcon, ArrowUpTrayIcon } from '@heroicons/react/24/outline';
+import { ChevronLeftIcon, EyeIcon, EyeSlashIcon, KeyIcon, ArrowPathIcon, ArrowUpTrayIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
 import SEO from '../components/SEO';
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
-import { rtdb } from '../firebase';
-import { ref, set as rtdbSet } from 'firebase/database';
 
 const generateMatricule = (name: string, existingUsernames: string[]): string => {
   const initial = name.trim().charAt(0).toUpperCase();
@@ -19,7 +17,7 @@ const generateMatricule = (name: string, existingUsernames: string[]): string =>
 
 const AdminModelAccess: React.FC = () => {
   const { data, saveData } = useData();
-  const { migrateModelToAuth } = useAuth();
+  const { migrateModelToAuth, createUserWithRole } = useAuth();
   const models = data?.models ?? [];
   const [editingId, setEditingId] = useState<string | null>(null);
   const [newPassword, setNewPassword] = useState('');
@@ -55,19 +53,25 @@ const AdminModelAccess: React.FC = () => {
         continue;
       }
 
-      if (!model.email) {
-        // Update model with generated email first
-        await saveData({ 
-          ...data, 
-          models: data.models.map(m => m.id === model.id ? { ...m, email } : m) 
-        });
-      }
+      const result = await createUserWithRole(email, password, 'student', {
+        id: model.id,
+        name: model.name,
+      });
 
-      const result = await migrateModelToAuth(model.id, email, password);
       if (result.success) {
+        // Met à jour l'email dans le data local si généré automatiquement
+        if (!model.email) {
+          await saveData({
+            ...data,
+            models: data.models.map(m => m.id === model.id ? { ...m, email } : m),
+          });
+        }
         successCount++;
       } else {
-        errorCount++;
+        // Déjà dans Firebase Auth → tenter migrateModelToAuth pour lier l'uid
+        const retryResult = await migrateModelToAuth(model.id, email, password);
+        if (retryResult.success) successCount++;
+        else errorCount++;
       }
     }
 
@@ -139,6 +143,13 @@ const AdminModelAccess: React.FC = () => {
         </Link>
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
           <div className="flex items-center gap-4">
+            <Link
+              to="/admin/firebase-setup"
+              className="flex items-center gap-2 px-4 py-2.5 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/40 text-purple-300 text-sm font-bold rounded-lg transition-colors shrink-0"
+            >
+              <ShieldCheckIcon className="w-4 h-4" />
+              Config Firebase Auth
+            </Link>
             <button
               onClick={handleMigrateAllToFirebase}
               disabled={migratingAll}

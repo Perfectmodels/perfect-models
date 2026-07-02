@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useData } from '../contexts/DataContext';
+import { useAuth } from '../contexts/AuthContext';
 import SEO from '../components/SEO';
 import { Link, useNavigate } from 'react-router-dom';
 import {
@@ -21,8 +22,9 @@ const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
 
 const ModelDashboard: React.FC = () => {
   const { data, saveData } = useData();
+  const { user: authUser } = useAuth();
   const navigate = useNavigate();
-  const userId = sessionStorage.getItem('userId');
+  const userId = authUser?.userId ?? null;
   const [editableModel, setEditableModel] = useState<Model | null>(null);
   const [activeTab, setActiveTab] = useState<TabId>('profile');
   const [expandedBriefId, setExpandedBriefId] = useState<string | null>(null);
@@ -62,7 +64,8 @@ const ModelDashboard: React.FC = () => {
     }
   };
 
-  const handleLogout = () => { sessionStorage.clear(); navigate('/login'); };
+  const { logout } = useAuth();
+  const handleLogout = async () => { await logout(); navigate('/login'); };
 
   const handleToggleBrief = async (briefId: string) => {
     const newId = expandedBriefId === briefId ? null : briefId;

@@ -1,176 +1,376 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // --- RÈGLES DE PRODUCTION (À activer après les tests) ---
-    // Décommentez ces règles et commentez les règles de développement ci-dessous
-    
-    /*
-    // Collections publiques en lecture, admin en écriture
-    match /models/{modelId} {
-      allow read: if true;
-      allow write: if request.auth != null && request.auth.token.admin == true;
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {userId}
+    // Fields:
+    //   - uid: string (required, immutable)
+    //   - username: string (required)
+    //   - displayName: string (optional)
+    //   - bio: string (optional, max 150 chars)
+    //   - photoURL: string (optional)
+    //   - role: string (required, 'creator' or 'admin')
+    //   - theme: map (optional)
+    //   - createdAt: string (required, immutable)
+    //
+    // Collection: accounts
+    // Document ID: Firebase Auth uid
+    // Fields:
+    //   - uid: string (required, immutable, same as document ID)
+    //   - email: string (required, private)
+    //   - displayName: string (required)
+    //   - role: string (required, privileged, immutable for account owner)
+    //   - profileId: string (required, immutable for account owner)
+    //   - status: string (required, 'active' or 'disabled')
+    //   - username: string (optional)
+    //   - contestId: string (optional)
+    //   - migrationSource: string (optional, 'legacy-rtdb')
+    //   - createdAt: timestamp (required, immutable)
+    //   - updatedAt: timestamp (required)
+    //   - migratedAt: timestamp (optional)
+    //
+    // Collection: user_settings
+    // Document ID: {userId}
+    // Fields:
+    //   - uid: string (required, immutable)
+    //   - mobileMoneyNumber: string (optional)
+    //   - bankDetails: string (optional)
+    //   - email: string (required)
+    //   - updatedAt: string (required)
+    //
+    // Collection: links
+    // Document ID: {linkId}
+    // Fields:
+    //   - userId: string (required, immutable)
+    //   - title: string (required)
+    //   - url: string (required)
+    //   - icon: string (optional)
+    //   - order: number (required)
+    //   - isVisible: boolean (required)
+    //   - createdAt: string (required, immutable)
+    //
+    // Collection: events
+    // Document ID: {eventId}
+    // Fields:
+    //   - userId: string (required, immutable)
+    //   - title: string (required)
+    //   - date: string (required)
+    //   - location: string (required)
+    //   - coverImage: string (optional)
+    //   - price: number (required)
+    //   - quantity: number (required)
+    //   - sold: number (required)
+    //   - isPublished: boolean (required)
+    //   - createdAt: string (required, immutable)
+    //
+    // Collection: tickets
+    // Document ID: {ticketId}
+    // Fields:
+    //   - eventId: string (required, immutable)
+    //   - buyerName: string (required)
+    //   - buyerEmail: string (required)
+    //   - buyerPhone: string (optional)
+    //   - status: string (required, 'paid', 'pending', 'cancelled')
+    //   - createdAt: string (required, immutable)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
     }
-    
-    match /articles/{articleId} {
-      allow read: if true;
-      allow write: if request.auth != null && request.auth.token.admin == true;
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
     }
-    
-    match /fashionDayEvents/{eventId} {
-      allow read: if true;
-      allow write: if request.auth != null && request.auth.token.admin == true;
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.userId;
     }
-    
-    match /testimonials/{testimonialId} {
-      allow read: if true;
-      allow write: if request.auth != null && request.auth.token.admin == true;
+    function uidUnchanged() {
+      return !('uid' in request.resource.data) || request.resource.data.uid == request.auth.uid;
     }
-    
-    match /newsItems/{newsId} {
-      allow read: if true;
-      allow write: if request.auth != null && request.auth.token.admin == true;
+    function uidNotModified() {
+      return !('uid' in request.resource.data) || request.resource.data.uid == resource.data.uid;
     }
-    
-    match /agencyServices/{serviceId} {
-      allow read: if true;
-      allow write: if request.auth != null && request.auth.token.admin == true;
+    function userIdUnchanged() {
+      return !('userId' in request.resource.data) || request.resource.data.userId == request.auth.uid;
     }
-    
-    // Candidatures : lecture admin, écriture publique (création uniquement)
-    match /castingApplications/{applicationId} {
-      allow read: if request.auth != null && request.auth.token.admin == true;
-      allow create: if true;
-      allow update, delete: if request.auth != null && request.auth.token.admin == true;
+    function userIdNotModified() {
+      return !('userId' in request.resource.data) || request.resource.data.userId == resource.data.userId;
     }
-    
-    match /fashionDayApplications/{applicationId} {
-      allow read: if request.auth != null && request.auth.token.admin == true;
-      allow create: if true;
-      allow update, delete: if request.auth != null && request.auth.token.admin == true;
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
     }
-    
-    // Réservations : lecture admin, écriture publique (création uniquement)
-    match /fashionDayReservations/{reservationId} {
-      allow read: if request.auth != null && request.auth.token.admin == true;
-      allow create: if true;
-      allow update, delete: if request.auth != null && request.auth.token.admin == true;
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
     }
-    
-    // Messages de contact : lecture admin, écriture publique (création uniquement)
-    match /contactMessages/{messageId} {
-      allow read: if request.auth != null && request.auth.token.admin == true;
-      allow create: if true;
-      allow update, delete: if request.auth != null && request.auth.token.admin == true;
+    function validStringLength(field, minLen, maxLen) {
+      return request.resource.data[field] is string &&
+        request.resource.data[field].size() >= minLen &&
+        request.resource.data[field].size() <= maxLen;
     }
-    
-    match /bookingRequests/{requestId} {
-      allow read: if request.auth != null && request.auth.token.admin == true;
-      allow create: if true;
-      allow update, delete: if request.auth != null && request.auth.token.admin == true;
+    function isValidOptionalString(field, minLen, maxLen) {
+      return !(field in request.resource.data) ||
+             (request.resource.data[field] is string &&
+              request.resource.data[field].size() >= minLen &&
+              request.resource.data[field].size() <= maxLen);
     }
-    
-    // Configuration : lecture publique, écriture admin
-    match /config/{configId} {
-      allow read: if true;
-      allow write: if request.auth != null && request.auth.token.admin == true;
+    function isValidUrl(url) {
+      return url is string && (url.matches("^https://.*") || url.matches("^http://.*"));
     }
-    
-    // Collections privées (admin seulement)
-    match /forumThreads/{threadId} {
-      allow read, write: if request.auth != null;
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
     }
-    
-    match /forumReplies/{replyId} {
-      allow read, write: if request.auth != null;
+    function accountPath(uid) {
+      return /databases/$(database)/documents/accounts/$(uid);
     }
-    
-    match /articleComments/{commentId} {
-      allow read: if true;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null && 
-        (request.auth.uid == resource.data.userId || request.auth.token.admin == true);
-    }
-    
-    match /courseData/{courseId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.token.admin == true;
-    }
-    
-    match /absences/{absenceId} {
-      allow read, write: if request.auth != null && request.auth.token.admin == true;
-    }
-    
-    match /monthlyPayments/{paymentId} {
-      allow read, write: if request.auth != null && request.auth.token.admin == true;
-    }
-    
-    match /photoshootBriefs/{briefId} {
-      allow read, write: if request.auth != null && request.auth.token.admin == true;
-    }
-    
-    match /juryMembers/{memberId} {
-      allow read: if true;
-      allow write: if request.auth != null && request.auth.token.admin == true;
-    }
-    
-    match /registrationStaff/{staffId} {
-      allow read: if true;
-      allow write: if request.auth != null && request.auth.token.admin == true;
-    }
-    
-    match /recoveryRequests/{requestId} {
-      allow read, write: if request.auth != null && request.auth.token.admin == true;
-    }
-    
-    match /gallery/{itemId} {
-      allow read: if true;
-      allow write: if request.auth != null && request.auth.token.admin == true;
-    }
-    
-    // Règle par défaut : deny all (sécurité maximale)
-    match /{document=**} {
-      allow read, write: if false;
-    }
-    */
-    
-    // --- RÈGLES DE DÉVELOPPEMENT (Actuellement actives) ---
-    // À DÉSACTIVER EN PRODUCTION !
-    
-    // Configurations
-    match /config/{document} {
-      allow read, write: if true;
+    function isAdmin() {
+      return isAuthenticated() &&
+        (
+          (exists(accountPath(request.auth.uid)) &&
+            get(accountPath(request.auth.uid)).data.role == 'admin') ||
+          (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+            get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') ||
+          (
+            request.auth.token.email_verified == true &&
+            request.auth.token.email in [
+              'admin@perfectmodels.online',
+              'contact@perfectmodels.online',
+              'perfectmodels.ga@gmail.com'
+            ]
+          )
+        );
     }
 
-    // Collections principales
-    match /models/{modelId} {
-      allow read, write: if true;
-    }
-    
-    match /articles/{articleId} {
-      allow read, write: if true;
-    }
-    
-    match /fashionDayEvents/{eventId} {
-      allow read, write: if true;
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidUser() {
+      let data = request.resource.data;
+      return hasOnlyAllowedFields(['uid', 'username', 'displayName', 'bio', 'photoURL', 'role', 'theme', 'createdAt']) &&
+             data.uid is string && data.uid.size() > 0 && data.uid.size() < 100 &&
+             data.username is string && data.username.size() >= 3 && data.username.size() <= 30 &&
+             isValidOptionalString('displayName', 0, 50) &&
+             isValidOptionalString('bio', 0, 150) &&
+             isValidOptionalString('photoURL', 0, 1000) &&
+             data.role in ['creator', 'admin'] &&
+             (!( 'theme' in data ) || data.theme is map) &&
+             data.createdAt is string && data.createdAt.size() > 0 && data.createdAt.size() < 50;
     }
 
-    match /bookingRequests/{requestId} {
-      allow read, write: if true;
+    function isValidUserSettings() {
+      let data = request.resource.data;
+      return hasOnlyAllowedFields(['uid', 'mobileMoneyNumber', 'bankDetails', 'email', 'updatedAt']) &&
+             data.uid is string && data.uid.size() > 0 && data.uid.size() < 100 &&
+             isValidOptionalString('mobileMoneyNumber', 0, 50) &&
+             isValidOptionalString('bankDetails', 0, 500) &&
+             data.email is string && isValidEmail(data.email) && data.email.size() < 100 &&
+             data.updatedAt is string && data.updatedAt.size() > 0 && data.updatedAt.size() < 50;
     }
 
-    match /castingApplications/{applicationId} {
-      allow read, write: if true;
+    function isValidLink() {
+      let data = request.resource.data;
+      return hasOnlyAllowedFields(['userId', 'title', 'url', 'icon', 'order', 'isVisible', 'createdAt']) &&
+             data.userId is string && data.userId.size() > 0 && data.userId.size() < 100 &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 100 &&
+             data.url is string && isValidUrl(data.url) && data.url.size() <= 1000 &&
+             isValidOptionalString('icon', 0, 100) &&
+             data.order is number &&
+             data.isVisible is bool &&
+             data.createdAt is string && data.createdAt.size() > 0 && data.createdAt.size() < 50;
     }
 
-    match /fashionDayReservations/{reservationId} {
-      allow read, write: if true;
+    function isValidEvent() {
+      let data = request.resource.data;
+      return hasOnlyAllowedFields(['userId', 'title', 'date', 'location', 'coverImage', 'price', 'quantity', 'sold', 'isPublished', 'createdAt']) &&
+             data.userId is string && data.userId.size() > 0 && data.userId.size() < 100 &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 100 &&
+             data.date is string && data.date.size() > 0 && data.date.size() < 50 &&
+             data.location is string && data.location.size() > 0 && data.location.size() <= 200 &&
+             isValidOptionalString('coverImage', 0, 1000) &&
+             data.price is number && data.price >= 0 &&
+             data.quantity is number && data.quantity >= 0 &&
+             data.sold is number && data.sold >= 0 &&
+             data.isPublished is bool &&
+             data.createdAt is string && data.createdAt.size() > 0 && data.createdAt.size() < 50;
     }
 
-    // Règle par défaut pour le reste (Flexible pour le développement)
-    match /{document=**} {
-      allow read, write: if true;
+    function isValidTicket() {
+      let data = request.resource.data;
+      return hasOnlyAllowedFields(['eventId', 'buyerName', 'buyerEmail', 'buyerPhone', 'status', 'createdAt']) &&
+             data.eventId is string && data.eventId.size() > 0 && data.eventId.size() < 100 &&
+             data.buyerName is string && data.buyerName.size() > 0 && data.buyerName.size() <= 100 &&
+             data.buyerEmail is string && isValidEmail(data.buyerEmail) && data.buyerEmail.size() <= 100 &&
+             isValidOptionalString('buyerPhone', 0, 50) &&
+             data.status in ['paid', 'pending', 'cancelled'] &&
+             data.createdAt is string && data.createdAt.size() > 0 && data.createdAt.size() < 50;
+    }
+
+    function isValidAccount() {
+      let data = request.resource.data;
+      return hasOnlyAllowedFields([
+               'uid',
+               'email',
+               'displayName',
+               'role',
+               'profileId',
+               'status',
+               'username',
+               'contestId',
+               'migrationSource',
+               'createdAt',
+               'updatedAt',
+               'migratedAt'
+             ]) &&
+             hasRequiredFields([
+               'uid',
+               'email',
+               'displayName',
+               'role',
+               'profileId',
+               'status',
+               'createdAt',
+               'updatedAt'
+             ]) &&
+             data.uid is string && data.uid.size() >= 20 && data.uid.size() <= 128 &&
+             isValidEmail(data.email) && data.email.size() <= 254 &&
+             data.displayName is string &&
+               data.displayName.size() >= 1 && data.displayName.size() <= 100 &&
+             data.role in ['admin', 'student', 'jury', 'registration', 'jury-contest'] &&
+             data.profileId is string &&
+               data.profileId.size() >= 1 && data.profileId.size() <= 128 &&
+             data.status in ['active', 'disabled'] &&
+             isValidOptionalString('username', 1, 80) &&
+             isValidOptionalString('contestId', 1, 128) &&
+             (
+               !('migrationSource' in data) ||
+               data.migrationSource == 'legacy-rtdb'
+             ) &&
+             data.createdAt is timestamp &&
+             data.updatedAt is timestamp &&
+             (
+               !('migratedAt' in data) ||
+               data.migratedAt is timestamp
+             );
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      // Public read for profiles
+      allow read: if true;
+      allow create: if isAuthenticated() && isValidUser() && uidUnchanged() && ((isOwner(userId) && request.resource.data.role == 'creator') || isAdmin());
+      allow update: if isAuthenticated() && isValidUser() && uidNotModified() && ((isOwner(userId) && request.resource.data.role == resource.data.role && request.resource.data.createdAt == resource.data.createdAt) || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    match /accounts/{accountId} {
+      // Account documents contain email addresses and are never public.
+      allow read: if isOwner(accountId) || isAdmin();
+
+      // A new user can only create their own non-privileged mannequin account.
+      // Privileged roles must be provisioned by an existing administrator.
+      allow create: if isAuthenticated() &&
+        isValidAccount() &&
+        request.resource.data.uid == accountId &&
+        request.resource.data.createdAt == request.time &&
+        request.resource.data.updatedAt == request.time &&
+        (
+          !('migratedAt' in request.resource.data) ||
+          request.resource.data.migratedAt == request.time
+        ) &&
+        (
+          (
+            isOwner(accountId) &&
+            request.resource.data.role == 'student' &&
+            request.resource.data.status == 'active' &&
+            request.resource.data.email == request.auth.token.email
+          ) ||
+          isAdmin()
+        );
+
+      // Owners may edit presentation fields only; authorization fields stay immutable.
+      allow update: if isAuthenticated() &&
+        isValidAccount() &&
+        request.resource.data.uid == accountId &&
+        request.resource.data.updatedAt == request.time &&
+        (
+          (
+            isOwner(accountId) &&
+            request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly([
+                'displayName',
+                'username',
+                'migrationSource',
+                'migratedAt',
+                'updatedAt'
+              ]) &&
+            request.resource.data.role == resource.data.role &&
+            request.resource.data.profileId == resource.data.profileId &&
+            request.resource.data.email == resource.data.email &&
+            request.resource.data.status == resource.data.status &&
+            request.resource.data.createdAt == resource.data.createdAt &&
+            (
+              request.resource.data.diff(resource.data).affectedKeys()
+                .hasNone(['migrationSource', 'migratedAt']) ||
+              (
+                !('migrationSource' in resource.data) &&
+                request.resource.data.migrationSource == 'legacy-rtdb' &&
+                request.resource.data.migratedAt == request.time
+              )
+            )
+          ) ||
+          (
+            isAdmin() &&
+            request.resource.data.uid == resource.data.uid &&
+            request.resource.data.createdAt == resource.data.createdAt
+          )
+        );
+
+      allow delete: if isAdmin();
+    }
+
+    match /user_settings/{userId} {
+      // Private settings
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isAuthenticated() && isValidUserSettings() && uidUnchanged() && isOwner(userId);
+      allow update: if isAuthenticated() && isValidUserSettings() && uidNotModified() && isOwner(userId);
+      allow delete: if isAdmin();
+    }
+
+    match /links/{linkId} {
+      // Public read for links
+      allow read: if true;
+      allow create: if isAuthenticated() && isValidLink() && userIdUnchanged() && (request.auth.uid == request.resource.data.userId || isAdmin());
+      allow update: if isAuthenticated() && isValidLink() && userIdNotModified() && (request.auth.uid == resource.data.userId && request.resource.data.createdAt == resource.data.createdAt || isAdmin());
+      allow delete: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin());
+    }
+
+    match /events/{eventId} {
+      // Public read for events
+      allow read: if true;
+      allow create: if isAuthenticated() && isValidEvent() && userIdUnchanged() && (request.auth.uid == request.resource.data.userId || isAdmin());
+      allow update: if isAuthenticated() && isValidEvent() && userIdNotModified() && (request.auth.uid == resource.data.userId && request.resource.data.createdAt == resource.data.createdAt || isAdmin());
+      allow delete: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin());
+    }
+
+    match /tickets/{ticketId} {
+      // Tickets can be created by anyone (public buyers)
+      // They can only be read by the event owner or admin
+      allow read: if isAuthenticated() && (get(/databases/$(database)/documents/events/$(resource.data.eventId)).data.userId == request.auth.uid || isAdmin());
+      allow create: if isValidTicket();
+      // Only event owner or admin can update ticket status
+      allow update: if isAuthenticated() && isValidTicket() && request.resource.data.eventId == resource.data.eventId && request.resource.data.createdAt == resource.data.createdAt && (get(/databases/$(database)/documents/events/$(resource.data.eventId)).data.userId == request.auth.uid || isAdmin());
+      allow delete: if isAdmin();
     }
   }
 }

@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link, NavLink, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useData } from '../../contexts/DataContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { ArrowRightOnRectangleIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import AnimatedHamburgerIcon from './AnimatedHamburgerIcon';
 
@@ -72,20 +73,20 @@ const Header: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const { data } = useData();
+  const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  const isLoggedIn = !!user;
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
-    setIsLoggedIn(sessionStorage.getItem('classroom_access') === 'granted');
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [location]);
+  }, []);
 
-  const handleLogout = () => {
-    sessionStorage.clear();
-    setIsLoggedIn(false);
+  const handleLogout = async () => {
+    await logout();
     navigate('/login');
   };
 

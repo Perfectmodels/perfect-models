@@ -1,10 +1,10 @@
 
 import React, { useEffect, useRef, lazy, Suspense } from 'react';
-import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { DataProvider, useData } from './contexts/DataContext';
 import { ToastProvider } from './components/ui/Toast';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Layout from './components/icons/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import { PWAInstaller } from './components/PWAInstaller';
@@ -29,7 +29,7 @@ const Casting = lazy(() => import('./pages/Casting'));
 const CastingForm = lazy(() => import('./pages/CastingForm'));
 const FashionDayApplicationForm = lazy(() => import('./pages/FashionDayApplicationForm'));
 const Login = lazy(() => import('./pages/Login'));
-const ModelMigration = lazy(() => import('./pages/ModelMigration'));
+const PhoneLogin = lazy(() => import('./pages/PhoneLogin'));
 const Activity = lazy(() => import('./pages/Activity')); // Renamed Formations
 const ChapterDetail = lazy(() => import('./pages/ChapterDetail'));
 const ModelDashboard = lazy(() => import('./pages/ModelDashboard')); // Profil
@@ -74,6 +74,7 @@ const AdminMailing = lazy(() => import('./pages/AdminMailing'));
 const MissOneLight = lazy(() => import('./pages/MissOneLight'));
 const AdminMissOneLight = lazy(() => import('./pages/AdminMissOneLight'));
 const AdminBeautyContest = lazy(() => import('./pages/AdminBeautyContest'));
+const AdminFirebaseSetup = lazy(() => import('./pages/AdminFirebaseSetup'));
 
 
 // Role-specific pages
@@ -147,7 +148,8 @@ const AnimatedRoutes: React.FC = () => {
                     <Route path="/casting-formulaire" element={<CastingForm />} />
                     <Route path="/fashion-day-application" element={<FashionDayApplicationForm />} />
                     <Route path="/login" element={<Login />} />
-                    <Route path="/login/migration" element={<ModelMigration />} />
+                    <Route path="/login/phone" element={<PhoneLogin />} />
+                    <Route path="/login/migration" element={<Navigate to="/login" replace />} />
                     <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                     <Route path="/terms-of-use" element={<TermsOfUse />} />
                     <Route path="/galerie" element={<Gallery />} />
@@ -198,6 +200,7 @@ const AnimatedRoutes: React.FC = () => {
                     <Route path="/admin/mailing" element={<ProtectedRoute role="admin"><AdminMailing /></ProtectedRoute>} />
                     <Route path="/admin/miss-one-light" element={<ProtectedRoute role="admin"><AdminMissOneLight /></ProtectedRoute>} />
                     <Route path="/admin/beauty-contests" element={<ProtectedRoute role="admin"><AdminBeautyContest /></ProtectedRoute>} />
+                    <Route path="/admin/firebase-setup" element={<ProtectedRoute role="admin"><AdminFirebaseSetup /></ProtectedRoute>} />
 
                     <Route path="*" element={<NotFound />} />
                 </Routes>
@@ -212,7 +215,15 @@ const PUBLIC_PATHS = ['/', '/agence', '/mannequins', '/fashion-day', '/magazine'
 const AppContent: React.FC = () => {
     const location = useLocation();
     const { data } = useData();
+    const { user } = useAuth();
     const notifiedPaths = useRef<Set<string>>(new Set());
+
+    // Restaurer la session FCM dès que l'admin est authentifié via Firebase
+    useEffect(() => {
+        if (user?.role === 'admin') {
+            restoreFcmSession().catch(() => {});
+        }
+    }, [user?.role]);
 
     // Notif visite — une seule fois par chemin par session
     useEffect(() => {
@@ -282,20 +293,15 @@ const AppContent: React.FC = () => {
 }
 
 const App: React.FC = () => {
-    const { isNative, platform } = useCapacitor();
+    const { isNative } = useCapacitor();
 
     useEffect(() => {
         if (isNative) {
             // Native mobile: use Capacitor push notifications
             initNativePush();
         } else {
-            // Web: use service worker and FCM
+            // Web: enregistrement du service worker (FCM géré dans AppContent selon l'état auth)
             registerServiceWorker();
-            // Restaurer le token FCM uniquement si l'admin est connecté (session persistante)
-            const isAdminPersisted = localStorage.getItem('pmm_admin_access') === 'granted';
-            if (isAdminPersisted) {
-                restoreFcmSession().catch(() => {});
-            }
         }
     }, [isNative]);
 
@@ -303,11 +309,11 @@ const App: React.FC = () => {
         <DataProvider>
             <AuthProvider>
                 <ToastProvider>
-                    <BrowserRouter>
-                        <ScrollToTop />
-                        <AppContent />
-                        <PWAInstaller />
-                    </BrowserRouter>
+<BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                         <ScrollToTop />
+                         <AppContent />
+                         <PWAInstaller />
+                     </BrowserRouter>
                 </ToastProvider>
             </AuthProvider>
         </DataProvider>

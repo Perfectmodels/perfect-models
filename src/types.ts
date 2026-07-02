@@ -214,6 +214,8 @@ export interface JuryMember {
   name: string;
   username: string;
   password: string;
+  email?: string;
+  firebaseUid?: string;
 }
 
 export interface RegistrationStaff {
@@ -221,6 +223,8 @@ export interface RegistrationStaff {
   name: string;
   username: string;
   password: string;
+  email?: string;
+  firebaseUid?: string;
 }
 
 export interface CastingApplication {

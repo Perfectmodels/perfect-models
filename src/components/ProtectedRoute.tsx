@@ -1,62 +1,57 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth, UserRole } from '../contexts/AuthContext';
 
 interface ProtectedRouteProps {
   children: React.ReactElement;
-  role: 'admin' | 'student' | 'jury' | 'registration' | 'beginner' | 'jury-contest';
+  role: UserRole | 'beginner'; // 'beginner' conservé pour compatibilité (non utilisé)
 }
 
-/** Clés de persistance session admin dans localStorage */
-export const ADMIN_SESSION_KEYS = {
-  access: 'pmm_admin_access',
-  role: 'pmm_admin_role',
-  name: 'pmm_admin_name',
-  userId: 'pmm_admin_userId',
-} as const;
-
-/** Sauvegarde la session admin dans localStorage (persistante) */
-export function persistAdminSession(name: string, userId: string): void {
-  localStorage.setItem(ADMIN_SESSION_KEYS.access, 'granted');
-  localStorage.setItem(ADMIN_SESSION_KEYS.role, 'admin');
-  localStorage.setItem(ADMIN_SESSION_KEYS.name, name);
-  localStorage.setItem(ADMIN_SESSION_KEYS.userId, userId);
-}
-
-/** Efface la session admin persistante */
-export function clearAdminSession(): void {
-  Object.values(ADMIN_SESSION_KEYS).forEach(k => localStorage.removeItem(k));
-}
-
-/** Restaure la session admin depuis localStorage vers sessionStorage */
-export function restoreAdminSession(): boolean {
-  const access = localStorage.getItem(ADMIN_SESSION_KEYS.access);
-  const role = localStorage.getItem(ADMIN_SESSION_KEYS.role);
-  if (access === 'granted' && role === 'admin') {
-    sessionStorage.setItem('classroom_access', 'granted');
-    sessionStorage.setItem('classroom_role', 'admin');
-    sessionStorage.setItem('userName', localStorage.getItem(ADMIN_SESSION_KEYS.name) || 'Admin');
-    sessionStorage.setItem('userId', localStorage.getItem(ADMIN_SESSION_KEYS.userId) || 'admin-id');
-    return true;
-  }
-  return false;
-}
-
+/**
+ * Garde de route basé sur Firebase Auth via AuthContext.
+ * - Pendant le chargement initial de Firebase, affiche un écran de chargement
+ *   pour éviter toute redirection prématurée.
+ * - Redirige vers /login si l'utilisateur n'est pas authentifié ou n'a pas le bon rôle.
+ */
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, role }) => {
+  const { user, loading } = useAuth();
   const location = useLocation();
 
-  // Pour le rôle admin, vérifier aussi localStorage (session persistante)
-  if (role === 'admin') {
-    restoreAdminSession();
+  // Firebase n'a pas encore résolu l'état auth — on attend
+  if (loading) {
+    return (
+      <div
+        className="min-h-screen bg-pm-dark flex items-center justify-center"
+        aria-label="Chargement en cours"
+      >
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-4 border-pm-gold border-t-transparent rounded-full animate-spin" />
+          <p className="text-pm-off-white/50 text-sm">Vérification de l'accès…</p>
+        </div>
+      </div>
+    );
   }
 
-  const userRole = sessionStorage.getItem('classroom_role');
-  const hasAccess = sessionStorage.getItem('classroom_access') === 'granted';
-
-  if (hasAccess && userRole === role) {
-    return children;
+  // Non authentifié
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  return <Navigate to="/login" state={{ from: location }} replace />;
+  // Mauvais rôle
+  if (user.role !== role) {
+    // Redirige vers le panel correspondant au rôle réel
+    const roleRedirect: Record<UserRole, string> = {
+      admin: '/admin',
+      student: '/profil',
+      jury: '/jury/casting',
+      registration: '/enregistrement/casting',
+      'jury-contest': '/concours/jury',
+    };
+    const destination = roleRedirect[user.role] ?? '/login';
+    return <Navigate to={destination} replace />;
+  }
+
+  return children;
 };
 
 export default ProtectedRoute;

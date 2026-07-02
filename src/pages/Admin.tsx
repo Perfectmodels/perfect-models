@@ -12,6 +12,7 @@ import {
     BellIcon, BellSlashIcon, PhotoIcon,
 } from '@heroicons/react/24/outline';
 import { useData } from '../contexts/DataContext';
+import { useAuth } from '../contexts/AuthContext';
 import { requestNotificationPermission, getCachedFcmToken } from '../utils/fcmService';
 import { ref, get } from 'firebase/database';
 import { db } from '../realtimedbConfig';
@@ -78,6 +79,7 @@ const DashboardCard: React.FC<{
 // ── Main Component ────────────────────────────────────────────────────────────
 const Admin: React.FC = () => {
     const navigate = useNavigate();
+    const { logout } = useAuth();
     const { data, saveData } = useData();
     const [activeTab, setActiveTab] = useState<TabId>('overview');
 
@@ -135,8 +137,8 @@ const Admin: React.FC = () => {
         setPushStatus(token ? 'granted' : 'denied');
     };
 
-    const handleLogout = () => {
-        sessionStorage.clear();
+    const handleLogout = async () => {
+        await logout();
         navigate('/login');
     };
 

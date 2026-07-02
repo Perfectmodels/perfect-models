@@ -4,8 +4,10 @@ import { ref, onValue, push, set, update } from 'firebase/database';
 import { Star, LogOut, CheckCircle, ChevronRight, ChevronLeft, Layers } from 'lucide-react';
 import SEO from '../components/SEO';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { STAGE_LABELS, STAGE_ORDER, type ContestStage } from './AdminBeautyContest';
 
+// ... types ...
 interface Candidate { id: string; order: number; name: string; photo: string; bio: string; status: string; }
 interface ScoringCriteria { id: string; passageId?: string; label: string; weight: number; order: number; }
 interface Passage { id: string; order: number; name: string; description: string; }
@@ -13,14 +15,15 @@ interface Score { id: string; juryId: string; candidateId: string; passageId: st
 interface Contest { id: string; name: string; date: string; location: string; status: string; currentStage: ContestStage; }
 
 const RTDB_BASE = 'beautyContests';
-const stagePath = (contestId: string, stage: ContestStage) => `${RTDB_BASE}/${contestId}/stages/${stage}`;
 
 export default function JuryContest() {
   const navigate = useNavigate();
-  const juryId   = sessionStorage.getItem('userId') || '';
-  const juryName = sessionStorage.getItem('userName') || '';
-  const contestId = sessionStorage.getItem('contestId') || '';
+  const { user: authUser, logout } = useAuth();
+  const juryId    = authUser?.userId ?? '';
+  const juryName  = authUser?.displayName ?? '';
+  const contestId = authUser?.contestId ?? '';
 
+  const stagePath = (cId: string, stage: ContestStage) => `${RTDB_BASE}/${cId}/stages/${stage}`;
   const [contest, setContest] = useState<Contest|null>(null);
   const [activeStage, setActiveStage] = useState<ContestStage>('preselection');
   const [candidates, setCandidates] = useState<Candidate[]>([]);
@@ -140,7 +143,7 @@ export default function JuryContest() {
     finally { setSaving(false); }
   };
 
-  const handleLogout = () => { sessionStorage.clear(); navigate('/login'); };
+  const handleLogout = async () => { await logout(); navigate('/login'); };
   if (loading) return <div className='min-h-screen bg-pm-dark flex items-center justify-center'><img src="/logo.svg" alt="PMM" className="w-24 h-24 animate-pulse" /></div>;
   if (!contestId || !contest) return (
     <div className='min-h-screen bg-pm-dark flex flex-col items-center justify-center gap-4 px-4 text-center'>

@@ -1,11 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { useData } from '../contexts/DataContext';
+import { useAuth } from '../contexts/AuthContext';
 import { CastingApplication } from '../types';
 import SEO from '../components/SEO';
 import { UserPlusIcon, PrinterIcon } from '@heroicons/react/24/outline';
 
 const RegistrationCasting: React.FC = () => {
     const { data, saveData, isInitialized } = useData();
+    const { user: authUser } = useAuth();
     const initialFormState = {
         firstName: '', lastName: '', birthDate: '', email: '', phone: '', nationality: '', city: '',
         gender: 'Femme' as 'Homme' | 'Femme', height: '', weight: '', chest: '', waist: '', hips: '', shoeSize: '',
@@ -14,7 +16,7 @@ const RegistrationCasting: React.FC = () => {
     const [formData, setFormData] = useState(initialFormState);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const staffName = sessionStorage.getItem('userName');
+    const staffName = authUser?.displayName ?? 'Staff';
 
     const registeredApplicants = useMemo(() => {
         return data?.castingApplications

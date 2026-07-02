@@ -1,18 +1,18 @@
-
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChatBubbleLeftRightIcon, PlusIcon } from '@heroicons/react/24/outline';
 import SEO from '../components/SEO';
 import { useData } from '../contexts/DataContext';
+import { useAuth } from '../contexts/AuthContext';
 import { ForumThread } from '../types';
 
 const ClassroomForum: React.FC = () => {
     const { data, saveData, isInitialized } = useData();
+    const { user: authUser } = useAuth();
     const [isCreating, setIsCreating] = useState(false);
     const [newThread, setNewThread] = useState({ title: '', initialPost: '' });
 
-    const userId = sessionStorage.getItem('userId');
+    const userId = authUser?.userId ?? null;
     const user = data?.models.find(m => m.id === userId);
     
     const threads = data?.forumThreads.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()) || [];

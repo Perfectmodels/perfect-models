@@ -5,16 +5,18 @@ import { useParams, Link } from 'react-router-dom';
 import { ArrowLeftIcon, PaperAirplaneIcon, UserCircleIcon } from '@heroicons/react/24/outline';
 import SEO from '../components/SEO';
 import { useData } from '../contexts/DataContext';
+import { useAuth } from '../contexts/AuthContext';
 import { ForumReply } from '../types';
 import NotFound from './NotFound';
 
 const ForumThread: React.FC = () => {
     const { data, saveData, isInitialized } = useData();
+    const { user: authUser } = useAuth();
     const { threadId } = useParams<{ threadId: string }>();
     const [newReply, setNewReply] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
     
-    const userId = sessionStorage.getItem('userId');
+    const userId = authUser?.userId ?? null;
     const user = data?.models.find(m => m.id === userId);
 
     const thread = data?.forumThreads.find(t => t.id === threadId);
