@@ -158,16 +158,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const normalizedIdentifier = identifier.toLowerCase().trim();
       
-      // Handle admin hardcoded login
-      if (normalizedIdentifier === 'admin' && password === 'admin2025') {
-        localStorage.setItem('pmm_admin_access', 'granted');
-        localStorage.setItem('pmm_admin_role', 'admin');
-        sessionStorage.setItem('classroom_access', 'granted');
-        sessionStorage.setItem('classroom_role', 'admin');
-        sessionStorage.setItem('userId', 'admin-id');
-        sessionStorage.setItem('userName', 'Admin');
-        return { success: true };
-      }
 
       // Helper to find user and try legacy auth fallback
       const modelsSnap = await get(ref(rtdb, 'models'));
