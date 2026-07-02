@@ -16,6 +16,7 @@ export interface Model {
   distinctions?: ModelDistinction[];
   isPublic?: boolean; 
   level?: 'Pro' | 'Débutant';
+  permissions?: UserPermissions;
   measurements: {
     chest: string;
     waist: string;
@@ -36,6 +37,48 @@ export interface Model {
   lastLogin?: string;
   lastActivity?: string;
 }
+
+// ── Permissions granulaires par utilisateur ───────────────────────────────────
+export interface UserPermissions {
+  // Mannequins
+  canAccessFormation?: boolean;       // Formation avancée
+  canAccessClassroom?: boolean;       // Classroom (cours de base)
+  canAccessForum?: boolean;           // Forum de la classe
+  canViewPhotoshootBriefs?: boolean;  // Briefings photoshoots
+  canViewResults?: boolean;           // Résultats et scores
+  canEditProfile?: boolean;           // Modification du profil public
+  // Jury
+  canScoreCasting?: boolean;          // Notation casting
+  canViewAllCandidates?: boolean;     // Voir toutes les candidatures
+  // Staff
+  canRegisterCandidates?: boolean;    // Enregistrement candidatures
+  canPrintList?: boolean;             // Impression liste
+  // Général
+  isActive?: boolean;                 // Compte actif/suspendu
+}
+
+// Permissions par défaut selon le rôle
+export const DEFAULT_PERMISSIONS: Record<string, UserPermissions> = {
+  student: {
+    canAccessFormation: true,
+    canAccessClassroom: true,
+    canAccessForum: true,
+    canViewPhotoshootBriefs: true,
+    canViewResults: true,
+    canEditProfile: true,
+    isActive: true,
+  },
+  jury: {
+    canScoreCasting: true,
+    canViewAllCandidates: true,
+    isActive: true,
+  },
+  registration: {
+    canRegisterCandidates: true,
+    canPrintList: true,
+    isActive: true,
+  },
+};
 
 export interface Stylist {
   name: string;

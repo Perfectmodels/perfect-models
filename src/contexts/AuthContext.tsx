@@ -20,6 +20,8 @@ import {
 import { ref, get, set, update } from 'firebase/database';
 import { deleteDoc, doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 
+import { UserPermissions } from '../types';
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type UserRole = 'admin' | 'student' | 'jury' | 'registration' | 'jury-contest';
@@ -33,6 +35,8 @@ export interface AuthUser {
   userId: string;
   /** ID du concours beauté — uniquement pour jury-contest */
   contestId?: string;
+  /** Permissions granulaires */
+  permissions?: UserPermissions;
 }
 
 export interface ModelMigrationRequest {
@@ -493,7 +497,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         const authUser = await resolveUserRole(firebaseUser);
-        setUser(authUser);
+        // Vérifier si le compte est suspendu (isActive === false dans Firestore)
+        if (authUser) {
+          // Charger les permissions depuis Firestore si disponibles
+          try {
+            const accountSnap = await getDoc(doc(db, 'accounts', firebaseUser.uid));
+            if (accountSnap.exists()) {
+              const accountData = accountSnap.data();
+              if (accountData.permissions?.isActive === false) {
+                // Compte suspendu — déconnecter immédiatement
+                await signOut(auth);
+                setUser(null);
+                setLoading(false);
+                return;
+              }
+              if (accountData.permissions) {
+                (authUser as any).permissions = accountData.permissions;
+              }
+            }
+          } catch {
+            // Ignorer les erreurs de lecture permissions
+          }
+          setUser(authUser);
+        } else {
+          setUser(null);
+        }
       } else {
         setUser(null);
       }

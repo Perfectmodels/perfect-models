@@ -3,7 +3,8 @@ import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
 import { CastingApplication } from '../types';
 import SEO from '../components/SEO';
-import { UserPlusIcon, PrinterIcon } from '@heroicons/react/24/outline';
+import { UserPlusIcon, PrinterIcon, LockClosedIcon } from '@heroicons/react/24/outline';
+import ChangePasswordModal from '../components/ChangePasswordModal';
 
 const RegistrationCasting: React.FC = () => {
     const { data, saveData, isInitialized } = useData();
@@ -17,6 +18,7 @@ const RegistrationCasting: React.FC = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const staffName = authUser?.displayName ?? 'Staff';
+    const [showChangePassword, setShowChangePassword] = useState(false);
 
     const registeredApplicants = useMemo(() => {
         return data?.castingApplications
@@ -79,7 +81,18 @@ const RegistrationCasting: React.FC = () => {
                             <h1 className="admin-page-title">Enregistrement Casting</h1>
                             <p className="admin-page-subtitle">Connecté en tant que {staffName}.</p>
                         </div>
+                        <button
+                          onClick={() => setShowChangePassword(true)}
+                          className="flex items-center gap-2 px-4 py-2 bg-pm-gold/10 hover:bg-pm-gold/20 border border-pm-gold/30 text-pm-gold text-sm font-bold rounded-lg transition-colors"
+                        >
+                          <LockClosedIcon className="w-4 h-4" />
+                          Changer mon mot de passe
+                        </button>
                     </div>
+
+                    {showChangePassword && (
+                      <ChangePasswordModal onClose={() => setShowChangePassword(false)} />
+                    )}
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         {/* Registration Form */}

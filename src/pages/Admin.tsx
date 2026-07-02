@@ -9,7 +9,7 @@ import {
     SignalIcon, ArrowUpRightIcon, StarIcon, PlusIcon, PaperAirplaneIcon,
     Squares2X2Icon, ChartBarIcon, WrenchScrewdriverIcon,
     UserCircleIcon, PencilIcon, CheckIcon, XMarkIcon, EyeIcon, EyeSlashIcon,
-    BellIcon, BellSlashIcon, PhotoIcon,
+    BellIcon, BellSlashIcon, PhotoIcon, LockClosedIcon,
 } from '@heroicons/react/24/outline';
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -18,6 +18,7 @@ import { ref, get } from 'firebase/database';
 import { db } from '../realtimedbConfig';
 import TrainingStatsWidget from '../components/TrainingStatsWidget';
 import { loadProgressFromLocal } from '../utils/trainingHelpers';
+import ChangePasswordModal from '../components/ChangePasswordModal';
 
 // Import test utilities in development
 if (import.meta.env.DEV) {
@@ -82,6 +83,7 @@ const Admin: React.FC = () => {
     const { logout } = useAuth();
     const { data, saveData } = useData();
     const [activeTab, setActiveTab] = useState<TabId>('overview');
+    const [showChangePassword, setShowChangePassword] = useState(false);
 
     // ── Profil admin ──────────────────────────────────────────────────────────
     const [editingProfile, setEditingProfile] = useState(false);
@@ -512,7 +514,7 @@ const Admin: React.FC = () => {
                                         )}
                                     </div>
                                     <div>
-                                        <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 mb-2 block">Mot de passe</label>
+                                        <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 mb-2 block">Mot de passe (legacy)</label>
                                         {editingProfile ? (
                                             <div className="relative">
                                                 <input type={showPassword ? 'text' : 'password'} value={profileForm.password}
@@ -526,6 +528,19 @@ const Admin: React.FC = () => {
                                         ) : (
                                             <p className="text-sm font-mono text-white/30 py-2.5 border-b border-white/5">••••••••••</p>
                                         )}
+                                    </div>
+                                    {/* Changement mot de passe Firebase */}
+                                    <div className="pt-2">
+                                        <button
+                                            onClick={() => setShowChangePassword(true)}
+                                            className="flex items-center gap-2 px-4 py-2.5 bg-pm-gold/10 hover:bg-pm-gold/20 border border-pm-gold/30 text-pm-gold text-xs font-black uppercase tracking-widest rounded-lg transition-colors"
+                                        >
+                                            <LockClosedIcon className="w-4 h-4" />
+                                            Changer le mot de passe Firebase
+                                        </button>
+                                        <p className="text-[10px] text-white/20 mt-1.5">
+                                            Modifie le mot de passe utilisé pour vous connecter via Firebase Auth.
+                                        </p>
                                     </div>
                                 </div>
                             </div>

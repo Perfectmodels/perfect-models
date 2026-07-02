@@ -1,6 +1,7 @@
-import { ConnectorConfig, DataConnect, QueryRef, QueryPromise, ExecuteQueryOptions, MutationRef, MutationPromise } from 'firebase/data-connect';
+import { ConnectorConfig, DataConnect, QueryRef, QueryPromise, ExecuteQueryOptions, MutationRef, MutationPromise, DataConnectSettings } from 'firebase/data-connect';
 
 export const connectorConfig: ConnectorConfig;
+export const dataConnectSettings: DataConnectSettings;
 
 export type TimestampString = string;
 export type UUIDString = string;

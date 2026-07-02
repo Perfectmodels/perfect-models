@@ -18,22 +18,6 @@ service cloud.firestore {
     //   - theme: map (optional)
     //   - createdAt: string (required, immutable)
     //
-    // Collection: accounts
-    // Document ID: Firebase Auth uid
-    // Fields:
-    //   - uid: string (required, immutable, same as document ID)
-    //   - email: string (required, private)
-    //   - displayName: string (required)
-    //   - role: string (required, privileged, immutable for account owner)
-    //   - profileId: string (required, immutable for account owner)
-    //   - status: string (required, 'active' or 'disabled')
-    //   - username: string (optional)
-    //   - contestId: string (optional)
-    //   - migrationSource: string (optional, 'legacy-rtdb')
-    //   - createdAt: timestamp (required, immutable)
-    //   - updatedAt: timestamp (required)
-    //   - migratedAt: timestamp (optional)
-    //
     // Collection: user_settings
     // Document ID: {userId}
     // Fields:
@@ -127,25 +111,10 @@ service cloud.firestore {
     function isValidEmail(email) {
       return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
     }
-    function accountPath(uid) {
-      return /databases/$(database)/documents/accounts/$(uid);
-    }
     function isAdmin() {
       return isAuthenticated() &&
-        (
-          (exists(accountPath(request.auth.uid)) &&
-            get(accountPath(request.auth.uid)).data.role == 'admin') ||
-          (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-            get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') ||
-          (
-            request.auth.token.email_verified == true &&
-            request.auth.token.email in [
-              'admin@perfectmodels.online',
-              'contact@perfectmodels.online',
-              'perfectmodels.ga@gmail.com'
-            ]
-          )
-        );
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "perfectmodels.ga@gmail.com" && request.auth.token.email_verified == true));
     }
 
     // ===============================================================
@@ -213,54 +182,6 @@ service cloud.firestore {
              data.createdAt is string && data.createdAt.size() > 0 && data.createdAt.size() < 50;
     }
 
-    function isValidAccount() {
-      let data = request.resource.data;
-      return hasOnlyAllowedFields([
-               'uid',
-               'email',
-               'displayName',
-               'role',
-               'profileId',
-               'status',
-               'username',
-               'contestId',
-               'migrationSource',
-               'createdAt',
-               'updatedAt',
-               'migratedAt'
-             ]) &&
-             hasRequiredFields([
-               'uid',
-               'email',
-               'displayName',
-               'role',
-               'profileId',
-               'status',
-               'createdAt',
-               'updatedAt'
-             ]) &&
-             data.uid is string && data.uid.size() >= 20 && data.uid.size() <= 128 &&
-             isValidEmail(data.email) && data.email.size() <= 254 &&
-             data.displayName is string &&
-               data.displayName.size() >= 1 && data.displayName.size() <= 100 &&
-             data.role in ['admin', 'student', 'jury', 'registration', 'jury-contest'] &&
-             data.profileId is string &&
-               data.profileId.size() >= 1 && data.profileId.size() <= 128 &&
-             data.status in ['active', 'disabled'] &&
-             isValidOptionalString('username', 1, 80) &&
-             isValidOptionalString('contestId', 1, 128) &&
-             (
-               !('migrationSource' in data) ||
-               data.migrationSource == 'legacy-rtdb'
-             ) &&
-             data.createdAt is timestamp &&
-             data.updatedAt is timestamp &&
-             (
-               !('migratedAt' in data) ||
-               data.migratedAt is timestamp
-             );
-    }
-
     // ===============================================================
     // Rules
     // ===============================================================
@@ -270,72 +191,6 @@ service cloud.firestore {
       allow read: if true;
       allow create: if isAuthenticated() && isValidUser() && uidUnchanged() && ((isOwner(userId) && request.resource.data.role == 'creator') || isAdmin());
       allow update: if isAuthenticated() && isValidUser() && uidNotModified() && ((isOwner(userId) && request.resource.data.role == resource.data.role && request.resource.data.createdAt == resource.data.createdAt) || isAdmin());
-      allow delete: if isAdmin();
-    }
-
-    match /accounts/{accountId} {
-      // Account documents contain email addresses and are never public.
-      allow read: if isOwner(accountId) || isAdmin();
-
-      // A new user can only create their own non-privileged mannequin account.
-      // Privileged roles must be provisioned by an existing administrator.
-      allow create: if isAuthenticated() &&
-        isValidAccount() &&
-        request.resource.data.uid == accountId &&
-        request.resource.data.createdAt == request.time &&
-        request.resource.data.updatedAt == request.time &&
-        (
-          !('migratedAt' in request.resource.data) ||
-          request.resource.data.migratedAt == request.time
-        ) &&
-        (
-          (
-            isOwner(accountId) &&
-            request.resource.data.role == 'student' &&
-            request.resource.data.status == 'active' &&
-            request.resource.data.email == request.auth.token.email
-          ) ||
-          isAdmin()
-        );
-
-      // Owners may edit presentation fields only; authorization fields stay immutable.
-      allow update: if isAuthenticated() &&
-        isValidAccount() &&
-        request.resource.data.uid == accountId &&
-        request.resource.data.updatedAt == request.time &&
-        (
-          (
-            isOwner(accountId) &&
-            request.resource.data.diff(resource.data).affectedKeys()
-              .hasOnly([
-                'displayName',
-                'username',
-                'migrationSource',
-                'migratedAt',
-                'updatedAt'
-              ]) &&
-            request.resource.data.role == resource.data.role &&
-            request.resource.data.profileId == resource.data.profileId &&
-            request.resource.data.email == resource.data.email &&
-            request.resource.data.status == resource.data.status &&
-            request.resource.data.createdAt == resource.data.createdAt &&
-            (
-              request.resource.data.diff(resource.data).affectedKeys()
-                .hasNone(['migrationSource', 'migratedAt']) ||
-              (
-                !('migrationSource' in resource.data) &&
-                request.resource.data.migrationSource == 'legacy-rtdb' &&
-                request.resource.data.migratedAt == request.time
-              )
-            )
-          ) ||
-          (
-            isAdmin() &&
-            request.resource.data.uid == resource.data.uid &&
-            request.resource.data.createdAt == resource.data.createdAt
-          )
-        );
-
       allow delete: if isAdmin();
     }
 

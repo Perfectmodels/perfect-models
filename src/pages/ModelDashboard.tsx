@@ -7,27 +7,31 @@ import {
   BookOpenIcon, UserIcon, ArrowRightOnRectangleIcon, EnvelopeIcon,
   CheckCircleIcon, CalendarDaysIcon, MapPinIcon, ChartBarIcon,
   SparklesIcon, ClockIcon, TrophyIcon, CameraIcon,
-  ChevronDownIcon, ChevronUpIcon, ExclamationCircleIcon,
+  ChevronDownIcon, ChevronUpIcon, ExclamationCircleIcon, LockClosedIcon,
 } from '@heroicons/react/24/outline';
 import { Model, PhotoshootBrief } from '../types';
 import ModelForm from '../components/ModelForm';
+import ChangePasswordModal from '../components/ChangePasswordModal';
 
 type TabId = 'profile' | 'results' | 'briefs';
-
-const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
-  { id: 'profile',  label: 'Mon Profil',    icon: UserIcon },
-  { id: 'results',  label: 'Mes Résultats', icon: ChartBarIcon },
-  { id: 'briefs',   label: 'Briefings',     icon: EnvelopeIcon },
-];
 
 const ModelDashboard: React.FC = () => {
   const { data, saveData } = useData();
   const { user: authUser } = useAuth();
   const navigate = useNavigate();
   const userId = authUser?.userId ?? null;
+  const perms = authUser?.permissions;
+
+  // Onglets filtrés selon les permissions
+  const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
+    { id: 'profile',  label: 'Mon Profil',    icon: UserIcon },
+    ...(perms?.canViewResults !== false  ? [{ id: 'results' as TabId,  label: 'Mes Résultats', icon: ChartBarIcon }] : []),
+    ...(perms?.canViewPhotoshootBriefs !== false ? [{ id: 'briefs' as TabId, label: 'Briefings', icon: EnvelopeIcon }] : []),
+  ];
   const [editableModel, setEditableModel] = useState<Model | null>(null);
   const [activeTab, setActiveTab] = useState<TabId>('profile');
   const [expandedBriefId, setExpandedBriefId] = useState<string | null>(null);
+  const [showChangePassword, setShowChangePassword] = useState(false);
 
   const originalModel = data?.models.find(m => m.id === userId);
   const courseModules = data?.courseData?.filter(m => m.quiz && m.quiz.length > 0) || [];
@@ -108,6 +112,12 @@ const ModelDashboard: React.FC = () => {
             className="text-[9px] font-black uppercase tracking-[0.3em] text-white/30 hover:text-pm-gold transition-colors hidden sm:block">
             Portfolio Public
           </Link>
+          <button
+            onClick={() => setShowChangePassword(true)}
+            className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.3em] text-white/30 hover:text-pm-gold transition-colors hidden sm:flex"
+          >
+            <LockClosedIcon className="w-4 h-4" /> Mot de passe
+          </button>
           <button onClick={handleLogout}
             className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.3em] text-white/30 hover:text-red-400 transition-colors">
             <ArrowRightOnRectangleIcon className="w-4 h-4" /> Déconnexion
@@ -162,16 +172,27 @@ const ModelDashboard: React.FC = () => {
 
           {/* Liens rapides */}
           <div className="space-y-2 mt-auto">
-            <Link to="/formation"
-              className="flex items-center gap-3 p-3 border border-white/5 hover:border-pm-gold/30 hover:bg-pm-gold/5 transition-all group">
-              <BookOpenIcon className="w-4 h-4 text-pm-gold/60 group-hover:text-pm-gold" />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 group-hover:text-white transition-colors">Formation Avancée</span>
-            </Link>
-            <Link to={`/mannequins/${editableModel.id}`}
-              className="flex items-center gap-3 p-3 border border-white/5 hover:border-pm-gold/30 hover:bg-pm-gold/5 transition-all group">
-              <CameraIcon className="w-4 h-4 text-pm-gold/60 group-hover:text-pm-gold" />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 group-hover:text-white transition-colors">Portfolio Public</span>
-            </Link>
+            {perms?.canAccessFormation !== false && (
+              <Link to="/formation"
+                className="flex items-center gap-3 p-3 border border-white/5 hover:border-pm-gold/30 hover:bg-pm-gold/5 transition-all group">
+                <BookOpenIcon className="w-4 h-4 text-pm-gold/60 group-hover:text-pm-gold" />
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 group-hover:text-white transition-colors">Formation Avancée</span>
+              </Link>
+            )}
+            {perms?.canEditProfile !== false && (
+              <Link to={`/mannequins/${editableModel.id}`}
+                className="flex items-center gap-3 p-3 border border-white/5 hover:border-pm-gold/30 hover:bg-pm-gold/5 transition-all group">
+                <CameraIcon className="w-4 h-4 text-pm-gold/60 group-hover:text-pm-gold" />
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 group-hover:text-white transition-colors">Portfolio Public</span>
+              </Link>
+            )}
+            <button
+              onClick={() => setShowChangePassword(true)}
+              className="w-full flex items-center gap-3 p-3 border border-white/5 hover:border-pm-gold/30 hover:bg-pm-gold/5 transition-all group text-left"
+            >
+              <LockClosedIcon className="w-4 h-4 text-pm-gold/60 group-hover:text-pm-gold" />
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 group-hover:text-white transition-colors">Changer mon mot de passe</span>
+            </button>
           </div>
         </aside>
 
@@ -343,6 +364,10 @@ const ModelDashboard: React.FC = () => {
           )}
         </main>
       </div>
+
+      {showChangePassword && (
+        <ChangePasswordModal onClose={() => setShowChangePassword(false)} />
+      )}
     </div>
   );
 };

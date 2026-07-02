@@ -24,6 +24,7 @@
     "@capacitor/share": "^8.0.1",
     "@capacitor/splash-screen": "^8.0.1",
     "@capacitor/status-bar": "^8.0.2",
+    "@dataconnect/admin-generated": "file:src/dataconnect-admin-generated",
     "@dataconnect/generated": "file:src/dataconnect-generated",
     "@google/genai": "^1.17.0",
     "@heroicons/react": "^2.2.0",
