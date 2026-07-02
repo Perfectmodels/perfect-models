@@ -146,17 +146,6 @@ const Login: React.FC = () => {
       }
     }
 
-    // Handle admin
-    if (!foundUser && normalizedUsername === 'admin' && password === 'admin2025') {
-      localStorage.setItem('pmm_admin_access', 'granted');
-      localStorage.setItem('pmm_admin_role', 'admin');
-      sessionStorage.setItem('classroom_access', 'granted');
-      sessionStorage.setItem('classroom_role', 'admin');
-      sessionStorage.setItem('userId', 'admin-id');
-      sessionStorage.setItem('userName', 'Admin');
-      navigate('/admin');
-      return;
-    }
 
     // If found with Firebase email, try Firebase Auth
     if (emailToUse) {
@@ -216,17 +205,6 @@ const Login: React.FC = () => {
         }
     }
 
-    // Try legacy admin login
-    if (normalizedUsername === 'admin' && password === 'admin2025') {
-        localStorage.setItem('pmm_admin_access', 'granted');
-        localStorage.setItem('pmm_admin_role', 'admin');
-        sessionStorage.setItem('classroom_access', 'granted');
-        sessionStorage.setItem('classroom_role', 'admin');
-        sessionStorage.setItem('userId', 'admin-id');
-        sessionStorage.setItem('userName', 'Admin');
-        navigate('/admin');
-        return;
-    }
 
     setError('Identifiant ou mot de passe incorrect.');
     setPassword('');
