@@ -44,4 +44,5 @@ const ModelCard: React.FC<ModelCardProps> = ({ model }) => {
   );
 };
 
-export default ModelCard;
+// Memoize to prevent unnecessary re-renders during parent list filtering/searching
+export default React.memo(ModelCard);
