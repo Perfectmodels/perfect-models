@@ -1,0 +1,3 @@
+## 2024-07-03 - Loading Spinner Accessibility
+**Learning:** Decorative visual spinners in dynamic loading components must explicitly hide the animation from screen readers using `aria-hidden="true"` and provide an accessible loading status via `role="status"` and `aria-live="polite"` with visually hidden text (`sr-only`), otherwise screen reader users are left without context during async operations.
+**Action:** Always add `role="status"`, `aria-live="polite"`, and `aria-hidden="true"` on visual spinners with an accompanying `sr-only` text container for accessibility in loading components.
