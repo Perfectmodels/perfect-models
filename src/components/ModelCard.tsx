@@ -44,4 +44,9 @@ const ModelCard: React.FC<ModelCardProps> = ({ model }) => {
   );
 };
 
-export default ModelCard;
+// ⚡ Bolt Performance Optimization
+// What: Memoized the ModelCard component to prevent unnecessary re-renders.
+// Why: The parent Models.tsx manages search/filter state. Without memoization, every keystroke
+//      forces all ModelCard instances (which contain expensive framer-motion animations) to re-render.
+// Impact: Eliminates input lag and reduces UI thread blocking during typing.
+export default React.memo(ModelCard);
