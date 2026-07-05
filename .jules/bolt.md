@@ -1,0 +1,3 @@
+## 2024-10-25 - React.memo() on ModelCard
+**Learning:** In React TypeScript, applying React.memo() directly at the variable assignment for a component typed with React.FC causes a TypeScript error because MemoExoticComponent is not assignable to React.FC. Additionally, parent components with search/filter state (like Models.tsx) cause severe input lag when child list items containing expensive Framer Motion animations aren't memoized.
+**Action:** Always wrap child list item components containing expensive render operations in React.memo() at the export statement instead of variable assignment.
