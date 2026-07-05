@@ -6,7 +6,8 @@ import HeroSlide from '../components/MissOneLight/HeroSlide';
 import Top5Slide from '../components/MissOneLight/Top5Slide';
 import CandidatesSlide from '../components/MissOneLight/CandidatesSlide';
 import SEO from '../components/SEO';
-import { sendVoteConfirmation } from '../utils/brevoService';
+import { sendVoteConfirmation, sendVoteNotificationToAdmin } from '../utils/brevoService';
+import { useData } from '../contexts/DataContext';
 
 const WHATSAPP_NUMBER = '24174799319';
 const PRICE_PER_VOTE = 100;
@@ -153,6 +154,7 @@ interface Candidate {
 interface VoteForm { name: string; email: string; phone: string; votes: number; }
 
 export default function MissOneLight() {
+  const { data } = useData();
   const [rawCandidates, setRawCandidates] = useState<Candidate[]>([]);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -348,12 +350,23 @@ export default function MissOneLight() {
       });
 
       // 1b. Send confirmation email to voter (non-blocking)
-      sendVoteConfirmation({
-        email: form.email.trim().toLowerCase(),
-        candidateName: selectedCandidate.name,
-        votes,
-        txRef,
-      }).catch(() => {});
+      Promise.allSettled([
+        sendVoteConfirmation({
+          email: form.email.trim().toLowerCase(),
+          candidateName: selectedCandidate.name,
+          votes,
+          txRef,
+        }),
+        sendVoteNotificationToAdmin({
+          voterName: form.name.trim(),
+          email: form.email.trim().toLowerCase(),
+          phone: form.phone.trim(),
+          candidateName: selectedCandidate.name,
+          votes,
+          txRef,
+          notificationEmail: data?.contactInfo?.notificationEmail || data?.contactInfo?.email || 'contact@perfectmodels.ga'
+        })
+      ]).catch(() => {});
 
       // 2. Open WhatsApp with pre-filled message (slight delay so PDF triggers first)
       await new Promise(r => setTimeout(r, 400));
