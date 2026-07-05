@@ -5,6 +5,7 @@ import { CastingApplication } from '../types';
 import SEO from '../components/SEO';
 import { UserPlusIcon, PrinterIcon, LockClosedIcon } from '@heroicons/react/24/outline';
 import ChangePasswordModal from '../components/ChangePasswordModal';
+import { sendRegistrationCastingConfirmationToUser, sendRegistrationCastingNotificationToAdmin } from '../utils/brevoService';
 
 const RegistrationCasting: React.FC = () => {
     const { data, saveData, isInitialized } = useData();
@@ -55,6 +56,25 @@ const RegistrationCasting: React.FC = () => {
         try {
             await saveData({ ...data, castingApplications: updatedApplications });
             setFormData(initialFormState); // Reset form
+
+            // Send confirmation and notification emails non-blocking
+            if (formData.email) {
+                Promise.allSettled([
+                    sendRegistrationCastingConfirmationToUser({
+                        firstName: formData.firstName,
+                        lastName: formData.lastName,
+                        email: formData.email,
+                    }),
+                    sendRegistrationCastingNotificationToAdmin({
+                        firstName: formData.firstName,
+                        lastName: formData.lastName,
+                        email: formData.email,
+                        phone: formData.phone,
+                        gender: formData.gender,
+                        notificationEmail: data?.contactInfo?.notificationEmail || data?.contactInfo?.email || 'contact@perfectmodels.ga',
+                    })
+                ]).catch(() => {});
+            }
         } catch (error) {
             console.error(error);
             alert("Erreur lors de l'enregistrement.");
