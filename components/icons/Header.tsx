@@ -139,7 +139,7 @@ const Header: React.FC = () => {
         </div>
 
         {/* Mobile Toggle */}
-        <button onClick={() => setIsOpen(!isOpen)} className="lg:hidden z-50 text-pm-gold p-2">
+        <button onClick={() => setIsOpen(!isOpen)} aria-label={isOpen ? "Fermer le menu" : "Ouvrir le menu"} aria-expanded={isOpen} className="lg:hidden z-50 text-pm-gold p-2">
           <AnimatedHamburgerIcon isOpen={isOpen} />
         </button>
       </div>

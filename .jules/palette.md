@@ -1,0 +1,3 @@
+## 2024-05-24 - Dynamic ARIA attributes for mobile toggles
+**Learning:** In React components with stateful toggles (like mobile hamburger menus), using static `aria-label` is insufficient. Adding `aria-expanded={isOpen}` and dynamically changing the `aria-label` based on state (e.g., "Ouvrir le menu" vs "Fermer le menu") drastically improves screen reader context.
+**Action:** Next time I encounter a hamburger or accordion toggle, I will ensure `aria-expanded` is bound to the open/closed state and the `aria-label` text accurately reflects the action that will occur upon clicking.
