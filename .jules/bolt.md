@@ -1,0 +1,3 @@
+## 2024-10-25 - Prevent Input Lag in Search Lists
+**Learning:** Parent components managing search/filter state can cause severe input lag if child list items containing expensive render operations (like `framer-motion` animations) re-render on every keystroke.
+**Action:** Always wrap child list item components containing expensive render operations in `React.memo()` at the export statement to prevent thread blocking during parent state updates.
