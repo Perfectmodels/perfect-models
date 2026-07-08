@@ -59,17 +59,17 @@ export const apiKeys: ApiKeys = {
 };
 
 export const juryMembers: JuryMember[] = [
-  { id: 'jury1', name: 'Martelly', username: 'jury1', password: 'password2025' },
-  { id: 'jury2', name: 'Darain', username: 'jury2', password: 'password2025' },
-  { id: 'jury3', name: 'David', username: 'jury3', password: 'password2025' },
-  { id: 'jury4', name: 'Sadia', username: 'jury4', password: 'password2025' },
+  { id: 'jury1', name: 'Martelly', username: 'jury1' },
+  { id: 'jury2', name: 'Darain', username: 'jury2' },
+  { id: 'jury3', name: 'David', username: 'jury3' },
+  { id: 'jury4', name: 'Sadia', username: 'jury4' },
 ];
 
 export const registrationStaff: RegistrationStaff[] = [
-  { id: 'reg1', name: 'Sephora', username: 'enregistrement1', password: 'password2025' },
-  { id: 'reg2', name: 'Aimée', username: 'enregistrement2', password: 'password2025' },
-  { id: 'reg3', name: 'Duchesse', username: 'enregistrement3', password: 'password2025' },
-  { id: 'reg4', name: 'Sephra', username: 'enregistrement4', password: 'password2025' },
+  { id: 'reg1', name: 'Sephora', username: 'enregistrement1' },
+  { id: 'reg2', name: 'Aimée', username: 'enregistrement2' },
+  { id: 'reg3', name: 'Duchesse', username: 'enregistrement3' },
+  { id: 'reg4', name: 'Sephra', username: 'enregistrement4' },
 ];
 
 export const models: Model[] = [

@@ -256,7 +256,7 @@ export interface JuryMember {
   id: string;
   name: string;
   username: string;
-  password: string;
+  password?: string;
   email?: string;
   firebaseUid?: string;
 }
@@ -265,7 +265,7 @@ export interface RegistrationStaff {
   id: string;
   name: string;
   username: string;
-  password: string;
+  password?: string;
   email?: string;
   firebaseUid?: string;
 }
@@ -482,7 +482,7 @@ export interface AdminProfile {
   id: string;
   name: string;
   username: string;
-  password: string;
+  password?: string;
   email: string;
   phone?: string;
   role?: string;
