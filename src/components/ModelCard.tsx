@@ -44,4 +44,7 @@ const ModelCard: React.FC<ModelCardProps> = ({ model }) => {
   );
 };
 
-export default ModelCard;
+// What: Memoized ModelCard using React.memo
+// Why: Prevents unnecessary re-renders of all cards when typing in the search input in Models.tsx
+// Impact: Reduces input lag and main thread blocking from expensive framer-motion animations
+export default React.memo(ModelCard);
