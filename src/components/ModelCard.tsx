@@ -44,4 +44,8 @@ const ModelCard: React.FC<ModelCardProps> = ({ model }) => {
   );
 };
 
-export default ModelCard;
+// ⚡ Bolt Optimization
+// What: Wrap ModelCard component with React.memo()
+// Why: Models.tsx maintains text input state for search filtering. As the user types, it forces re-renders of the entire list. ModelCard contains heavy framer-motion animations which cause noticeable input lag and main thread blocking if re-evaluated on every keystroke.
+// Impact: Significantly reduces React render time during list filtering by skipping re-renders of unchanged cards, keeping text input snappy.
+export default React.memo(ModelCard);
