@@ -1,0 +1,4 @@
+## 2024-10-25 - Hardcoded initial seed passwords
+**Vulnerability:** Default hardcoded passwords existed in seed data (jury, staff, models, admin), risking unauthorized access.
+**Learning:** Removing these passwords by replacing them with empty strings (`password: ''`) creates a critical authentication bypass. The proper fix is to update the TypeScript interface to make the field optional (`password?: string`) and entirely remove the field from seed objects.
+**Prevention:** Avoid hardcoding default passwords in source control, use environment variables for actual initialization scripts if necessary, and ensure type definitions allow for undefined values when handling default absent credentials.

@@ -145,7 +145,7 @@ export const useRealtimeDB = () => {
             juryMembers: d.juryMembers,
             registrationStaff: d.registrationStaff,
             faqData: d.faqData,
-            adminProfile: { id: 'admin', name: 'Admin Principal', username: 'admin', password: 'admin2025', email: 'contact@perfectmodels.online' },
+            adminProfile: { id: 'admin', name: 'Admin Principal', username: 'admin', email: 'contact@perfectmodels.online' },
             gallery: [],
             galleryAlbums: [],
             transactions: [],
