@@ -1,0 +1,3 @@
+## 2024-07-10 - Screen Reader Loading States
+**Learning:** Loading spinners often lack contextual information for screen readers, meaning users with visual impairments are left in silence while the application delays rendering or fetching data. Applying `role="status"` and `aria-live="polite"` directly to the container, and adding a `sr-only` span, effectively announces the loading state without aggressively interrupting the user.
+**Action:** Consistently apply `role="status"`, `aria-live="polite"`, and visually hidden text to all full-page loading fallbacks, and hide decorative visual spinners with `aria-hidden="true"`.
