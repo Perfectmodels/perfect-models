@@ -1,0 +1,3 @@
+## 2026-07-11 - Accessible Loading States
+**Learning:** Screen readers require `role="status"` and `aria-live="polite"` on dynamic loading containers to notify users of asynchronous state changes, and visual spinners should be explicitly hidden with `aria-hidden="true"`.
+**Action:** Always include an accessible loading text (e.g., using a `.sr-only` class) alongside `aria-hidden="true"` on decorative loading SVGs/images across the application.
