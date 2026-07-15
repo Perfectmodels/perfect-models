@@ -5,6 +5,7 @@ import { CastingApplication } from '../types';
 import SEO from '../components/SEO';
 import { UserPlusIcon, PrinterIcon, LockClosedIcon } from '@heroicons/react/24/outline';
 import ChangePasswordModal from '../components/ChangePasswordModal';
+import { sendCastingConfirmationToUser, sendCastingNotificationToAdmin } from '../utils/brevoService';
 
 const RegistrationCasting: React.FC = () => {
     const { data, saveData, isInitialized } = useData();
@@ -54,6 +55,30 @@ const RegistrationCasting: React.FC = () => {
 
         try {
             await saveData({ ...data, castingApplications: updatedApplications });
+
+            // Send Brevo email notifications
+            const notifEmail = data.contactInfo?.notificationEmail || data.contactInfo?.email || 'contact@perfectmodels.ga';
+            if (formData.email) {
+                sendCastingConfirmationToUser({
+                    firstName: formData.firstName,
+                    lastName: formData.lastName,
+                    email: formData.email,
+                    city: formData.city || 'Libreville'
+                }).catch(console.error);
+            }
+            sendCastingNotificationToAdmin({
+                firstName: formData.firstName,
+                lastName: formData.lastName,
+                email: formData.email || 'Non renseigné',
+                phone: formData.phone || 'Non renseigné',
+                city: formData.city || 'Non renseignée',
+                gender: formData.gender,
+                height: formData.height || '',
+                experience: formData.experience || 'Non renseignée',
+                instagram: formData.instagram || '',
+                notificationEmail: notifEmail
+            }).catch(console.error);
+
             setFormData(initialFormState); // Reset form
         } catch (error) {
             console.error(error);
