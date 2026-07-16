@@ -15,9 +15,16 @@ const ModelCard: React.FC<ModelCardProps> = ({ model }) => {
       className="group relative h-[420px] sm:h-[520px] lg:h-[650px] overflow-hidden bg-pm-gray border border-white/5"
     >
       <Link to={`/mannequins/${model.id}`} className="block h-full">
+        {/*
+          ⚡ Bolt Optimization:
+          What: Added loading="lazy" to the model image.
+          Why: Defers loading of images until they are close to the viewport.
+          Impact: Reduces initial page load time and saves bandwidth on the Models gallery page.
+        */}
         <img 
             src={model.imageUrl} 
             alt={model.name} 
+            loading="lazy"
             className="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:scale-110" 
         />
         <div className="absolute inset-0 bg-gradient-to-t from-pm-dark via-transparent to-transparent opacity-40 group-hover:opacity-80 transition-opacity duration-700"></div>
@@ -44,4 +51,10 @@ const ModelCard: React.FC<ModelCardProps> = ({ model }) => {
   );
 };
 
-export default ModelCard;
+/*
+  ⚡ Bolt Optimization:
+  What: Wrapped ModelCard export with React.memo().
+  Why: Prevents unnecessary re-renders of unchanged ModelCard components when the parent list changes.
+  Impact: Improves filtering and scrolling performance on the Models page.
+*/
+export default React.memo(ModelCard);
