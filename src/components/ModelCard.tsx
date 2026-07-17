@@ -15,10 +15,13 @@ const ModelCard: React.FC<ModelCardProps> = ({ model }) => {
       className="group relative h-[420px] sm:h-[520px] lg:h-[650px] overflow-hidden bg-pm-gray border border-white/5"
     >
       <Link to={`/mannequins/${model.id}`} className="block h-full">
+        {/* ⚡ Bolt: Added loading="lazy" to defer offscreen images.
+            Impact: Significantly reduces initial page load time and bandwidth on list pages. */}
         <img 
             src={model.imageUrl} 
             alt={model.name} 
             className="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:scale-110" 
+            loading="lazy"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-pm-dark via-transparent to-transparent opacity-40 group-hover:opacity-80 transition-opacity duration-700"></div>
         
@@ -44,4 +47,6 @@ const ModelCard: React.FC<ModelCardProps> = ({ model }) => {
   );
 };
 
-export default ModelCard;
+// ⚡ Bolt: Memoized component to prevent unnecessary re-renders when parent lists update (e.g. search filters).
+// Impact: Reduces React render time for grids with many models and prevents framer-motion lag.
+export default React.memo(ModelCard);
