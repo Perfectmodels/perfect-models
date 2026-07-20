@@ -15,9 +15,16 @@ const ModelCard: React.FC<ModelCardProps> = ({ model }) => {
       className="group relative h-[420px] sm:h-[520px] lg:h-[650px] overflow-hidden bg-pm-gray border border-white/5"
     >
       <Link to={`/mannequins/${model.id}`} className="block h-full">
+        {/*
+          ⚡ Bolt Optimization:
+          What: Added loading="lazy" to the image element.
+          Why: Defers loading offscreen images in model lists until they are scrolled into view.
+          Impact: Reduces initial page load time, saves bandwidth, and improves Time to Interactive.
+        */}
         <img 
             src={model.imageUrl} 
             alt={model.name} 
+            loading="lazy"
             className="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:scale-110" 
         />
         <div className="absolute inset-0 bg-gradient-to-t from-pm-dark via-transparent to-transparent opacity-40 group-hover:opacity-80 transition-opacity duration-700"></div>
