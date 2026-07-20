@@ -97,8 +97,13 @@ const ScrollToTop: React.FC = () => {
 };
 
 const LoadingFallback: React.FC = () => (
-    <div className="w-full h-screen flex items-center justify-center bg-pm-dark">
-        <img src="/logo.svg" alt="PMM" className="w-24 h-24 animate-pulse" />
+    <div
+        className="w-full h-screen flex items-center justify-center bg-pm-dark"
+        role="status"
+        aria-live="polite"
+    >
+        <img src="/logo.svg" alt="" className="w-24 h-24 animate-pulse" aria-hidden="true" />
+        <span className="sr-only">Chargement en cours...</span>
     </div>
 );
 
