@@ -44,4 +44,8 @@ const ModelCard: React.FC<ModelCardProps> = ({ model }) => {
   );
 };
 
-export default ModelCard;
+// ⚡ Bolt Performance Optimization
+// What: Wrapped the ModelCard component with React.memo() at the export.
+// Why: Prevents unnecessary re-renders of ModelCard components when the parent list state changes (e.g., typing in the search filter in Models.tsx).
+// Impact: Reduces React rendering workload during search and filtering operations by avoiding re-renders for unchanged components.
+export default React.memo(ModelCard);
