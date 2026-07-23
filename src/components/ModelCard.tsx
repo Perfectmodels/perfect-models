@@ -15,10 +15,12 @@ const ModelCard: React.FC<ModelCardProps> = ({ model }) => {
       className="group relative h-[420px] sm:h-[520px] lg:h-[650px] overflow-hidden bg-pm-gray border border-white/5"
     >
       <Link to={`/mannequins/${model.id}`} className="block h-full">
+        {/* ⚡ Bolt: Added lazy loading to model image to improve initial page load performance and reduce bandwidth by deferring off-screen images */}
         <img 
             src={model.imageUrl} 
             alt={model.name} 
             className="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:scale-110" 
+            loading="lazy"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-pm-dark via-transparent to-transparent opacity-40 group-hover:opacity-80 transition-opacity duration-700"></div>
         
