@@ -485,7 +485,13 @@ export default function AdminBeautyContest() {
   };
   // ── Jury CRUD (contest-level) ─────────────────────────────────────────────
   const genUsername = (name:string) => name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/s+/g,'.').replace(/[^a-z0-9.]/g,'') + '.' + cid.slice(-4);
-  const genPassword = () => { const c='ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'; return Array.from({length:8},()=>c[Math.floor(Math.random()*c.length)]).join(''); };
+  const genPassword = () => {
+    // Security enhancement: use cryptographically secure PRNG for passwords
+    const c = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    const array = new Uint8Array(8);
+    window.crypto.getRandomValues(array);
+    return Array.from(array, byte => c[byte % c.length]).join('');
+  };
   const handleSaveJury = async (e:React.FormEvent) => {
     e.preventDefault(); if (!cid || !juryForm.name) { showToast('Nom requis', false); return; }
     try {
