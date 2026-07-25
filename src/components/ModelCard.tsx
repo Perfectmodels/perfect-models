@@ -44,4 +44,10 @@ const ModelCard: React.FC<ModelCardProps> = ({ model }) => {
   );
 };
 
-export default ModelCard;
+/*
+ * ⚡ Bolt Performance Optimization
+ * 💡 What: Wrapped export in React.memo()
+ * 🎯 Why: ModelCard is rendered in large grid lists (e.g., Home, Models pages). Without memoization, changes in parent state (like search or filters) cause all cards to re-render, even if the model prop hasn't changed.
+ * 📊 Impact: Reduces React rendering workload by preventing unnecessary re-renders of unchanged cards, improving scrolling and filtering performance.
+ */
+export default React.memo(ModelCard);
