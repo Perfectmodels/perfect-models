@@ -1,0 +1,37 @@
+name: Model Auth Migration
+
+on:
+  push:
+    branches:
+      - audit-improvements-2026-08-08
+    paths:
+      - 'scripts/migrate-model-auth.mjs'
+      - '.github/workflows/model-auth-migration.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run migration
+        run: node scripts/migrate-model-auth.mjs
+
+      - name: Upload migration results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: model-auth-migration-results
+          path: migration-output/
+          if-no-files-found: error
+          retention-days: 3
