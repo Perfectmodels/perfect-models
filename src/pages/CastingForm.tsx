@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ChevronLeftIcon, ChevronRightIcon, CheckIcon } from '@heroicons/react/24/outline';
+import React, { useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { CheckIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import SEO from '../components/SEO';
 import { useData } from '../contexts/DataContext';
 import { invalidateCache } from '../hooks/useFirebaseCollection';
@@ -8,76 +8,168 @@ import ImgBBUploader from '../components/ImgBBUploader';
 import { notifyAdmin } from '../utils/adminNotify';
 import { sendCastingConfirmationToUser, sendCastingNotificationToAdmin } from '../utils/brevoService';
 
-const STEPS = ['Infos personnelles', 'Mensurations', 'Expérience', 'Photos'];
+const STEPS = ['Infos personnelles', 'Mensurations', 'Expérience', 'Photos & consentement'];
 
 const EMPTY = {
-  // Étape 1
-  firstName: '', lastName: '', birthDate: '', gender: 'Femme', nationality: '', city: '', email: '', phone: '',
-  // Étape 2
-  height: '', weight: '', chest: '', waist: '', hips: '', shoeSize: '', eyeColor: '', hairColor: '',
-  // Étape 3
-  experience: 'none', instagram: '', portfolioLink: '',
-  // Étape 4
-  photoPortraitUrl: '', photoFullBodyUrl: '', photoProfileUrl: '',
+  firstName: '',
+  lastName: '',
+  birthDate: '',
+  gender: 'Femme',
+  nationality: '',
+  city: '',
+  email: '',
+  phone: '',
+  height: '',
+  weight: '',
+  chest: '',
+  waist: '',
+  hips: '',
+  shoeSize: '',
+  eyeColor: '',
+  hairColor: '',
+  experience: 'none',
+  instagram: '',
+  portfolioLink: '',
+  photoPortraitUrl: '',
+  photoFullBodyUrl: '',
+  photoProfileUrl: '',
 };
 
 type FormData = typeof EMPTY;
 
-const inputCls = "w-full bg-black/40 border border-pm-gold/20 rounded-lg px-4 py-3 text-sm text-pm-off-white placeholder:text-white/20 focus:outline-none focus:border-pm-gold transition-colors";
-const labelCls = "text-xs uppercase tracking-widest text-pm-off-white/40 mb-1.5 block";
+const inputCls = 'w-full bg-black/40 border border-pm-gold/20 rounded-lg px-4 py-3 text-sm text-pm-off-white placeholder:text-white/20 focus:outline-none focus:border-pm-gold transition-colors';
+const labelCls = 'text-xs uppercase tracking-widest text-pm-off-white/40 mb-1.5 block';
+
+const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+const isValidPhone = (value: string) => value.replace(/\D/g, '').length >= 8;
 
 const CastingForm: React.FC = () => {
   const navigate = useNavigate();
   const { addDocument, data } = useData();
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<FormData>(EMPTY);
+  const [consent, setConsent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState('');
 
-  const update = (field: keyof FormData, value: string) =>
-    setForm(f => ({ ...f, [field]: value }));
+  const update = (field: keyof FormData, value: string) => setForm(current => ({ ...current, [field]: value }));
+
+  const age = useMemo(() => {
+    if (!form.birthDate) return null;
+    const birth = new Date(form.birthDate);
+    if (Number.isNaN(birth.getTime())) return null;
+    const today = new Date();
+    let years = today.getFullYear() - birth.getFullYear();
+    const beforeBirthday = today.getMonth() < birth.getMonth() || (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate());
+    if (beforeBirthday) years -= 1;
+    return years;
+  }, [form.birthDate]);
+
+  const validateStep = (targetStep: number) => {
+    if (targetStep === 0) {
+      if (!form.firstName.trim() || !form.lastName.trim() || !form.birthDate || !form.city.trim() || !form.email.trim() || !form.phone.trim()) {
+        return 'Complétez tous les champs obligatoires avant de continuer.';
+      }
+      if (!isValidEmail(form.email)) return 'Saisissez une adresse email valide.';
+      if (!isValidPhone(form.phone)) return 'Saisissez un numéro de téléphone valide.';
+      if (age !== null && (age < 14 || age > 80)) return 'Vérifiez la date de naissance saisie.';
+    }
+
+    if (targetStep === 1) {
+      const height = Number(form.height);
+      if (!form.height || Number.isNaN(height) || height < 120 || height > 230) {
+        return 'Indiquez une taille valide en centimètres.';
+      }
+    }
+
+    if (targetStep === 2 && !form.experience) return "Indiquez votre niveau d'expérience.";
+
+    if (targetStep === 3) {
+      if (!form.photoPortraitUrl && !form.photoFullBodyUrl && !form.photoProfileUrl) {
+        return 'Ajoutez au moins une photo récente avant de soumettre votre candidature.';
+      }
+      if (!consent) return 'Vous devez accepter le traitement de vos informations et photos pour le casting.';
+    }
+
+    return '';
+  };
+
+  const goNext = () => {
+    const validationError = validateStep(step);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    setError('');
+    setStep(current => Math.min(current + 1, STEPS.length - 1));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const goPrevious = () => {
+    setError('');
+    setStep(current => Math.max(current - 1, 0));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const securePassageNumber = () => {
+    const values = new Uint32Array(1);
+    window.crypto.getRandomValues(values);
+    return (values[0] % 9000) + 1000;
+  };
 
   const handleSubmit = async () => {
+    const validationError = validateStep(3);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     setSubmitting(true);
     setError('');
+
     try {
-      await addDocument('castingApplications', {
+      const id = await addDocument('castingApplications', {
         ...form,
+        email: form.email.trim().toLowerCase(),
+        phone: form.phone.trim(),
         status: 'Nouveau',
         submissionDate: new Date().toISOString(),
-        passageNumber: Math.floor(Math.random() * 9000) + 1000,
+        passageNumber: securePassageNumber(),
+        consentAccepted: true,
+        consentAcceptedAt: new Date().toISOString(),
+        source: 'website',
       });
+
+      if (!id) throw new Error("La candidature n'a pas pu être enregistrée.");
+
       invalidateCache('castingApplications');
-      
-      // Notification push admin
       notifyAdmin('casting', `${form.firstName} ${form.lastName} — ${form.city}`, '/admin/casting-applications').catch(() => {});
 
-      // Emails Brevo (non-bloquant)
       Promise.allSettled([
         sendCastingConfirmationToUser({
           firstName: form.firstName,
           lastName: form.lastName,
-          email: form.email,
+          email: form.email.trim().toLowerCase(),
           city: form.city,
         }),
-sendCastingNotificationToAdmin({
-           firstName: form.firstName,
-           lastName: form.lastName,
-           email: form.email,
-           phone: form.phone,
-           city: form.city,
-           gender: form.gender,
-           height: form.height,
-           experience: form.experience,
-           instagram: form.instagram || undefined,
-           notificationEmail: data?.contactInfo?.notificationEmail || data?.contactInfo?.email || 'contact@perfectmodels.online',
-         }),
+        sendCastingNotificationToAdmin({
+          firstName: form.firstName,
+          lastName: form.lastName,
+          email: form.email.trim().toLowerCase(),
+          phone: form.phone,
+          city: form.city,
+          gender: form.gender,
+          height: form.height,
+          experience: form.experience,
+          instagram: form.instagram || undefined,
+          notificationEmail: data?.contactInfo?.notificationEmail || data?.contactInfo?.email || 'contact@perfectmodels.online',
+        }),
       ]).catch(() => {});
-      
+
       setDone(true);
-    } catch (e: any) {
-      setError(e.message || 'Erreur lors de la soumission');
+    } catch (caught: any) {
+      setError(caught?.message || 'Une erreur est survenue lors de la soumission. Réessayez dans quelques instants.');
     } finally {
       setSubmitting(false);
     }
@@ -85,13 +177,16 @@ sendCastingNotificationToAdmin({
 
   if (done) {
     return (
-      <div className="bg-pm-dark min-h-screen flex items-center justify-center px-6">
-        <div className="text-center max-w-md">
+      <div className="bg-pm-dark min-h-screen flex items-center justify-center px-6 text-pm-off-white">
+        <SEO title="Candidature reçue" noIndex />
+        <div className="text-center max-w-lg border border-pm-gold/20 p-8 sm:p-12 bg-black/30 rounded-2xl">
           <div className="w-16 h-16 rounded-full bg-pm-gold/10 border border-pm-gold/30 flex items-center justify-center mx-auto mb-6">
             <CheckIcon className="w-8 h-8 text-pm-gold" />
           </div>
-          <h2 className="text-3xl font-playfair font-black text-white mb-3">Candidature envoyée</h2>
-          <p className="text-pm-off-white/50 text-sm mb-8">Nous avons bien reçu votre dossier. Notre équipe vous contactera sous 48h.</p>
+          <h1 className="text-3xl sm:text-4xl font-playfair font-black text-white mb-3">Candidature bien reçue</h1>
+          <p className="text-pm-off-white/50 text-sm leading-relaxed mb-8">
+            Votre dossier a été enregistré. L'équipe Perfect Models Management examinera votre profil et vous contactera si votre candidature est retenue pour la suite du processus.
+          </p>
           <button onClick={() => navigate('/casting')} className="px-6 py-3 bg-pm-gold text-pm-dark font-black text-xs uppercase tracking-widest rounded-full hover:bg-white transition-colors">
             Retour au casting
           </button>
@@ -102,172 +197,129 @@ sendCastingNotificationToAdmin({
 
   return (
     <div className="bg-pm-dark min-h-screen text-pm-off-white">
-      <SEO title="Formulaire de Candidature — Casting" />
-      <div className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 max-w-2xl">
-        <button onClick={() => navigate('/casting')} className="inline-flex items-center gap-2 text-pm-gold/60 hover:text-pm-gold text-xs uppercase tracking-widest font-black mb-8 sm:mb-10 transition-colors">
-          <ChevronLeftIcon className="w-4 h-4" /> Retour
+      <SEO title="Formulaire de candidature casting" description="Déposez votre candidature au casting Perfect Models Management." noIndex />
+      <div className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 max-w-3xl">
+        <button onClick={() => navigate('/casting')} className="inline-flex items-center gap-2 text-pm-gold/60 hover:text-pm-gold text-xs uppercase tracking-widest font-black mb-8 transition-colors">
+          <ChevronLeftIcon className="w-4 h-4" /> Retour au casting
         </button>
 
-        <h1 className="text-3xl sm:text-4xl font-playfair font-black italic mb-2">Candidature Casting</h1>
-        <p className="text-pm-off-white/40 text-sm mb-8 sm:mb-10">Étape {step + 1} sur {STEPS.length} — {STEPS[step]}</p>
+        <div className="mb-8 sm:mb-10">
+          <span className="section-label">Candidature PMM</span>
+          <h1 className="mt-3 text-3xl sm:text-5xl font-playfair font-black italic text-white">Présentez votre profil</h1>
+          <p className="mt-3 text-pm-off-white/40 text-sm">Étape {step + 1} sur {STEPS.length} — {STEPS[step]}</p>
+        </div>
 
-        {/* Stepper */}
-        <div className="flex items-center gap-1.5 sm:gap-2 mb-8 sm:mb-10">
-          {STEPS.map((s, i) => (
-            <React.Fragment key={i}>
-              <div className={`flex items-center gap-1.5 sm:gap-2 ${i <= step ? 'text-pm-gold' : 'text-white/20'}`}>
-                <div className={`w-7 h-7 rounded-full border flex items-center justify-center text-xs font-black transition-all ${i < step ? 'bg-pm-gold border-pm-gold text-pm-dark' : i === step ? 'border-pm-gold text-pm-gold' : 'border-white/10 text-white/20'}`}>
-                  {i < step ? <CheckIcon className="w-3.5 h-3.5" /> : i + 1}
+        <div className="flex items-center gap-1.5 sm:gap-2 mb-8 sm:mb-10" aria-label={`Étape ${step + 1} sur ${STEPS.length}`}>
+          {STEPS.map((item, index) => (
+            <React.Fragment key={item}>
+              <div className={`flex items-center gap-2 ${index <= step ? 'text-pm-gold' : 'text-white/20'}`}>
+                <div className={`w-8 h-8 rounded-full border flex items-center justify-center text-xs font-black ${index < step ? 'bg-pm-gold border-pm-gold text-pm-dark' : index === step ? 'border-pm-gold' : 'border-white/10'}`}>
+                  {index < step ? <CheckIcon className="w-4 h-4" /> : index + 1}
                 </div>
-                <span className="text-[10px] uppercase tracking-widest hidden sm:block">{s}</span>
+                <span className="hidden md:block text-[9px] uppercase tracking-widest">{item}</span>
               </div>
-              {i < STEPS.length - 1 && <div className={`flex-1 h-px ${i < step ? 'bg-pm-gold/40' : 'bg-white/10'}`} />}
+              {index < STEPS.length - 1 && <div className={`flex-1 h-px ${index < step ? 'bg-pm-gold/40' : 'bg-white/10'}`} />}
             </React.Fragment>
           ))}
         </div>
 
         <div className="bg-black/30 border border-pm-gold/10 rounded-2xl p-5 sm:p-8">
-          {/* Étape 1 */}
           {step === 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-              <div>
-                <label className={labelCls}>Prénom *</label>
-                <input value={form.firstName} onChange={e => update('firstName', e.target.value)} placeholder="Prénom" className={inputCls} />
-              </div>
-              <div>
-                <label className={labelCls}>Nom *</label>
-                <input value={form.lastName} onChange={e => update('lastName', e.target.value)} placeholder="Nom de famille" className={inputCls} />
-              </div>
-              <div>
-                <label className={labelCls}>Date de naissance *</label>
-                <input type="date" value={form.birthDate} onChange={e => update('birthDate', e.target.value)} className={inputCls} />
-              </div>
-              <div>
-                <label className={labelCls}>Genre *</label>
-                <select value={form.gender} onChange={e => update('gender', e.target.value)} className={inputCls}>
-                  <option value="Femme">Femme</option>
-                  <option value="Homme">Homme</option>
-                  <option value="Non-binaire">Non-binaire</option>
-                </select>
-              </div>
-              <div>
-                <label className={labelCls}>Nationalité</label>
-                <input value={form.nationality} onChange={e => update('nationality', e.target.value)} placeholder="Ex: Gabonaise" className={inputCls} />
-              </div>
-              <div>
-                <label className={labelCls}>Ville *</label>
-                <input value={form.city} onChange={e => update('city', e.target.value)} placeholder="Ex: Libreville" className={inputCls} />
-              </div>
-              <div>
-                <label className={labelCls}>Email *</label>
-                <input type="email" value={form.email} onChange={e => update('email', e.target.value)} placeholder="votre@email.com" className={inputCls} />
-              </div>
-              <div>
-                <label className={labelCls}>Téléphone *</label>
-                <input type="tel" value={form.phone} onChange={e => update('phone', e.target.value)} placeholder="+241 077 00 00 00" className={inputCls} />
-              </div>
+              <Field label="Prénom *"><input value={form.firstName} onChange={event => update('firstName', event.target.value)} autoComplete="given-name" className={inputCls} /></Field>
+              <Field label="Nom *"><input value={form.lastName} onChange={event => update('lastName', event.target.value)} autoComplete="family-name" className={inputCls} /></Field>
+              <Field label="Date de naissance *"><input type="date" value={form.birthDate} onChange={event => update('birthDate', event.target.value)} className={inputCls} /></Field>
+              <Field label="Genre *"><select value={form.gender} onChange={event => update('gender', event.target.value)} className={inputCls}><option>Femme</option><option>Homme</option></select></Field>
+              <Field label="Nationalité"><input value={form.nationality} onChange={event => update('nationality', event.target.value)} placeholder="Ex. Gabonaise" className={inputCls} /></Field>
+              <Field label="Ville *"><input value={form.city} onChange={event => update('city', event.target.value)} autoComplete="address-level2" placeholder="Ex. Libreville" className={inputCls} /></Field>
+              <Field label="Email *"><input type="email" value={form.email} onChange={event => update('email', event.target.value)} autoComplete="email" className={inputCls} /></Field>
+              <Field label="Téléphone *"><input type="tel" value={form.phone} onChange={event => update('phone', event.target.value)} autoComplete="tel" placeholder="+241 ..." className={inputCls} /></Field>
             </div>
           )}
 
-          {/* Étape 2 */}
           {step === 1 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-5">
               {[
-                { label: 'Taille (cm) *', field: 'height', placeholder: '175' },
-                { label: 'Poids (kg)', field: 'weight', placeholder: '60' },
-                { label: 'Poitrine (cm)', field: 'chest', placeholder: '90' },
-                { label: 'Taille vêtement (cm)', field: 'waist', placeholder: '65' },
-                { label: 'Hanches (cm)', field: 'hips', placeholder: '95' },
-                { label: 'Pointure', field: 'shoeSize', placeholder: '39' },
-              ].map(({ label, field, placeholder }) => (
-                <div key={field}>
-                  <label className={labelCls}>{label}</label>
-                  <input type="number" value={(form as any)[field]} onChange={e => update(field as keyof FormData, e.target.value)} placeholder={placeholder} className={inputCls} />
-                </div>
+                ['Taille (cm) *', 'height', '175'],
+                ['Poids (kg)', 'weight', '60'],
+                ['Poitrine (cm)', 'chest', '90'],
+                ['Tour de taille (cm)', 'waist', '65'],
+                ['Hanches (cm)', 'hips', '95'],
+                ['Pointure', 'shoeSize', '39'],
+              ].map(([label, field, placeholder]) => (
+                <Field key={field} label={label}>
+                  <input type="number" min="1" value={form[field as keyof FormData]} onChange={event => update(field as keyof FormData, event.target.value)} placeholder={placeholder} className={inputCls} />
+                </Field>
               ))}
-              <div>
-                <label className={labelCls}>Couleur des yeux</label>
-                <input value={form.eyeColor} onChange={e => update('eyeColor', e.target.value)} placeholder="Ex: Marron" className={inputCls} />
-              </div>
-              <div>
-                <label className={labelCls}>Couleur des cheveux</label>
-                <input value={form.hairColor} onChange={e => update('hairColor', e.target.value)} placeholder="Ex: Noir" className={inputCls} />
-              </div>
+              <Field label="Couleur des yeux"><input value={form.eyeColor} onChange={event => update('eyeColor', event.target.value)} className={inputCls} /></Field>
+              <Field label="Couleur des cheveux"><input value={form.hairColor} onChange={event => update('hairColor', event.target.value)} className={inputCls} /></Field>
             </div>
           )}
 
-          {/* Étape 3 */}
           {step === 2 && (
-            <div className="space-y-5">
+            <div className="space-y-6">
               <div>
                 <label className={labelCls}>Niveau d'expérience *</label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {[
-                    { value: 'none', label: 'Débutant(e)', desc: 'Aucune expérience' },
-                    { value: 'beginner', label: 'Novice', desc: 'Quelques shootings' },
-                    { value: 'intermediate', label: 'Intermédiaire', desc: 'Défilés locaux' },
-                    { value: 'professional', label: 'Professionnel(le)', desc: 'Portfolio solide' },
-                  ].map(opt => (
-                    <button key={opt.value} type="button" onClick={() => update('experience', opt.value)}
-                      className={`p-4 rounded-xl border text-left transition-all ${form.experience === opt.value ? 'border-pm-gold bg-pm-gold/10' : 'border-white/10 hover:border-pm-gold/30'}`}>
-                      <p className={`text-sm font-bold ${form.experience === opt.value ? 'text-pm-gold' : 'text-white/70'}`}>{opt.label}</p>
-                      <p className="text-xs text-white/30 mt-0.5">{opt.desc}</p>
+                    ['none', 'Débutant(e)', 'Aucune expérience professionnelle'],
+                    ['beginner', 'Novice', 'Quelques shootings ou entraînements'],
+                    ['intermediate', 'Intermédiaire', 'Défilés ou productions locales'],
+                    ['professional', 'Professionnel(le)', 'Expérience régulière et portfolio solide'],
+                  ].map(([value, title, description]) => (
+                    <button key={value} type="button" onClick={() => update('experience', value)} className={`p-4 rounded-xl border text-left ${form.experience === value ? 'border-pm-gold bg-pm-gold/10' : 'border-white/10 hover:border-pm-gold/30'}`}>
+                      <p className={`text-sm font-bold ${form.experience === value ? 'text-pm-gold' : 'text-white/70'}`}>{title}</p>
+                      <p className="text-xs text-white/30 mt-1">{description}</p>
                     </button>
                   ))}
                 </div>
               </div>
-              <div>
-                <label className={labelCls}>Instagram</label>
-                <input value={form.instagram} onChange={e => update('instagram', e.target.value)} placeholder="@votre_compte" className={inputCls} />
-              </div>
-              <div>
-                <label className={labelCls}>Lien portfolio</label>
-                <input type="url" value={form.portfolioLink} onChange={e => update('portfolioLink', e.target.value)} placeholder="https://..." className={inputCls} />
-              </div>
+              <Field label="Instagram"><input value={form.instagram} onChange={event => update('instagram', event.target.value)} placeholder="@votre_compte" className={inputCls} /></Field>
+              <Field label="Lien portfolio"><input type="url" value={form.portfolioLink} onChange={event => update('portfolioLink', event.target.value)} placeholder="https://..." className={inputCls} /></Field>
             </div>
           )}
 
-          {/* Étape 4 */}
           {step === 3 && (
-            <div className="space-y-6">
-              <p className="text-sm text-pm-off-white/50">Ajoutez au moins une photo. Fond neutre recommandé.</p>
+            <div className="space-y-7">
+              <div>
+                <h2 className="text-xl font-playfair font-black text-white">Photos récentes</h2>
+                <p className="mt-2 text-sm text-white/40">Ajoutez au moins une photo. Privilégiez une lumière naturelle, un fond simple et évitez les filtres.</p>
+              </div>
               {[
-                { label: 'Portrait (visage)', field: 'photoPortraitUrl' },
-                { label: 'Plein corps', field: 'photoFullBodyUrl' },
-                { label: 'Profil (de côté)', field: 'photoProfileUrl' },
-              ].map(({ label, field }) => (
+                ['Portrait / visage', 'photoPortraitUrl'],
+                ['Plein corps', 'photoFullBodyUrl'],
+                ['Profil / côté', 'photoProfileUrl'],
+              ].map(([label, field]) => (
                 <div key={field}>
                   <label className={labelCls}>{label}</label>
-                  <ImgBBUploader
-                     value={(form as any)[field]}
-                     onChange={(url: string) => update(field as keyof FormData, url)}
-                   />
+                  <ImgBBUploader value={form[field as keyof FormData]} onChange={(url: string) => update(field as keyof FormData, url)} />
                 </div>
               ))}
+
+              <label className="flex items-start gap-3 p-4 border border-white/10 rounded-xl cursor-pointer">
+                <input type="checkbox" checked={consent} onChange={event => setConsent(event.target.checked)} className="mt-1 accent-[#D4AF37]" />
+                <span className="text-sm text-white/55 leading-relaxed">
+                  J'accepte que Perfect Models Management traite les informations et photos de ce dossier pour l'étude de ma candidature. J'ai pris connaissance de la <Link to="/privacy-policy" target="_blank" className="text-pm-gold hover:underline">politique de confidentialité</Link> et des <Link to="/terms-of-use" target="_blank" className="text-pm-gold hover:underline">conditions d'utilisation</Link>.
+                </span>
+              </label>
             </div>
           )}
         </div>
 
-        {error && <p className="mt-4 text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3">{error}</p>}
+        {error && <p role="alert" className="mt-4 text-sm text-red-300 bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3">{error}</p>}
 
-        {/* Navigation */}
-        <div className="flex items-center justify-between mt-6 sm:mt-8">
-          <button onClick={() => setStep(s => s - 1)} disabled={step === 0}
-            className="flex items-center gap-2 px-4 sm:px-5 py-2.5 border border-pm-gold/20 text-pm-off-white/60 text-xs uppercase tracking-widest rounded-full hover:border-pm-gold/50 hover:text-pm-off-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+        <div className="flex items-center justify-between mt-7">
+          <button type="button" onClick={goPrevious} disabled={step === 0} className="flex items-center gap-2 px-4 sm:px-5 py-2.5 border border-pm-gold/20 text-pm-off-white/60 text-xs uppercase tracking-widest rounded-full hover:border-pm-gold/50 disabled:opacity-30 disabled:cursor-not-allowed">
             <ChevronLeftIcon className="w-4 h-4" /> Précédent
           </button>
 
           {step < STEPS.length - 1 ? (
-            <button onClick={() => setStep(s => s + 1)}
-              className="flex items-center gap-2 px-5 sm:px-6 py-2.5 bg-pm-gold text-pm-dark font-black text-xs uppercase tracking-widest rounded-full hover:bg-white transition-colors">
+            <button type="button" onClick={goNext} className="flex items-center gap-2 px-5 sm:px-6 py-2.5 bg-pm-gold text-pm-dark font-black text-xs uppercase tracking-widest rounded-full hover:bg-white transition-colors">
               Suivant <ChevronRightIcon className="w-4 h-4" />
             </button>
           ) : (
-            <button onClick={handleSubmit} disabled={submitting}
-              className="flex items-center gap-2 px-5 sm:px-6 py-2.5 bg-pm-gold text-pm-dark font-black text-xs uppercase tracking-widest rounded-full hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-              {submitting
-                ? <><span className="loading loading-spinner loading-xs text-pm-dark" />Envoi…</>
-                : <><CheckIcon className="w-4 h-4" />Soumettre ma candidature</>}
+            <button type="button" onClick={handleSubmit} disabled={submitting} className="flex items-center gap-2 px-5 sm:px-6 py-2.5 bg-pm-gold text-pm-dark font-black text-xs uppercase tracking-widest rounded-full hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed">
+              {submitting ? 'Envoi…' : <><CheckIcon className="w-4 h-4" /> Soumettre ma candidature</>}
             </button>
           )}
         </div>
@@ -276,5 +328,11 @@ sendCastingNotificationToAdmin({
   );
 };
 
-export default CastingForm;
+const Field: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
+  <div>
+    <label className={labelCls}>{label}</label>
+    {children}
+  </div>
+);
 
+export default CastingForm;
