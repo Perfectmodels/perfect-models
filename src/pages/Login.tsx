@@ -1,48 +1,47 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
-  LockClosedIcon,
-  UserIcon,
-  XMarkIcon,
-  PhoneIcon,
+  ArrowLeftIcon,
   ArrowRightIcon,
   CheckCircleIcon,
+  EnvelopeIcon,
+  EyeIcon,
+  EyeSlashIcon,
+  KeyIcon,
+  LockClosedIcon,
+  PhoneIcon,
+  ShieldCheckIcon,
+  UserIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
+import { motion } from 'framer-motion';
 import SEO from '../components/SEO';
 import { useData } from '../contexts/DataContext';
 import { ModelMigrationRequest, useAuth } from '../contexts/AuthContext';
 import { RecoveryRequest } from '../types';
-import { motion } from 'framer-motion';
 import { notifyAdmin } from '../utils/adminNotify';
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+const REMEMBERED_IDENTIFIER_KEY = 'pmm_login_identifier';
 
-interface ActiveUser {
-  name: string;
-  role: string;
-  loginTime: number;
-}
-
-const updateUserActivity = (name: string, role: string) => {
-  const now = Date.now();
-  const fifteen = 15 * 60 * 1000;
-  const current: ActiveUser[] = JSON.parse(localStorage.getItem('pmm_active_users') || '[]');
-  const filtered = current.filter((u) => u.name !== name && now - u.loginTime < fifteen);
-  filtered.push({ name, role, loginTime: now });
-  localStorage.setItem('pmm_active_users', JSON.stringify(filtered));
+const roleRedirect: Record<string, string> = {
+  admin: '/admin',
+  student: '/profil',
+  jury: '/jury/casting',
+  registration: '/enregistrement/casting',
+  'jury-contest': '/concours/jury',
 };
 
-// ─── Composant principal ──────────────────────────────────────────────────────
-
 const Login: React.FC = () => {
-  const [identifier, setIdentifier] = useState('');
+  const [identifier, setIdentifier] = useState(() => localStorage.getItem(REMEMBERED_IDENTIFIER_KEY) || '');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberIdentifier, setRememberIdentifier] = useState(
+    () => Boolean(localStorage.getItem(REMEMBERED_IDENTIFIER_KEY))
+  );
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRecoveryModalOpen, setIsRecoveryModalOpen] = useState(false);
-  const [showAdminReset, setShowAdminReset] = useState(false);
   const [resetMessage, setResetMessage] = useState('');
-  const [isResetting, setIsResetting] = useState(false);
   const [migration, setMigration] = useState<ModelMigrationRequest | null>(null);
   const [migrationEmail, setMigrationEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -53,35 +52,29 @@ const Login: React.FC = () => {
   const location = useLocation();
   const { data, isInitialized, saveData } = useData();
   const { login, migrateModelToAuth, resetPassword, user, loading } = useAuth();
+  const from = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname;
 
-  // Redirect destination après login
-  const from = (location.state as any)?.from?.pathname;
-
-  // Si déjà connecté, rediriger immédiatement
   useEffect(() => {
-    if (loading) return;
-    if (!user) return;
-
-    const roleRedirect: Record<string, string> = {
-      admin: '/admin',
-      student: '/profil',
-      jury: '/jury/casting',
-      registration: '/enregistrement/casting',
-      'jury-contest': '/concours/jury',
-    };
-
-    const destination = from || roleRedirect[user.role] || '/';
-    navigate(destination, { replace: true });
+    if (loading || !user) return;
+    navigate(from || roleRedirect[user.role] || '/', { replace: true });
   }, [user, loading, navigate, from]);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleLogin = async (event: React.FormEvent) => {
+    event.preventDefault();
+    const cleanIdentifier = identifier.trim();
+    if (!cleanIdentifier || !password) return;
+
     setError('');
     setResetMessage('');
-    setShowAdminReset(false);
     setIsSubmitting(true);
 
-    const result = await login(identifier.trim(), password);
+    if (rememberIdentifier) {
+      localStorage.setItem(REMEMBERED_IDENTIFIER_KEY, cleanIdentifier);
+    } else {
+      localStorage.removeItem(REMEMBERED_IDENTIFIER_KEY);
+    }
+
+    const result = await login(cleanIdentifier, password);
 
     if (!result.success) {
       if (result.migrationRequired && result.migration) {
@@ -91,38 +84,23 @@ const Login: React.FC = () => {
         return;
       }
       setError(result.error || 'Identifiant ou mot de passe incorrect.');
-      setShowAdminReset(
-        Boolean(result.error?.startsWith('Compte administrateur reconnu'))
-      );
       setPassword('');
       setIsSubmitting(false);
-      return;
     }
-
-    // Le useEffect ci-dessus prendra le relais dès que user est résolu par Firebase
-    // On met à jour lastLogin et on notifie l'admin après que user soit disponible
-    // (géré dans le useEffect via onAuthStateChanged → AuthContext)
-    // Ici on peut juste laisser le flux se faire naturellement.
-    // Note: isSubmitting reste true jusqu'à la redirection automatique.
   };
 
-  const handleAdminPasswordReset = async () => {
-    setIsResetting(true);
-    setResetMessage('');
-    const result = await resetPassword('admin@perfectmodels.online');
-    setResetMessage(
-      result.success
-        ? 'Un email de réinitialisation a été envoyé au compte administrateur.'
-        : result.error || "Impossible d'envoyer l'email de réinitialisation."
-    );
-    setIsResetting(false);
+  const handlePasswordReset = async (email: string) => {
+    const result = await resetPassword(email.trim().toLowerCase());
+    if (!result.success) {
+      throw new Error(result.error || "Impossible d'envoyer le lien de réinitialisation.");
+    }
   };
 
-  const handleMigration = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleMigration = async (event: React.FormEvent) => {
+    event.preventDefault();
     if (!migration) return;
-    if (newPassword.length < 6) {
-      setError('Le nouveau mot de passe doit contenir au moins 6 caractères.');
+    if (newPassword.length < 8) {
+      setError('Le nouveau mot de passe doit contenir au moins 8 caractères.');
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -140,21 +118,20 @@ const Login: React.FC = () => {
     );
 
     if (!result.success) {
-      setError(result.error || 'La migration du compte a échoué.');
+      setError(result.error || 'La sécurisation du compte a échoué.');
       setIsMigrating(false);
       return;
     }
 
     notifyAdmin(
       'migration',
-      `Compte migré : ${migration.name} (${migrationEmail})`,
+      `Compte sécurisé : ${migration.name} (${migrationEmail})`,
       '/admin/model-access'
     ).catch(() => {});
     setMigration(null);
     setPassword('');
     setNewPassword('');
     setConfirmPassword('');
-    // La création Auth connecte le mannequin ; le useEffect redirige vers son profil.
   };
 
   const handleSubmitRecovery = async (modelName: string, phone: string) => {
@@ -166,132 +143,276 @@ const Login: React.FC = () => {
       timestamp: new Date().toISOString(),
       status: 'Nouveau',
     };
-    const updatedRequests = [...(data.recoveryRequests || []), newRequest];
-    await saveData({ ...data, recoveryRequests: updatedRequests });
-    notifyAdmin('contact', `Récupération accès: ${modelName}`, '/admin/recovery-requests').catch(() => {});
-    setIsRecoveryModalOpen(false);
-    alert('Votre demande a été envoyée. Vous serez contacté prochainement.');
+    await saveData({
+      ...data,
+      recoveryRequests: [...(data.recoveryRequests || []), newRequest],
+    });
+    notifyAdmin(
+      'contact',
+      `Récupération accès : ${modelName}`,
+      '/admin/recovery-requests'
+    ).catch(() => {});
   };
+
+  const backgroundImage = data?.siteImages?.castingBg;
+  const logo = data?.siteConfig?.logo || '/logo.svg';
 
   return (
     <>
-      <SEO title="Accès Privé" noIndex />
-      <div
-        className="bg-cover bg-center min-h-screen flex items-center justify-center p-4"
-        style={{ backgroundImage: `url(${data?.siteImages.castingBg})` }}
-      >
-        <div className="absolute inset-0 bg-pm-dark/80 backdrop-blur-sm" />
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="relative w-full max-w-sm"
-        >
-          <div className="bg-black/50 border border-pm-gold/20 p-8 rounded-lg shadow-2xl shadow-black/50 text-center">
-            <Link to="/">
+      <SEO title="Connexion | Espace PMM" noIndex />
+      <main className="relative min-h-screen overflow-hidden bg-[#080808] text-white">
+        <div className="absolute inset-0 lg:hidden">
+          {backgroundImage && (
+            <img
+              src={backgroundImage}
+              alt=""
+              className="h-full w-full object-cover opacity-20"
+              aria-hidden="true"
+            />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-[#080808]/90 to-[#080808]" />
+        </div>
+
+        <div className="relative grid min-h-screen lg:grid-cols-[1.08fr_0.92fr]">
+          <section className="relative hidden min-h-screen overflow-hidden border-r border-white/10 lg:flex lg:flex-col lg:justify-between">
+            {backgroundImage ? (
               <img
-                src={data?.siteConfig.logo}
-                alt="Logo"
-                className="h-20 w-auto mx-auto mb-6 bg-black rounded-full border-2 border-pm-gold p-1"
+                src={backgroundImage}
+                alt="Univers Perfect Models Management"
+                className="absolute inset-0 h-full w-full object-cover"
               />
-            </Link>
-            <h1 className="text-3xl font-playfair text-pm-gold mb-2">Accès Privé</h1>
-            <p className="text-pm-off-white/70 mb-8">Bienvenue sur votre espace personnel.</p>
+            ) : (
+              <div className="absolute inset-0 bg-gradient-to-br from-neutral-950 via-neutral-900 to-black" />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-br from-black/35 via-black/50 to-black/90" />
+            <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black via-black/50 to-transparent" />
 
-            <form onSubmit={handleLogin} className="space-y-6">
-              {/* Identifiant */}
-              <div className="relative">
-                <UserIcon className="h-5 w-5 text-pm-off-white/50 absolute top-1/2 left-4 transform -translate-y-1/2" />
-                <input
-                  type="text"
-                  value={identifier}
-                  onChange={(e) => { setIdentifier(e.target.value); setError(''); }}
-                  placeholder="Identifiant, nom ou email"
-                  className="w-full bg-pm-dark/70 border-2 border-pm-off-white/20 rounded-full py-3 px-12 focus:outline-none focus:border-pm-gold transition-colors"
-                  required
-                  autoComplete="username"
-                />
-              </div>
-
-              {/* Mot de passe */}
-              <div className="relative">
-                <LockClosedIcon className="h-5 w-5 text-pm-off-white/50 absolute top-1/2 left-4 transform -translate-y-1/2" />
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => { setPassword(e.target.value); setError(''); }}
-                  placeholder="Mot de passe"
-                  className="w-full bg-pm-dark/70 border-2 border-pm-off-white/20 rounded-full py-3 px-12 focus:outline-none focus:border-pm-gold transition-colors"
-                  required
-                  autoComplete="current-password"
-                />
-              </div>
-
-              {error && <p className="text-red-400 text-sm !mt-4">{error}</p>}
-              {showAdminReset && (
-                <button
-                  type="button"
-                  onClick={handleAdminPasswordReset}
-                  disabled={isResetting}
-                  className="text-xs text-pm-gold hover:text-white hover:underline disabled:opacity-50"
-                >
-                  {isResetting
-                    ? 'Envoi en cours…'
-                    : 'Réinitialiser le mot de passe administrateur'}
-                </button>
-              )}
-              {resetMessage && (
-                <p className="text-green-400 text-xs !mt-3">{resetMessage}</p>
-              )}
-
-              <button
-                type="submit"
-                disabled={!isInitialized || isSubmitting}
-                className="w-full group flex items-center justify-center gap-2 px-8 py-3 bg-pm-gold text-pm-dark font-bold uppercase tracking-widest rounded-full transition-all duration-300 hover:bg-white !mt-8 disabled:opacity-50"
+            <div className="relative z-10 flex items-center justify-between p-10 xl:p-14">
+              <Link
+                to="/"
+                className="inline-flex items-center gap-3 text-sm font-medium text-white/75 transition hover:text-white"
               >
-                {isSubmitting ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-pm-dark border-t-transparent rounded-full animate-spin" />
-                    <span>Connexion…</span>
-                  </>
-                ) : (
-                  <>
-                    <span>{isInitialized ? 'Connexion' : 'Chargement…'}</span>
-                    <ArrowRightIcon className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
-                  </>
-                )}
-              </button>
-            </form>
-
-            <div className="mt-6 space-y-2">
-              <p className="text-xs text-pm-off-white/50">
-                Ancien compte mannequin ? Connectez-vous avec vos accès habituels :
-                la migration vous sera proposée automatiquement.
-              </p>
-              <button
-                onClick={() => setIsRecoveryModalOpen(true)}
-                className="text-xs text-pm-off-white/60 hover:text-pm-gold hover:underline block w-full"
-              >
-                Coordonnées oubliées ?
-              </button>
-              <button
-                onClick={() => navigate('/login/phone')}
-                className="flex items-center justify-center gap-1 text-xs text-green-400 hover:text-green-300 hover:underline w-full"
-              >
-                <PhoneIcon className="w-3 h-3" />
-                Connexion par SMS
-              </button>
+                <ArrowLeftIcon className="h-4 w-4" />
+                Retour au site
+              </Link>
+              <span className="rounded-full border border-white/15 bg-black/30 px-4 py-2 text-[11px] uppercase tracking-[0.28em] text-white/70 backdrop-blur-md">
+                Espace privé
+              </span>
             </div>
-          </div>
-        </motion.div>
-      </div>
+
+            <div className="relative z-10 max-w-2xl p-10 xl:p-14">
+              <div className="mb-8 h-px w-16 bg-pm-gold" />
+              <p className="mb-4 text-xs font-semibold uppercase tracking-[0.34em] text-pm-gold">
+                Perfect Models Management
+              </p>
+              <h1 className="max-w-xl font-playfair text-5xl leading-[1.02] text-white xl:text-6xl">
+                Votre carrière, vos outils, votre espace.
+              </h1>
+              <p className="mt-6 max-w-lg text-base leading-7 text-white/68">
+                Accédez à votre profil, vos formations, vos activités de casting et aux outils de gestion réservés à votre rôle au sein de l'agence.
+              </p>
+
+              <div className="mt-10 grid max-w-xl grid-cols-3 gap-3">
+                {[
+                  ['Profils', 'Accès sécurisé'],
+                  ['Formation', 'Suivi personnel'],
+                  ['Casting', 'Outils métiers'],
+                ].map(([title, subtitle]) => (
+                  <div key={title} className="border-t border-white/15 pt-4">
+                    <p className="text-sm font-semibold text-white">{title}</p>
+                    <p className="mt-1 text-xs text-white/45">{subtitle}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <section className="relative flex min-h-screen items-center justify-center px-5 py-10 sm:px-8 lg:px-12 xl:px-20">
+            <motion.div
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45, ease: 'easeOut' }}
+              className="w-full max-w-[470px]"
+            >
+              <div className="mb-9 flex items-center justify-between lg:hidden">
+                <Link to="/" aria-label="Retour à l'accueil">
+                  <img src={logo} alt="Perfect Models Management" className="h-14 w-auto" />
+                </Link>
+                <Link
+                  to="/"
+                  className="inline-flex items-center gap-2 text-xs text-white/60 transition hover:text-white"
+                >
+                  <ArrowLeftIcon className="h-4 w-4" />
+                  Site public
+                </Link>
+              </div>
+
+              <div className="mb-9 hidden lg:block">
+                <Link to="/" className="inline-flex items-center">
+                  <img src={logo} alt="Perfect Models Management" className="h-16 w-auto" />
+                </Link>
+              </div>
+
+              <div className="mb-8">
+                <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-pm-gold/20 bg-pm-gold/[0.06] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-pm-gold">
+                  <ShieldCheckIcon className="h-4 w-4" />
+                  Connexion sécurisée
+                </div>
+                <h2 className="font-playfair text-4xl text-white sm:text-[2.75rem]">Bienvenue</h2>
+                <p className="mt-3 text-sm leading-6 text-white/55">
+                  Connectez-vous avec l'identifiant associé à votre espace PMM.
+                </p>
+              </div>
+
+              <form onSubmit={handleLogin} className="space-y-5" noValidate>
+                <div>
+                  <label htmlFor="identifier" className="mb-2 block text-sm font-medium text-white/78">
+                    Identifiant ou adresse email
+                  </label>
+                  <div className="group relative">
+                    <UserIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/35 transition group-focus-within:text-pm-gold" />
+                    <input
+                      id="identifier"
+                      type="text"
+                      value={identifier}
+                      onChange={(event) => {
+                        setIdentifier(event.target.value);
+                        setError('');
+                      }}
+                      placeholder="Ex. nom@perfectmodels.online"
+                      className="w-full rounded-xl border border-white/12 bg-white/[0.045] py-3.5 pl-12 pr-4 text-sm text-white outline-none transition placeholder:text-white/25 hover:border-white/20 focus:border-pm-gold/70 focus:bg-white/[0.06] focus:ring-4 focus:ring-pm-gold/10"
+                      required
+                      autoComplete="username"
+                      autoCapitalize="none"
+                      spellCheck={false}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="mb-2 flex items-center justify-between gap-4">
+                    <label htmlFor="password" className="block text-sm font-medium text-white/78">
+                      Mot de passe
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setIsRecoveryModalOpen(true)}
+                      className="text-xs font-medium text-pm-gold transition hover:text-white"
+                    >
+                      Mot de passe oublié ?
+                    </button>
+                  </div>
+                  <div className="group relative">
+                    <LockClosedIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/35 transition group-focus-within:text-pm-gold" />
+                    <input
+                      id="password"
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={(event) => {
+                        setPassword(event.target.value);
+                        setError('');
+                      }}
+                      placeholder="Votre mot de passe"
+                      className="w-full rounded-xl border border-white/12 bg-white/[0.045] py-3.5 pl-12 pr-12 text-sm text-white outline-none transition placeholder:text-white/25 hover:border-white/20 focus:border-pm-gold/70 focus:bg-white/[0.06] focus:ring-4 focus:ring-pm-gold/10"
+                      required
+                      autoComplete="current-password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((value) => !value)}
+                      aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-white/35 transition hover:text-white focus:outline-none focus:text-pm-gold"
+                    >
+                      {showPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
+                    </button>
+                  </div>
+                </div>
+
+                <label className="flex cursor-pointer items-center gap-3 text-xs text-white/55">
+                  <input
+                    type="checkbox"
+                    checked={rememberIdentifier}
+                    onChange={(event) => setRememberIdentifier(event.target.checked)}
+                    className="h-4 w-4 rounded border-white/20 bg-white/5 text-pm-gold focus:ring-pm-gold/30"
+                  />
+                  Mémoriser mon identifiant sur cet appareil
+                </label>
+
+                {error && (
+                  <div role="alert" className="rounded-xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm leading-5 text-red-200">
+                    {error}
+                  </div>
+                )}
+                {resetMessage && (
+                  <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm leading-5 text-emerald-200">
+                    {resetMessage}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={!isInitialized || isSubmitting || loading}
+                  className="group flex w-full items-center justify-center gap-2 rounded-xl bg-pm-gold px-6 py-4 text-sm font-bold uppercase tracking-[0.18em] text-pm-dark transition hover:bg-white focus:outline-none focus:ring-4 focus:ring-pm-gold/20 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isSubmitting || loading ? (
+                    <>
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-pm-dark/30 border-t-pm-dark" />
+                      Connexion…
+                    </>
+                  ) : (
+                    <>
+                      {isInitialized ? 'Se connecter' : 'Initialisation…'}
+                      <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    </>
+                  )}
+                </button>
+              </form>
+
+              <div className="my-7 flex items-center gap-4">
+                <div className="h-px flex-1 bg-white/10" />
+                <span className="text-[10px] uppercase tracking-[0.24em] text-white/30">Autre accès</span>
+                <div className="h-px flex-1 bg-white/10" />
+              </div>
+
+              <button
+                type="button"
+                onClick={() => navigate('/login/phone')}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/12 bg-white/[0.025] px-5 py-3.5 text-sm font-medium text-white/70 transition hover:border-white/25 hover:bg-white/[0.05] hover:text-white"
+              >
+                <PhoneIcon className="h-4 w-4" />
+                Continuer avec un numéro de téléphone
+              </button>
+
+              <div className="mt-8 rounded-xl border border-white/8 bg-white/[0.025] p-4">
+                <div className="flex gap-3">
+                  <KeyIcon className="mt-0.5 h-5 w-5 shrink-0 text-pm-gold/80" />
+                  <div>
+                    <p className="text-sm font-medium text-white/80">Ancien accès mannequin ?</p>
+                    <p className="mt-1 text-xs leading-5 text-white/42">
+                      Utilisez vos identifiants habituels. Si votre compte doit être sécurisé ou mis à jour, la procédure vous sera proposée automatiquement.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <p className="mt-8 text-center text-[11px] leading-5 text-white/30">
+                Accès réservé aux membres et équipes autorisés de Perfect Models Management.
+              </p>
+            </motion.div>
+          </section>
+        </div>
+      </main>
 
       {isRecoveryModalOpen && (
         <RecoveryModal
+          initialEmail={identifier.includes('@') ? identifier : ''}
           onClose={() => setIsRecoveryModalOpen(false)}
-          onSubmit={handleSubmitRecovery}
+          onPasswordReset={handlePasswordReset}
+          onAccessRequest={handleSubmitRecovery}
+          onSuccess={(message) => setResetMessage(message)}
         />
       )}
+
       {migration && (
         <MigrationModal
           migration={migration}
@@ -315,6 +436,44 @@ const Login: React.FC = () => {
     </>
   );
 };
+
+interface ModalShellProps {
+  title: string;
+  description?: string;
+  onClose: () => void;
+  children: React.ReactNode;
+}
+
+const ModalShell: React.FC<ModalShellProps> = ({ title, description, onClose, children }) => (
+  <div
+    className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="account-modal-title"
+  >
+    <motion.div
+      initial={{ opacity: 0, scale: 0.98, y: 12 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      className="w-full max-w-md overflow-hidden rounded-2xl border border-white/10 bg-[#111] shadow-2xl shadow-black/60"
+    >
+      <div className="flex items-start justify-between gap-4 border-b border-white/8 px-6 py-5">
+        <div>
+          <h2 id="account-modal-title" className="font-playfair text-2xl text-white">{title}</h2>
+          {description && <p className="mt-1 text-sm leading-5 text-white/45">{description}</p>}
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Fermer"
+          className="rounded-lg p-2 text-white/45 transition hover:bg-white/5 hover:text-white"
+        >
+          <XMarkIcon className="h-5 w-5" />
+        </button>
+      </div>
+      <div className="p-6">{children}</div>
+    </motion.div>
+  </div>
+);
 
 const MigrationModal: React.FC<{
   migration: ModelMigrationRequest;
@@ -341,151 +500,192 @@ const MigrationModal: React.FC<{
   onSubmit,
   onClose,
 }) => (
-  <div
-    className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center p-4"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="migration-title"
+  <ModalShell
+    title="Sécuriser votre compte"
+    description="Une mise à jour unique est nécessaire pour continuer à utiliser votre espace."
+    onClose={onClose}
   >
-    <div className="bg-pm-dark border border-pm-gold/30 rounded-lg shadow-2xl w-full max-w-md">
-      <div className="p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 id="migration-title" className="text-xl font-playfair text-pm-gold">
-            Sécuriser votre compte
-          </h2>
-          <button type="button" onClick={onClose} className="text-pm-off-white/70 hover:text-white">
-            <XMarkIcon className="w-6 h-6" />
-          </button>
-        </div>
-        <div className="flex gap-3 p-3 mb-5 bg-green-500/10 border border-green-500/30 rounded-lg">
-          <CheckCircleIcon className="w-5 h-5 text-green-400 shrink-0 mt-0.5" />
-          <p className="text-sm text-green-200">
-            Identité confirmée pour <strong>{migration.name}</strong>. Créez maintenant vos accès
-            Firebase sécurisés.
-          </p>
-        </div>
-        <form onSubmit={onSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs uppercase tracking-widest text-pm-off-white/50 mb-1">
-              Adresse email
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(event) => onEmailChange(event.target.value)}
-              className="admin-input"
-              autoComplete="email"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-xs uppercase tracking-widest text-pm-off-white/50 mb-1">
-              Nouveau mot de passe
-            </label>
-            <input
-              type="password"
-              value={newPassword}
-              onChange={(event) => onNewPasswordChange(event.target.value)}
-              className="admin-input"
-              minLength={6}
-              autoComplete="new-password"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-xs uppercase tracking-widest text-pm-off-white/50 mb-1">
-              Confirmer le mot de passe
-            </label>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(event) => onConfirmPasswordChange(event.target.value)}
-              className="admin-input"
-              minLength={6}
-              autoComplete="new-password"
-              required
-            />
-          </div>
-          {error && <p className="text-red-400 text-sm">{error}</p>}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full px-8 py-3 bg-pm-gold text-pm-dark font-bold uppercase tracking-widest rounded-full transition-all hover:bg-white disabled:opacity-50"
-          >
-            {loading ? 'Création du compte…' : 'Créer et continuer'}
-          </button>
-        </form>
-      </div>
+    <div className="mb-5 flex gap-3 rounded-xl border border-emerald-400/20 bg-emerald-500/10 p-4">
+      <CheckCircleIcon className="mt-0.5 h-5 w-5 shrink-0 text-emerald-400" />
+      <p className="text-sm leading-5 text-emerald-100/80">
+        Identité confirmée pour <strong className="text-white">{migration.name}</strong>. Définissez vos nouveaux accès sécurisés.
+      </p>
     </div>
-  </div>
+    <form onSubmit={onSubmit} className="space-y-4">
+      <Field label="Adresse email">
+        <input
+          type="email"
+          value={email}
+          onChange={(event) => onEmailChange(event.target.value)}
+          className="login-modal-input"
+          autoComplete="email"
+          required
+        />
+      </Field>
+      <Field label="Nouveau mot de passe" hint="8 caractères minimum">
+        <input
+          type="password"
+          value={newPassword}
+          onChange={(event) => onNewPasswordChange(event.target.value)}
+          className="login-modal-input"
+          minLength={8}
+          autoComplete="new-password"
+          required
+        />
+      </Field>
+      <Field label="Confirmer le mot de passe">
+        <input
+          type="password"
+          value={confirmPassword}
+          onChange={(event) => onConfirmPasswordChange(event.target.value)}
+          className="login-modal-input"
+          minLength={8}
+          autoComplete="new-password"
+          required
+        />
+      </Field>
+      {error && <p className="text-sm text-red-300">{error}</p>}
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full rounded-xl bg-pm-gold px-6 py-3.5 text-sm font-bold uppercase tracking-[0.14em] text-pm-dark transition hover:bg-white disabled:opacity-50"
+      >
+        {loading ? 'Mise à jour…' : 'Sécuriser et continuer'}
+      </button>
+    </form>
+  </ModalShell>
 );
 
-// ─── Modal récupération d'accès ───────────────────────────────────────────────
-
 const RecoveryModal: React.FC<{
+  initialEmail: string;
   onClose: () => void;
-  onSubmit: (name: string, phone: string) => void;
-}> = ({ onClose, onSubmit }) => {
+  onPasswordReset: (email: string) => Promise<void>;
+  onAccessRequest: (name: string, phone: string) => Promise<void>;
+  onSuccess: (message: string) => void;
+}> = ({ initialEmail, onClose, onPasswordReset, onAccessRequest, onSuccess }) => {
+  const [mode, setMode] = useState<'email' | 'support'>('email');
+  const [email, setEmail] = useState(initialEmail);
   const [modelName, setModelName] = useState('');
   const [phone, setPhone] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit(modelName, phone);
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setLoading(true);
+    setError('');
+    try {
+      if (mode === 'email') {
+        await onPasswordReset(email);
+        onSuccess('Si cette adresse correspond à un compte, les instructions de réinitialisation ont été envoyées.');
+      } else {
+        await onAccessRequest(modelName, phone);
+        onSuccess("Votre demande d'accès a été transmise à l'équipe PMM.");
+      }
+      onClose();
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'Une erreur est survenue.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div
-      className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-      role="dialog"
-      aria-modal="true"
+    <ModalShell
+      title="Récupérer mon accès"
+      description="Choisissez la méthode correspondant à votre situation."
+      onClose={onClose}
     >
-      <div className="bg-pm-dark border border-pm-gold/30 rounded-lg shadow-2xl w-full max-w-md">
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-playfair text-pm-gold">Demande de Coordonnées</h2>
-            <button onClick={onClose} className="text-pm-off-white/70 hover:text-white">
-              <XMarkIcon className="w-6 h-6" />
-            </button>
-          </div>
-          <p className="text-sm text-pm-off-white/70 mb-6">
-            Entrez votre nom et votre numéro de téléphone. L'administrateur vous contactera pour
-            vous fournir vos accès.
-          </p>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="relative">
-              <UserIcon className="h-5 w-5 text-pm-off-white/50 absolute top-1/2 left-4 transform -translate-y-1/2" />
-              <input
-                type="text"
-                value={modelName}
-                onChange={(e) => setModelName(e.target.value)}
-                placeholder="Votre nom complet"
-                className="admin-input pl-12"
-                required
-              />
-            </div>
-            <div className="relative">
-              <PhoneIcon className="h-5 w-5 text-pm-off-white/50 absolute top-1/2 left-4 transform -translate-y-1/2" />
-              <input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="Votre numéro de téléphone"
-                className="admin-input pl-12"
-                required
-              />
-            </div>
-            <button
-              type="submit"
-              className="w-full px-8 py-3 bg-pm-gold text-pm-dark font-bold uppercase tracking-widest rounded-full transition-all duration-300 hover:bg-white mt-4"
-            >
-              Envoyer la demande
-            </button>
-          </form>
-        </div>
+      <div className="mb-5 grid grid-cols-2 rounded-xl bg-white/[0.035] p-1">
+        <button
+          type="button"
+          onClick={() => { setMode('email'); setError(''); }}
+          className={`rounded-lg px-3 py-2.5 text-xs font-medium transition ${mode === 'email' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white/70'}`}
+        >
+          Par email
+        </button>
+        <button
+          type="button"
+          onClick={() => { setMode('support'); setError(''); }}
+          className={`rounded-lg px-3 py-2.5 text-xs font-medium transition ${mode === 'support' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white/70'}`}
+        >
+          Contacter PMM
+        </button>
       </div>
-    </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {mode === 'email' ? (
+          <Field label="Adresse email du compte">
+            <div className="relative">
+              <EnvelopeIcon className="absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-white/30" />
+              <input
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="votre@email.com"
+                className="login-modal-input pl-11"
+                autoComplete="email"
+                required
+              />
+            </div>
+          </Field>
+        ) : (
+          <>
+            <Field label="Nom complet">
+              <div className="relative">
+                <UserIcon className="absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-white/30" />
+                <input
+                  type="text"
+                  value={modelName}
+                  onChange={(event) => setModelName(event.target.value)}
+                  placeholder="Votre nom complet"
+                  className="login-modal-input pl-11"
+                  required
+                />
+              </div>
+            </Field>
+            <Field label="Numéro de téléphone">
+              <div className="relative">
+                <PhoneIcon className="absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-white/30" />
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(event) => setPhone(event.target.value)}
+                  placeholder="+241 …"
+                  className="login-modal-input pl-11"
+                  autoComplete="tel"
+                  required
+                />
+              </div>
+            </Field>
+          </>
+        )}
+
+        {error && <p className="text-sm text-red-300">{error}</p>}
+        <button
+          type="submit"
+          disabled={loading}
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-pm-gold px-6 py-3.5 text-sm font-bold uppercase tracking-[0.14em] text-pm-dark transition hover:bg-white disabled:opacity-50"
+        >
+          {loading ? 'Traitement…' : mode === 'email' ? 'Envoyer le lien' : 'Envoyer la demande'}
+        </button>
+      </form>
+    </ModalShell>
   );
 };
+
+const Field: React.FC<{
+  label: string;
+  hint?: string;
+  children: React.ReactNode;
+}> = ({ label, hint, children }) => (
+  <label className="block">
+    <span className="mb-2 flex items-center justify-between gap-3 text-sm font-medium text-white/70">
+      {label}
+      {hint && <span className="text-[11px] font-normal text-white/30">{hint}</span>}
+    </span>
+    {children}
+  </label>
+);
 
 export default Login;
