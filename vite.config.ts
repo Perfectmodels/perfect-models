@@ -8,7 +8,6 @@ export default defineConfig(({ mode }) => {
     base: '/',
     plugins: [
       react(),
-      // ── Émulation locale des Vercel API functions ──────────────────────────
       {
         name: 'local-api',
         configureServer(server) {
@@ -34,7 +33,9 @@ export default defineConfig(({ mode }) => {
                   headers: { 'Content-Type': 'application/json', 'api-key': apiKey },
                   body: JSON.stringify({
                     sender: { name: 'Perfect Models Management', email: env.DEFAULT_FROM_EMAIL || 'contact@perfectmodels.online' },
-                    to, subject, htmlContent,
+                    to,
+                    subject,
+                    htmlContent,
                     ...(replyTo ? { replyTo } : {}),
                   }),
                 });
@@ -59,7 +60,10 @@ export default defineConfig(({ mode }) => {
             'vendor-firebase-app': ['firebase/app'],
             'vendor-firebase-auth': ['firebase/auth'],
             'vendor-firebase-db': ['firebase/database'],
+            'vendor-firebase-firestore': ['firebase/firestore'],
             'vendor-firebase-messaging': ['firebase/messaging'],
+            'vendor-pdf': ['jspdf', 'jspdf-autotable', 'html2canvas'],
+            'vendor-icons': ['lucide-react'],
           },
         },
       },
