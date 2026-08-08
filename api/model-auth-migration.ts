@@ -4,7 +4,7 @@ import crypto from 'node:crypto';
 const API_KEY = 'AIzaSyBawZl4SJz7drhzIrG0dnazSglyF6vmKCg';
 const DATABASE_URL = 'https://perfect-156b5-default-rtdb.firebaseio.com';
 const DEFAULT_PASSWORD = 'Pmm2026@';
-const TOKEN_HASH = '7ac4cbe44dad706ea9b0a46de84739d8e8f47d42740a866f37f901ef21c18f02';
+const TOKEN_HASH = 'f591155db5d1fecc38df25290a8bc626095153db316a2cd013adea873ebae9db';
 
 const normalize = (value: string) => value
   .normalize('NFD')
@@ -93,7 +93,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const action = String(req.query.action || 'preview');
 
     if (action !== 'run') {
-      return res.status(200).json({ count: records.length, records });
+      return res.status(200).json({ count: records.length, records: records.map(({ password, ...record }) => record) });
     }
 
     const token = String(req.query.token || '');
