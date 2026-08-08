@@ -26,10 +26,8 @@ dist-ssr
 
 # Environment variables
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*
+!.env.example
 
 # Build outputs
 build
@@ -44,7 +42,7 @@ coverage
 # Cache
 .cache
 .parcel-cache
-.eslintcache
+eslintcache
 .stylelintcache
 
 # Temporary files
@@ -74,6 +72,7 @@ firebase-debug.*.log
 !package-lock.json
 !tsconfig.json
 !tsconfig.node.json
+!database.rules.json
 perfectmodels-4e5fa-default-rtdb-export.json
 
 # IDE
@@ -108,7 +107,6 @@ perfectmodels-4e5fa-default-rtdb-export.json
 *.bak
 *.swp
 *~
-.env*.local
 
 # Mobile (Capacitor)
 # Keep android/ and ios/ folders but ignore build artifacts
