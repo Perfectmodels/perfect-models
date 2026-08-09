@@ -1,5 +1,5 @@
 import { getSql } from './neon';
-import { neonDataApiFetch } from './neon-data-api';
+import { createAnonymousNeonClient } from './neon-unified';
 import { isPublicCollection } from './data-policy';
 
 export interface CollectionRow {
@@ -18,11 +18,16 @@ async function directCollection(key: string) {
   return rows[0]?.data ?? null;
 }
 
-async function apiCollection(key: string) {
-  const rows = await neonDataApiFetch<Array<{ data: unknown }>>(
-    `/app_collections?select=data&key=eq.${encodeURIComponent(key)}&limit=1`,
-  );
-  return rows[0]?.data ?? null;
+async function anonymousCollection(key: string) {
+  const neon = createAnonymousNeonClient();
+  const { data, error } = await neon
+    .from('app_collections')
+    .select('data')
+    .eq('key', key)
+    .eq('is_public', true)
+    .limit(1);
+  if (error) throw new Error(`Neon Data API: ${error.message}`);
+  return (data as Array<{ data: unknown }> | null)?.[0]?.data ?? null;
 }
 
 export async function getCollection(key: string) {
@@ -31,12 +36,12 @@ export async function getCollection(key: string) {
       return await directCollection(key);
     } catch (error) {
       if (!isPublicCollection(key)) throw error;
-      console.warn('[neon] direct collection read failed; using Data API fallback', { key });
+      console.warn('[neon] direct read failed; using anonymous Data API', { key });
     }
   }
 
   if (!isPublicCollection(key)) return null;
-  return apiCollection(key);
+  return anonymousCollection(key);
 }
 
 export async function getCollections(): Promise<CollectionRow[]> {
@@ -47,13 +52,18 @@ export async function getCollections(): Promise<CollectionRow[]> {
         'SELECT key,data,is_public,updated_at::text FROM public.app_collections ORDER BY key',
       )) as CollectionRow[];
     } catch {
-      console.warn('[neon] direct database read failed; using public Data API fallback');
+      console.warn('[neon] direct database read failed; using anonymous Data API');
     }
   }
 
-  return neonDataApiFetch<CollectionRow[]>(
-    '/app_collections?select=key,data,is_public,updated_at&is_public=eq.true&order=key.asc',
-  );
+  const neon = createAnonymousNeonClient();
+  const { data, error } = await neon
+    .from('app_collections')
+    .select('key,data,is_public,updated_at')
+    .eq('is_public', true)
+    .order('key', { ascending: true });
+  if (error) throw new Error(`Neon Data API: ${error.message}`);
+  return (data || []) as CollectionRow[];
 }
 
 export async function setCollection(
@@ -64,7 +74,7 @@ export async function setCollection(
 ) {
   if (!process.env.DATABASE_URL) {
     throw new Error(
-      'DATABASE_URL is required for authenticated Neon writes. Public reads remain available through the Neon Data API.',
+      'DATABASE_URL is required for server-side collection writes. Client writes use secured Neon RPCs.',
     );
   }
 
