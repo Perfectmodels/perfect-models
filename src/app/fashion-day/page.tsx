@@ -1,2 +1,5 @@
-import LegacyRoute from '@/app/_legacy/LegacyRoute';
-export default function Page() { return <LegacyRoute component="FashionDay" />; }
+import FashionDayPage from '@/features/fashion-day/FashionDayPage';
+
+export default function Page() {
+  return <FashionDayPage />;
+}

@@ -1,0 +1,249 @@
+'use client';
+
+import React, { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
+import { CalendarDaysIcon, MapPinIcon, PlayIcon, UserGroupIcon } from '@heroicons/react/24/outline';
+import SEO from '@/components/SEO';
+import Loading from '@/components/Loading';
+import { useData } from '@/contexts/DataContext';
+import type { FashionDayEvent } from '@/types';
+
+type FashionDayEdition = FashionDayEvent & { coverImageUrl?: string };
+
+const formatDate = (value: string) => {
+  if (!value) return 'Date à confirmer';
+  return new Date(`${value}T12:00:00`).toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+};
+
+const youtubeId = (value?: string) => {
+  if (!value) return '';
+  try {
+    const url = new URL(value);
+    const host = url.hostname.replace(/^www\./, '');
+    if (host === 'youtu.be') return url.pathname.split('/').filter(Boolean)[0] || '';
+    if (host === 'youtube.com' || host === 'm.youtube.com') {
+      const fromQuery = url.searchParams.get('v');
+      if (fromQuery) return fromQuery;
+      const parts = url.pathname.split('/').filter(Boolean);
+      if (['shorts', 'embed', 'live'].includes(parts[0])) return parts[1] || '';
+    }
+  } catch {
+    return '';
+  }
+  return '';
+};
+
+function EditionVideo({ event, cover }: { event: FashionDayEdition; cover: string }) {
+  const id = youtubeId(event.announcementVideoEmbedUrl);
+  if (id) {
+    return (
+      <div className="aspect-video overflow-hidden rounded-2xl border border-pm-gold/20 bg-black shadow-2xl">
+        <iframe
+          src={`https://www.youtube-nocookie.com/embed/${id}`}
+          title={`Spot Perfect Fashion Day édition ${event.edition}`}
+          className="h-full w-full"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowFullScreen
+        />
+      </div>
+    );
+  }
+  if (event.announcementVideoUrl) {
+    return (
+      <video
+        src={event.announcementVideoUrl}
+        controls
+        playsInline
+        preload="metadata"
+        poster={cover}
+        className="aspect-video w-full rounded-2xl border border-pm-gold/20 bg-black object-contain shadow-2xl"
+      />
+    );
+  }
+  return null;
+}
+
+function PeopleSection({ title, eyebrow, items }: { title: string; eyebrow: string; items: { name: string; description: string; images: string[] }[] }) {
+  if (!items.length) return null;
+  return (
+    <section className="border-t border-white/5 py-16 sm:py-24">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-10">
+        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-pm-gold/60">{eyebrow}</p>
+        <h3 className="mt-2 font-playfair text-4xl font-black sm:text-5xl">{title}</h3>
+        <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {items.map((item, index) => (
+            <article key={`${item.name}-${index}`} className="overflow-hidden rounded-2xl border border-white/10 bg-black/40">
+              {(item.images ?? [])[0] ? (
+                <img src={item.images[0]} alt={item.name} className="aspect-[4/3] w-full object-cover" />
+              ) : (
+                <div className="flex aspect-[4/3] items-center justify-center bg-white/[0.03] font-playfair text-5xl text-white/10">{item.name?.[0] || 'P'}</div>
+              )}
+              <div className="p-5">
+                <h4 className="font-playfair text-2xl font-bold text-white">{item.name}</h4>
+                {item.description && <p className="mt-2 text-sm leading-relaxed text-white/45">{item.description}</p>}
+                {(item.images?.length ?? 0) > 1 && (
+                  <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
+                    {item.images.slice(1).map((url, imageIndex) => <img key={`${url}-${imageIndex}`} src={url} alt="" className="h-16 w-16 flex-none rounded-lg object-cover" />)}
+                  </div>
+                )}
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export default function FashionDayPage() {
+  const { data, isInitialized } = useData();
+  const events = useMemo(
+    () => ((data?.fashionDayEvents ?? []) as FashionDayEdition[]).slice().sort((a, b) => b.edition - a.edition),
+    [data?.fashionDayEvents],
+  );
+  const [selectedEdition, setSelectedEdition] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (events.length && (selectedEdition === null || !events.some((event) => event.edition === selectedEdition))) {
+      setSelectedEdition(events[0].edition);
+    }
+  }, [events, selectedEdition]);
+
+  if (!isInitialized || !data) return <Loading />;
+
+  if (!events.length) {
+    return (
+      <main className="min-h-screen bg-pm-dark px-6 py-32 text-center text-white">
+        <SEO title="Perfect Fashion Day" description="Les éditions Perfect Fashion Day de Perfect Models Management." />
+        <h1 className="font-playfair text-5xl font-black text-pm-gold">Perfect Fashion Day</h1>
+        <p className="mt-4 text-white/40">Les prochaines éditions seront publiées ici.</p>
+      </main>
+    );
+  }
+
+  const event = events.find((item) => item.edition === selectedEdition) || events[0];
+  const cover = event.coverImageUrl || event.galleryImages?.[0] || event.stylists?.[0]?.images?.[0] || data.siteImages.fashionDayBg;
+  const hasVideo = Boolean(youtubeId(event.announcementVideoEmbedUrl) || event.announcementVideoUrl);
+  const upcoming = event.date ? new Date(`${event.date}T23:59:59`).getTime() > Date.now() : false;
+
+  return (
+    <main className="min-h-screen overflow-hidden bg-pm-dark text-pm-off-white">
+      <SEO
+        title={`Perfect Fashion Day — Édition ${event.edition}`}
+        description={event.description || `Perfect Fashion Day, édition ${event.edition} — ${event.theme}.`}
+        image={cover}
+      />
+
+      <section className="relative min-h-[88vh] overflow-hidden">
+        <img key={cover} src={cover} alt={`Cover Perfect Fashion Day édition ${event.edition}`} className="absolute inset-0 h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-t from-pm-dark via-black/35 to-black/15" />
+        <div className="relative z-10 mx-auto flex min-h-[88vh] max-w-7xl flex-col justify-end px-4 pb-12 pt-32 sm:px-6 lg:px-10">
+          <p className="text-[10px] font-black uppercase tracking-[0.48em] text-pm-gold">Perfect Fashion Day · Édition {String(event.edition).padStart(2, '0')}</p>
+          <h1 className="mt-3 max-w-5xl font-playfair text-5xl font-black italic leading-[0.95] text-white sm:text-7xl lg:text-8xl">{event.theme}</h1>
+          <div className="mt-8 flex flex-wrap gap-5 text-sm text-white/70">
+            <span className="inline-flex items-center gap-2"><CalendarDaysIcon className="h-5 w-5 text-pm-gold" />{formatDate(event.date)}</span>
+            <span className="inline-flex items-center gap-2"><MapPinIcon className="h-5 w-5 text-pm-gold" />{event.location || 'Lieu à confirmer'}</span>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-b border-white/5 bg-black/40 py-6">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-10">
+          <p className="mb-4 text-[9px] font-black uppercase tracking-[0.35em] text-white/30">Choisir une édition</p>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
+            {events.map((item) => {
+              const itemCover = item.coverImageUrl || item.galleryImages?.[0] || data.siteImages.fashionDayBg;
+              const active = item.edition === event.edition;
+              return (
+                <button key={item.edition} type="button" onClick={() => setSelectedEdition(item.edition)} className={`group relative overflow-hidden rounded-xl border text-left transition ${active ? 'border-pm-gold' : 'border-white/10 hover:border-white/30'}`}>
+                  <img src={itemCover} alt={`Cover édition ${item.edition}`} className="aspect-[16/10] w-full object-cover transition duration-500 group-hover:scale-105" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-transparent" />
+                  <div className="absolute inset-x-0 bottom-0 p-3">
+                    <span className={`text-[9px] font-black uppercase tracking-widest ${active ? 'text-pm-gold' : 'text-white/60'}`}>Édition {String(item.edition).padStart(2, '0')}</span>
+                    <p className="truncate font-playfair text-sm font-bold text-white">{item.theme}</p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-[1.4fr_0.6fr] lg:px-10">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-pm-gold/60">L’édition</p>
+          <h2 className="mt-2 font-playfair text-4xl font-black sm:text-6xl">« {event.theme} »</h2>
+          <p className="mt-6 max-w-3xl text-base font-light leading-8 text-white/50 sm:text-lg">{event.description}</p>
+        </div>
+        <div className="space-y-5 border-l border-pm-gold/20 pl-6">
+          {event.promoter && <div><span className="text-[9px] uppercase tracking-[0.35em] text-white/25">Promoteur</span><p className="mt-1 font-playfair text-xl font-bold">{event.promoter}</p></div>}
+          {event.mc && <div><span className="text-[9px] uppercase tracking-[0.35em] text-white/25">Maître de cérémonie</span><p className="mt-1 font-playfair text-xl font-bold">{event.mc}</p></div>}
+          <div><span className="text-[9px] uppercase tracking-[0.35em] text-white/25">Participants</span><p className="mt-1 inline-flex items-center gap-2 font-playfair text-xl font-bold"><UserGroupIcon className="h-5 w-5 text-pm-gold" />{(event.featuredModels?.length ?? 0) + (event.stylists?.length ?? 0) + (event.artists?.length ?? 0)}</p></div>
+        </div>
+      </section>
+
+      {hasVideo && (
+        <section className="border-y border-white/5 bg-[#050505] py-16 sm:py-24">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-10">
+            <div className="mb-8 flex items-end justify-between gap-4">
+              <div><p className="text-[10px] font-black uppercase tracking-[0.4em] text-pm-gold/60">Spot officiel</p><h3 className="mt-2 font-playfair text-4xl font-black sm:text-5xl">La vidéo de l’édition</h3></div>
+              <PlayIcon className="hidden h-10 w-10 text-pm-gold/30 sm:block" />
+            </div>
+            <EditionVideo event={event} cover={cover} />
+          </div>
+        </section>
+      )}
+
+      {(event.galleryImages?.length ?? 0) > 0 && (
+        <section className="py-16 sm:py-24">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-10">
+            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-pm-gold/60">Moments forts</p>
+            <h3 className="mt-2 font-playfair text-4xl font-black sm:text-5xl">Galerie de l’édition</h3>
+            <div className="mt-8 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+              {(event.galleryImages ?? []).map((url, index) => <img key={`${url}-${index}`} src={url} alt={`Perfect Fashion Day édition ${event.edition} — ${index + 1}`} className="aspect-square w-full rounded-xl object-cover" />)}
+            </div>
+          </div>
+        </section>
+      )}
+
+      <PeopleSection title="Les Créateurs" eyebrow="Showcase" items={event.stylists ?? []} />
+      <PeopleSection title="Les Artistes" eyebrow="Performances" items={event.artists ?? []} />
+
+      {(event.featuredModels?.length ?? 0) > 0 && (
+        <section className="border-t border-white/5 bg-black/30 py-14">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-10">
+            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-pm-gold/60">On the runway</p>
+            <h3 className="mt-2 font-playfair text-3xl font-black">Mannequins vedettes</h3>
+            <div className="mt-6 flex flex-wrap gap-2">{(event.featuredModels ?? []).map((name) => <span key={name} className="rounded-full border border-pm-gold/20 px-4 py-2 text-sm text-white/70">{name}</span>)}</div>
+          </div>
+        </section>
+      )}
+
+      {(event.partners?.length ?? 0) > 0 && (
+        <section className="border-t border-white/5 py-14">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-10">
+            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-pm-gold/60">Partenaires</p>
+            <div className="mt-6 grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">{(event.partners ?? []).map((partner, index) => <div key={`${partner.name}-${index}`} className="rounded-xl border border-white/10 p-4"><span className="text-[9px] uppercase tracking-[0.3em] text-pm-gold/50">{partner.type || 'Partenaire'}</span><p className="mt-1 font-playfair text-lg font-bold">{partner.name}</p></div>)}</div>
+          </div>
+        </section>
+      )}
+
+      {upcoming && (
+        <section className="bg-pm-gold py-20 text-pm-dark sm:py-28">
+          <div className="mx-auto max-w-4xl px-4 text-center sm:px-6">
+            <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-50">{formatDate(event.date)}</p>
+            <h3 className="mt-4 font-playfair text-5xl font-black italic sm:text-7xl">Rejoignez l’édition {event.edition}.</h3>
+            <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
+              <Link href="/fashion-day-application" className="bg-pm-dark px-8 py-4 text-sm font-black uppercase tracking-widest text-pm-gold">Candidature talent</Link>
+              <Link href="/contact" className="border-2 border-pm-dark px-8 py-4 text-sm font-black uppercase tracking-widest">Devenir partenaire</Link>
+            </div>
+          </div>
+        </section>
+      )}
+    </main>
+  );
+}
