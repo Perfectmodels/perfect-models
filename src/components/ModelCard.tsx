@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { Model } from '../types';
 import { motion } from 'framer-motion';
@@ -7,7 +7,12 @@ interface ModelCardProps {
   model: Model;
 }
 
-const ModelCard: React.FC<ModelCardProps> = ({ model }) => {
+/**
+ * What: Wrapped ModelCard in React.memo()
+ * Why: Prevents unnecessary re-renders of all cards in the grid when parent state (like search filters in Models.tsx) changes
+ * Impact: Significant reduction in render cycle time for the Models and Home pages, improving UI responsiveness during filtering
+ */
+const ModelCard = memo(({ model }: ModelCardProps) => {
   return (
     <motion.div 
       whileHover={{ y: -8 }}
@@ -42,6 +47,6 @@ const ModelCard: React.FC<ModelCardProps> = ({ model }) => {
       </Link>
     </motion.div>
   );
-};
+});
 
 export default ModelCard;
