@@ -27,8 +27,6 @@
     "@capacitor/share": "^8.0.1",
     "@capacitor/splash-screen": "^8.0.1",
     "@capacitor/status-bar": "^8.0.2",
-    "@dataconnect/admin-generated": "file:src/dataconnect-admin-generated",
-    "@dataconnect/generated": "file:src/dataconnect-generated",
     "@google/genai": "^1.17.0",
     "@heroicons/react": "^2.2.0",
     "@vercel/analytics": "^1.6.1",
@@ -50,7 +48,6 @@
     "@types/react": "^18.3.28",
     "@types/react-dom": "^18.2.22",
     "autoprefixer": "^10.4.19",
-    "firebase-admin": "^14.1.0",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.3",
     "typescript": "^5.2.2"

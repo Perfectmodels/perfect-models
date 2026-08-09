@@ -23,7 +23,6 @@ for (const [key, value] of Object.entries(publicFirebaseMap)) {
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
-  transpilePackages: ['@dataconnect/generated', '@dataconnect/admin-generated'],
   experimental: {
     optimizePackageImports: ['@heroicons/react', 'lucide-react'],
   },
@@ -42,7 +41,7 @@ const nextConfig = {
     ];
   },
   webpack(config, { webpack }) {
-    // Compatibility bridge while the Firebase/Neon cutover replaces the last VITE_* reads.
+    // Temporary bridge while the remaining Firebase client code is replaced by Neon-backed APIs.
     config.plugins.push(
       new webpack.DefinePlugin({
         'import.meta.env': JSON.stringify(legacyViteEnv),
