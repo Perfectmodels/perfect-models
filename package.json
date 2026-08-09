@@ -1,7 +1,7 @@
 {
   "name": "perfect-models-management",
   "private": true,
-  "version": "2.0.0",
+  "version": "3.0.0",
   "type": "module",
   "engines": { "node": ">=20.9.0" },
   "scripts": {
@@ -11,13 +11,11 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@capacitor/android": "^8.3.0",
     "@capacitor/app": "^8.1.0",
     "@capacitor/camera": "^8.0.2",
     "@capacitor/cli": "^8.3.0",
     "@capacitor/core": "^8.3.0",
     "@capacitor/haptics": "^8.0.2",
-    "@capacitor/ios": "^8.3.0",
     "@capacitor/push-notifications": "^8.0.3",
     "@capacitor/share": "^8.0.1",
     "@capacitor/splash-screen": "^8.0.1",
@@ -30,7 +28,6 @@
     "@vercel/blob": "latest",
     "avatar": "^0.1.0",
     "dropbox": "^10.30.0",
-    "firebase": "^12.8.0",
     "framer-motion": "^12.38.0",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",
