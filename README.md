@@ -1,20 +1,34 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Perfect Models Management
 
-# Run and deploy your AI Studio app
+Site officiel et plateforme de gestion de Perfect Models Management, désormais architecturés avec **Next.js App Router**, React, TypeScript et Tailwind CSS.
 
-This contains everything you need to run your app locally.
+## Architecture
 
-View your app in AI Studio: https://ai.studio/apps/drive/1Cvjw78BrZq2moM6ZPPBGu69kBKsMXjz8
+- `src/app/` : routage Next.js, metadata, handlers serveur et shell applicatif.
+- `src/legacy-pages/` : écrans métier React conservés pendant la modernisation progressive.
+- `src/components/` : composants partagés et interfaces d'administration.
+- `src/contexts/` et `src/hooks/` : état applicatif et accès aux données.
+- `public/` : ressources statiques et PWA.
+- `android/` / `ios/` : sources Capacitor conservées séparément du build web Next.js.
 
-## Run Locally
+## Commandes
 
-**Prerequisites:**  Node.js
+```bash
+npm install
+npm run dev
+npm run typecheck
+npm run build
+npm start
+```
 
+Node.js 20.9+ est requis.
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## Variables d'environnement
+
+Copier `.env.example` vers `.env.local`. Les secrets serveur ne doivent jamais utiliser le préfixe `NEXT_PUBLIC_`.
+
+La compatibilité `VITE_*` restante est transitoire et doit disparaître au terme de la migration Firebase → Neon PostgreSQL.
+
+## Déploiement
+
+Le projet est prévu pour Vercel avec détection native Next.js. Les mises en production doivent être déclenchées uniquement après validation du lot complet de modifications.

@@ -1,5 +1,7 @@
+'use client';
+
 import React from 'react';
-import { useLocation } from 'react-router-dom';
+import { usePathname } from 'next/navigation';
 import Header, { Breadcrumb } from './Header';
 import Footer from './Footer';
 import { AnnouncementMarquee } from './Marquee';
@@ -10,15 +12,19 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const location = useLocation();
+  const pathname = usePathname() || '/';
 
-  // Switch to AdminLayout for admin routes
-  if (location.pathname.startsWith('/admin')) {
+  if (pathname.startsWith('/admin')) {
     return <AdminLayout>{children}</AdminLayout>;
   }
 
+  // Authentication owns the full viewport and must not inherit the public site chrome.
+  if (pathname.startsWith('/login')) {
+    return <>{children}</>;
+  }
+
   return (
-    <div className="bg-pm-dark min-h-screen flex flex-col font-montserrat">
+    <div className="min-h-screen bg-pm-dark font-montserrat flex flex-col">
       <AnnouncementMarquee />
       <Header />
       <main className="flex-grow pt-24 lg:pt-28">

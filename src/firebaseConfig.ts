@@ -1,23 +1,3 @@
-import { initializeApp } from "firebase/app";
-import { getDatabase } from "firebase/database";
-import { getMessaging } from "firebase/messaging";
-import { getFirestore } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
-
-export const firebaseConfig = {
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyBawZl4SJz7drhzIrG0dnazSglyF6vmKCg",
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "perfect-156b5.firebaseapp.com",
-    databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL || "https://perfect-156b5-default-rtdb.firebaseio.com",
-    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "perfect-156b5",
-    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "perfect-156b5.firebasestorage.app",
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "435536634816",
-    appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:435536634816:web:2f480f6d627e032da1de25",
-    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-H9WJWPEY59"
-};
-
-export const app = initializeApp(firebaseConfig);
-
-export const db = getDatabase(app);
-export const firestore = getFirestore(app);
-export const messaging = getMessaging(app);
-export const auth = getAuth(app);
+import { auth } from './compat/firebase/auth';
+export const app={name:'pmm-web'};export const db={};export const firestore={};export const messaging={};export { auth };
+export const firebaseConfig={};

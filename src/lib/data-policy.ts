@@ -1,0 +1,9 @@
+import type { AppSessionProfile } from './auth/profile';
+export const PUBLIC_COLLECTIONS = new Set(['siteConfig','navLinks','socialLinks','agencyTimeline','agencyInfo','modelDistinctions','agencyServices','agencyAchievements','agencyPartners','models','fashionDayEvents','testimonials','articles','courseData','contactInfo','siteImages','newsItems','faqData','gallery','galleryAlbums','missOneLight']);
+export const INTAKE_COLLECTIONS = new Set(['castingApplications','fashionDayApplications','contactMessages','bookingRequests','recoveryRequests','articleComments','forumReplies','adminNotifications']);
+export const STUDENT_PRIVATE_COLLECTIONS = new Set(['absences','monthlyPayments','photoshootBriefs','forumThreads','forumReplies','articleComments']);
+export const JURY_COLLECTIONS = new Set(['castingApplications','beautyContests']);
+export const REGISTRATION_COLLECTIONS = new Set(['castingApplications']);
+export const isPublicCollection=(key:string)=>PUBLIC_COLLECTIONS.has(key);
+export function canReadCollection(key:string,p:AppSessionProfile|null){if(PUBLIC_COLLECTIONS.has(key))return true;if(!p)return false;if(p.role==='admin')return true;if(p.role==='student')return STUDENT_PRIVATE_COLLECTIONS.has(key)||key==='models';if(p.role==='jury')return JURY_COLLECTIONS.has(key);if(p.role==='registration')return REGISTRATION_COLLECTIONS.has(key);if(p.role==='jury-contest')return key==='beautyContests';return false;}
+export function canWriteCollection(key:string,p:AppSessionProfile|null,op:'create'|'update'|'delete'){if(p?.role==='admin')return true;if(op==='create'&&INTAKE_COLLECTIONS.has(key))return true;if(!p)return false;if(p.role==='student')return key==='models'||(op==='create'&&['forumReplies','articleComments'].includes(key));if(p.role==='jury')return JURY_COLLECTIONS.has(key);if(p.role==='registration')return REGISTRATION_COLLECTIONS.has(key);if(p.role==='jury-contest')return key==='beautyContests';return false;}
