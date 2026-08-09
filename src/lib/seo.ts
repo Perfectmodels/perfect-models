@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
-export const SITE_URL = 'https://perfectmodels.online';
+export const SITE_URL = 'https://www.perfectmodels.online';
 export const SITE_NAME = 'Perfect Models Management';
 export const SITE_SHORT_NAME = 'PMM';
 export const SITE_LOCALE = 'fr_GA';

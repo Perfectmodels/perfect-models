@@ -7,11 +7,11 @@ Le site PMM est optimisé pour la visibilité organique, sociale, locale et mach
 ## SEO / référencement naturel
 
 - Métadonnées Next.js rendues côté serveur.
-- Canonical sur `https://perfectmodels.online`.
+- Canonical sur `https://www.perfectmodels.online`, qui correspond à l’hôte public final servi après redirection.
 - Titres et descriptions propres aux pages stratégiques.
 - Métadonnées dynamiques pour articles, mannequins et services.
 - `robots.txt` limitant l’exploration des espaces privés.
-- `sitemap.xml` alimenté par Neon avec fallback statique.
+- `sitemap.xml` alimenté par Neon avec fallback statique et déduplication des URLs.
 - RSS pour le magazine.
 - Langue `fr-GA` et signaux géographiques Libreville/Gabon.
 
