@@ -1,30 +1,4 @@
 {
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/sitemap.xml", "destination": "/api/sitemap" },
-    { "source": "/robots.txt", "destination": "/api/robots" },
-    { "source": "/rss.xml", "destination": "/api/rss" },
-    { "source": "/magazine/:slug", "destination": "/api/og-preview?slug=:slug" },
-    { "source": "/mannequins/:id", "destination": "/api/og-preview?type=mannequins&slug=:id" },
-    { "source": "/services/:slug", "destination": "/api/og-preview?type=services&slug=:slug" },
-    { "source": "/((?!api/|sitemap\\.xml|robots\\.txt|manifest\\.json|logo\\.svg|sw\\.js|.*\\.).*)", "destination": "/index.html" }
-  ],
-  "headers": [
-    {
-      "source": "/sitemap.xml",
-      "headers": [
-        { "key": "Content-Type", "value": "application/xml; charset=utf-8" },
-        { "key": "Cache-Control", "value": "public, max-age=86400" }
-      ]
-    },
-    {
-      "source": "/(.*)",
-      "headers": [
-        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "Referrer-Policy", "value": "origin-when-cross-origin" },
-        { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" }
-      ]
-    }
-  ]
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs"
 }
