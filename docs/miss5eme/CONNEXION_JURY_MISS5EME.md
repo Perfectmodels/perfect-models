@@ -1,212 +1,72 @@
-# Connexion Jury Miss 5ème - Guide
+# Connexion Jury Miss 5ème — Spécification sécurisée
 
-## 🎯 Nouvelle Fonctionnalité
+> **Statut : historique / non garanti actif.** Les anciens mécanismes basés sur un PIN partagé et une session navigateur locale ne doivent pas être réutilisés.
 
-Les jurés du concours Miss 5ème peuvent maintenant se connecter directement depuis la page de login principale du site.
+## Principe actuel
 
----
+Toute réactivation d’un espace jury doit utiliser l’authentification centrale PMM :
 
-## 📍 Accès
+1. le juré dispose d’un compte individuel Neon Auth ;
+2. `auth_profiles` associe ce compte au rôle `jury` ou `jury-contest` ;
+3. le serveur vérifie que le juré est affecté au concours concerné ;
+4. la session est établie par Neon Auth ;
+5. les routes de notation vérifient de nouveau l’identité et l’autorisation avant toute écriture.
 
-**URL** : `votre-site.com/login`
+## Connexion
 
----
+Le point d’entrée commun peut rester `/login` lorsque le module est activé. L’interface ne doit pas demander un code partagé documenté dans le dépôt.
 
-## 🔐 Processus de Connexion
+Une fois authentifié, le serveur peut rediriger le juré vers l’espace correspondant à son concours selon son profil et les routes réellement activées dans la version déployée.
 
-### Étape 1 : Accéder à la page de login
-- Aller sur `votre-site.com/login`
-- Vous verrez deux options de connexion
+## Informations de compte
 
-### Étape 2 : Sélectionner le mode Jury
-- Cliquer sur le bouton **"Jury Miss 5ème"** (bouton rose)
-- L'interface change pour afficher les options de jury
+Les informations suivantes ne doivent **jamais** apparaître dans ce document :
 
-### Étape 3 : Choisir votre numéro de juré
-- Sélectionner votre numéro : **Juré 1**, **2**, **3** ou **4**
-- Le bouton sélectionné devient rose
+- mot de passe ;
+- PIN ;
+- token de session ;
+- secret Neon ;
+- clé API ;
+- cookie de session.
 
-### Étape 4 : Entrer le code PIN
-- Entrer le code PIN : **0000**
-- Le champ est centré avec espacement pour faciliter la saisie
+Les accès sont créés et administrés depuis les mécanismes sécurisés de la plateforme.
 
-### Étape 5 : Se connecter
-- Cliquer sur **"Connexion"**
-- Vous êtes redirigé vers l'interface de notation
+## Session
 
----
+La session d’identité provient de Neon Auth. `sessionStorage` ou `localStorage` peut éventuellement servir à un état d’interface non sensible, mais ne doit jamais remplacer une session serveur ou prouver le rôle jury.
 
-## 🎨 Interface de Login
+## Autorisations
 
-### Mode Standard (par défaut)
-```
-┌─────────────────────────────────────┐
-│  [Connexion Standard] [Jury Miss 5ème] │
-│                                     │
-│  👤 Identifiant ou Nom              │
-│  🔒 Mot de passe                    │
-│                                     │
-│  [Connexion]                        │
-│                                     │
-│  Coordonnées oubliées ?             │
-└─────────────────────────────────────┘
-```
+Avant d’afficher ou enregistrer une note, vérifier :
 
-### Mode Jury Miss 5ème
-```
-┌─────────────────────────────────────┐
-│  [Connexion Standard] [Jury Miss 5ème] │
-│                                     │
-│  Sélectionnez votre numéro de juré  │
-│  [Juré 1] [Juré 2] [Juré 3] [Juré 4]│
-│                                     │
-│  🔒 Code PIN (0000)                 │
-│                                     │
-│  [Connexion]                        │
-└─────────────────────────────────────┘
+```text
+session valide
+   ↓
+profil actif
+   ↓
+rôle jury autorisé
+   ↓
+affectation au concours
+   ↓
+concours ouvert à la notation
+   ↓
+opération autorisée
 ```
 
----
+## Déconnexion
 
-## ✨ Avantages
+La déconnexion doit invalider la session d’authentification de la plateforme puis rediriger vers `/login` ou la page publique appropriée.
 
-### Pour les Jurés
-✅ **Accès simplifié** : Un seul point d'entrée pour tous les utilisateurs
-✅ **Interface claire** : Distinction visuelle entre les modes de connexion
-✅ **Pas de lien à retenir** : Utiliser la page de login habituelle
-✅ **Session persistante** : Reste connecté même après fermeture du navigateur
+## Dépannage
 
-### Pour l'Administration
-✅ **Gestion centralisée** : Tous les accès depuis une seule page
-✅ **Traçabilité** : Notifications admin lors des connexions jury
-✅ **Simplicité** : Plus besoin de partager un lien spécifique
+En cas d’accès refusé :
 
----
+1. vérifier que le compte juré est actif ;
+2. vérifier son rôle dans `auth_profiles` ;
+3. vérifier son affectation au concours ;
+4. vérifier que la période de notation est ouverte ;
+5. consulter les logs serveur si une API retourne 401 ou 403.
 
-## 🔄 Flux Complet
+## Référence métier
 
-```
-1. Juré accède à /login
-   ↓
-2. Clique sur "Jury Miss 5ème"
-   ↓
-3. Sélectionne son numéro (1-4)
-   ↓
-4. Entre le PIN 0000
-   ↓
-5. Clique sur "Connexion"
-   ↓
-6. Redirigé vers /jury/miss-5eme
-   ↓
-7. Interface de notation s'affiche
-   ↓
-8. Commence à noter les candidates
-```
-
----
-
-## 🎯 Détails Techniques
-
-### Session Storage
-Lors de la connexion jury, les informations suivantes sont stockées :
-```javascript
-sessionStorage.setItem('classroom_access', 'granted');
-sessionStorage.setItem('classroom_role', 'miss5eme_jury');
-sessionStorage.setItem('juryNumber', '1'); // 1, 2, 3 ou 4
-sessionStorage.setItem('userName', 'Juré 1');
-```
-
-### Reconnexion Automatique
-- Si un juré ferme le navigateur et revient sur `/jury/miss-5eme`
-- Le système vérifie la session
-- Reconnecte automatiquement le juré avec son numéro
-
-### Déconnexion
-- Bouton "Déconnexion" dans l'interface de notation
-- Efface la session
-- Redirige vers `/login`
-
----
-
-## 🎨 Design
-
-### Couleurs
-- **Mode Standard** : Or (#D4AF37) - Couleur principale du site
-- **Mode Jury** : Rose (#EC4899) - Couleur distinctive pour Miss 5ème
-
-### Responsive
-- ✅ Desktop : Affichage complet
-- ✅ Tablette : Adapté
-- ✅ Mobile : Optimisé pour petits écrans
-
----
-
-## 📱 Compatibilité
-
-✅ Chrome / Edge
-✅ Firefox
-✅ Safari
-✅ Mobile (iOS / Android)
-
----
-
-## 🔐 Sécurité
-
-### Validation
-- ✅ PIN vérifié (doit être 0000)
-- ✅ Numéro de juré obligatoire
-- ✅ Session sécurisée
-- ✅ Notification admin à chaque connexion
-
-### Limitations
-- Maximum 4 jurés (numéros 1-4)
-- Un seul PIN pour tous (0000)
-- Chaque juré a un numéro unique
-
----
-
-## 💡 Conseils d'Utilisation
-
-### Pour les Jurés
-1. **Choisissez toujours le même numéro** : Cela permet de suivre vos notes
-2. **Ne partagez pas votre numéro** : Chaque juré doit avoir son propre numéro
-3. **Restez connecté** : Pas besoin de se reconnecter à chaque passage
-
-### Pour l'Admin
-1. **Informez les jurés** : Expliquez qu'ils doivent aller sur /login
-2. **Attribuez les numéros** : Assignez un numéro (1-4) à chaque juré avant le concours
-3. **Surveillez les connexions** : Vous recevez une notification à chaque connexion jury
-
----
-
-## 🆘 Dépannage
-
-**Q: Le bouton "Jury Miss 5ème" n'apparaît pas**
-R: Vérifiez que vous êtes bien sur la page /login
-
-**Q: Le PIN ne fonctionne pas**
-R: Assurez-vous d'entrer exactement "0000" (quatre zéros)
-
-**Q: Je ne peux pas sélectionner de numéro de juré**
-R: Cliquez d'abord sur le bouton "Jury Miss 5ème" en haut
-
-**Q: Je suis déconnecté automatiquement**
-R: La session est maintenue. Si vous êtes déconnecté, reconnectez-vous avec le même numéro
-
----
-
-## 📞 Support
-
-Pour toute question, contactez l'administrateur du système.
-
----
-
-## 🎉 Résumé
-
-La connexion jury Miss 5ème est maintenant intégrée à la page de login principale, offrant :
-- ✅ Accès simplifié
-- ✅ Interface intuitive
-- ✅ Session persistante
-- ✅ Gestion centralisée
-
-Les jurés peuvent se connecter en 3 clics : Mode Jury → Numéro → PIN → Connexion !
+Voir [MISS_5EME.md](MISS_5EME.md) pour la spécification métier générale du module.

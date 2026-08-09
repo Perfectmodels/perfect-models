@@ -2,7 +2,7 @@
 
 Plateforme web officielle de **Perfect Models Management (PMM)** : site institutionnel, gestion de l’agence, mannequins, formations, castings, contenus éditoriaux et éditions **Perfect Fashion Day**.
 
-> Nom canonique prévu pour le dépôt GitHub : `perfect-models-management`.
+> Dépôt GitHub canonique : `Perfectmodels/perfect-models`.
 
 ## Stack actuelle
 
@@ -159,12 +159,15 @@ Voir [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — architecture actuelle
 - [`docs/FASHION_DAY.md`](docs/FASHION_DAY.md) — module Perfect Fashion Day
 - [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) — previews et production
+- [`docs/FORMATION_MODULE.md`](docs/FORMATION_MODULE.md) — module Formation
 - [`docs/technical/READY_TO_TEST.md`](docs/technical/READY_TO_TEST.md) — checklist de validation web
 - [`docs/technical/ROBUSTESSE_CONCURRENCE.md`](docs/technical/ROBUSTESSE_CONCURRENCE.md) — cohérence et concurrence avec Neon
 
+Les documents `docs/miss5eme/` sont conservés comme spécifications métier historiques. Ils ne doivent pas être considérés comme preuve qu’une route ou un concours est actuellement actif.
+
 ## Règles de sécurité
 
-- Aucun mot de passe en clair dans les collections applicatives.
+- Aucun mot de passe, PIN ou secret en clair dans la documentation ou les collections applicatives.
 - Aucun token Blob, secret Neon ou clé API dans Git.
 - Les routes d’upload sensibles vérifient le rôle côté serveur.
 - Les données privées ne doivent jamais être rendues publiques par une route de contenu.

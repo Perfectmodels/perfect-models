@@ -1,275 +1,84 @@
-# Modale de Notation Admin - Miss 5ème
+# Saisie / correction de notation Admin — Miss 5ème
 
-## 🎯 Vue d'Ensemble
+> **Statut : spécification historique.** Toute interface admin de notation doit respecter les contrôles serveur et l’audit décrits ici.
 
-L'administrateur peut maintenant noter les candidates directement depuis l'interface admin via une modale de notation complète.
+## Objectif
 
----
+Permettre à un administrateur autorisé de saisir une note manquante ou de corriger exceptionnellement une notation, sans contourner la traçabilité du concours.
 
-## 📍 Accès
+## Informations à sélectionner
 
-**Admin** : `/admin/miss-5eme` → Onglet "Candidates" → Bouton "✏️ Noter" sur chaque candidate
+L’interface doit identifier explicitement :
 
----
+- concours ;
+- candidate ;
+- juré concerné ;
+- passage ;
+- critères ;
+- valeur de chaque critère.
 
-## 🎨 Interface de la Modale
+Les critères et leurs maxima proviennent de la configuration active du concours.
 
-### En-tête
-```
-┌─────────────────────────────────────────────────┐
-│ Noter: Marie Dupont                          ✕  │
-│ Candidate #5                                    │
-└─────────────────────────────────────────────────┘
-```
+## Saisie
 
-### Sélection du Juré
-```
-┌─────────────────────────────────────────────────┐
-│ Sélectionner le juré                            │
-│ [Juré 1] [Juré 2] [Juré 3] [Juré 4]           │
-└─────────────────────────────────────────────────┘
-```
+L’interface peut utiliser une modale ou une page dédiée. Avant l’enregistrement :
 
-### Sélection du Passage
-```
-┌─────────────────────────────────────────────────┐
-│ Sélectionner le passage                         │
-│ [Passage 1] [Passage 2] [Passage 3]           │
-└─────────────────────────────────────────────────┘
-```
+1. vérifier que le concours existe ;
+2. vérifier que la candidate appartient au concours ;
+3. vérifier que le juré est affecté au concours ;
+4. vérifier que le passage et les critères sont actifs ;
+5. valider chaque valeur contre le barème ;
+6. détecter une notation déjà existante.
 
-### Notation des Critères
-```
-┌─────────────────────────────────────────────────┐
-│ 😊 Sourire                              3 / 4   │
-│ [0] [1] [2] [3] [4]                            │
-│                                                  │
-│ 🤸 Gestuelle                            4 / 4   │
-│ [0] [1] [2] [3] [4]                            │
-│                                                  │
-│ ⭐ Performance Technique                4 / 4   │
-│ [0] [1] [2] [3] [4]                            │
-│                                                  │
-│ 👗 Prestance et Élégance                4 / 4   │
-│ [0] [1] [2] [3] [4]                            │
-└─────────────────────────────────────────────────┘
+## Correction d’une note existante
+
+Une correction ne doit pas écraser silencieusement l’historique. Conserver au minimum :
+
+```text
+score_audit
+- score_id
+- changed_by
+- old_value
+- new_value
+- reason
+- changed_at
 ```
 
-### Total et Actions
-```
-┌─────────────────────────────────────────────────┐
-│ Total                                   15 / 20 │
-│                                                  │
-│ [Annuler]          [Enregistrer la note]       │
-└─────────────────────────────────────────────────┘
-```
+Un motif peut être rendu obligatoire pour toute modification après validation initiale.
 
----
+## Permissions
 
-## 🔧 Fonctionnalités
+Seuls les comptes disposant du rôle ou de la permission administrative adaptée peuvent accéder à cette action. Le contrôle doit être effectué côté serveur, pas uniquement par le rendu du bouton.
 
-### Sélection du Juré
-- Choisir parmi les 4 jurés (1, 2, 3, 4)
-- Bouton actif en rose
-- Obligatoire avant de noter
+## Anti-doublon
 
-### Sélection du Passage
-- Choisir parmi les 3 passages (1, 2, 3)
-- Bouton actif en rose
-- Obligatoire avant de noter
+L’écriture doit respecter la règle d’unicité définie par le concours. Si une note existe déjà, l’API choisit explicitement entre :
 
-### Notation des Critères
-- 4 critères à noter (0-4 points chacun)
-- Boutons de 0 à 4 pour chaque critère
-- Affichage en temps réel du score par critère
-- Icônes pour identification rapide
+- refuser la création ;
+- ouvrir le workflow de correction ;
+- mettre à jour dans une transaction avec audit.
 
-### Calcul Automatique
-- Total calculé en temps réel
-- Affichage en grand (3xl)
-- Validation : max 20 points
-- Couleur rouge si dépassement
+## Messages d’interface
 
-### Validation
-- ✅ Bouton "Enregistrer" actif si total ≤ 20
-- ❌ Bouton désactivé si total > 20
-- Message d'erreur si dépassement
-- Toast de confirmation après enregistrement
+Prévoir des états distincts :
 
----
+- enregistrement en cours ;
+- succès confirmé par le serveur ;
+- valeur hors barème ;
+- note déjà existante ;
+- concours fermé ;
+- accès refusé ;
+- erreur serveur.
 
-## 📊 Cas d'Usage
+L’interface ne doit jamais afficher un succès avant confirmation de l’API.
 
-### 1. Noter une Candidate
-**Scénario** : L'admin veut ajouter une note pour un juré
+## Sécurité
 
-**Étapes** :
-1. Aller sur l'onglet "Candidates"
-2. Cliquer sur "✏️ Noter" sur la candidate
-3. Sélectionner le juré (ex: Juré 2)
-4. Sélectionner le passage (ex: Passage 1)
-5. Noter chaque critère (0-4)
-6. Vérifier le total (≤ 20)
-7. Cliquer sur "Enregistrer la note"
+- session Neon Auth valide ;
+- rôle admin vérifié ;
+- aucune connexion PostgreSQL depuis le navigateur ;
+- aucune donnée d’accès dans les logs UI ;
+- audit obligatoire des corrections sensibles ;
+- réinitialisation globale séparée de la saisie normale et protégée par confirmation forte.
 
-### 2. Corriger une Note Manquante
-**Scénario** : Un juré a oublié de noter une candidate
-
-**Étapes** :
-1. Identifier la candidate et le passage manquant
-2. Ouvrir la modale de notation
-3. Sélectionner le juré concerné
-4. Sélectionner le passage
-5. Entrer les notes
-6. Enregistrer
-
-### 3. Ajouter des Notes en Masse
-**Scénario** : Saisir toutes les notes d'un juré
-
-**Étapes** :
-1. Pour chaque candidate :
-   - Ouvrir la modale
-   - Sélectionner le même juré
-   - Sélectionner le passage
-   - Noter et enregistrer
-2. Répéter pour tous les passages
-
----
-
-## 🎨 Design
-
-### Couleurs
-- **Rose (#EC4899)** : Boutons actifs, total
-- **Gris** : Boutons inactifs
-- **Rouge** : Erreur (total > 20)
-- **Blanc** : Fond de la modale
-
-### Tailles
-- Modale : max-w-2xl (768px)
-- Hauteur max : 90vh (scroll si nécessaire)
-- Boutons critères : flex-1 (largeur égale)
-- Total : text-3xl (grande taille)
-
-### Animations
-- Backdrop blur : bg-black/80 backdrop-blur-sm
-- Transitions : transition-colors
-- Hover : hover:bg-gray-200, hover:bg-pink-700
-
----
-
-## 🔐 Sécurité
-
-### Validation
-✅ Total ne peut pas dépasser 20
-✅ Juré obligatoire
-✅ Passage obligatoire
-✅ Tous les critères initialisés à 0
-
-### Gestion des Jurés
-- Vérifie si le juré existe dans Firebase
-- Crée le juré automatiquement si nécessaire
-- Utilise le même système que la connexion jury
-
-### Sauvegarde
-- Enregistrement dans `miss5emeScores`
-- Horodatage automatique
-- Notification de succès
-
----
-
-## 💡 Avantages
-
-### Pour l'Admin
-✅ **Correction facile** : Ajouter/corriger des notes rapidement
-✅ **Interface unifiée** : Même interface que les jurés
-✅ **Contrôle total** : Noter pour n'importe quel juré
-✅ **Validation** : Impossible de dépasser 20 points
-
-### Pour le Concours
-✅ **Flexibilité** : Gérer les absences de jurés
-✅ **Correction** : Rectifier les erreurs
-✅ **Backup** : Saisir les notes papier si nécessaire
-✅ **Transparence** : Toutes les notes tracées
-
----
-
-## 🔄 Workflow Typique
-
-### Scénario 1 : Juré Absent
-```
-1. Juré 3 absent au Passage 2
-   ↓
-2. Admin ouvre la modale
-   ↓
-3. Sélectionne Juré 3, Passage 2
-   ↓
-4. Entre les notes du juré (notes papier)
-   ↓
-5. Enregistre
-   ↓
-6. Notes complètes pour toutes les candidates
-```
-
-### Scénario 2 : Correction d'Erreur
-```
-1. Juré 2 a fait une erreur au Passage 1
-   ↓
-2. Admin identifie l'erreur dans les fiches
-   ↓
-3. Ouvre la modale pour la candidate
-   ↓
-4. Sélectionne Juré 2, Passage 1
-   ↓
-5. Entre les notes correctes
-   ↓
-6. Enregistre (écrase l'ancienne note)
-```
-
-### Scénario 3 : Saisie Manuelle
-```
-1. Concours avec notes papier
-   ↓
-2. Admin saisit toutes les notes après
-   ↓
-3. Pour chaque candidate :
-   - Ouvre la modale
-   - Saisit les 4 jurés × 3 passages
-   ↓
-4. Système calcule automatiquement
-   ↓
-5. Résultats disponibles immédiatement
-```
-
----
-
-## 📱 Responsive
-
-### Desktop
-- Modale centrée
-- Largeur max : 768px
-- Tous les éléments visibles
-
-### Tablette
-- Modale adaptée
-- Scroll si nécessaire
-- Boutons tactiles
-
-### Mobile
-- Modale plein écran
-- Scroll vertical
-- Boutons optimisés
-
----
-
-## 🎯 Résumé
-
-La modale de notation admin permet :
-- ✅ Noter pour n'importe quel juré
-- ✅ Corriger les erreurs
-- ✅ Gérer les absences
-- ✅ Saisir les notes papier
-- ✅ Interface identique aux jurés
-- ✅ Validation automatique
-- ✅ Sauvegarde instantanée
-
-C'est l'outil parfait pour la gestion complète du concours Miss 5ème !
+Voir [MISS_5EME.md](MISS_5EME.md) pour le modèle général.

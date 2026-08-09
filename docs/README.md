@@ -9,14 +9,25 @@ Cet index décrit la documentation **actuelle** de la plateforme PMM. Les ancien
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Architecture Next.js, Neon, auth, données et médias |
 | [FASHION_DAY.md](FASHION_DAY.md) | Gestion des éditions Perfect Fashion Day |
 | [DEPLOYMENT.md](DEPLOYMENT.md) | Workflow branches, Preview Vercel et production |
-| [FORMATION_MODULE.md](FORMATION_MODULE.md) | Fonctionnement du module formation |
+| [FORMATION_MODULE.md](FORMATION_MODULE.md) | Fonctionnement du module Formation |
 | [technical/READY_TO_TEST.md](technical/READY_TO_TEST.md) | Checklist de validation avant mise en production |
 | [technical/ROBUSTESSE_CONCURRENCE.md](technical/ROBUSTESSE_CONCURRENCE.md) | Principes de cohérence et d’écriture concurrente |
 | [technical/ICONS_GENERATED.md](technical/ICONS_GENERATED.md) | Assets et icônes web/PWA |
 
-## Documentation métier Miss / Jury
+## Documentation métier historique Miss / Jury
 
-Les fichiers `docs/miss5eme/` documentent les parcours métier liés aux concours et aux jurys. Ils restent disponibles comme documentation fonctionnelle, mais toute référence historique à Firebase doit être interprétée selon l’architecture actuelle : les accès aux données passent désormais par les API applicatives et Neon.
+Les fichiers `docs/miss5eme/` sont conservés comme **spécifications métier historiques**. Ils décrivent les concepts de candidates, jurés, passages, critères, fiches individuelles et classement, mais ne garantissent pas qu’une route équivalente soit actuellement activée dans le site.
+
+Ils ont été nettoyés pour respecter l’architecture et les règles de sécurité actuelles :
+
+- aucun PIN ou mot de passe en clair ;
+- aucune instruction de connexion basée sur `sessionStorage` ;
+- aucune dépendance active à Firebase présentée comme architecture actuelle ;
+- authentification attendue via Neon Auth et profils applicatifs ;
+- écritures sensibles attendues via API serveur ;
+- règles de notation configurables plutôt que valeurs historiques contradictoires.
+
+Documents :
 
 - [CONNEXION_JURY_MISS5EME.md](miss5eme/CONNEXION_JURY_MISS5EME.md)
 - [FICHES_INDIVIDUELLES_MISS5EME.md](miss5eme/FICHES_INDIVIDUELLES_MISS5EME.md)
@@ -30,10 +41,11 @@ Les fichiers `docs/miss5eme/` documentent les parcours métier liés aux concour
 ## Principes de maintenance
 
 1. La documentation de référence doit décrire uniquement l’architecture réellement présente dans le dépôt.
-2. Les secrets, mots de passe, tokens et chaînes de connexion ne sont jamais écrits dans les fichiers Markdown.
+2. Les secrets, mots de passe, PIN, tokens et chaînes de connexion ne sont jamais écrits dans les fichiers Markdown.
 3. Une fonctionnalité modifiée doit entraîner la mise à jour du document métier associé.
 4. Les instructions de déploiement doivent respecter le workflow Preview → validation → production.
 5. Les anciens noms techniques conservés uniquement pour compatibilité ne doivent pas être présentés comme des dépendances actives.
+6. Un document historique doit être explicitement identifié comme tel s’il ne correspond plus à une route active.
 
 ## État actuel
 
@@ -42,5 +54,5 @@ Les fichiers `docs/miss5eme/` documentent les parcours métier liés aux concour
 - Auth : Neon Auth
 - Médias : Vercel Blob
 - Hébergement : Vercel
-- Dépôt cible : `perfect-models-management`
+- Dépôt : `Perfectmodels/perfect-models`
 - Branche de preview de migration : `preview/neon-next-migration`
