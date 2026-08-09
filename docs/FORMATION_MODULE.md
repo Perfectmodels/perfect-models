@@ -1,323 +1,154 @@
-# Module de Formation Avancée - Perfect Models Management
+# Module Formation — Perfect Models Management
 
-## 📚 Vue d'ensemble
+## Objectif
 
-Le module de formation avancée est un système complet d'apprentissage interactif conçu pour former les mannequins professionnels. Il comprend :
+Le module Formation accompagne les mannequins PMM dans leur progression professionnelle : fondamentaux du mannequinat, défilé, photographie, présence digitale et gestion de carrière.
 
-- **4 modules de formation** couvrant tous les aspects du mannequinat
-- **Chapitres détaillés** avec contenu pédagogique riche
-- **Quiz interactifs** pour valider les connaissances
-- **Système de progression** avec sauvegarde locale
-- **Certificats de complétion** téléchargeables
+La plateforme actuelle utilise **Next.js App Router**, le store applicatif PMM et les API connectées à **Neon PostgreSQL**. Les anciennes références à `src/pages`, au router React historique et à une progression exclusivement enregistrée dans `localStorage` ne décrivent plus l’architecture de référence.
 
-## 🏗️ Architecture
+## Routes actuelles
 
-### Structure des fichiers
+Les principaux parcours sont disponibles sous :
 
-```
-src/
-├── types/
-│   └── training.ts              # Types TypeScript pour la formation
-├── data/
-│   └── trainingModules.ts       # Données des modules (contenu)
-├── pages/
-│   ├── AdvancedTraining.tsx     # Page principale (liste des modules)
-│   └── TrainingModuleView.tsx   # Vue détaillée d'un module
-└── components/
-    └── TrainingCertificate.tsx  # Composant certificat
+```text
+/formation
+/formation/module/[moduleId]
+/formations
+/formations/forum
+/formations/forum/[threadId]
+/formations/[moduleSlug]/[chapterSlug]
+/profil
 ```
 
-### Types principaux
+L’accès dépend du rôle de l’utilisateur et de ses permissions applicatives.
 
-```typescript
-interface TrainingModule {
-  num: number;
-  title: string;
-  subtitle: string;
-  objectifs: string[];
-  chapters: TrainingChapter[];
-}
+## Permissions
 
-interface TrainingChapter {
+Un profil mannequin peut notamment disposer de :
+
+- `canAccessFormation`
+- `canAccessClassroom`
+- `canAccessForum`
+- `canViewPhotoshootBriefs`
+- `canViewResults`
+- `canEditProfile`
+
+Les vérifications de sécurité doivent être appliquées côté serveur/API pour toute donnée privée ou toute écriture sensible.
+
+## Contenu pédagogique
+
+Le contenu pédagogique est structuré en modules, chapitres et quiz. Une partie du contenu peut encore être chargée depuis les constantes TypeScript du projet pendant la migration progressive vers une gestion entièrement administrable.
+
+Structure conceptuelle :
+
+```ts
+interface Module {
+  slug: string;
   title: string;
-  content: string[];
-  keyPoints: string[];
+  chapters: Chapter[];
   quiz: QuizQuestion[];
 }
 
-interface UserProgress {
-  moduleId: number;
-  chapterIndex: number;
-  completedChapters: number[];
-  quizScores: { [chapterIndex: number]: QuizScore };
-  startedAt: string;
-  lastAccessedAt: string;
-  certificateEarned?: boolean;
+interface Chapter {
+  slug: string;
+  title: string;
+  content: string;
 }
 ```
 
-## 🎯 Fonctionnalités
+Des structures historiques plus détaillées existent également pour certains parcours avancés. Elles doivent être maintenues compatibles tant que les écrans correspondants sont encore utilisés.
 
-### 1. Système de progression
+## Parcours pédagogique
 
-- **Sauvegarde automatique** dans localStorage
-- **Déblocage progressif** des modules (un module doit être complété pour débloquer le suivant)
-- **Suivi détaillé** : chapitres complétés, scores de quiz, tentatives
-- **Reprise automatique** au dernier chapitre non complété
+Le module couvre notamment :
 
-### 2. Quiz interactifs
+### 1. Fondamentaux du mannequinat
 
-- **Questions à choix multiples** avec explications détaillées
-- **Score minimum requis** : 70% pour valider un chapitre
-- **Tentatives illimitées** avec historique des scores
-- **Feedback immédiat** après soumission
+- métier de mannequin ;
+- posture et discipline ;
+- préparation physique et mentale ;
+- compréhension de l’écosystème mode.
 
-### 3. Certificats
+### 2. Défilé et présence scénique
 
-- **Génération automatique** après complétion d'un module
-- **Design professionnel** avec bordures décoratives
-- **Téléchargement PDF** (à implémenter)
-- **Partage sur réseaux sociaux**
+- marche podium ;
+- poses ;
+- gestion du rythme ;
+- backstage ;
+- présence scénique.
 
-### 4. Statistiques
+### 3. Photographie et image professionnelle
 
-- Modules complétés / Total
-- Chapitres terminés / Total
-- Score moyen des quiz
-- Certificats obtenus
+- techniques de pose ;
+- préparation shooting ;
+- portfolio ;
+- personal branding ;
+- présence digitale.
 
-## 📖 Modules de formation
+### 4. Gestion de carrière
 
-### Module 1 : Fondamentaux du Mannequinat Professionnel
-- Le métier de mannequin au Gabon
-- Standards physiques et critères de sélection
-- Préparation physique et mentale
-- Écosystème de la mode gabonaise
+- rémunération ;
+- négociation ;
+- contrats ;
+- droits et obligations ;
+- développement professionnel.
 
-### Module 2 : Techniques de Défilé et Présence Scénique
-- Marche sur podium professionnelle
-- Poses et expressions
-- Backstage et organisation
-- Présence scénique et charisme
+## Progression et résultats
 
-### Module 3 : Photographie de Mode et Présence Digitale
-- Techniques de pose photo
-- Shooting professionnel
-- Personal branding
-- Instagram et réseaux sociaux
+La progression affichée à l’utilisateur doit provenir de la couche de données applicative et être synchronisée avec les données persistées lorsque le parcours concerné l’exige.
 
-### Module 4 : Gestion de Carrière et Business
-- Rémunération et tarification
-- Négociation de contrats
-- Cadre légal au Gabon
-- Développement professionnel
+Les nouveaux développements ne doivent pas créer une deuxième source de vérité durable uniquement dans `localStorage`.
 
-## 🚀 Utilisation
+Les scores de quiz et états de progression doivent être rattachés au profil du mannequin par un identifiant stable.
 
-### Intégration dans l'application
+## Forum
 
-1. **Ajouter les routes** dans votre router :
+Le forum Formation utilise les collections applicatives pour :
 
-```typescript
-import AdvancedTraining from './pages/AdvancedTraining';
-import TrainingModuleView from './pages/TrainingModuleView';
+- fils de discussion ;
+- réponses ;
+- auteur ;
+- date de création ;
+- contenu.
 
-// Dans vos routes
-<Route path="/formation" element={<AdvancedTraining />} />
-<Route path="/formation/module/:moduleId" element={<TrainingModuleView />} />
-```
+Les routes `/formations/forum` et `/formations/forum/[threadId]` doivent respecter les permissions `canAccessForum`.
 
-2. **Ajouter un lien** dans votre navigation :
+## Administration
 
-```typescript
-<Link to="/formation">Formation Avancée</Link>
-```
+L’administration permet progressivement de suivre :
 
-### Gestion de la progression
+- accès à la formation ;
+- progression des mannequins ;
+- résultats ;
+- contenu pédagogique ;
+- Classroom ;
+- briefings et ressources associés.
 
-La progression est automatiquement sauvegardée dans `localStorage` sous la clé `trainingProgress`.
+Toute nouvelle fonctionnalité d’administration doit utiliser les API applicatives plutôt qu’un accès direct à la base depuis le navigateur.
 
-Structure de données :
-```json
-[
-  {
-    "moduleId": 1,
-    "chapterIndex": 2,
-    "completedChapters": [0, 1],
-    "quizScores": {
-      "0": {
-        "score": 3,
-        "total": 3,
-        "attempts": 1,
-        "lastAttempt": "2024-01-15T10:30:00Z",
-        "passed": true
-      }
-    },
-    "startedAt": "2024-01-15T09:00:00Z",
-    "lastAccessedAt": "2024-01-15T10:35:00Z"
-  }
-]
-```
+## Données et sécurité
 
-## 🎨 Personnalisation
+- Authentification : Neon Auth.
+- Profil métier et permissions : `auth_profiles`.
+- Données applicatives : API Next.js et Neon PostgreSQL.
+- Aucun mot de passe ou secret ne doit être stocké dans les données de formation.
+- Une modification de progression appartenant à un mannequin doit vérifier l’identité et/ou l’autorisation côté serveur.
 
-### Ajouter un nouveau module
+## Validation
 
-1. Éditer `src/data/trainingModules.ts`
-2. Ajouter un objet `TrainingModule` dans le tableau `TRAINING_MODULES`
+Avant mise en production, tester :
 
-```typescript
-{
-  num: 5,
-  title: "Nouveau Module",
-  subtitle: "Description courte",
-  objectifs: [
-    "Objectif 1",
-    "Objectif 2"
-  ],
-  chapters: [
-    {
-      title: "Chapitre 1",
-      content: [
-        "Paragraphe 1",
-        "Paragraphe 2"
-      ],
-      keyPoints: [
-        "Point clé 1",
-        "Point clé 2"
-      ],
-      quiz: [
-        {
-          question: "Question ?",
-          options: ["Option 1", "Option 2", "Option 3", "Option 4"],
-          correct: 1, // Index de la bonne réponse (0-based)
-          explanation: "Explication de la réponse"
-        }
-      ]
-    }
-  ]
-}
-```
+1. connexion mannequin ;
+2. accès `/formation` ;
+3. ouverture d’un module ;
+4. navigation entre chapitres ;
+5. quiz ;
+6. persistance de progression ;
+7. forum ;
+8. permissions désactivées ;
+9. vue admin de progression ;
+10. rendu mobile et desktop.
 
-### Modifier les couleurs
+## Maintenance
 
-Les couleurs principales sont définies dans Tailwind :
-- `pm-gold` : Couleur or principale
-- `pm-dark` : Fond sombre
-- Modifier dans `tailwind.config.js`
-
-### Ajuster le score minimum
-
-Dans `TrainingModuleView.tsx`, ligne ~150 :
-```typescript
-const passed = (correct / total) >= 0.7; // 70% pour réussir
-```
-
-## 📊 Métriques et analytics
-
-### Événements à tracker
-
-- `module_started` : Début d'un module
-- `chapter_completed` : Chapitre terminé
-- `quiz_submitted` : Quiz soumis
-- `quiz_passed` : Quiz réussi
-- `module_completed` : Module complété
-- `certificate_downloaded` : Certificat téléchargé
-
-### Exemple d'intégration
-
-```typescript
-// Dans TrainingModuleView.tsx
-const handleSubmitQuiz = () => {
-  // ... logique existante
-  
-  // Analytics
-  if (typeof gtag !== 'undefined') {
-    gtag('event', 'quiz_submitted', {
-      module_id: module.num,
-      chapter_index: currentChapterIndex,
-      score: correct,
-      total: total
-    });
-  }
-};
-```
-
-## 🔒 Sécurité et données
-
-### Stockage local
-
-- Les données sont stockées dans `localStorage`
-- Aucune donnée sensible n'est stockée
-- Les données peuvent être exportées/importées
-
-### Synchronisation cloud (à implémenter)
-
-Pour synchroniser la progression entre appareils :
-
-1. Créer une collection Firebase `userProgress`
-2. Sauvegarder lors de chaque mise à jour
-3. Charger au démarrage de l'application
-
-```typescript
-// Exemple de sauvegarde Firebase
-import { doc, setDoc } from 'firebase/firestore';
-
-const saveProgressToCloud = async (userId: string, progress: UserProgress[]) => {
-  await setDoc(doc(db, 'userProgress', userId), {
-    progress,
-    lastUpdated: new Date().toISOString()
-  });
-};
-```
-
-## 🐛 Dépannage
-
-### La progression ne se sauvegarde pas
-
-1. Vérifier que `localStorage` est disponible
-2. Vérifier la console pour les erreurs
-3. Vider le cache du navigateur
-
-### Les modules ne se débloquent pas
-
-1. Vérifier que tous les chapitres du module précédent sont complétés
-2. Vérifier que les quiz ont été réussis (score ≥ 70%)
-3. Rafraîchir la page
-
-### Les quiz ne s'affichent pas
-
-1. Vérifier que les données dans `trainingModules.ts` sont correctes
-2. Vérifier que chaque chapitre a un tableau `quiz`
-3. Vérifier la console pour les erreurs
-
-## 🚀 Améliorations futures
-
-### Court terme
-- [ ] Export/import de la progression
-- [ ] Mode hors ligne avec Service Worker
-- [ ] Notifications de rappel
-- [ ] Badges et récompenses
-
-### Moyen terme
-- [ ] Génération PDF des certificats
-- [ ] Vidéos intégrées dans les chapitres
-- [ ] Forum de discussion par module
-- [ ] Exercices pratiques interactifs
-
-### Long terme
-- [ ] Système de mentorat
-- [ ] Classes virtuelles en direct
-- [ ] Évaluations par des professionnels
-- [ ] Marketplace de formations additionnelles
-
-## 📞 Support
-
-Pour toute question ou problème :
-- Email : formation@perfectmodels.ga
-- Documentation : [docs.perfectmodels.ga](https://docs.perfectmodels.ga)
-- GitHub Issues : [github.com/perfectmodels/issues](https://github.com/perfectmodels/issues)
-
----
-
-**Perfect Models Management** - Formation Professionnelle d'Excellence
+Les anciens composants présents dans `src/legacy-pages/` peuvent encore être utilisés pendant la modernisation. Lorsqu’un écran Formation est migré vers `src/features/` ou un composant App Router natif, sa documentation doit être mise à jour dans ce fichier.
