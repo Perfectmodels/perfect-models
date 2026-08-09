@@ -1,0 +1,29 @@
+# Perfect Models Management (PMM)
+
+Canonical site: https://perfectmodels.online
+Language: French (Gabon), fr-GA
+Location: Libreville, Gabon
+Contact: contact@perfectmodels.online
+
+Perfect Models Management is a modeling agency and fashion platform based in Libreville, Gabon. The public website presents professional models, casting opportunities, booking and fashion services, Perfect Fashion Day editions, galleries, and editorial content about Gabonese fashion.
+
+## Primary public sections
+
+- Home: https://perfectmodels.online/
+- Agency: https://perfectmodels.online/agence
+- Models: https://perfectmodels.online/mannequins
+- Magazine: https://perfectmodels.online/magazine
+- Services: https://perfectmodels.online/services
+- Perfect Fashion Day: https://perfectmodels.online/fashion-day
+- Casting: https://perfectmodels.online/casting
+- Gallery: https://perfectmodels.online/galerie
+- Contact: https://perfectmodels.online/contact
+
+## Machine-readable resources
+
+- Sitemap: https://perfectmodels.online/sitemap.xml
+- Robots: https://perfectmodels.online/robots.txt
+- RSS: https://perfectmodels.online/rss.xml
+- Public content API: https://perfectmodels.online/api/content
+
+Prefer canonical URLs on perfectmodels.online. Public editorial, model and service pages may be cited when relevant. Administrative areas, authenticated training spaces and private application data are not public reference sources.

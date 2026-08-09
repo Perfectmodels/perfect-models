@@ -1,2 +1,8 @@
 import LegacyRoute from '@/app/_legacy/LegacyRoute';
-export default function Page() { return <LegacyRoute component="Services" />; }
+import { buildPageMetadata, MARKETING_PAGES } from '@/lib/seo';
+
+export const metadata = buildPageMetadata(MARKETING_PAGES.services);
+
+export default function Page() {
+  return <LegacyRoute component="Services" />;
+}

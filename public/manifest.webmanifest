@@ -1,47 +1,23 @@
 {
+  "name": "Perfect Models Management",
+  "short_name": "PMM",
+  "description": "Agence de mannequins à Libreville, Gabon : talents, booking, casting, formation, mode et événements.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "lang": "fr-GA",
+  "dir": "ltr",
   "background_color": "#080808",
+  "theme_color": "#0A0A0A",
+  "categories": ["fashion", "business", "lifestyle"],
   "icons": [
-    {
-      "src": "../icons/icon-48.webp",
-      "type": "image/png",
-      "sizes": "48x48",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "../icons/icon-72.webp",
-      "type": "image/png",
-      "sizes": "72x72",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "../icons/icon-96.webp",
-      "type": "image/png",
-      "sizes": "96x96",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "../icons/icon-128.webp",
-      "type": "image/png",
-      "sizes": "128x128",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "../icons/icon-192.webp",
-      "type": "image/png",
-      "sizes": "192x192",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "../icons/icon-256.webp",
-      "type": "image/png",
-      "sizes": "256x256",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "../icons/icon-512.webp",
-      "type": "image/png",
-      "sizes": "512x512",
-      "purpose": "any maskable"
-    }
+    { "src": "/icons/icon-48.webp", "type": "image/webp", "sizes": "48x48", "purpose": "any" },
+    { "src": "/icons/icon-72.webp", "type": "image/webp", "sizes": "72x72", "purpose": "any" },
+    { "src": "/icons/icon-96.webp", "type": "image/webp", "sizes": "96x96", "purpose": "any" },
+    { "src": "/icons/icon-128.webp", "type": "image/webp", "sizes": "128x128", "purpose": "any" },
+    { "src": "/icons/icon-192.webp", "type": "image/webp", "sizes": "192x192", "purpose": "any maskable" },
+    { "src": "/icons/icon-256.webp", "type": "image/webp", "sizes": "256x256", "purpose": "any" },
+    { "src": "/icons/icon-512.webp", "type": "image/webp", "sizes": "512x512", "purpose": "any maskable" }
   ]
 }
