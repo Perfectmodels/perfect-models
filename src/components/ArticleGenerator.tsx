@@ -112,6 +112,9 @@ const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({ isOpen, onClose, on
             });
 
             const jsonResult = response.text;
+            if (!jsonResult) {
+                throw new Error("La génération IA n'a retourné aucun contenu exploitable.");
+            }
             const parsedArticle: Partial<Article> = JSON.parse(jsonResult);
             onArticleGenerated(parsedArticle);
 
