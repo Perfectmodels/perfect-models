@@ -96,7 +96,7 @@ export async function GET(request: NextRequest) {
   };
 
   let content = allContent;
-  if (type && Object.hasOwn(allContent, type)) content = { [type]: allContent[type] };
+  if (type && Object.prototype.hasOwnProperty.call(allContent, type)) content = { [type]: allContent[type] };
 
   if (query) {
     content = Object.fromEntries(
@@ -112,11 +112,6 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json(
     { meta: { site: BASE_URL, generatedAt: new Date().toISOString(), total }, content },
-    {
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Cache-Control': 'public, max-age=300, s-maxage=600',
-      },
-    },
+    { headers: { 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'public, max-age=300, s-maxage=600' } },
   );
 }
