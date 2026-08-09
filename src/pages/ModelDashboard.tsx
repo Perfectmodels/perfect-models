@@ -1,443 +1,374 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { useData } from '../contexts/DataContext';
-import { useAuth } from '../contexts/AuthContext';
-import SEO from '../components/SEO';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  BookOpenIcon, UserIcon, ArrowRightOnRectangleIcon, EnvelopeIcon,
-  CheckCircleIcon, CalendarDaysIcon, MapPinIcon, ChartBarIcon,
-  SparklesIcon, ClockIcon, TrophyIcon, CameraIcon,
-  ChevronDownIcon, ChevronUpIcon, ExclamationCircleIcon, LockClosedIcon,
+  AcademicCapIcon,
+  ArrowRightIcon,
+  ArrowRightOnRectangleIcon,
+  BookOpenIcon,
+  CalendarDaysIcon,
+  CameraIcon,
+  ChartBarIcon,
+  CheckCircleIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+  ClockIcon,
+  EnvelopeIcon,
+  ExclamationCircleIcon,
+  IdentificationIcon,
+  LockClosedIcon,
+  MapPinIcon,
+  PencilSquareIcon,
+  SparklesIcon,
+  TrophyIcon,
+  UserCircleIcon,
+  UserIcon,
 } from '@heroicons/react/24/outline';
-import { Model, PhotoshootBrief } from '../types';
-import ModelForm from '../components/ModelForm';
+import SEO from '../components/SEO';
 import ChangePasswordModal from '../components/ChangePasswordModal';
+import ModelForm from '../components/ModelForm';
+import { useAuth } from '../contexts/AuthContext';
+import { useData } from '../contexts/DataContext';
+import { useFirebaseCollection } from '../hooks/useFirebaseCollection';
+import { Model, PhotoshootBrief } from '../types';
 
-type TabId = 'profile' | 'results' | 'briefs';
+type TabId = 'overview' | 'profile' | 'training' | 'briefs';
+
+type ProfileCheck = {
+  label: string;
+  ok: boolean;
+  description: string;
+};
 
 const ModelDashboard: React.FC = () => {
-  const { data, saveData } = useData();
-  const { user: authUser } = useAuth();
+  const { data, saveData, updateDocument } = useData();
+  const { user: authUser, logout } = useAuth();
   const navigate = useNavigate();
-  const userId = authUser?.userId ?? null;
   const perms = authUser?.permissions;
-
-  // Onglets filtrés selon les permissions
-  const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
-    { id: 'profile',  label: 'Mon Profil',    icon: UserIcon },
-    ...(perms?.canViewResults !== false  ? [{ id: 'results' as TabId,  label: 'Mes Résultats', icon: ChartBarIcon }] : []),
-    ...(perms?.canViewPhotoshootBriefs !== false ? [{ id: 'briefs' as TabId, label: 'Briefings', icon: EnvelopeIcon }] : []),
-  ];
+  const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [editableModel, setEditableModel] = useState<Model | null>(null);
-  const [activeTab, setActiveTab] = useState<TabId>('profile');
   const [expandedBriefId, setExpandedBriefId] = useState<string | null>(null);
   const [showChangePassword, setShowChangePassword] = useState(false);
+  const [saveMessage, setSaveMessage] = useState('');
 
-  const originalModel = data?.models.find(m => m.id === userId);
-  const courseModules = data?.courseData?.filter(m => m.quiz && m.quiz.length > 0) || [];
-  const myBriefs = (data?.photoshootBriefs ?? [])
-    .filter(b => b.modelId === userId)
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  const newBriefsCount = myBriefs.filter(b => b.status === 'Nouveau').length;
+  const briefsCollection = useFirebaseCollection<PhotoshootBrief>('photoshootBriefs', { pageSize: 1000, orderBy: 'createdAt' });
+
+  const originalModel = useMemo(() => {
+    const models = data?.models ?? [];
+    if (!authUser) return undefined;
+    return models.find(model =>
+      model.id === authUser.userId ||
+      model.firebaseUid === authUser.uid ||
+      (Boolean(authUser.email) && model.email?.toLowerCase() === authUser.email?.toLowerCase())
+    );
+  }, [data?.models, authUser]);
 
   useEffect(() => {
     if (originalModel) setEditableModel(JSON.parse(JSON.stringify(originalModel)));
   }, [originalModel]);
 
-  // Stats
+  const courseModules = useMemo(
+    () => (data?.courseData ?? []).filter(module => module.quiz && module.quiz.length > 0),
+    [data?.courseData]
+  );
+
+  const myBriefs = useMemo(() => {
+    if (!editableModel) return [];
+    return briefsCollection.items
+      .filter(brief => brief.modelId === editableModel.id || brief.modelId === authUser?.userId)
+      .sort((a, b) => new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime());
+  }, [briefsCollection.items, editableModel, authUser?.userId]);
+
+  const upcomingBriefs = useMemo(
+    () => myBriefs
+      .filter(brief => new Date(brief.dateTime).getTime() >= Date.now())
+      .sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime()),
+    [myBriefs]
+  );
+
+  const newBriefsCount = myBriefs.filter(brief => brief.status === 'Nouveau').length;
+
   const stats = useMemo(() => {
-    if (!editableModel) return { completed: 0, total: 0, avgScore: 0, bestScore: 0 };
+    if (!editableModel) return { completed: 0, total: 0, avgScore: 0, bestScore: 0, progress: 0 };
     const scores = Object.values(editableModel.quizScores ?? {});
     const completed = scores.length;
     const total = courseModules.length;
-    const avgScore = completed > 0 ? Math.round(scores.reduce((s, q) => s + (q.score / q.total) * 100, 0) / completed) : 0;
-    const bestScore = completed > 0 ? Math.round(Math.max(...scores.map(q => (q.score / q.total) * 100))) : 0;
-    return { completed, total, avgScore, bestScore };
+    const avgScore = completed
+      ? Math.round(scores.reduce((sum, score) => sum + (score.score / score.total) * 100, 0) / completed)
+      : 0;
+    const bestScore = completed
+      ? Math.round(Math.max(...scores.map(score => (score.score / score.total) * 100)))
+      : 0;
+    return {
+      completed,
+      total,
+      avgScore,
+      bestScore,
+      progress: total ? Math.round((completed / total) * 100) : 0,
+    };
   }, [editableModel, courseModules]);
+
+  const profileChecks = useMemo<ProfileCheck[]>(() => {
+    if (!editableModel) return [];
+    return [
+      { label: 'Adresse email', ok: Boolean(editableModel.email), description: 'Nécessaire pour les accès et notifications.' },
+      { label: 'Téléphone de contact', ok: Boolean(editableModel.phone), description: 'Coordonnée professionnelle de contact.' },
+      { label: 'Photo principale', ok: Boolean(editableModel.imageUrl), description: 'Photo de couverture du profil public.' },
+      { label: 'Portfolio', ok: Boolean(editableModel.portfolioImages?.length), description: 'Au moins une image complémentaire.' },
+      { label: 'Localisation', ok: Boolean(editableModel.location), description: 'Ville ou zone de disponibilité.' },
+      { label: 'Catégories', ok: Boolean(editableModel.categories?.length), description: 'Défilé, éditorial, commercial, etc.' },
+      { label: 'Expérience', ok: Boolean(editableModel.experience?.trim()), description: 'Présentation de l’expérience professionnelle.' },
+      { label: 'Mensurations', ok: Boolean(editableModel.measurements?.chest && editableModel.measurements?.waist && editableModel.measurements?.hips && editableModel.measurements?.shoeSize), description: 'Poitrine, taille, hanches et pointure.' },
+    ];
+  }, [editableModel]);
+
+  const profileCompleteness = profileChecks.length
+    ? Math.round((profileChecks.filter(check => check.ok).length / profileChecks.length) * 100)
+    : 0;
+  const missingChecks = profileChecks.filter(check => !check.ok);
+
+  const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
+    { id: 'overview', label: 'Accueil', icon: SparklesIcon },
+    ...(perms?.canEditProfile !== false ? [{ id: 'profile' as TabId, label: 'Mon profil', icon: UserIcon }] : []),
+    ...(perms?.canViewResults !== false ? [{ id: 'training' as TabId, label: 'Formation', icon: AcademicCapIcon }] : []),
+    ...(perms?.canViewPhotoshootBriefs !== false ? [{ id: 'briefs' as TabId, label: 'Briefings', icon: EnvelopeIcon }] : []),
+  ];
 
   const handleSave = async (updatedModel: Model) => {
     if (!data) return;
-    await saveData({ ...data, models: data.models.map(m => m.id === updatedModel.id ? updatedModel : m) });
-    alert('Profil mis à jour avec succès.');
+    await saveData({ ...data, models: data.models.map(model => model.id === updatedModel.id ? updatedModel : model) });
+    setEditableModel(JSON.parse(JSON.stringify(updatedModel)));
+    setSaveMessage('Profil mis à jour avec succès.');
+    window.setTimeout(() => setSaveMessage(''), 3500);
   };
 
   const handleCancel = () => {
-    if (originalModel) {
-      setEditableModel(JSON.parse(JSON.stringify(originalModel)));
-      alert('Les modifications ont été annulées.');
-    }
+    if (originalModel) setEditableModel(JSON.parse(JSON.stringify(originalModel)));
   };
 
-  const { logout } = useAuth();
-  const handleLogout = async () => { await logout(); navigate('/login'); };
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
 
   const handleToggleBrief = async (briefId: string) => {
-    const newId = expandedBriefId === briefId ? null : briefId;
-    setExpandedBriefId(newId);
-    if (newId) {
-      const brief = myBriefs.find(b => b.id === briefId);
-      if (brief?.status === 'Nouveau' && data) {
-        await saveData({ ...data, photoshootBriefs: data.photoshootBriefs.map(b => b.id === briefId ? { ...b, status: 'Lu' as const } : b) });
+    const nextId = expandedBriefId === briefId ? null : briefId;
+    setExpandedBriefId(nextId);
+    if (!nextId) return;
+    const brief = myBriefs.find(item => item.id === briefId);
+    if (brief?.status === 'Nouveau') {
+      try {
+        await updateDocument('photoshootBriefs', brief.id, { status: 'Lu' });
+        briefsCollection.refresh();
+      } catch (error) {
+        console.error('Impossible de marquer le briefing comme lu:', error);
       }
     }
   };
 
-  const getScoreColor = (pct: number) => pct >= 80 ? 'text-green-400' : pct >= 50 ? 'text-yellow-400' : 'text-red-400';
-  const getScoreBg = (pct: number) => pct >= 80 ? 'bg-green-500' : pct >= 50 ? 'bg-yellow-500' : 'bg-red-500';
-
   if (!editableModel) {
     return (
-      <div className="bg-pm-dark min-h-screen flex items-center justify-center">
-        <div className="w-12 h-px bg-pm-gold animate-pulse" />
+      <div className="flex min-h-screen items-center justify-center bg-pm-dark text-white">
+        <div className="max-w-md px-6 text-center">
+          <div className="mx-auto mb-5 h-10 w-10 animate-pulse rounded-full border border-pm-gold/30 bg-pm-gold/10" />
+          <p className="text-sm text-white/45">Chargement de votre espace mannequin…</p>
+        </div>
       </div>
     );
   }
 
   const firstName = editableModel.name.split(' ')[0];
-  const levelColor = editableModel.level === 'Pro' ? 'text-pm-gold border-pm-gold/40 bg-pm-gold/10' : 'text-white/50 border-white/10 bg-white/5';
+  const nextBrief = upcomingBriefs[0];
+  const levelLabel = editableModel.level || 'Débutant';
+  const levelClass = editableModel.level === 'Pro'
+    ? 'border-pm-gold/30 bg-pm-gold/10 text-pm-gold'
+    : 'border-white/10 bg-white/5 text-white/50';
 
   return (
-    <div className="bg-pm-dark text-pm-off-white min-h-screen">
-      <SEO title={`Espace de ${editableModel.name}`} noIndex />
+    <div className="min-h-screen bg-[#060606] text-pm-off-white">
+      <SEO title={`Espace mannequin | ${editableModel.name}`} noIndex />
 
-      {/* ── Top bar ── */}
-      <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-white/5 bg-pm-dark/80 backdrop-blur-xl px-6">
-        <div className="flex items-center gap-4">
-          <Link to="/" className="text-[9px] font-black uppercase tracking-[0.4em] text-pm-gold">PMM</Link>
-          <span className="text-white/10">|</span>
-          <span className="text-[9px] font-black uppercase tracking-[0.3em] text-white/30">Espace Mannequin</span>
+      <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-white/5 bg-[#060606]/90 px-4 backdrop-blur-xl sm:px-6 lg:px-10">
+        <div className="flex min-w-0 items-center gap-3">
+          <Link to="/" className="shrink-0 text-[10px] font-black uppercase tracking-[0.35em] text-pm-gold">PMM</Link>
+          <span className="text-white/10">/</span>
+          <span className="truncate text-[9px] font-black uppercase tracking-[0.25em] text-white/30">Espace mannequin</span>
         </div>
-        <div className="flex items-center gap-4">
-          <Link to={`/mannequins/${editableModel.id}`}
-            className="text-[9px] font-black uppercase tracking-[0.3em] text-white/30 hover:text-pm-gold transition-colors hidden sm:block">
-            Portfolio Public
-          </Link>
-          <button
-            onClick={() => setShowChangePassword(true)}
-            className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.3em] text-white/30 hover:text-pm-gold transition-colors hidden sm:flex"
-          >
-            <LockClosedIcon className="w-4 h-4" /> Mot de passe
-          </button>
-          <button onClick={handleLogout}
-            className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.3em] text-white/30 hover:text-red-400 transition-colors">
-            <ArrowRightOnRectangleIcon className="w-4 h-4" /> Déconnexion
-          </button>
+        <div className="flex items-center gap-3 sm:gap-5">
+          <Link to={`/mannequins/${editableModel.id}`} className="hidden text-[9px] font-black uppercase tracking-[0.2em] text-white/35 transition hover:text-pm-gold sm:block">Portfolio public</Link>
+          <button onClick={() => setShowChangePassword(true)} className="hidden items-center gap-2 text-[9px] font-black uppercase tracking-[0.2em] text-white/35 transition hover:text-pm-gold md:flex"><LockClosedIcon className="h-4 w-4" /> Sécurité</button>
+          <button onClick={handleLogout} className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.2em] text-white/35 transition hover:text-red-400"><ArrowRightOnRectangleIcon className="h-4 w-4" /><span className="hidden sm:inline">Déconnexion</span></button>
         </div>
       </header>
 
-      <div className="flex min-h-[calc(100vh-4rem)]">
-        {/* ── Sidebar ── */}
-        <aside className="hidden lg:flex lg:flex-col lg:w-72 border-r border-white/5 p-8 shrink-0">
-          {/* Avatar + identité */}
-          <div className="mb-10">
-            <div className="relative w-20 h-20 mb-4">
+      <div className="mx-auto grid max-w-[1700px] lg:grid-cols-[280px_minmax(0,1fr)]">
+        <aside className="hidden min-h-[calc(100vh-4rem)] border-r border-white/5 p-7 lg:flex lg:flex-col">
+          <div>
+            <div className="relative mb-5 h-20 w-20">
               {editableModel.imageUrl ? (
-                <img src={editableModel.imageUrl} alt={editableModel.name}
-                  className="w-20 h-20 rounded-full object-cover border-2 border-pm-gold/30" />
+                <img src={editableModel.imageUrl} alt={editableModel.name} className="h-20 w-20 rounded-2xl object-cover ring-1 ring-pm-gold/25" />
               ) : (
-                <div className="w-20 h-20 rounded-full bg-pm-gold/10 border-2 border-pm-gold/20 flex items-center justify-center">
-                  <UserIcon className="w-8 h-8 text-pm-gold/40" />
-                </div>
+                <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-white/10 bg-white/5"><UserCircleIcon className="h-8 w-8 text-white/20" /></div>
               )}
-              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-2 border-pm-dark rounded-full" />
+              <span className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-[#060606] bg-emerald-500" />
             </div>
-            <p className="text-xl font-playfair font-black text-white">{editableModel.name}</p>
-            <p className="text-xs text-white/30 mt-0.5">{editableModel.location || 'Libreville, Gabon'}</p>
-            <span className={`inline-block mt-2 text-[9px] font-black uppercase tracking-[0.3em] px-2 py-1 rounded-full border ${levelColor}`}>
-              {editableModel.level || 'Débutant'}
-            </span>
+            <h2 className="font-playfair text-xl font-black text-white">{editableModel.name}</h2>
+            <p className="mt-1 text-xs text-white/30">{editableModel.username}</p>
+            <span className={`mt-3 inline-flex rounded-full border px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.25em] ${levelClass}`}>{levelLabel}</span>
           </div>
 
-          {/* Stats rapides */}
-          <div className="space-y-3 mb-10">
-            <div className="flex items-center justify-between py-3 border-b border-white/5">
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30">Quiz complétés</span>
-              <span className="text-sm font-black text-pm-gold">{stats.completed}/{stats.total}</span>
-            </div>
-            <div className="flex items-center justify-between py-3 border-b border-white/5">
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30">Score moyen</span>
-              <span className={`text-sm font-black ${getScoreColor(stats.avgScore)}`}>{stats.avgScore}%</span>
-            </div>
-            <div className="flex items-center justify-between py-3 border-b border-white/5">
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30">Meilleur score</span>
-              <span className={`text-sm font-black ${getScoreColor(stats.bestScore)}`}>{stats.bestScore}%</span>
-            </div>
-            <div className="flex items-center justify-between py-3">
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30">Briefings</span>
-              <span className="text-sm font-black text-white">{myBriefs.length}
-                {newBriefsCount > 0 && <span className="ml-1 text-[9px] bg-red-500 text-white px-1.5 py-0.5 rounded-full">{newBriefsCount}</span>}
-              </span>
-            </div>
-          </div>
+          <nav className="mt-10 space-y-1">
+            {TABS.map(tab => (
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-[10px] font-black uppercase tracking-[0.18em] transition ${activeTab === tab.id ? 'bg-pm-gold text-pm-dark' : 'text-white/35 hover:bg-white/5 hover:text-white'}`}>
+                <tab.icon className="h-5 w-5" />
+                <span className="flex-1">{tab.label}</span>
+                {tab.id === 'briefs' && newBriefsCount > 0 && <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] text-white">{newBriefsCount}</span>}
+              </button>
+            ))}
+          </nav>
 
-          {/* Liens rapides */}
-          <div className="space-y-2 mt-auto">
+          <div className="mt-auto space-y-2 pt-10">
             {perms?.canAccessFormation !== false && (
-              <Link to="/formation"
-                className="flex items-center gap-3 p-3 border border-white/5 hover:border-pm-gold/30 hover:bg-pm-gold/5 transition-all group">
-                <BookOpenIcon className="w-4 h-4 text-pm-gold/60 group-hover:text-pm-gold" />
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 group-hover:text-white transition-colors">Formation Avancée</span>
-              </Link>
+              <Link to="/formation" className="flex items-center gap-3 rounded-xl border border-white/5 p-3 text-[9px] font-black uppercase tracking-[0.16em] text-white/35 transition hover:border-pm-gold/20 hover:text-pm-gold"><BookOpenIcon className="h-4 w-4" /> Formation avancée</Link>
             )}
-            {perms?.canEditProfile !== false && (
-              <Link to={`/mannequins/${editableModel.id}`}
-                className="flex items-center gap-3 p-3 border border-white/5 hover:border-pm-gold/30 hover:bg-pm-gold/5 transition-all group">
-                <CameraIcon className="w-4 h-4 text-pm-gold/60 group-hover:text-pm-gold" />
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 group-hover:text-white transition-colors">Portfolio Public</span>
-              </Link>
-            )}
-            <button
-              onClick={() => setShowChangePassword(true)}
-              className="w-full flex items-center gap-3 p-3 border border-white/5 hover:border-pm-gold/30 hover:bg-pm-gold/5 transition-all group text-left"
-            >
-              <LockClosedIcon className="w-4 h-4 text-pm-gold/60 group-hover:text-pm-gold" />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 group-hover:text-white transition-colors">Changer mon mot de passe</span>
-            </button>
+            <button onClick={() => setShowChangePassword(true)} className="flex w-full items-center gap-3 rounded-xl border border-white/5 p-3 text-left text-[9px] font-black uppercase tracking-[0.16em] text-white/35 transition hover:border-pm-gold/20 hover:text-pm-gold"><LockClosedIcon className="h-4 w-4" /> Changer le mot de passe</button>
           </div>
         </aside>
 
-        {/* ── Main ── */}
-        <main className="flex-1 p-6 lg:p-10 overflow-y-auto">
-          {/* Greeting */}
-          <div className="mb-8">
-            <span className="section-label">Bienvenue</span>
-            <h1 className="text-3xl md:text-4xl font-playfair font-black text-white">
-              Bonjour, <span className="gold-gradient-text">{firstName}</span>
-            </h1>
-          </div>
-
-          {/* KPI cards (mobile: visible, desktop: visible) */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
-            {[
-              { label: 'Quiz complétés', value: `${stats.completed}/${stats.total}`, icon: BookOpenIcon, color: 'text-pm-gold' },
-              { label: 'Score moyen', value: `${stats.avgScore}%`, icon: ChartBarIcon, color: getScoreColor(stats.avgScore) },
-              { label: 'Meilleur score', value: `${stats.bestScore}%`, icon: TrophyIcon, color: getScoreColor(stats.bestScore) },
-              { label: 'Briefings', value: String(myBriefs.length), icon: EnvelopeIcon, color: 'text-white/60', badge: newBriefsCount },
-            ].map(card => (
-              <div key={card.label} className="glass-card p-4 flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-xl bg-black/40 flex items-center justify-center shrink-0 ${card.color}`}>
-                  <card.icon className="w-5 h-5" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/30 truncate">{card.label}</p>
-                  <p className={`text-2xl font-playfair font-black ${card.color}`}>
-                    {card.value}
-                    {(card.badge ?? 0) > 0 && (
-                      <span className="ml-1 text-[9px] bg-red-500 text-white px-1.5 py-0.5 rounded-full align-middle">{card.badge}</span>
-                    )}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Tabs */}
-          <div className="flex gap-1 border-b border-white/5 mb-8">
-            {TABS.map(tab => {
-              const Icon = tab.icon;
-              const isBriefs = tab.id === 'briefs';
-              return (
-                <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                  className={`relative flex items-center gap-2 px-5 py-3 text-[10px] font-black uppercase tracking-[0.25em] border-b-2 -mb-px transition-all ${
-                    activeTab === tab.id ? 'border-pm-gold text-pm-gold' : 'border-transparent text-white/30 hover:text-white/60'
-                  }`}>
-                  <Icon className="w-4 h-4" />
-                  {tab.label}
-                  {isBriefs && newBriefsCount > 0 && (
-                    <span className="w-4 h-4 bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center">{newBriefsCount}</span>
-                  )}
+        <main className="min-w-0 p-4 sm:p-6 lg:p-10 xl:p-14">
+          <div className="mb-6 lg:hidden">
+            <div className="flex gap-1 overflow-x-auto border-b border-white/5 pb-1 no-scrollbar">
+              {TABS.map(tab => (
+                <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`relative flex shrink-0 items-center gap-2 px-4 py-3 text-[9px] font-black uppercase tracking-[0.18em] ${activeTab === tab.id ? 'text-pm-gold' : 'text-white/30'}`}>
+                  <tab.icon className="h-4 w-4" />{tab.label}
+                  {tab.id === 'briefs' && newBriefsCount > 0 && <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-[8px] text-white">{newBriefsCount}</span>}
                 </button>
-              );
-            })}
+              ))}
+            </div>
           </div>
 
-          {/* ── Tab: Profil ── */}
-          {activeTab === 'profile' && (
-            <ModelForm model={editableModel} onSave={handleSave} onCancel={handleCancel} mode="model" isCreating={false} />
-          )}
+          {saveMessage && <div className="mb-6 rounded-xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">{saveMessage}</div>}
 
-          {/* ── Tab: Résultats ── */}
-          {activeTab === 'results' && (
-            <div className="space-y-6">
-              {/* Progression globale */}
-              {stats.total > 0 && (
-                <div className="glass-card p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-pm-gold">Progression Globale</h3>
-                    <span className="text-sm font-black text-white">{stats.completed}/{stats.total} modules</span>
-                  </div>
-                  <div className="w-full bg-white/5 rounded-full h-2 mb-2">
-                    <div className="bg-pm-gold h-2 rounded-full transition-all duration-700"
-                      style={{ width: `${stats.total > 0 ? (stats.completed / stats.total) * 100 : 0}%` }} />
-                  </div>
-                  <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-white/20 mt-1">
-                    <span>Début</span>
-                    <span>{stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0}%</span>
-                    <span>Fin</span>
-                  </div>
-                </div>
-              )}
+          {activeTab === 'overview' && (
+            <div className="space-y-8">
+              <section>
+                <p className="text-[9px] font-black uppercase tracking-[0.4em] text-pm-gold">Mon espace</p>
+                <h1 className="mt-2 font-playfair text-4xl font-black text-white sm:text-5xl">Bonjour, <span className="text-pm-gold">{firstName}</span></h1>
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-white/40">Suivez votre profil professionnel, votre progression et les prochains briefings transmis par l’agence.</p>
+              </section>
 
-              {/* Liste des modules */}
-              <div className="glass-card overflow-hidden">
-                <div className="px-6 py-4 border-b border-white/5">
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-white flex items-center gap-3">
-                    <SparklesIcon className="w-4 h-4 text-pm-gold" /> Résultats par Module
-                  </h3>
-                </div>
-                {courseModules.length > 0 ? (
-                  <div className="divide-y divide-white/5">
-                    {courseModules.map(module => {
-                      const scoreData = editableModel.quizScores?.[module.slug];
-                      const pct = scoreData ? Math.round((scoreData.score / scoreData.total) * 100) : null;
-                      return (
-                        <div key={module.slug} className="flex items-center gap-4 px-6 py-4">
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${pct !== null ? 'bg-black/40' : 'bg-white/5'}`}>
-                            {pct !== null ? (
-                              <TrophyIcon className={`w-5 h-5 ${getScoreColor(pct)}`} />
-                            ) : (
-                              <ClockIcon className="w-5 h-5 text-white/20" />
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-white/80 truncate">{module.title}</p>
-                            {pct !== null ? (
-                              <div className="flex items-center gap-2 mt-1">
-                                <div className="flex-1 bg-white/5 rounded-full h-1.5">
-                                  <div className={`h-1.5 rounded-full ${getScoreBg(pct)}`} style={{ width: `${pct}%` }} />
-                                </div>
-                                <span className={`text-[10px] font-black ${getScoreColor(pct)}`}>{pct}%</span>
-                              </div>
-                            ) : (
-                              <p className="text-[10px] text-white/20 mt-1 uppercase tracking-widest font-black">Non complété</p>
-                            )}
-                          </div>
-                          {pct !== null && (
-                            <div className={`text-right shrink-0`}>
-                              <p className={`text-2xl font-playfair font-black ${getScoreColor(pct)}`}>{pct}%</p>
-                              <p className="text-[9px] text-white/20 uppercase tracking-widest">{scoreData!.score}/{scoreData!.total}</p>
-                            </div>
-                          )}
+              <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+                <Kpi label="Profil" value={`${profileCompleteness}%`} icon={IdentificationIcon} accent={profileCompleteness >= 80 ? 'text-emerald-400' : 'text-amber-400'} />
+                <Kpi label="Formation" value={`${stats.progress}%`} icon={AcademicCapIcon} accent="text-pm-gold" />
+                <Kpi label="Score moyen" value={`${stats.avgScore}%`} icon={ChartBarIcon} accent="text-blue-400" />
+                <Kpi label="Briefings" value={myBriefs.length} badge={newBriefsCount} icon={EnvelopeIcon} accent="text-white" />
+              </section>
+
+              <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+                <div className="glass-card overflow-hidden">
+                  <div className="flex items-start justify-between gap-4 border-b border-white/5 p-5 sm:p-6">
+                    <div>
+                      <p className="text-[9px] font-black uppercase tracking-[0.35em] text-pm-gold">Profil professionnel</p>
+                      <h2 className="mt-1 text-xl font-bold text-white">Niveau de préparation</h2>
+                    </div>
+                    <button onClick={() => setActiveTab('profile')} className="inline-flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.18em] text-pm-gold transition hover:text-white">Modifier <PencilSquareIcon className="h-4 w-4" /></button>
+                  </div>
+                  <div className="p-5 sm:p-6">
+                    <div className="mb-3 flex items-center justify-between"><span className="text-sm text-white/50">Complétude du profil</span><strong className="text-xl text-white">{profileCompleteness}%</strong></div>
+                    <div className="h-2 overflow-hidden rounded-full bg-white/5"><div className="h-full rounded-full bg-pm-gold transition-all" style={{ width: `${profileCompleteness}%` }} /></div>
+                    <div className="mt-6 space-y-3">
+                      {profileChecks.map(check => (
+                        <div key={check.label} className="flex items-start gap-3 rounded-xl border border-white/5 bg-white/[0.015] p-3">
+                          {check.ok ? <CheckCircleIcon className="mt-0.5 h-5 w-5 shrink-0 text-emerald-400" /> : <ExclamationCircleIcon className="mt-0.5 h-5 w-5 shrink-0 text-amber-400" />}
+                          <div><p className="text-sm font-semibold text-white/75">{check.label}</p><p className="mt-0.5 text-xs text-white/30">{check.description}</p></div>
                         </div>
-                      );
-                    })}
+                      ))}
+                    </div>
+                    {missingChecks.length > 0 && <button onClick={() => setActiveTab('profile')} className="mt-5 inline-flex items-center gap-2 rounded-xl bg-pm-gold px-5 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-pm-dark">Compléter mon profil <ArrowRightIcon className="h-4 w-4" /></button>}
                   </div>
-                ) : (
-                  <div className="px-6 py-12 text-center text-white/20 text-xs italic">Aucun quiz disponible pour le moment.</div>
-                )}
-              </div>
-
-              {stats.completed === 0 && (
-                <div className="glass-card p-8 text-center">
-                  <BookOpenIcon className="w-12 h-12 text-pm-gold/20 mx-auto mb-4" />
-                  <p className="text-white/40 text-sm">Commencez votre formation pour voir vos résultats ici.</p>
-                  <Link to="/formation" className="inline-block mt-4 btn-premium !py-2 !px-6 !text-[10px]">Accéder à la Formation Avancée</Link>
                 </div>
-              )}
+
+                <div className="space-y-6">
+                  <div className="glass-card p-5 sm:p-6">
+                    <p className="text-[9px] font-black uppercase tracking-[0.35em] text-pm-gold">Prochain rendez-vous</p>
+                    {nextBrief ? (
+                      <div className="mt-5">
+                        <h3 className="font-playfair text-2xl font-black text-white">{nextBrief.theme}</h3>
+                        <div className="mt-5 space-y-3 text-sm text-white/45">
+                          <div className="flex items-center gap-3"><CalendarDaysIcon className="h-5 w-5 text-pm-gold" />{new Date(nextBrief.dateTime).toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short' })}</div>
+                          <div className="flex items-center gap-3"><MapPinIcon className="h-5 w-5 text-pm-gold" />{nextBrief.location}</div>
+                        </div>
+                        <button onClick={() => { setActiveTab('briefs'); setExpandedBriefId(nextBrief.id); }} className="mt-5 inline-flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.18em] text-pm-gold">Voir le briefing <ArrowRightIcon className="h-4 w-4" /></button>
+                      </div>
+                    ) : <p className="mt-5 text-sm leading-6 text-white/30">Aucun briefing à venir pour le moment.</p>}
+                  </div>
+
+                  <div className="glass-card p-5 sm:p-6">
+                    <p className="text-[9px] font-black uppercase tracking-[0.35em] text-pm-gold">Raccourcis</p>
+                    <div className="mt-4 grid gap-2">
+                      <Link to={`/mannequins/${editableModel.id}`} className="flex items-center gap-3 rounded-xl border border-white/5 p-3 text-sm text-white/50 transition hover:border-pm-gold/20 hover:text-white"><CameraIcon className="h-5 w-5 text-pm-gold" /> Voir mon portfolio public</Link>
+                      {perms?.canAccessFormation !== false && <Link to="/formation" className="flex items-center gap-3 rounded-xl border border-white/5 p-3 text-sm text-white/50 transition hover:border-pm-gold/20 hover:text-white"><BookOpenIcon className="h-5 w-5 text-pm-gold" /> Continuer ma formation</Link>}
+                      <button onClick={() => setShowChangePassword(true)} className="flex items-center gap-3 rounded-xl border border-white/5 p-3 text-left text-sm text-white/50 transition hover:border-pm-gold/20 hover:text-white"><LockClosedIcon className="h-5 w-5 text-pm-gold" /> Sécurité du compte</button>
+                    </div>
+                  </div>
+                </div>
+              </section>
             </div>
           )}
 
-          {/* ── Tab: Briefings ── */}
-          {activeTab === 'briefs' && (
-            <div className="space-y-4">
-              {myBriefs.length > 0 ? (
-                <>
-                  {newBriefsCount > 0 && (
-                    <div className="flex items-center gap-3 p-4 bg-pm-gold/5 border border-pm-gold/20 rounded-xl">
-                      <ExclamationCircleIcon className="w-5 h-5 text-pm-gold shrink-0" />
-                      <p className="text-sm text-pm-gold font-medium">
-                        Vous avez <span className="font-black">{newBriefsCount}</span> nouveau{newBriefsCount > 1 ? 'x' : ''} briefing{newBriefsCount > 1 ? 's' : ''} à consulter.
-                      </p>
-                    </div>
-                  )}
-                  {myBriefs.map(brief => (
-                    <BriefItem key={brief.id} brief={brief} expandedBriefId={expandedBriefId} onToggle={handleToggleBrief} />
-                  ))}
-                </>
-              ) : (
-                <div className="glass-card p-12 text-center">
-                  <EnvelopeIcon className="w-12 h-12 text-white/10 mx-auto mb-4" />
-                  <p className="text-white/30 text-sm italic">Votre boîte de réception est vide.</p>
-                </div>
-              )}
+          {activeTab === 'profile' && perms?.canEditProfile !== false && (
+            <div>
+              <div className="mb-7"><p className="text-[9px] font-black uppercase tracking-[0.35em] text-pm-gold">Profil professionnel</p><h1 className="mt-2 font-playfair text-3xl font-black text-white sm:text-4xl">Mes informations</h1><p className="mt-2 text-sm text-white/35">Maintenez vos informations, mensurations et portfolio à jour.</p></div>
+              <ModelForm model={editableModel} onSave={handleSave} onCancel={handleCancel} mode="model" isCreating={false} />
+            </div>
+          )}
+
+          {activeTab === 'training' && perms?.canViewResults !== false && (
+            <div className="space-y-6">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <div><p className="text-[9px] font-black uppercase tracking-[0.35em] text-pm-gold">Formation</p><h1 className="mt-2 font-playfair text-3xl font-black text-white sm:text-4xl">Ma progression</h1></div>
+                {perms?.canAccessFormation !== false && <Link to="/formation" className="inline-flex items-center gap-2 self-start rounded-xl bg-pm-gold px-5 py-3 text-[9px] font-black uppercase tracking-[0.16em] text-pm-dark sm:self-auto">Continuer la formation <ArrowRightIcon className="h-4 w-4" /></Link>}
+              </div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3"><Kpi label="Modules complétés" value={`${stats.completed}/${stats.total}`} icon={BookOpenIcon} accent="text-pm-gold" /><Kpi label="Score moyen" value={`${stats.avgScore}%`} icon={ChartBarIcon} accent={scoreColor(stats.avgScore)} /><Kpi label="Meilleur score" value={`${stats.bestScore}%`} icon={TrophyIcon} accent={scoreColor(stats.bestScore)} /></div>
+              <div className="glass-card p-5 sm:p-6"><div className="mb-3 flex justify-between"><span className="text-sm text-white/45">Progression globale</span><span className="font-black text-white">{stats.progress}%</span></div><div className="h-2 rounded-full bg-white/5"><div className="h-2 rounded-full bg-pm-gold" style={{ width: `${stats.progress}%` }} /></div></div>
+              <div className="glass-card overflow-hidden"><div className="border-b border-white/5 px-5 py-4 sm:px-6"><h2 className="text-sm font-bold text-white">Résultats par module</h2></div><div className="divide-y divide-white/5">{courseModules.length ? courseModules.map(module => { const result = editableModel.quizScores?.[module.slug]; const pct = result ? Math.round((result.score / result.total) * 100) : null; return <div key={module.slug} className="flex items-center gap-4 px-5 py-4 sm:px-6"><div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/5">{pct === null ? <ClockIcon className="h-5 w-5 text-white/20" /> : <TrophyIcon className={`h-5 w-5 ${scoreColor(pct)}`} />}</div><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-white/75">{module.title}</p><p className="mt-1 text-xs text-white/25">{pct === null ? 'À compléter' : `${result!.score}/${result!.total} bonnes réponses`}</p></div><span className={`font-playfair text-2xl font-black ${pct === null ? 'text-white/15' : scoreColor(pct)}`}>{pct === null ? '—' : `${pct}%`}</span></div>; }) : <div className="p-10 text-center text-sm text-white/25">Aucun module disponible.</div>}</div></div>
+            </div>
+          )}
+
+          {activeTab === 'briefs' && perms?.canViewPhotoshootBriefs !== false && (
+            <div className="space-y-5">
+              <div><p className="text-[9px] font-black uppercase tracking-[0.35em] text-pm-gold">Production</p><h1 className="mt-2 font-playfair text-3xl font-black text-white sm:text-4xl">Mes briefings</h1><p className="mt-2 text-sm text-white/35">Retrouvez les informations de shooting et directives envoyées par l’agence.</p></div>
+              {newBriefsCount > 0 && <div className="flex items-center gap-3 rounded-xl border border-pm-gold/20 bg-pm-gold/5 p-4 text-sm text-pm-gold"><ExclamationCircleIcon className="h-5 w-5 shrink-0" />{newBriefsCount} nouveau{newBriefsCount > 1 ? 'x' : ''} briefing{newBriefsCount > 1 ? 's' : ''} à consulter.</div>}
+              {briefsCollection.isLoading ? <div className="glass-card p-10 text-center text-sm text-white/25">Chargement des briefings…</div> : myBriefs.length ? myBriefs.map(brief => <BriefItem key={brief.id} brief={brief} expanded={expandedBriefId === brief.id} onToggle={handleToggleBrief} />) : <div className="glass-card p-12 text-center"><EnvelopeIcon className="mx-auto h-10 w-10 text-white/10" /><p className="mt-4 text-sm text-white/30">Aucun briefing n’a encore été publié pour votre profil.</p></div>}
             </div>
           )}
         </main>
       </div>
 
-      {showChangePassword && (
-        <ChangePasswordModal onClose={() => setShowChangePassword(false)} />
-      )}
+      {showChangePassword && <ChangePasswordModal onClose={() => setShowChangePassword(false)} />}
     </div>
   );
 };
 
-const BriefItem: React.FC<{
-  brief: PhotoshootBrief;
-  expandedBriefId: string | null;
-  onToggle: (id: string) => void;
-}> = ({ brief, expandedBriefId, onToggle }) => {
-  const isExpanded = expandedBriefId === brief.id;
+const Kpi: React.FC<{ label: string; value: string | number; icon: React.ElementType; accent: string; badge?: number }> = ({ label, value, icon: Icon, accent, badge = 0 }) => (
+  <div className="glass-card p-4 sm:p-5"><div className="mb-4 flex items-center justify-between"><p className="truncate text-[8px] font-black uppercase tracking-[0.24em] text-white/30">{label}</p><Icon className={`h-5 w-5 ${accent}`} /></div><p className={`font-playfair text-3xl font-black sm:text-4xl ${accent}`}>{value}{badge > 0 && <span className="ml-2 rounded-full bg-red-500 px-1.5 py-0.5 align-middle text-[9px] font-sans text-white">{badge}</span>}</p></div>
+);
+
+const scoreColor = (score: number) => score >= 80 ? 'text-emerald-400' : score >= 50 ? 'text-amber-400' : score > 0 ? 'text-red-400' : 'text-white/25';
+
+const BriefItem: React.FC<{ brief: PhotoshootBrief; expanded: boolean; onToggle: (id: string) => void }> = ({ brief, expanded, onToggle }) => {
   const isNew = brief.status === 'Nouveau';
-
   return (
-    <div className={`glass-card overflow-hidden transition-all ${isNew ? 'border-pm-gold/30' : ''}`}>
-      <button onClick={() => onToggle(brief.id)}
-        className="w-full px-6 py-4 text-left flex items-center justify-between gap-4 hover:bg-white/[0.02] transition-colors">
-        <div className="flex items-center gap-4 min-w-0">
-          <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${isNew ? 'bg-pm-gold/20' : 'bg-white/5'}`}>
-            {isNew
-              ? <span className="w-2.5 h-2.5 bg-pm-gold rounded-full animate-pulse" />
-              : <CheckCircleIcon className="w-4 h-4 text-green-500" />
-            }
-          </div>
-          <div className="min-w-0">
-            <p className={`text-sm font-bold truncate ${isNew ? 'text-pm-gold' : 'text-white/80'}`}>{brief.theme}</p>
-            <p className="text-[10px] text-white/30 mt-0.5 uppercase tracking-widest font-black">
-              {new Date(brief.dateTime).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3 shrink-0">
-          {isNew && <span className="text-[9px] font-black uppercase tracking-widest text-pm-gold bg-pm-gold/10 px-2 py-1 rounded-full">Nouveau</span>}
-          {isExpanded ? <ChevronUpIcon className="w-4 h-4 text-white/30" /> : <ChevronDownIcon className="w-4 h-4 text-white/30" />}
-        </div>
+    <div className={`glass-card overflow-hidden ${isNew ? 'border-pm-gold/25' : ''}`}>
+      <button onClick={() => onToggle(brief.id)} className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition hover:bg-white/[0.02] sm:px-6">
+        <div className="flex min-w-0 items-center gap-4"><div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${isNew ? 'bg-pm-gold/10 text-pm-gold' : 'bg-white/5 text-emerald-400'}`}>{isNew ? <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-pm-gold" /> : <CheckCircleIcon className="h-5 w-5" />}</div><div className="min-w-0"><p className={`truncate text-sm font-bold ${isNew ? 'text-pm-gold' : 'text-white/80'}`}>{brief.theme}</p><p className="mt-1 text-[10px] font-black uppercase tracking-widest text-white/25">{new Date(brief.dateTime).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}</p></div></div>
+        <div className="flex shrink-0 items-center gap-3">{isNew && <span className="hidden rounded-full bg-pm-gold/10 px-2 py-1 text-[8px] font-black uppercase tracking-widest text-pm-gold sm:block">Nouveau</span>}{expanded ? <ChevronUpIcon className="h-4 w-4 text-white/30" /> : <ChevronDownIcon className="h-4 w-4 text-white/30" />}</div>
       </button>
-
-      {isExpanded && (
-        <div className="px-6 pb-6 border-t border-white/5 pt-4 space-y-4 animate-fade-in">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="flex items-center gap-3 p-4 bg-black/40 rounded-xl">
-              <CalendarDaysIcon className="w-5 h-5 text-pm-gold shrink-0" />
-              <div>
-                <p className="text-[9px] font-black uppercase tracking-widest text-white/30">Date & Heure</p>
-                <p className="text-sm font-medium text-white mt-0.5">
-                  {new Date(brief.dateTime).toLocaleString('fr-FR', { dateStyle: 'full', timeStyle: 'short' })}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 p-4 bg-black/40 rounded-xl">
-              <MapPinIcon className="w-5 h-5 text-pm-gold shrink-0" />
-              <div>
-                <p className="text-[9px] font-black uppercase tracking-widest text-white/30">Lieu</p>
-                <p className="text-sm font-medium text-white mt-0.5">{brief.location}</p>
-              </div>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="p-4 bg-black/40 rounded-xl">
-              <p className="text-[9px] font-black uppercase tracking-widest text-pm-gold mb-2">Style Vestimentaire</p>
-              <p className="text-sm text-white/70 whitespace-pre-wrap leading-relaxed">{brief.clothingStyle}</p>
-            </div>
-            <div className="p-4 bg-black/40 rounded-xl">
-              <p className="text-[9px] font-black uppercase tracking-widest text-pm-gold mb-2">Accessoires</p>
-              <p className="text-sm text-white/70 whitespace-pre-wrap leading-relaxed">{brief.accessories}</p>
-            </div>
-          </div>
-        </div>
-      )}
+      {expanded && <div className="space-y-4 border-t border-white/5 px-5 pb-6 pt-5 sm:px-6"><div className="grid gap-3 sm:grid-cols-2"><Info icon={CalendarDaysIcon} label="Date & heure" value={new Date(brief.dateTime).toLocaleString('fr-FR', { dateStyle: 'full', timeStyle: 'short' })} /><Info icon={MapPinIcon} label="Lieu" value={brief.location} /></div><div className="grid gap-3 sm:grid-cols-2"><TextInfo label="Style vestimentaire" value={brief.clothingStyle} /><TextInfo label="Accessoires" value={brief.accessories} /></div></div>}
     </div>
   );
 };
+
+const Info: React.FC<{ icon: React.ElementType; label: string; value: string }> = ({ icon: Icon, label, value }) => <div className="flex gap-3 rounded-xl bg-black/35 p-4"><Icon className="h-5 w-5 shrink-0 text-pm-gold" /><div><p className="text-[8px] font-black uppercase tracking-widest text-white/25">{label}</p><p className="mt-1 text-sm text-white/70">{value}</p></div></div>;
+const TextInfo: React.FC<{ label: string; value: string }> = ({ label, value }) => <div className="rounded-xl bg-black/35 p-4"><p className="text-[8px] font-black uppercase tracking-widest text-pm-gold">{label}</p><p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-white/60">{value}</p></div>;
 
 export default ModelDashboard;
