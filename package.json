@@ -23,6 +23,7 @@
     "@google/genai": "^1.17.0",
     "@heroicons/react": "^2.2.0",
     "@neondatabase/auth": "latest",
+    "@neondatabase/neon-js": "latest",
     "@neondatabase/serverless": "^1.0.0",
     "@vercel/analytics": "^1.6.1",
     "@vercel/blob": "latest",
