@@ -1,61 +1,50 @@
 {
   "name": "perfect-models-management",
   "private": true,
-  "version": "1.0.0",
+  "version": "3.0.0",
   "type": "module",
+  "engines": { "node": ">=20.9.0" },
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "mobile:build": "npm run build && npx cap sync",
-    "mobile:ios": "npm run mobile:build && npx cap open ios",
-    "mobile:android": "npm run mobile:build && npx cap open android",
-    "mobile:sync": "npx cap sync"
+    "dev": "next dev --webpack",
+    "build": "next build --webpack",
+    "start": "next start",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@capacitor/android": "^8.3.0",
     "@capacitor/app": "^8.1.0",
     "@capacitor/camera": "^8.0.2",
     "@capacitor/cli": "^8.3.0",
     "@capacitor/core": "^8.3.0",
     "@capacitor/haptics": "^8.0.2",
-    "@capacitor/ios": "^8.3.0",
     "@capacitor/push-notifications": "^8.0.3",
     "@capacitor/share": "^8.0.1",
     "@capacitor/splash-screen": "^8.0.1",
     "@capacitor/status-bar": "^8.0.2",
-    "@dataconnect/admin-generated": "file:src/dataconnect-admin-generated",
-    "@dataconnect/generated": "file:src/dataconnect-generated",
     "@google/genai": "^1.17.0",
     "@heroicons/react": "^2.2.0",
+    "@neondatabase/auth": "latest",
+    "@neondatabase/serverless": "^1.0.0",
     "@vercel/analytics": "^1.6.1",
+    "@vercel/blob": "latest",
     "avatar": "^0.1.0",
     "dropbox": "^10.30.0",
-    "firebase": "^12.8.0",
     "framer-motion": "^12.38.0",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.7",
     "lucide-react": "^1.7.0",
+    "next": "16.2.9",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.23.1",
-    "ui": "^0.2.4",
-    "vercel": "^32.7.2"
+    "ui": "^0.2.4"
   },
   "devDependencies": {
+    "@types/node": "^22.10.0",
     "@types/react": "^18.3.28",
     "@types/react-dom": "^18.2.22",
-    "@vercel/node": "^4.0.0",
-    "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.19",
-    "firebase-admin": "^14.1.0",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.3",
-    "typescript": "^5.2.2",
-    "vite": "^6.0.0"
-  },
-  "allowScripts": {
-    "protobufjs@7.6.4": true
+    "typescript": "^5.2.2"
   }
 }

@@ -1,0 +1,1 @@
+export type Messaging=Record<string,never>;export const getMessaging=()=>({});export const isSupported=async()=>false;export const getToken=async()=>null;export const onMessage=(_m:any,_cb:any)=>()=>{};
