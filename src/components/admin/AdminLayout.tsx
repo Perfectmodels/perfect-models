@@ -1,209 +1,204 @@
-import React, { useState, useCallback } from 'react';
-import { NavLink, useLocation, Link } from 'react-router-dom';
-import { 
-    HomeIcon, UsersIcon, PhotoIcon, NewspaperIcon, CalendarDaysIcon, Cog6ToothIcon, ClipboardDocumentListIcon,
-    KeyIcon, PresentationChartLineIcon,
-    BuildingStorefrontIcon, SparklesIcon, ChatBubbleLeftRightIcon, BriefcaseIcon,
-    ClipboardDocumentCheckIcon, CurrencyDollarIcon, CalendarIcon, PaintBrushIcon,
-    Bars3Icon, XMarkIcon,
-    BookOpenIcon,
-    PaperAirplaneIcon,
-    BellIcon,
-    BellSlashIcon,
-    AcademicCapIcon,
+import React, { useCallback, useMemo, useState } from 'react';
+import { Link, NavLink, useLocation } from 'react-router-dom';
+import {
+  AcademicCapIcon,
+  Bars3Icon,
+  BellAlertIcon,
+  BellIcon,
+  BellSlashIcon,
+  BookOpenIcon,
+  BriefcaseIcon,
+  BuildingStorefrontIcon,
+  CalendarDaysIcon,
+  CalendarIcon,
+  ChatBubbleLeftRightIcon,
+  ChevronRightIcon,
+  ClipboardDocumentCheckIcon,
+  ClipboardDocumentListIcon,
+  Cog6ToothIcon,
+  CurrencyDollarIcon,
+  HomeIcon,
+  KeyIcon,
+  MagnifyingGlassIcon,
+  NewspaperIcon,
+  PaintBrushIcon,
+  PaperAirplaneIcon,
+  PhotoIcon,
+  PresentationChartLineIcon,
+  SparklesIcon,
+  UsersIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useAuth } from '../../contexts/AuthContext';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
 import { useToast } from '../ui/Toast';
 
-interface NavItemProps {
-  to: string;
-  icon: React.ElementType;
-  label: string;
-  onClick?: () => void;
-}
+type NavigationItem = { to: string; label: string; icon: React.ElementType; description: string };
+type NavigationSection = { title: string; items: NavigationItem[] };
 
-const NavItem: React.FC<NavItemProps> = ({ to, icon: Icon, label, onClick }) => (
-    <NavLink
-        to={to}
-        end={to === '/admin'}
-        onClick={onClick}
-        className={({ isActive }) =>
-            `flex items-center gap-4 px-4 py-3 rounded-lg text-xs font-black uppercase tracking-[0.2em] transition-all duration-300 ${
-                isActive
-                    ? 'bg-pm-gold text-pm-dark shadow-xl shadow-pm-gold/10'
-                    : 'text-white/40 hover:bg-white/5 hover:text-white'
-            }`
-        }
-    >
-        <Icon className="w-5 h-5 shrink-0" />
-        <span className="truncate">{label}</span>
-    </NavLink>
-);
-
-const navSections = [
-    {
-        title: 'Principal',
-        links: [
-            { to: '/admin', icon: HomeIcon, label: 'Tableau de Bord' },
-            { to: '/admin/models', icon: UsersIcon, label: 'Mannequins' },
-            { to: '/admin/media-library', icon: PhotoIcon, label: 'Médiathèque' },
-            { to: '/admin/magazine', icon: NewspaperIcon, label: 'Magazine' },
-            { to: '/admin/bookings', icon: BriefcaseIcon, label: 'Réservations' },
-            { to: '/admin/messages', icon: ChatBubbleLeftRightIcon, label: 'Messages' },
-            { to: '/admin/comments', icon: ClipboardDocumentListIcon, label: 'Commentaires' },
-            { to: '/admin/news', icon: NewspaperIcon, label: 'Actualités' },
-            { to: '/admin/agency', icon: BuildingStorefrontIcon, label: 'Agence' },
-        ]
-    },
-    {
-        title: 'Recrutement',
-        links: [
-            { to: '/admin/casting-applications', icon: ClipboardDocumentListIcon, label: 'Candidatures' },
-            { to: '/admin/casting-results', icon: ClipboardDocumentCheckIcon, label: 'Notation' },
-            { to: '/admin/fashion-day-applications', icon: SparklesIcon, label: 'Candidatures PFD' },
-            { to: '/admin/fashion-day-events', icon: CalendarDaysIcon, label: 'Événements PFD' },
-            { to: '/admin/recovery-requests', icon: KeyIcon, label: 'Récupérations' },
-        ]
-    },
-    {
-        title: 'Opérations',
-        links: [
-            { to: '/formation', icon: AcademicCapIcon, label: 'Formation Avancée' },
-            { to: '/admin/classroom-progress', icon: PresentationChartLineIcon, label: 'Progression' },
-            { to: '/admin/model-access', icon: KeyIcon, label: 'Accès Modèles' },
-            { to: '/admin/absences', icon: CalendarIcon, label: 'Présences'},
-            { to: '/admin/payments', icon: CurrencyDollarIcon, label: 'Finances' },
-            { to: '/admin/artistic-direction', icon: PaintBrushIcon, label: 'Direction Artistique' },
-        ]
-    },
-    {
-        title: 'Système',
-        links: [
-            { to: '/admin/mailing', icon: PaperAirplaneIcon, label: 'Mailing' },
-            { to: '/admin/settings', icon: Cog6ToothIcon, label: 'Configuration' },
-        ]
-    }
+const navigation: NavigationSection[] = [
+  {
+    title: 'Piloter',
+    items: [
+      { to: '/admin', label: 'Vue d’ensemble', icon: HomeIcon, description: 'Priorités et activité' },
+      { to: '/admin/models', label: 'Talents', icon: UsersIcon, description: 'Profils et visibilité' },
+      { to: '/admin/bookings', label: 'Bookings', icon: BriefcaseIcon, description: 'Demandes clients' },
+      { to: '/admin/messages', label: 'Messages', icon: ChatBubbleLeftRightIcon, description: 'Demandes entrantes' },
+    ],
+  },
+  {
+    title: 'Produire',
+    items: [
+      { to: '/admin/fashion-day-events', label: 'Perfect Fashion Day', icon: SparklesIcon, description: 'Éditions et programme' },
+      { to: '/admin/casting-applications', label: 'Castings', icon: ClipboardDocumentListIcon, description: 'Candidatures' },
+      { to: '/admin/casting-results', label: 'Décisions', icon: ClipboardDocumentCheckIcon, description: 'Résultats jury' },
+      { to: '/admin/magazine', label: 'Magazine', icon: NewspaperIcon, description: 'Publications' },
+      { to: '/admin/news', label: 'Actualités', icon: CalendarDaysIcon, description: 'Annonces courtes' },
+      { to: '/admin/media-library', label: 'Médiathèque', icon: PhotoIcon, description: 'Fichiers et albums' },
+    ],
+  },
+  {
+    title: 'Coordonner',
+    items: [
+      { to: '/admin/fashion-day-applications', label: 'Candidatures PFD', icon: SparklesIcon, description: 'Talents et participants' },
+      { to: '/admin/artistic-direction', label: 'Direction artistique', icon: PaintBrushIcon, description: 'Briefs de production' },
+      { to: '/admin/payments', label: 'Finances', icon: CurrencyDollarIcon, description: 'Paiements' },
+      { to: '/admin/absences', label: 'Présences', icon: CalendarIcon, description: 'Suivi équipe' },
+      { to: '/admin/classroom-progress', label: 'Progression', icon: PresentationChartLineIcon, description: 'Parcours formation' },
+      { to: '/formation', label: 'Formation', icon: AcademicCapIcon, description: 'Contenu pédagogique' },
+    ],
+  },
+  {
+    title: 'Gérer',
+    items: [
+      { to: '/admin/model-access', label: 'Accès', icon: KeyIcon, description: 'Comptes et droits' },
+      { to: '/admin/recovery-requests', label: 'Récupérations', icon: KeyIcon, description: 'Demandes de compte' },
+      { to: '/admin/comments', label: 'Modération', icon: ChatBubbleLeftRightIcon, description: 'Commentaires' },
+      { to: '/admin/mailing', label: 'Mailing', icon: PaperAirplaneIcon, description: 'Campagnes email' },
+      { to: '/admin/agency', label: 'Agence', icon: BuildingStorefrontIcon, description: 'Informations publiques' },
+      { to: '/admin/settings', label: 'Réglages', icon: Cog6ToothIcon, description: 'Configuration' },
+    ],
+  },
 ];
 
-const Sidebar: React.FC<{ onLinkClick?: () => void }> = ({ onLinkClick }) => (
-    <nav className="flex flex-col gap-y-10">
-        {navSections.map(section => (
-            <div key={section.title}>
-                <h3 className="px-4 text-[9px] font-black uppercase text-pm-gold/40 tracking-[0.4em] mb-4">{section.title}</h3>
-                <div className="space-y-1">
-                    {section.links.map(link => <NavItem key={link.to} {...link} onClick={onLinkClick} />)}
-                </div>
-            </div>
-        ))}
-    </nav>
+const titleFromPath = (pathname: string) => {
+  const item = navigation.flatMap(section => section.items).find(entry => entry.to === pathname);
+  return item?.label || 'Administration';
+};
+
+const NavigationList: React.FC<{ onNavigate?: () => void }> = ({ onNavigate }) => (
+  <nav className="space-y-8" aria-label="Navigation administration">
+    {navigation.map(section => (
+      <section key={section.title}>
+        <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.24em] text-pm-gold/50">{section.title}</p>
+        <div className="space-y-1">
+          {section.items.map(({ to, label, icon: Icon, description }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={to === '/admin'}
+              onClick={onNavigate}
+              title={description}
+              className={({ isActive }) => `group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition ${
+                isActive
+                  ? 'bg-pm-gold text-[#1d1607] shadow-[0_8px_20px_rgba(181,138,42,0.16)]'
+                  : 'text-white/55 hover:bg-white/[0.055] hover:text-pm-off-white'
+              }`}
+            >
+              <Icon className="h-4 w-4 shrink-0" />
+              <span className="min-w-0 flex-1 truncate font-medium">{label}</span>
+              <ChevronRightIcon className="h-3.5 w-3.5 opacity-0 transition group-hover:translate-x-0.5 group-hover:opacity-70" />
+            </NavLink>
+          ))}
+        </div>
+      </section>
+    ))}
+  </nav>
 );
 
 const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [sidebarOpen, setSidebarOpen] = useState(false);
-    const location = useLocation();
-    const { info } = useToast();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const location = useLocation();
+  const { user } = useAuth();
+  const { info } = useToast();
+  const handleNotification = useCallback((notification: { title: string; body: string }) => info(`${notification.title} — ${notification.body}`), [info]);
+  const { permission, isLoading, subscribe } = usePushNotifications(handleNotification);
 
-    const handleNotification = useCallback((n: { title: string; body: string }) => {
-        info(`${n.title} — ${n.body}`);
-    }, [info]);
+  const searchResults = useMemo(() => {
+    const term = query.trim().toLocaleLowerCase('fr');
+    return term ? navigation.flatMap(section => section.items).filter(item => `${item.label} ${item.description}`.toLocaleLowerCase('fr').includes(term)) : [];
+  }, [query]);
 
-    const { permission, isLoading, subscribe } = usePushNotifications(handleNotification);
+  const requestNotifications = async () => {
+    if (permission !== 'granted') await subscribe();
+  };
 
-    const handleBellClick = async () => {
-        if (permission === 'granted') return;
-        await subscribe();
-    };
+  return (
+    <div className="min-h-screen bg-[#0f0d0a] text-pm-off-white selection:bg-pm-gold selection:text-[#1d1607]">
+      <div className="pointer-events-none fixed inset-0 -z-0 opacity-70 [background-image:radial-gradient(circle_at_14%_0%,rgba(181,138,42,0.13),transparent_28rem),radial-gradient(circle_at_92%_16%,rgba(129,91,21,0.11),transparent_24rem)]" />
 
-    return (
-        <div className="min-h-screen bg-[#050505] text-pm-off-white flex">
-            {/* Sidebar for Desktop */}
-            <aside className="hidden lg:flex lg:flex-col lg:w-72 fixed top-0 left-0 h-full bg-pm-dark border-r border-white/5 p-8 overflow-y-auto no-scrollbar">
-                <div className="flex items-center gap-3 mb-16 px-4">
-                    <div className="w-9 h-9 rounded-lg bg-pm-gold/10 border border-pm-gold/30 flex items-center justify-center shrink-0">
-                        <span className="text-pm-gold font-playfair font-black text-[10px]">PMM</span>
-                    </div>
-                    <div>
-                        <h1 className="font-playfair text-sm font-black text-white italic leading-none">Admin Panel</h1>
-                        <p className="text-[8px] font-black uppercase tracking-[0.3em] text-pm-gold/40 mt-0.5">Perfect Models</p>
-                    </div>
-                </div>
-                <Sidebar />
-            </aside>
-
-            {/* Mobile Sidebar */}
-            <AnimatePresence>
-                {sidebarOpen && (
-                    <>
-                        <motion.div 
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            onClick={() => setSidebarOpen(false)} 
-                            className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm lg:hidden"
-                        />
-                        <motion.div 
-                            initial={{ x: "-100%" }}
-                            animate={{ x: 0 }}
-                            exit={{ x: "-100%" }}
-                            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                            className="fixed inset-y-0 left-0 z-50 w-72 bg-pm-dark border-r border-white/5 p-8 overflow-y-auto lg:hidden"
-                        >
-                            <div className="flex items-center justify-between mb-16 px-4">
-                                <h1 className="font-playfair text-xl font-black italic">Admin Panel</h1>
-                                <button onClick={() => setSidebarOpen(false)} className="text-white/40 hover:text-white"><XMarkIcon className="w-6 h-6" /></button>
-                            </div>
-                            <Sidebar onLinkClick={() => setSidebarOpen(false)} />
-                        </motion.div>
-                    </>
-                )}
-            </AnimatePresence>
-
-            {/* Main Content */}
-            <div className="flex flex-col flex-1 lg:pl-72 min-w-0">
-                <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-white/5 bg-pm-dark/60 backdrop-blur-xl px-4 sm:px-6 lg:px-10">
-                    <div className="flex items-center gap-3 sm:gap-6 min-w-0 flex-1">
-                        <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 text-pm-off-white/80 shrink-0">
-                            <Bars3Icon className="w-6 h-6" />
-                        </button>
-                        <div className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.2em] sm:tracking-[0.4em] text-pm-gold truncate">
-                            {location.pathname.split('/').pop()?.replace(/-/g, ' ') || 'Tableau de Bord'}
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-                        <button
-                            onClick={handleBellClick}
-                            disabled={isLoading || permission === 'denied'}
-                            title={
-                                permission === 'granted' ? 'Notifications activées'
-                                : permission === 'denied' ? 'Notifications bloquées (modifier dans le navigateur)'
-                                : 'Activer les notifications push'
-                            }
-                            className={`p-2 rounded-full transition-all duration-300 ${
-                                permission === 'granted'
-                                    ? 'text-pm-gold'
-                                    : permission === 'denied'
-                                    ? 'text-white/20 cursor-not-allowed'
-                                    : 'text-white/40 hover:text-pm-gold hover:bg-pm-gold/10'
-                            }`}
-                        >
-                            {isLoading
-                                ? <span className="loading loading-spinner loading-sm text-pm-gold" />
-                                : permission === 'granted'
-                                ? <BellIcon className="w-5 h-5" />
-                                : <BellSlashIcon className="w-5 h-5" />
-                            }
-                        </button>
-                        <Link to="/" className="hidden sm:block text-[9px] font-black uppercase tracking-[0.2em] text-white/30 hover:text-pm-gold transition-colors whitespace-nowrap">Site Public</Link>
-                        <div className="w-8 h-8 rounded-full bg-pm-gold/20 border border-pm-gold/40 flex items-center justify-center text-pm-gold text-[10px] font-bold shrink-0">AD</div>
-                    </div>
-                </header>
-                <main className="p-4 sm:p-6 lg:p-10 xl:p-16 min-w-0 overflow-x-hidden">
-                    {children}
-                </main>
-            </div>
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[17.5rem] border-r border-white/[0.07] bg-[#15110c]/95 px-5 py-6 lg:flex lg:flex-col">
+        <Link to="/admin" className="mb-9 flex items-center gap-3 px-3" aria-label="Retour au tableau de bord">
+          <span className="grid h-10 w-10 place-items-center rounded-lg border border-pm-gold/40 bg-pm-gold/[0.08] font-playfair text-sm font-black text-pm-gold-light">PMM</span>
+          <span>
+            <strong className="block font-playfair text-[1.05rem] leading-tight text-pm-off-white">Maison PMM</strong>
+            <small className="mt-0.5 block text-[9px] font-bold uppercase tracking-[0.18em] text-pm-gold/55">Administration</small>
+          </span>
+        </Link>
+        <div className="min-h-0 flex-1 overflow-y-auto pr-1 [scrollbar-width:thin]">
+          <NavigationList />
         </div>
-    );
+        <div className="mt-5 border-t border-white/[0.07] pt-4">
+          <Link to="/" className="flex items-center gap-2 px-3 py-2 text-xs text-white/35 transition hover:text-pm-gold-light"><BookOpenIcon className="h-4 w-4" /> Voir le site public</Link>
+        </div>
+      </aside>
+
+      <div className="relative z-10 min-w-0 lg:pl-[17.5rem]">
+        <header className="sticky top-0 z-20 flex h-[4.5rem] items-center gap-3 border-b border-white/[0.07] bg-[#0f0d0a]/90 px-4 backdrop-blur-xl sm:px-6 lg:px-9">
+          <button onClick={() => setMobileOpen(true)} className="grid h-10 w-10 place-items-center rounded-lg text-white/65 hover:bg-white/[0.06] lg:hidden" aria-label="Ouvrir la navigation"><Bars3Icon className="h-5 w-5" /></button>
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-pm-gold/60">Espace équipe</p>
+            <h1 className="truncate font-playfair text-lg font-bold text-pm-off-white">{titleFromPath(location.pathname)}</h1>
+          </div>
+          <button onClick={() => setSearchOpen(true)} className="hidden items-center gap-2 rounded-lg border border-white/[0.09] bg-white/[0.025] px-3 py-2 text-xs text-white/40 transition hover:border-pm-gold/35 hover:text-pm-gold-light sm:flex" aria-label="Rechercher un module">
+            <MagnifyingGlassIcon className="h-4 w-4" /><span>Rechercher</span><kbd className="rounded border border-white/10 px-1.5 py-0.5 text-[9px]">⌘ K</kbd>
+          </button>
+          <button onClick={() => void requestNotifications()} disabled={isLoading || permission === 'denied'} className={`grid h-10 w-10 place-items-center rounded-lg transition ${permission === 'granted' ? 'bg-pm-gold/[0.12] text-pm-gold-light' : 'text-white/45 hover:bg-white/[0.06] hover:text-pm-gold-light'} disabled:cursor-not-allowed disabled:opacity-40`} title={permission === 'granted' ? 'Notifications activées' : 'Activer les notifications'}>
+            {isLoading ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-pm-gold/30 border-t-pm-gold" /> : permission === 'granted' ? <BellIcon className="h-5 w-5" /> : permission === 'denied' ? <BellSlashIcon className="h-5 w-5" /> : <BellAlertIcon className="h-5 w-5" />}
+          </button>
+          <div className="hidden min-w-0 border-l border-white/[0.08] pl-3 sm:block">
+            <p className="max-w-28 truncate text-xs font-semibold text-pm-off-white">{user?.displayName || 'Équipe PMM'}</p>
+            <p className="text-[9px] uppercase tracking-[0.16em] text-pm-gold/60">{user?.role || 'admin'}</p>
+          </div>
+        </header>
+        <main className="mx-auto w-full max-w-[1700px] px-4 py-7 sm:px-6 sm:py-9 lg:px-9 xl:px-12">{children}</main>
+      </div>
+
+      <AnimatePresence>
+        {mobileOpen && <>
+          <motion.button aria-label="Fermer la navigation" className="fixed inset-0 z-40 bg-black/70 lg:hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setMobileOpen(false)} />
+          <motion.aside className="fixed inset-y-0 left-0 z-50 w-[min(19rem,85vw)] overflow-y-auto border-r border-white/[0.08] bg-[#15110c] px-5 py-6 lg:hidden" initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }} transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}>
+            <div className="mb-8 flex items-center justify-between"><span className="font-playfair text-xl font-bold text-pm-off-white">Maison PMM</span><button onClick={() => setMobileOpen(false)} className="grid h-10 w-10 place-items-center rounded-lg text-white/55 hover:bg-white/[0.06]"><XMarkIcon className="h-5 w-5" /></button></div>
+            <NavigationList onNavigate={() => setMobileOpen(false)} />
+          </motion.aside>
+        </>}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {searchOpen && <motion.div className="fixed inset-0 z-[60] grid place-items-start bg-black/75 p-4 pt-[12vh] backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onMouseDown={() => setSearchOpen(false)}>
+          <motion.div className="w-full max-w-xl overflow-hidden rounded-xl border border-pm-gold/25 bg-[#18130d] shadow-2xl" initial={{ y: 12, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 8, opacity: 0 }} onMouseDown={event => event.stopPropagation()}>
+            <div className="flex items-center gap-3 border-b border-white/[0.08] px-4"><MagnifyingGlassIcon className="h-5 w-5 text-pm-gold" /><input autoFocus value={query} onChange={event => setQuery(event.target.value)} placeholder="Rechercher une fonctionnalité…" className="h-14 min-w-0 flex-1 bg-transparent text-sm text-pm-off-white outline-none placeholder:text-white/30" /><button onClick={() => setSearchOpen(false)} className="text-xs text-white/40">Échap</button></div>
+            <div className="max-h-[50vh] overflow-y-auto p-2">
+              {searchResults.length ? searchResults.map(item => <Link key={item.to} to={item.to} onClick={() => setSearchOpen(false)} className="flex items-center gap-3 rounded-lg px-3 py-3 transition hover:bg-pm-gold/[0.1]"><item.icon className="h-4 w-4 text-pm-gold" /><span className="flex-1"><b className="block text-sm text-pm-off-white">{item.label}</b><small className="text-xs text-white/35">{item.description}</small></span><ChevronRightIcon className="h-4 w-4 text-white/30" /></Link>) : <p className="px-3 py-8 text-center text-sm text-white/35">Saisissez le nom d’un module pour le trouver.</p>}
+            </div>
+          </motion.div>
+        </motion.div>}
+      </AnimatePresence>
+    </div>
+  );
 };
 
 export default AdminLayout;

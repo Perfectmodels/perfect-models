@@ -6,9 +6,11 @@ export default {
   theme: {
     extend: {
       colors: {
-        'pm-dark': '#111111',
-        'pm-gold': '#D4AF37',
-        'pm-off-white': '#f0f0f0',
+        'pm-dark': '#12100D',
+        'pm-gold': '#B58A2A',
+        'pm-gold-light': '#E2C36B',
+        'pm-gold-deep': '#6F4C12',
+        'pm-off-white': '#F4EFE4',
       },
       fontFamily: {
         playfair: ['"Playfair Display"', 'serif'],
