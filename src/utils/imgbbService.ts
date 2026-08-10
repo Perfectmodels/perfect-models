@@ -1,3 +1,31 @@
-export interface ImgBBUploadResult{url:string}
-export async function uploadToImgbb(file:File,_apiKey?:string,onProgress?:(pct:number)=>void):Promise<string>{onProgress?.(10);const form=new FormData();form.append('file',file);form.append('scope','casting');const response=await fetch('/api/media/upload',{method:'POST',credentials:'include',body:form});const data=await response.json().catch(()=>({}));if(!response.ok||!data.url)throw new Error(data.error||"Échec de l'upload Vercel Blob");onProgress?.(100);return data.url}
-export const ACCEPTED_IMAGE_TYPES='image/jpeg,image/png,image/webp,image/gif,image/avif';export const MAX_IMAGE_SIZE_MB=4.5;export function validateFile(file:File,_type:'image'|'video'|'auto'){if(!file.type.startsWith('image/'))return'Seules les images sont acceptées.';if(file.size>MAX_IMAGE_SIZE_MB*1024*1024)return`Fichier trop lourd (max ${MAX_IMAGE_SIZE_MB} Mo).`;return null}
+export interface ImgBBUploadResult { url: string }
+
+export async function uploadToImgbb(file: File, _apiKey?: string, onProgress?: (pct: number) => void): Promise<string> {
+  onProgress?.(10);
+  const form = new FormData();
+  form.append('file', file);
+  form.append('scope', 'casting');
+
+  const response = await fetch('/api/media/imgbb', {
+    method: 'POST',
+    credentials: 'include',
+    body: form,
+  });
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok || !data?.url) {
+    throw new Error(data?.error || "Échec de l'upload ImgBB");
+  }
+
+  onProgress?.(100);
+  return data.url;
+}
+
+export const ACCEPTED_IMAGE_TYPES = 'image/jpeg,image/png,image/webp,image/gif,image/avif';
+export const MAX_IMAGE_SIZE_MB = 4.5;
+
+export function validateFile(file: File, _type: 'image' | 'video' | 'auto') {
+  if (!file.type.startsWith('image/')) return 'Seules les images sont acceptées.';
+  if (file.size > MAX_IMAGE_SIZE_MB * 1024 * 1024) return `Fichier trop lourd (max ${MAX_IMAGE_SIZE_MB} Mo).`;
+  return null;
+}
