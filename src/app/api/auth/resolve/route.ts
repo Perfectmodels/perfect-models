@@ -39,7 +39,8 @@ async function resolve(identifier: string) {
       [normalized],
     );
     const row = rows[0];
-    if (!row || row.status !== 'active') {
+    // Les comptes mannequins utilisent le rôle student et doivent rester actifs.
+    if (!row || (row.status !== 'active' && row.app_role !== 'student')) {
       return NextResponse.json({ error: 'Identifiant introuvable ou compte inactif.' }, { status: 404 });
     }
     return NextResponse.json({
