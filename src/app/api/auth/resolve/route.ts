@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { sqlQuery } from '@/lib/neon';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 interface Row {
   login_email: string;
   identifier: string;
@@ -39,7 +42,7 @@ async function resolve(identifier: string) {
       [normalized],
     );
     const row = rows[0];
-    // Les comptes mannequins utilisent le rôle student et doivent rester actifs.
+    // Les comptes mannequins utilisent le rôle student et sont toujours actifs.
     if (!row || (row.status !== 'active' && row.app_role !== 'student')) {
       return NextResponse.json({ error: 'Identifiant introuvable ou compte inactif.' }, { status: 404 });
     }
@@ -48,7 +51,7 @@ async function resolve(identifier: string) {
       identifier: row.identifier,
       role: row.app_role,
       name: row.name,
-    });
+    }, { headers: { 'Cache-Control': 'no-store' } });
   } catch (error) {
     console.error('[auth/resolve] database lookup failed', error);
     return NextResponse.json(
