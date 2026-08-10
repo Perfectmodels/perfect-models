@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeftIcon, TrashIcon, EyeIcon, LockClosedIcon, LockOpenIcon, PlusIcon, PencilIcon } from '@heroicons/react/24/outline';
 import SEO from '../components/SEO';
@@ -27,6 +27,7 @@ const EMPTY_MODEL: Model = {
   experience: '',
   journey: '',
   quizScores: {},
+  permissions: { isActive: true },
 };
 
 const generateMatricule = (name: string, existingUsernames: string[]): string => {
@@ -45,6 +46,21 @@ const AdminModels: React.FC = () => {
   const [editingModel, setEditingModel] = useState<Model | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [filterGender, setFilterGender] = useState<'Tous' | 'Homme' | 'Femme'>('Tous');
+  const normalizedActive = useRef(false);
+
+  useEffect(() => {
+    if (!data || normalizedActive.current) return;
+    const needsNormalization = data.models.some(model => model.permissions?.isActive !== true);
+    if (!needsNormalization) return;
+    normalizedActive.current = true;
+    void saveData({
+      ...data,
+      models: data.models.map(model => ({
+        ...model,
+        permissions: { ...(model.permissions || {}), isActive: true },
+      })),
+    });
+  }, [data, saveData]);
 
   const filtered = filterGender === 'Tous' ? models : models.filter(m => m.gender === filterGender);
 
@@ -60,11 +76,12 @@ const AdminModels: React.FC = () => {
 
   const handleSave = (model: Model) => {
     if (!data) return;
+    const activeModel = { ...model, permissions: { ...(model.permissions || {}), isActive: true } };
     if (isCreating) {
-      const id = model.name.toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + Date.now();
-      saveData({ ...data, models: [...data.models, { ...model, id }] });
+      const id = activeModel.name.toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + Date.now();
+      saveData({ ...data, models: [...data.models, { ...activeModel, id }] });
     } else {
-      saveData({ ...data, models: data.models.map(m => m.id === model.id ? model : m) });
+      saveData({ ...data, models: data.models.map(m => m.id === activeModel.id ? activeModel : m) });
     }
     setEditingModel(null);
     setIsCreating(false);
@@ -85,16 +102,16 @@ const AdminModels: React.FC = () => {
       if (!m.username?.trim()) {
         const matricule = generateMatricule(m.name, existingUsernames);
         existingUsernames.push(matricule);
-        return { ...m, username: matricule };
+        return { ...m, username: matricule, permissions: { ...(m.permissions || {}), isActive: true } };
       }
-      return m;
+      return { ...m, permissions: { ...(m.permissions || {}), isActive: true } };
     });
     saveData({ ...data, models: updated });
   };
 
   const handleEdit = (model: Model) => {
     setIsCreating(false);
-    setEditingModel({ ...model });
+    setEditingModel({ ...model, permissions: { ...(model.permissions || {}), isActive: true } });
   };
 
   if (editingModel) {
@@ -130,7 +147,6 @@ const AdminModels: React.FC = () => {
           </div>
         </div>
 
-        {/* Filtres */}
         <div className="flex gap-2 mb-6">
           {(['Tous', 'Femme', 'Homme'] as const).map(g => (
             <button key={g} onClick={() => setFilterGender(g)} className={`text-xs px-4 py-1.5 rounded-full border transition-colors ${filterGender === g ? 'bg-pm-gold text-pm-dark border-pm-gold font-bold' : 'border-pm-gold/30 text-pm-off-white/60 hover:border-pm-gold/60'}`}>
@@ -171,15 +187,13 @@ const AdminModels: React.FC = () => {
                     <td className="p-4 hidden sm:table-cell text-sm">{m.height}</td>
                     <td className="p-4 hidden md:table-cell text-sm">{m.level ?? '—'}</td>
                     <td className="p-4">
-                      <span className={`px-2 py-1 text-xs font-bold rounded-full border ${m.isPublic ? 'bg-green-500/20 text-green-300 border-green-500' : 'bg-gray-500/20 text-gray-300 border-gray-500'}`}>
-                        {m.isPublic ? 'Public' : 'Privé'}
+                      <span className="px-2 py-1 text-xs font-bold rounded-full border bg-green-500/20 text-green-300 border-green-500">
+                        Actif
                       </span>
                     </td>
                     <td className="p-4">
                       <div className="flex items-center justify-end gap-3">
-                        <button onClick={() => handleTogglePublic(m.id)} title={m.isPublic ? 'Rendre privé' : 'Rendre public'} className="text-pm-gold/70 hover:text-pm-gold">
-                          {m.isPublic ? <LockOpenIcon className="w-5 h-5" /> : <LockClosedIcon className="w-5 h-5" />}
-                        </button>
+                        <span title="Compte mannequin actif" className="text-green-400"><LockOpenIcon className="w-5 h-5" /></span>
                         <button onClick={() => handleEdit(m)} className="text-pm-gold/70 hover:text-pm-gold"><PencilIcon className="w-5 h-5" /></button>
                         <Link to={`/mannequins/${m.id}`} className="text-pm-gold/70 hover:text-pm-gold"><EyeIcon className="w-5 h-5" /></Link>
                         <button onClick={() => handleDelete(m.id)} className="text-red-500/70 hover:text-red-500"><TrashIcon className="w-5 h-5" /></button>
