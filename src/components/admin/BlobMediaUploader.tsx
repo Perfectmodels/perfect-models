@@ -55,17 +55,36 @@ export default function BlobMediaUploader({
     setUploading(true);
     setProgress(0);
     try {
+      if (kind === 'image') {
+        const form = new FormData();
+        form.append('file', file);
+        form.append('scope', scope);
+        setProgress(15);
+        const response = await fetch('/api/media/imgbb', {
+          method: 'POST',
+          credentials: 'include',
+          body: form,
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data?.url) {
+          throw new Error(data?.error || "Échec de l'upload vers ImgBB.");
+        }
+        setProgress(100);
+        onChange(data.url);
+        return;
+      }
+
       const pathname = `pmm/${scope}/${Date.now()}-${safeFilename(file.name)}`;
       const blob = await upload(pathname, file, {
         access: 'public',
         handleUploadUrl: '/api/media/client-upload',
         clientPayload: JSON.stringify({ kind, scope }),
-        multipart: kind === 'video' && file.size > 100 * 1024 * 1024,
+        multipart: file.size > 100 * 1024 * 1024,
         onUploadProgress: ({ percentage }) => setProgress(Math.round(percentage)),
       });
       onChange(blob.url);
     } catch (cause: any) {
-      setError(cause?.message || "Échec de l'upload vers Vercel Blob.");
+      setError(cause?.message || "Échec du téléversement du média.");
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = '';
@@ -129,7 +148,7 @@ export default function BlobMediaUploader({
 
       {!compact && (
         <p className="text-[10px] text-white/30">
-          {kind === 'image' ? 'JPG, PNG, WEBP, GIF ou AVIF — 15 Mo max.' : 'MP4, WebM ou MOV — 1 Go max. Les gros fichiers utilisent un upload multipart.'}
+          {kind === 'image' ? 'JPG, PNG, WEBP, GIF ou AVIF — téléversement via ImgBB.' : 'MP4, WebM ou MOV — 1 Go max. Les gros fichiers utilisent Vercel Blob.'}
         </p>
       )}
       {error && <p className="text-xs text-red-400">{error}</p>}
