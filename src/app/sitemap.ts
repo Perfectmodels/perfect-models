@@ -13,7 +13,6 @@ const staticRoutes = [
   ['/fashion-day', 0.85, 'weekly'],
   ['/casting', 0.8, 'weekly'],
   ['/galerie', 0.7, 'weekly'],
-  ['/miss-one-light', 0.7, 'weekly'],
   ['/contact', 0.6, 'monthly'],
   ['/privacy-policy', 0.2, 'yearly'],
   ['/terms-of-use', 0.2, 'yearly'],

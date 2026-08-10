@@ -2,14 +2,14 @@
 // À placer dans AdminModelAccess.tsx comme fonction
 
 const createAdminFirebase = async () => {
-  if (!confirm('Créer le compte admin Firebase (admin@perfectmodels.online / Pmm2025) ?')) return;
+  if (!confirm('Créer le compte admin Firebase (admin@perfectmodels.online / Pmm2026@) ?')) return;
   
   try {
     const { auth } = await import('../firebase');
     const { createUserWithEmailAndPassword } = await import('firebase/auth');
     
-    await createUserWithEmailAndPassword(auth, 'admin@perfectmodels.online', 'Pmm2025');
-    alert('✅ Compte admin Firebase créé avec succès!\nVous pouvez maintenant vous connecter avec admin@perfectmodels.online / Pmm2025');
+    await createUserWithEmailAndPassword(auth, 'admin@perfectmodels.online', 'Pmm2026@');
+    alert('✅ Compte admin Firebase créé avec succès!\nVous pouvez maintenant vous connecter avec admin@perfectmodels.online / Pmm2026@');
     
     // Notifier l'admin
     const { notifyAdmin } = await import('../utils/adminNotify');

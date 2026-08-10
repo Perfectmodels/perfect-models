@@ -9,7 +9,6 @@ export const navLinks: NavLink[] = [
   { path: '/', label: 'Accueil', inFooter: true },
   { path: '/agence', label: 'Agence', inFooter: true },
   { path: '/mannequins', label: 'Mannequins', inFooter: true },
-  { path: '/miss-one-light', label: 'Miss One Light', inFooter: true },
   { path: '/fashion-day', label: 'PFD', inFooter: true, footerLabel: 'Perfect Fashion Day' },
   { path: '/magazine', label: 'Magazine', inFooter: true },
   { path: '/services', label: 'Services', inFooter: true },

@@ -524,24 +524,6 @@ export interface GalleryItem {
   createdAt: string;
 }
 
-export interface MissOneLightPendingVote {
-   id: string;
-   candidateId: string;
-   candidateName: string;
-   voterName?: string;      // nom du votant
-   votes: number;         // votes achetés (payés)
-   bonusVotes: number;    // votes bonus (+5 par tranche de 10)
-   totalVotes: number;    // votes + bonusVotes
-   email: string;
-   phone: string;
-   txRef: string;
-   validated: boolean;
-   cancelled?: boolean;   // annulé lors d'un reset votes
-   timestamp: string;
-   validatedAt?: string;
-   cancelledAt?: string;
-}
-
 export type NewsletterStatus = 'draft' | 'scheduled' | 'sending' | 'sent' | 'cancelled';
 
 export interface Newsletter {

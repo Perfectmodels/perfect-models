@@ -1,7 +1,6 @@
 'use client';
 
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { neonClient } from '@/lib/neon-browser';
 import type { UserPermissions } from '../types';
 
 export type UserRole = 'admin' | 'student' | 'jury' | 'registration' | 'jury-contest';
@@ -65,40 +64,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const refresh = useCallback(async () => {
     try {
-      const sessionResult = await (neonClient.auth as any).getSession();
-      const session = sessionResult?.data;
-      const sessionUser = session?.user;
-      if (!sessionUser?.id) {
+      const response = await fetch('/api/auth/profile', { credentials: 'include', cache: 'no-store' });
+      if (!response.ok) {
         setUser(null);
         return null;
       }
-
-      const { data, error } = await neonClient
-        .from('auth_profiles')
-        .select('user_id,identifier,app_role,login_email,profile_id,status,must_change_password,permissions,contest_id')
-        .eq('user_id', sessionUser.id)
-        .limit(1);
-
-      if (error) throw error;
-      const profile = (data as ProfileRow[] | null)?.[0];
-      if (!profile || profile.status !== 'active') {
+      const payload = await response.json().catch(() => ({}));
+      const profile = payload?.user as AuthUser | null;
+      if (!profile) {
         setUser(null);
         return null;
       }
-
-      const appUser: AuthUser = {
-        uid: profile.user_id,
-        userId: profile.profile_id || profile.identifier,
-        email: profile.login_email || sessionUser.email || null,
-        displayName: sessionUser.name || profile.identifier,
-        role: profile.app_role,
-        identifier: profile.identifier,
-        permissions: profile.permissions || undefined,
-        mustChangePassword: Boolean(profile.must_change_password),
-        contestId: profile.contest_id || undefined,
-      };
-      setUser(appUser);
-      return appUser;
+      setUser(profile);
+      return profile;
     } catch (error) {
       console.error('[auth] Neon profile refresh failed', error);
       setUser(null);
@@ -116,22 +94,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!candidate) return { success: false, error: 'Identifiant requis.' };
       if (ADMIN_ALIASES.has(candidate)) candidate = 'admin';
 
-      const { data, error } = await neonClient.rpc('pmm_resolve_login', {
-        p_identifier: candidate,
+      const response = await fetch('/api/auth/resolve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier: candidate }),
       });
-      if (error) return { success: false, error: 'Identifiant introuvable.' };
+      const resolved = await response.json().catch(() => ({}));
+      if (!response.ok || !resolved?.email) return { success: false, error: resolved?.error || 'Identifiant introuvable.' };
 
-      const resolved = (data as Array<{ login_email: string; status: string }> | null)?.[0];
-      if (!resolved?.login_email || resolved.status !== 'active') {
-        return { success: false, error: 'Identifiant introuvable ou compte inactif.' };
-      }
-
-      const result = await (neonClient.auth as any).signIn.email({
-        email: resolved.login_email,
-        password,
+      const signInResponse = await fetch('/api/auth/sign-in/email', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: resolved.email, password }),
       });
-      if (result?.error) {
-        return { success: false, error: result.error.message || 'Identifiant ou mot de passe incorrect.' };
+      const signInResult = await signInResponse.json().catch(() => ({}));
+      if (!signInResponse.ok) {
+        return { success: false, error: signInResult?.message || signInResult?.error?.message || 'Identifiant ou mot de passe incorrect.' };
       }
 
       const appUser = await refresh();
@@ -145,7 +124,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = useCallback(async () => {
     try {
-      await (neonClient.auth as any).signOut();
+      await fetch('/api/auth/sign-out', { method: 'POST', credentials: 'include' });
     } finally {
       setUser(null);
       emit();

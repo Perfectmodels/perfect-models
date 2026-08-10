@@ -207,7 +207,6 @@ const Home: React.FC = () => {
         <p className="mt-5 max-w-2xl mx-auto text-white/45">Booking, casting, défilé, campagne ou collaboration : présentez-nous votre besoin et notre équipe vous répondra avec une proposition adaptée.</p>
         <div className="mt-9 flex flex-col sm:flex-row justify-center gap-4">
           <Link to="/contact" className="btn-premium">Parler à l'agence</Link>
-          <Link to="/miss-one-light" className="btn-premium bg-transparent text-white border-white/20">Miss One Light</Link>
         </div>
       </section>
     </div>

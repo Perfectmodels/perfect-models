@@ -251,11 +251,4 @@ export const MARKETING_PAGES = {
     path: '/contact',
     keywords: ['contact agence mannequin Gabon', 'réserver mannequin Libreville', 'booking PMM'],
   },
-  missOneLight: {
-    title: 'Miss One Light : concours et talents au Gabon',
-    description:
-      'Découvrez Miss One Light, les candidates, les temps forts et les contenus du concours présenté sur la plateforme Perfect Models Management.',
-    path: '/miss-one-light',
-    keywords: ['Miss One Light Gabon', 'concours beauté Gabon', 'candidates Gabon'],
-  },
 } as const;

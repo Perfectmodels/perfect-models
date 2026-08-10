@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "lib": ["DOM", "DOM.Iterable", "ES2020"],
+    "lib": [
+      "DOM",
+      "DOM.Iterable",
+      "ES2020"
+    ],
     "allowJs": false,
     "skipLibCheck": true,
     "strict": true,
@@ -12,20 +16,50 @@
     "moduleResolution": "Bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "incremental": true,
-    "plugins": [{ "name": "next" }],
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
     "baseUrl": "./src",
     "paths": {
-      "@/*": ["*"],
-      "react-router-dom": ["compat/react-router-dom"],
-      "firebase/app": ["compat/firebase/app"],
-      "firebase/auth": ["compat/firebase/auth"],
-      "firebase/database": ["compat/firebase/database"],
-      "firebase/firestore": ["compat/firebase/firestore"],
-      "firebase/messaging": ["compat/firebase/messaging"]
+      "@/*": [
+        "*"
+      ],
+      "react-router-dom": [
+        "compat/react-router-dom"
+      ],
+      "firebase/app": [
+        "compat/firebase/app"
+      ],
+      "firebase/auth": [
+        "compat/firebase/auth"
+      ],
+      "firebase/database": [
+        "compat/firebase/database"
+      ],
+      "firebase/firestore": [
+        "compat/firebase/firestore"
+      ],
+      "firebase/messaging": [
+        "compat/firebase/messaging"
+      ]
     }
   },
-  "include": ["next-env.d.ts", ".next/types/**/*.ts", ".next/dev/types/**/*.ts", "src/**/*.ts", "src/**/*.tsx", "*.ts", "*.mjs"],
-  "exclude": ["node_modules", "docs", "resources"]
+  "include": [
+    "next-env.d.ts",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "*.ts",
+    "*.mjs"
+  ],
+  "exclude": [
+    "node_modules",
+    "docs",
+    "resources"
+  ]
 }

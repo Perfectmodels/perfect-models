@@ -131,3 +131,4 @@ ios/App/App.xcodeproj/project.xcworkspace/xcuserdata/
 # Capacitor
 .capacitor/
 capacitor.config.json
+.env*

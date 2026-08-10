@@ -1,5 +1,7 @@
 const legacyViteEnv = Object.fromEntries(
-  Object.entries(process.env).filter(([key]) => key.startsWith('VITE_')),
+  Object.entries(process.env)
+    .filter(([key]) => key.startsWith('VITE_') || key.startsWith('NEXT_VITE_'))
+    .map(([key, value]) => [key.replace(/^NEXT_/, ''), value]),
 );
 
 /** @type {import('next').NextConfig} */
