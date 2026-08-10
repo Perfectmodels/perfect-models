@@ -46,18 +46,6 @@ const ADMIN_ALIASES = new Set([
   'perfectmodels.ga@gmail.com',
 ]);
 
-type ProfileRow = {
-  user_id: string;
-  identifier: string;
-  app_role: UserRole;
-  login_email: string;
-  profile_id: string | null;
-  status: string;
-  must_change_password: boolean;
-  permissions: UserPermissions | null;
-  contest_id: string | null;
-};
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
@@ -96,7 +84,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const response = await fetch('/api/auth/resolve', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
         body: JSON.stringify({ identifier: candidate }),
       });
       const resolved = await response.json().catch(() => ({}));
@@ -105,7 +94,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const signInResponse = await fetch('/api/auth/sign-in/email', {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
         body: JSON.stringify({ email: resolved.email, password }),
       });
       const signInResult = await signInResponse.json().catch(() => ({}));
@@ -124,7 +113,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = useCallback(async () => {
     try {
-      await fetch('/api/auth/sign-out', { method: 'POST', credentials: 'include' });
+      const response = await fetch('/api/auth/sign-out', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({}),
+      });
+      if (!response.ok && response.status !== 401) {
+        console.warn('[auth] sign-out returned', response.status);
+      }
     } finally {
       setUser(null);
       emit();
@@ -162,7 +159,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const r = await fetch('/api/auth/forget-password', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
         body: JSON.stringify({ email: email.trim().toLowerCase(), redirectTo: `${window.location.origin}/login` }),
       });
       if (!r.ok) {
