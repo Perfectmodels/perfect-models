@@ -1,8 +1,20 @@
 import { neon } from '@neondatabase/serverless';
 
+export function getDatabaseUrl() {
+  return (
+    process.env.DATABASE_URL ||
+    process.env.DATABASE_URL_UNPOOLED ||
+    process.env.POSTGRES_URL ||
+    process.env.POSTGRES_URL_NON_POOLING ||
+    ''
+  );
+}
+
 export function getSql() {
-  const connectionString = process.env.DATABASE_URL;
-  if (!connectionString) throw new Error('DATABASE_URL is not configured.');
+  const connectionString = getDatabaseUrl();
+  if (!connectionString) {
+    throw new Error('No server-side Neon database connection is configured.');
+  }
   return neon(connectionString);
 }
 
