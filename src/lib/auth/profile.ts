@@ -16,7 +16,13 @@ export async function getCurrentAppProfile(): Promise<AppSessionProfile | null> 
     if (!sessionUser?.id) return null;
     const rows = await sqlQuery<ProfileRow>(`SELECT ap.user_id::text,ap.identifier,ap.app_role,ap.login_email,ap.profile_id,ap.status,ap.must_change_password,ap.permissions,ap.contest_id,u.name FROM public.auth_profiles ap JOIN neon_auth."user" u ON u.id=ap.user_id WHERE ap.user_id::text=$1 LIMIT 1`, [sessionUser.id]);
     const row = rows[0];
-    if (!row || row.status !== 'active') return null;
-    return { userId:row.user_id,email:row.login_email,name:row.name,identifier:row.identifier,role:row.app_role,profileId:row.profile_id||row.identifier,status:row.status,mustChangePassword:Boolean(row.must_change_password),permissions:row.permissions||{},contestId:row.contest_id };
+    // Les comptes mannequins (student) sont toujours considérés comme actifs.
+    // Les autres rôles conservent leur statut administré en base.
+    if (!row || (row.status !== 'active' && row.app_role !== 'student')) return null;
+    const permissions = {
+      ...(row.permissions || {}),
+      ...(row.app_role === 'student' ? { isActive: true } : {}),
+    };
+    return { userId:row.user_id,email:row.login_email,name:row.name,identifier:row.identifier,role:row.app_role,profileId:row.profile_id||row.identifier,status:row.app_role === 'student' ? 'active' : row.status,mustChangePassword:Boolean(row.must_change_password),permissions,contestId:row.contest_id };
   } catch { return null; }
 }
