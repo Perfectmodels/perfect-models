@@ -1,28 +1,56 @@
-import { auth } from './server';
-import { sqlQuery } from '../neon';
+import { getFirebaseAuthSession } from '../firebase-auth-server';
+import { firebaseRead } from '../firebase-data';
 
 export type AppRole = 'admin' | 'student' | 'jury' | 'registration' | 'jury-contest';
-export interface AppSessionProfile {
-  userId: string; email: string; name: string; identifier: string; role: AppRole;
-  profileId: string; status: string; mustChangePassword: boolean;
-  permissions: Record<string, boolean>; contestId?: string | null;
-}
-interface ProfileRow { user_id:string; identifier:string; app_role:AppRole; login_email:string; profile_id:string|null; status:string; must_change_password:boolean; permissions:Record<string,boolean>|null; contest_id:string|null; name:string; }
+export interface AppSessionProfile { userId: string; email: string; name: string; identifier: string; role: AppRole; profileId: string; status: string; mustChangePassword: boolean; permissions: Record<string, boolean>; contestId?: string | null; }
+
+type ProfileData = Partial<AppSessionProfile> & { name?: string; role?: AppRole; identifier?: string; profileId?: string; status?: string; permissions?: Record<string, boolean>; contestId?: string | null; mustChangePassword?: boolean };
+
+const ADMIN_EMAILS = new Set(['admin@perfectmodels.online', 'contact@perfectmodels.online', 'contact@perfectmodels.ga', 'perfectmodels.ga@gmail.com']);
 
 export async function getCurrentAppProfile(): Promise<AppSessionProfile | null> {
   try {
-    const { data: session } = await auth.getSession();
-    const sessionUser = session?.user;
-    if (!sessionUser?.id) return null;
-    const rows = await sqlQuery<ProfileRow>(`SELECT ap.user_id::text,ap.identifier,ap.app_role,ap.login_email,ap.profile_id,ap.status,ap.must_change_password,ap.permissions,ap.contest_id,u.name FROM public.auth_profiles ap JOIN neon_auth."user" u ON u.id=ap.user_id WHERE ap.user_id::text=$1 LIMIT 1`, [sessionUser.id]);
-    const row = rows[0];
-    // Les comptes mannequins (student) sont toujours considérés comme actifs.
-    // Les autres rôles conservent leur statut administré en base.
-    if (!row || (row.status !== 'active' && row.app_role !== 'student')) return null;
-    const permissions = {
-      ...(row.permissions || {}),
-      ...(row.app_role === 'student' ? { isActive: true } : {}),
+    const session = await getFirebaseAuthSession();
+    if (!session) return null;
+    const { idToken, user } = session;
+    const email = String(user.email || '').toLowerCase();
+    const candidates = [
+      `auth_profiles/${user.localId}`,
+      `authProfiles/${user.localId}`,
+      `users/${user.localId}`,
+    ];
+    let raw: ProfileData | null = null;
+    for (const path of candidates) {
+      const value = await firebaseRead<ProfileData>(path);
+      if (value) { raw = value; break; }
+    }
+
+    let modelProfile: any = null;
+    if (!raw && email.endsWith('@perfectmodels.online')) {
+      const models = await firebaseRead<Record<string, any>>('models');
+      modelProfile = Object.values(models || {}).find((m: any) => String(m?.email || '').toLowerCase() === email) || null;
+    }
+
+    const isAdmin = ADMIN_EMAILS.has(email);
+    const role: AppRole = isAdmin ? 'admin' : (raw?.role || 'student');
+    const identifier = raw?.identifier || modelProfile?.matricule || modelProfile?.identifier || email.split('@')[0];
+    const profileId = raw?.profileId || modelProfile?.id || user.localId;
+    const name = raw?.name || modelProfile?.name || user.displayName || identifier;
+    const permissions = { ...(raw?.permissions || {}), ...(role === 'student' ? { isActive: true } : {}) };
+
+    return {
+      userId: user.localId,
+      email,
+      name,
+      identifier,
+      role,
+      profileId,
+      status: raw?.status || 'active',
+      mustChangePassword: Boolean(raw?.mustChangePassword),
+      permissions,
+      contestId: raw?.contestId || null,
     };
-    return { userId:row.user_id,email:row.login_email,name:row.name,identifier:row.identifier,role:row.app_role,profileId:row.profile_id||row.identifier,status:row.app_role === 'student' ? 'active' : row.status,mustChangePassword:Boolean(row.must_change_password),permissions,contestId:row.contest_id };
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
