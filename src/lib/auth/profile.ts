@@ -1,28 +1,65 @@
+import { firebaseDatabaseGet } from '../firebase-backend';
 import { auth } from './server';
-import { sqlQuery } from '../neon';
 
 export type AppRole = 'admin' | 'student' | 'jury' | 'registration' | 'jury-contest';
-export interface AppSessionProfile {
-  userId: string; email: string; name: string; identifier: string; role: AppRole;
-  profileId: string; status: string; mustChangePassword: boolean;
-  permissions: Record<string, boolean>; contestId?: string | null;
+export interface AppSessionProfile { userId:string; email:string; name:string; identifier:string; role:AppRole; profileId:string; status:string; mustChangePassword:boolean; permissions:Record<string,boolean>; contestId?:string|null; }
+
+const ADMIN_ALIASES = new Set(['admin','admin@perfectmodels.online','contact@perfectmodels.online','contact@perfectmodels.ga','perfectmodels.ga@gmail.com']);
+
+function asArray(value:any): any[] {
+  return Array.isArray(value) ? value : value && typeof value === 'object' ? Object.values(value) : [];
 }
-interface ProfileRow { user_id:string; identifier:string; app_role:AppRole; login_email:string; profile_id:string|null; status:string; must_change_password:boolean; permissions:Record<string,boolean>|null; contest_id:string|null; name:string; }
+
+async function findProfile(user:any): Promise<AppSessionProfile | null> {
+  const email = String(user?.email || '').toLowerCase();
+  const name = String(user?.displayName || email.split('@')[0] || '');
+  const uid = String(user?.localId || '');
+  const identifier = email === 'admin@perfectmodels.online' ? 'admin' : email.split('@')[0];
+
+  if (ADMIN_ALIASES.has(email) || email === 'admin@perfectmodels.online') {
+    return { userId:uid,email,name: user?.displayName || 'Administration PMM',identifier:'admin',role:'admin',profileId:'admin',status:'active',mustChangePassword:false,permissions:{all:true,isAdmin:true} };
+  }
+
+  const candidateRoots = ['users','userProfiles','authProfiles','registrationStaff','juryMembers'];
+  for (const root of candidateRoots) {
+    const record = await firebaseDatabaseGet(`${root}/${uid}`).catch(() => null);
+    if (record && typeof record === 'object') {
+      const role = String(record.role || record.app_role || record.appRole || (root === 'juryMembers' ? 'jury' : root === 'registrationStaff' ? 'registration' : 'student')) as AppRole;
+      return {
+        userId:uid,
+        email:String(record.email || email),
+        name:String(record.name || record.displayName || name),
+        identifier:String(record.identifier || record.matricule || identifier),
+        role,
+        profileId:String(record.profileId || record.modelId || record.id || uid),
+        status:String(record.status || 'active'),
+        mustChangePassword:Boolean(record.mustChangePassword || record.must_change_password),
+        permissions:(record.permissions && typeof record.permissions === 'object') ? record.permissions : {},
+        contestId:record.contestId || null,
+      };
+    }
+  }
+
+  const models = asArray(await firebaseDatabaseGet('models').catch(() => null));
+  const model = models.find((m:any) => String(m?.email || m?.loginEmail || m?.login_email || '').toLowerCase() === email || String(m?.identifier || m?.matricule || '').toLowerCase() === identifier);
+  if (model) {
+    return { userId:uid,email,name:String(model.name || name),identifier:String(model.matricule || model.identifier || identifier),role:'student',profileId:String(model.id || uid),status:'active',mustChangePassword:Boolean(model.mustChangePassword),permissions:{isActive:true},contestId:model.contestId || null };
+  }
+
+  if (email.endsWith('@perfectmodels.online')) {
+    return { userId:uid,email,name,identifier,role:'student',profileId:uid,status:'active',mustChangePassword:false,permissions:{isActive:true} };
+  }
+  return null;
+}
 
 export async function getCurrentAppProfile(): Promise<AppSessionProfile | null> {
   try {
-    const { data: session } = await auth.getSession();
-    const sessionUser = session?.user;
-    if (!sessionUser?.id) return null;
-    const rows = await sqlQuery<ProfileRow>(`SELECT ap.user_id::text,ap.identifier,ap.app_role,ap.login_email,ap.profile_id,ap.status,ap.must_change_password,ap.permissions,ap.contest_id,u.name FROM public.auth_profiles ap JOIN neon_auth."user" u ON u.id=ap.user_id WHERE ap.user_id::text=$1 LIMIT 1`, [sessionUser.id]);
-    const row = rows[0];
-    // Les comptes mannequins (student) sont toujours considérés comme actifs.
-    // Les autres rôles conservent leur statut administré en base.
-    if (!row || (row.status !== 'active' && row.app_role !== 'student')) return null;
-    const permissions = {
-      ...(row.permissions || {}),
-      ...(row.app_role === 'student' ? { isActive: true } : {}),
-    };
-    return { userId:row.user_id,email:row.login_email,name:row.name,identifier:row.identifier,role:row.app_role,profileId:row.profile_id||row.identifier,status:row.app_role === 'student' ? 'active' : row.status,mustChangePassword:Boolean(row.must_change_password),permissions,contestId:row.contest_id };
+    const { data } = await auth.getSession();
+    return findProfile(data?.user);
   } catch { return null; }
+}
+
+export async function getFirebaseSessionUser() {
+  const { data } = await auth.getSession();
+  return data?.user || null;
 }

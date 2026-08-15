@@ -19,12 +19,9 @@
     "@capacitor/push-notifications": "^8.0.3",
     "@capacitor/share": "^8.0.1",
     "@capacitor/splash-screen": "^8.0.1",
-    "@capacitor/status-bar": "^8.0.2",
+    "@capacitor/status-bar": "^8.0.1",
     "@google/genai": "^1.17.0",
     "@heroicons/react": "^2.2.0",
-    "@neondatabase/auth": "latest",
-    "@neondatabase/neon-js": "latest",
-    "@neondatabase/serverless": "^1.0.0",
     "@vercel/analytics": "^1.6.1",
     "@vercel/blob": "latest",
     "avatar": "^0.1.0",
@@ -44,7 +41,7 @@
     "@types/react": "^18.3.28",
     "@types/react-dom": "^18.2.22",
     "autoprefixer": "^10.4.19",
-    "postcss": "^8.4.38",
+    "postcss": "^8.5.6",
     "tailwindcss": "^3.4.3",
     "typescript": "^5.2.2"
   }

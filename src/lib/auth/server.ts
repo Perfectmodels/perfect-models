@@ -1,9 +1,24 @@
-import { createHash } from 'node:crypto';
-import { createNeonAuth } from '@neondatabase/auth/next/server';
-import { getDatabaseUrl } from '../neon';
+import { clearFirebaseSession, firebaseChangePassword, firebaseLookup, getFirebaseIdToken, getValidFirebaseIdToken, setFirebaseSession } from '../firebase-backend';
 
-const baseUrl = process.env.NEON_AUTH_BASE_URL || process.env.NEXT_NEON_AUTH_BASE_URL || process.env.NEXT_VITE_NEON_AUTH_URL || 'https://ep-snowy-math-adl80x03.neonauth.c-2.us-east-1.aws.neon.tech/neondb/auth';
-const derivedSecret = createHash('sha256').update(getDatabaseUrl() || 'perfect-models-neon-auth-local-development').digest('hex');
-const cookieSecret = process.env.NEON_AUTH_COOKIE_SECRET || derivedSecret;
-
-export const auth = createNeonAuth({ baseUrl, cookies: { secret: cookieSecret } });
+export const auth = {
+  async getSession() {
+    const idToken = await getValidFirebaseIdToken();
+    if (!idToken) return { data: null };
+    const user = await firebaseLookup(idToken).catch(() => null);
+    return { data: user ? { user } : null };
+  },
+  async signOut() {
+    await clearFirebaseSession();
+  },
+  async changePassword(newPassword: string) {
+    const idToken = await getFirebaseIdToken();
+    if (!idToken) return { error: new Error('Session Firebase expirée.') };
+    try {
+      const result = await firebaseChangePassword(idToken, newPassword);
+      await setFirebaseSession(result);
+      return { data: result };
+    } catch (error) {
+      return { error };
+    }
+  },
+};
