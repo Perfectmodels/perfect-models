@@ -1,1 +1,13 @@
-import { NextResponse } from 'next/server';import { getCurrentAppProfile } from '@/lib/auth/profile';import { getSql } from '@/lib/neon';export async function POST(){const p=await getCurrentAppProfile();if(!p)return NextResponse.json({error:'Non autorisé.'},{status:401});const sql=getSql();await sql.query('UPDATE public.auth_profiles SET must_change_password=false,updated_at=now() WHERE user_id::text=$1',[p.userId]);return NextResponse.json({success:true})}
+import { NextResponse } from 'next/server';
+import { firebaseDatabasePut, getValidFirebaseIdToken } from '@/lib/firebase-backend';
+import { getCurrentAppProfile } from '@/lib/auth/profile';
+
+export const dynamic = 'force-dynamic';
+
+export async function POST() {
+  const profile = await getCurrentAppProfile();
+  if (!profile) return NextResponse.json({ error: 'Non autorisé.' }, { status: 401 });
+  const token = await getValidFirebaseIdToken();
+  await firebaseDatabasePut(`users/${profile.userId}/mustChangePassword`, false, token);
+  return NextResponse.json({ success: true });
+}
