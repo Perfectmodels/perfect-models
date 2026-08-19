@@ -10,8 +10,8 @@ const esc = (value: string) => String(value || '')
   .replace(/'/g, '&apos;');
 
 export async function GET() {
-  const neonArticles = collectionToArray(await getCollection('articles'));
-  const articles = (neonArticles.length ? neonArticles : seedArticles).slice(0, 30);
+  const dbArticles = collectionToArray(await getCollection('articles'));
+  const articles = (dbArticles.length ? dbArticles : seedArticles).slice(0, 30);
   const items = articles.map((article: any) => {
     const slug = article.slug || article.id;
     const url = `${BASE}/magazine/${slug}`;
