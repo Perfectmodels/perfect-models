@@ -20,6 +20,7 @@ import {
   PhotoIcon,
   PlusIcon,
   PresentationChartLineIcon,
+  ShieldCheckIcon,
   SparklesIcon,
   UsersIcon,
 } from '@heroicons/react/24/outline';
@@ -49,6 +50,7 @@ const modules: Module[] = [
   { group: 'Équipe', title: 'Formation', summary: 'Parcours professionnel', to: '/formation', icon: AcademicCapIcon },
   { group: 'Équipe', title: 'Progression', summary: 'Suivi pédagogique des talents', to: '/admin/classroom-progress', icon: PresentationChartLineIcon },
   { group: 'Équipe', title: 'Accès', summary: 'Comptes, rôles et identifiants', to: '/admin/model-access', icon: KeyIcon },
+  { group: 'Équipe', title: 'Permissions', summary: 'Droits d'accès par utilisateur admin', to: '/admin/user-permissions', icon: ShieldCheckIcon },
   { group: 'Équipe', title: 'Récupérations', summary: 'Demandes de retour de compte', to: '/admin/recovery-requests', icon: ExclamationTriangleIcon },
   { group: 'Équipe', title: 'Messages', summary: 'Demandes reçues depuis le site', to: '/admin/messages', icon: EnvelopeIcon },
   { group: 'Équipe', title: 'Commentaires', summary: 'Modération éditoriale', to: '/admin/comments', icon: EnvelopeIcon },

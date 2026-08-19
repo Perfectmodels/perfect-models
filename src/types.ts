@@ -57,6 +57,102 @@ export interface UserPermissions {
   isActive?: boolean;                 // Compte actif/suspendu
 }
 
+// ── Permissions d'accès aux pages admin (pour les délégués admin) ─────────────
+export interface AdminPagePermissions {
+  dashboard?: boolean;              // /admin — Tableau de bord
+  models?: boolean;                 // /admin/models — Mannequins
+  absences?: boolean;               // /admin/absences — Absences
+  agency?: boolean;                 // /admin/agency — Agence
+  artisticDirection?: boolean;      // /admin/artistic-direction — Direction artistique
+  beautyContests?: boolean;         // /admin/beauty-contests — Concours beauté
+  bookings?: boolean;               // /admin/bookings — Réservations
+  castingApplications?: boolean;    // /admin/casting-applications — Candidatures casting
+  castingResults?: boolean;         // /admin/casting-results — Résultats casting
+  classroom?: boolean;              // /admin/classroom — Classroom
+  classroomProgress?: boolean;      // /admin/classroom-progress — Progression
+  comments?: boolean;               // /admin/comments — Commentaires
+  fashionDayApplications?: boolean; // /admin/fashion-day-applications — Dossiers Fashion Day
+  fashionDayEvents?: boolean;       // /admin/fashion-day-events — Événements Fashion Day
+  gallery?: boolean;                // /admin/gallery — Galerie
+  imageAnalysis?: boolean;          // /admin/analyser-image — Analyse IA
+  imageGeneration?: boolean;        // /admin/generer-image — Génération IA
+  liveChat?: boolean;               // /admin/live-chat — Chat en direct
+  magazine?: boolean;               // /admin/magazine — Magazine
+  mailing?: boolean;                // /admin/mailing — Mailing
+  mediaLibrary?: boolean;           // /admin/media-library — Médiathèque
+  messages?: boolean;               // /admin/messages — Messages
+  modelAccess?: boolean;            // /admin/model-access — Accès mannequins
+  news?: boolean;                   // /admin/news — Actualités
+  payments?: boolean;               // /admin/payments — Paiements
+  recovery?: boolean;               // /admin/recovery-requests — Récupération
+  settings?: boolean;               // /admin/settings — Paramètres
+  userPermissions?: boolean;        // /admin/user-permissions — Gestion des permissions (cette page)
+}
+
+// Clé de permission associée à chaque route admin
+export const ADMIN_PAGE_PERMISSION_MAP: Record<string, keyof AdminPagePermissions> = {
+  '/admin':                           'dashboard',
+  '/admin/models':                    'models',
+  '/admin/absences':                  'absences',
+  '/admin/agency':                    'agency',
+  '/admin/artistic-direction':        'artisticDirection',
+  '/admin/beauty-contests':           'beautyContests',
+  '/admin/bookings':                  'bookings',
+  '/admin/casting-applications':      'castingApplications',
+  '/admin/casting-results':           'castingResults',
+  '/admin/classroom':                 'classroom',
+  '/admin/classroom-progress':        'classroomProgress',
+  '/admin/comments':                  'comments',
+  '/admin/fashion-day-applications':  'fashionDayApplications',
+  '/admin/fashion-day-events':        'fashionDayEvents',
+  '/admin/gallery':                   'gallery',
+  '/admin/analyser-image':            'imageAnalysis',
+  '/admin/generer-image':             'imageGeneration',
+  '/admin/live-chat':                 'liveChat',
+  '/admin/magazine':                  'magazine',
+  '/admin/mailing':                   'mailing',
+  '/admin/media-library':             'mediaLibrary',
+  '/admin/messages':                  'messages',
+  '/admin/model-access':              'modelAccess',
+  '/admin/news':                      'news',
+  '/admin/payments':                  'payments',
+  '/admin/recovery-requests':         'recovery',
+  '/admin/settings':                  'settings',
+  '/admin/user-permissions':          'userPermissions',
+};
+
+// Labels lisibles pour chaque permission admin
+export const ADMIN_PERMISSION_LABELS: Record<keyof AdminPagePermissions, string> = {
+  dashboard:               'Tableau de bord',
+  models:                  'Mannequins',
+  absences:                'Absences',
+  agency:                  'Agence',
+  artisticDirection:       'Direction artistique',
+  beautyContests:          'Concours beauté',
+  bookings:                'Réservations',
+  castingApplications:     'Candidatures casting',
+  castingResults:          'Résultats casting',
+  classroom:               'Classroom',
+  classroomProgress:       'Progression classroom',
+  comments:                'Commentaires',
+  fashionDayApplications:  'Dossiers Fashion Day',
+  fashionDayEvents:        'Événements Fashion Day',
+  gallery:                 'Galerie',
+  imageAnalysis:           'Analyse IA',
+  imageGeneration:         'Génération IA',
+  liveChat:                'Chat en direct',
+  magazine:                'Magazine',
+  mailing:                 'Mailing',
+  mediaLibrary:            'Médiathèque',
+  messages:                'Messages',
+  modelAccess:             'Accès mannequins',
+  news:                    'Actualités',
+  payments:                'Paiements',
+  recovery:                'Récupération compte',
+  settings:                'Paramètres site',
+  userPermissions:         'Gestion des permissions',
+};
+
 // Permissions par défaut selon le rôle
 export const DEFAULT_PERMISSIONS: Record<string, UserPermissions> = {
   student: {

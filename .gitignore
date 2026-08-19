@@ -108,6 +108,9 @@ perfectmodels-4e5fa-default-rtdb-export.json
 *.swp
 *~
 
+# Vendored fx source (nested git repo, built from source)
+fx/
+
 # Mobile (Capacitor)
 # Keep android/ and ios/ folders but ignore build artifacts
 android/app/build/

@@ -56,6 +56,7 @@ export const LiveChat = dynamic(() => import('@/legacy-pages/LiveChat'), { ssr: 
 export const AdminGallery = dynamic(() => import('@/legacy-pages/AdminGallery'), { ssr: false });
 export const AdminMailing = dynamic(() => import('@/legacy-pages/AdminMailing'), { ssr: false });
 export const AdminBeautyContest = dynamic(() => import('@/legacy-pages/AdminBeautyContest'), { ssr: false });
+export const AdminUserPermissions = dynamic(() => import('@/legacy-pages/AdminUserPermissions'), { ssr: false });
 export const NotFound = dynamic(() => import('@/legacy-pages/NotFound'), { ssr: false });
 
 export const legacyPages = {
@@ -68,7 +69,7 @@ export const legacyPages = {
   AdminFashionDay, AdminFashionDayEvents, AdminNews, AdminClassroomProgress,
   AdminModelAccess, AdminRecovery, AdminComments, AdminMessages, AdminBookings,
   AdminPayments, AdminAbsences, AdminArtisticDirection, ImageGeneration, ImageAnalysis,
-  LiveChat, AdminGallery, AdminMailing, AdminBeautyContest, NotFound,
+  LiveChat, AdminGallery, AdminMailing, AdminBeautyContest, AdminUserPermissions, NotFound,
 } as const;
 
 export type LegacyPageName = keyof typeof legacyPages;
