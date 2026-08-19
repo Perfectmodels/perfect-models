@@ -16,7 +16,7 @@ export interface AppSessionProfile {
   contestId?: string | null;
 }
 
-const ADMIN_ALIASES = new Set([
+export const ADMIN_ALIASES = new Set([
   'admin',
   'admin@perfectmodels.online',
   'contact@perfectmodels.online',
