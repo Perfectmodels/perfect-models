@@ -77,6 +77,11 @@ export async function findProfile(user: unknown): Promise<AppSessionProfile | nu
       (c.permissions && typeof c.permissions === 'object' && (c.permissions as Record<string, unknown>).isAdmin === true) ||
       c.adminPermissions !== undefined;
     const role = isDelegatedAdmin ? 'admin' : baseRole;
+    if (email && ADMIN_ALIASES.has(email)) {
+      console.info('[auth/profile] admin alias detected', { email, uid, baseRole, role });
+    } else if (email) {
+      console.info('[auth/profile] non-admin user', { email, uid, baseRole, role });
+    }
     let adminPermissions: Record<string, boolean> | undefined;
     if (role === 'admin') {
       const ap = await firebaseDatabaseGet(`adminPermissions/${uid}`).catch(() => null);
