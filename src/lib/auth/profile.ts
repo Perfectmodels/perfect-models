@@ -1,4 +1,4 @@
-import { firebaseDatabaseGet, firebaseDatabasePut } from '../firebase-backend';
+import { firebaseDatabaseGet, firebaseDatabasePut, getValidFirebaseIdToken } from '../firebase-backend';
 import { auth } from './server';
 
 export type AppRole = 'admin' | 'student' | 'jury' | 'registration' | 'jury-contest';
@@ -44,7 +44,7 @@ function normalizeAppRole(value: unknown, fallback: AppRole = 'student'): AppRol
   return map[key] || fallback;
 }
 
-export async function findProfile(user: unknown): Promise<AppSessionProfile | null> {
+export async function findProfile(user: unknown, idToken?: string | null): Promise<AppSessionProfile | null> {
   const u = user as Record<string, unknown> | null;
   const email = String(u?.email || '').toLowerCase();
   const name = String(u?.displayName || email.split('@')[0] || '');
@@ -68,7 +68,7 @@ export async function findProfile(user: unknown): Promise<AppSessionProfile | nu
     };
   }
 
-  const central = await firebaseDatabaseGet(`users/${uid}`).catch(() => null);
+  const central = await firebaseDatabaseGet(`users/${uid}`, idToken || undefined).catch(() => null);
   if (central && typeof central === 'object') {
     const c = central as Record<string, unknown>;
     const baseRole = normalizeAppRole(c.role || c.app_role || c.appRole);
@@ -77,14 +77,9 @@ export async function findProfile(user: unknown): Promise<AppSessionProfile | nu
       (c.permissions && typeof c.permissions === 'object' && (c.permissions as Record<string, unknown>).isAdmin === true) ||
       c.adminPermissions !== undefined;
     const role = isDelegatedAdmin ? 'admin' : baseRole;
-    if (email && ADMIN_ALIASES.has(email)) {
-      console.info('[auth/profile] admin alias detected', { email, uid, baseRole, role });
-    } else if (email) {
-      console.info('[auth/profile] non-admin user', { email, uid, baseRole, role });
-    }
     let adminPermissions: Record<string, boolean> | undefined;
     if (role === 'admin') {
-      const ap = await firebaseDatabaseGet(`adminPermissions/${uid}`).catch(() => null);
+      const ap = await firebaseDatabaseGet(`adminPermissions/${uid}`, idToken || undefined).catch(() => null);
       adminPermissions = ap && typeof ap === 'object' ? (ap as Record<string, boolean>) : undefined;
     }
     return {
@@ -102,7 +97,7 @@ export async function findProfile(user: unknown): Promise<AppSessionProfile | nu
     };
   }
 
-  const models = asArray(await firebaseDatabaseGet('models').catch(() => null)) as Record<string, unknown>[];
+  const models = asArray(await firebaseDatabaseGet('models', idToken || undefined).catch(() => null)) as Record<string, unknown>[];
   const model = models.find((m) => {
     if (!m || typeof m !== 'object') return false;
     const values = [m.email, m.loginEmail, m.login_email, m.identifier, m.matricule, m.name]
@@ -151,7 +146,8 @@ export async function findProfile(user: unknown): Promise<AppSessionProfile | nu
 export async function getCurrentAppProfile(): Promise<AppSessionProfile | null> {
   try {
     const { data } = await auth.getSession();
-    return findProfile(data?.user);
+    const idToken = await getValidFirebaseIdToken();
+    return findProfile(data?.user, idToken);
   } catch {
     return null;
   }
@@ -169,7 +165,8 @@ export async function ensureUserProfile(user: {
 }): Promise<AppSessionProfile | null> {
   const uid = String(user?.localId || '');
   if (!uid) return null;
-  const existing = await findProfile(user);
+  const idToken = await getValidFirebaseIdToken();
+  const existing = await findProfile(user, idToken);
   if (existing) return existing;
   const email = String(user?.email || '').toLowerCase();
   const name = String(user?.displayName || email.split('@')[0] || '');
