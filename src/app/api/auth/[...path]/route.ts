@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { clearFirebaseSession, firebaseChangePassword, firebaseResetPassword, firebaseSignIn, firebaseSignUp, setFirebaseSession } from '@/lib/firebase-backend';
+import { ensureUserProfile } from '@/lib/auth/profile';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,7 +19,11 @@ export async function POST(request: Request, context: Ctx) {
     }
 
     if (action === 'sign-up/email') {
-      const result = await firebaseSignUp(String(body.email || '').trim().toLowerCase(), String(body.password || ''), String(body.name || ''));
+      const email = String(body.email || '').trim().toLowerCase();
+      const password = String(body.password || '');
+      const name = String(body.name || email.split('@')[0] || '');
+      const result = await firebaseSignUp(email, password, name);
+      await ensureUserProfile({ localId: result.localId, email, displayName: name });
       await setFirebaseSession(result);
       return NextResponse.json({ user: { id: result.localId, email: result.email || null, name: result.displayName || null } }, { status: 201 });
     }
