@@ -24,8 +24,9 @@ async function findProfile(user:any): Promise<AppSessionProfile | null> {
   for (const root of candidateRoots) {
     const record = await firebaseDatabaseGet(`${root}/${uid}`).catch(() => null);
     if (record && typeof record === 'object') {
-      const role = String(record.role || record.app_role || record.appRole || (root === 'juryMembers' ? 'jury' : root === 'registrationStaff' ? 'registration' : 'student')) as AppRole;
-      // Lire les permissions admin si le rôle est admin (admin délégué)
+      const baseRole = String(record.role || record.app_role || record.appRole || (root === 'juryMembers' ? 'jury' : root === 'registrationStaff' ? 'registration' : 'student')) as AppRole;
+      const isDelegatedAdmin = baseRole === 'admin' || record.permissions?.isAdmin === true || record.adminPermissions !== undefined;
+      const role = isDelegatedAdmin ? 'admin' : baseRole;
       let adminPermissions: Record<string,boolean> | undefined;
       if (role === 'admin') {
         const ap = await firebaseDatabaseGet(`adminPermissions/${uid}`).catch(() => null);
@@ -50,11 +51,12 @@ async function findProfile(user:any): Promise<AppSessionProfile | null> {
   const models = asArray(await firebaseDatabaseGet('models').catch(() => null));
   const model = models.find((m:any) => String(m?.email || m?.loginEmail || m?.login_email || '').toLowerCase() === email || String(m?.identifier || m?.matricule || '').toLowerCase() === identifier);
   if (model) {
-    return { userId:uid,email,name:String(model.name || name),identifier:String(model.matricule || model.identifier || identifier),role:'student',profileId:String(model.id || uid),status:'active',mustChangePassword:Boolean(model.mustChangePassword),permissions:{isActive:true},adminPermissions:undefined,contestId:model.contestId || null };
+    const isModelAdmin = model.permissions?.isAdmin === true || model.adminPermissions !== undefined;
+    return { userId:uid,email,name:String(model.name || name),identifier:String(model.matricule || model.identifier || identifier),role: isModelAdmin ? 'admin' : 'student',profileId:String(model.id || uid),status:'active',mustChangePassword:Boolean(model.mustChangePassword),permissions:(model.permissions && typeof model.permissions === 'object') ? model.permissions : {isActive:true},adminPermissions: isModelAdmin ? (model.adminPermissions || undefined) : undefined,contestId:model.contestId || null };
   }
 
   if (email.endsWith('@perfectmodels.online')) {
-    return { userId:uid,email,name,identifier,role:'student',profileId:uid,status:'active',mustChangePassword:false,permissions:{isActive:true},adminPermissions:undefined };
+    return { userId:uid,email,name,identifier,role:'student',profileId:uid,status:'active',mustChangePassword:false,permissions:{isActive:true},adminPermissions:undefined,contestId:null };
   }
   return null;
 }
