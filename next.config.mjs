@@ -1,3 +1,5 @@
+import path from 'path';
+
 const legacyViteEnv = Object.fromEntries(
   Object.entries(process.env)
     .filter(([key]) => key.startsWith('VITE_') || key.startsWith('NEXT_VITE_'))
@@ -26,6 +28,14 @@ const nextConfig = {
     }];
   },
   webpack(config, { webpack }) {
+    const root = path.resolve(process.cwd(), 'src');
+    config.resolve.alias['@'] = root;
+    config.resolve.alias['react-router-dom'] = path.join(root, 'compat/react-router-dom');
+    config.resolve.alias['firebase/app'] = path.join(root, 'compat/firebase/app');
+    config.resolve.alias['firebase/auth'] = path.join(root, 'compat/firebase/auth');
+    config.resolve.alias['firebase/database'] = path.join(root, 'compat/firebase/database');
+    config.resolve.alias['firebase/firestore'] = path.join(root, 'compat/firebase/firestore');
+    config.resolve.alias['firebase/messaging'] = path.join(root, 'compat/firebase/messaging');
     config.plugins.push(new webpack.DefinePlugin({ 'import.meta.env': JSON.stringify(legacyViteEnv) }));
     return config;
   },
