@@ -1,5 +1,3 @@
-import { firebaseDatabaseGet, firebaseDatabasePut } from '../lib/firebase-backend';
-
 const ADMIN_ALIASES = new Set([
   'admin',
   'admin@perfectmodels.online',
@@ -8,12 +6,16 @@ const ADMIN_ALIASES = new Set([
   'perfectmodels.ga@gmail.com',
 ]);
 
-function asArray(value: unknown): unknown[] {
+const config = {
+  databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL || 'https://perfect-156b5-default-rtdb.firebaseio.com',
+};
+
+function asArray(value) {
   return Array.isArray(value) ? value : value && typeof value === 'object' ? Object.values(value) : [];
 }
 
-function normalizeAppRole(value: unknown, fallback = 'student'): string {
-  const map: Record<string, string> = {
+function normalizeAppRole(value, fallback = 'student') {
+  const map = {
     admin: 'admin',
     student: 'student',
     mannequin: 'student',
@@ -28,94 +30,86 @@ function normalizeAppRole(value: unknown, fallback = 'student'): string {
   return map[key] || fallback;
 }
 
-async function listAuthUids(): Promise<string[]> {
-  const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'AIzaSyBawZl4SJz7drhzIrG0dnazSglyF6vmKCg';
-  const uids: string[] = [];
-  let pageToken: string | undefined;
-  do {
-    const url = new URL(`https://identitytoolkit.googleapis.com/v1/projects/perfect-156b5/accounts:batchGet`);
-    url.searchParams.set('key', apiKey);
-    const body: Record<string, unknown> = { localIds: [] };
-    if (pageToken) body.nextPageToken = pageToken;
-    const res = await fetch(url.toString(), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-      cache: 'no-store',
-    });
-    if (!res.ok) {
-      console.error('[migration] batchGet failed', res.status, await res.text());
-      break;
-    }
-    const data = (await res.json()) as { users?: { localId: string }[]; nextPageToken?: string };
-    if (data.users) {
-      for (const u of data.users) {
-        if (u.localId) uids.push(u.localId);
-      }
-    }
-    pageToken = data.nextPageToken;
-  } while (pageToken);
-  return uids;
+async function firebaseDatabaseGet(path) {
+  const cleanPath = path.replace(/^\/+|\/+$/g, '');
+  const url = new URL(`${config.databaseURL}/${cleanPath}.json`);
+  const response = await fetch(url, { cache: 'no-store' });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    const error = new Error(`Firebase Realtime Database GET ${response.status}`);
+    error.status = response.status;
+    throw error;
+  }
+  return data;
 }
 
-async function migrate() {
-  console.log('[migration] listing Firebase Auth users...');
-  const uids = await listAuthUids();
-  console.log(`[migration] ${uids.length} auth users found`);
+async function firebaseDatabasePut(path, value) {
+  const cleanPath = path.replace(/^\/+|\/+$/g, '');
+  const url = new URL(`${config.databaseURL}/${cleanPath}.json`);
+  const response = await fetch(url, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(value),
+    cache: 'no-store',
+  });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    const error = new Error(`Firebase Realtime Database PUT ${response.status}`);
+    error.status = response.status;
+    throw error;
+  }
+  return data;
+}
+
+async function migrateNode(sourceKey, sourceLabel) {
+  console.log(`[migration] scanning ${sourceLabel} (${sourceKey})...`);
+  const data = await firebaseDatabaseGet(sourceKey).catch(() => null);
+  if (!data || typeof data !== 'object') {
+    console.log(`[migration] ${sourceLabel}: empty or missing`);
+    return { migrated: 0, skipped: 0, errors: 0 };
+  }
+
+  const entries = Object.entries(data).filter(([key]) => key !== '.priority' && key !== '.value' && !key.startsWith('.'));
+  console.log(`[migration] ${sourceLabel}: ${entries.length} entries found`);
 
   let migrated = 0;
   let skipped = 0;
   let errors = 0;
 
-  for (const uid of uids) {
+  for (const [id, record] of entries) {
     try {
-      const existing = await firebaseDatabaseGet(`users/${uid}`).catch(() => null);
-      if (existing && typeof existing === 'object') {
+      if (!record || typeof record !== 'object') {
+        skipped++;
+        continue;
+      }
+      const r = record;
+      const email = String(r.email || r.loginEmail || r.login_email || '').toLowerCase();
+      if (!email) {
         skipped++;
         continue;
       }
 
-      const candidates = await Promise.all([
-        firebaseDatabaseGet(`users/${uid}`).catch(() => null),
-        firebaseDatabaseGet(`userProfiles/${uid}`).catch(() => null),
-        firebaseDatabaseGet(`authProfiles/${uid}`).catch(() => null),
-        firebaseDatabaseGet(`models`).catch(() => null),
-      ]);
-
-      const [userRecord, userProfile, authProfile, models] = candidates;
-      let profile: Record<string, unknown> | null = null;
-      let source = '';
-
-      if (userRecord && typeof userRecord === 'object') {
-        profile = userRecord as Record<string, unknown>;
-        source = 'users';
-      } else if (userProfile && typeof userProfile === 'object') {
-        profile = userProfile as Record<string, unknown>;
-        source = 'userProfiles';
-      } else if (authProfile && typeof authProfile === 'object') {
-        profile = authProfile as Record<string, unknown>;
-        source = 'authProfiles';
+      const uid = String(r.authUserId || r.firebaseUid || id);
+      const existing = await firebaseDatabaseGet(`users/${uid}`).catch(() => null);
+      if (existing && typeof existing === 'object' && existing.email) {
+        skipped++;
+        continue;
       }
 
-      const modelsArr = asArray(models) as Record<string, unknown>[];
-      const model = modelsArr.find((m) => String(m?.authUserId || m?.firebaseUid || '') === uid);
-
-      const email = String(profile?.email || model?.email || '');
-      const name = String(profile?.name || profile?.displayName || model?.name || email.split('@')[0] || uid);
-      const identifier = String(profile?.identifier || profile?.matricule || model?.matricule || model?.identifier || email.split('@')[0] || uid);
-      const baseRole = profile ? normalizeAppRole(profile.role || profile.app_role || profile.appRole) : 'student';
+      const name = String(r.name || r.displayName || email.split('@')[0] || uid);
+      const identifier = String(r.identifier || r.matricule || r.username || email.split('@')[0] || uid);
+      const baseRole = normalizeAppRole(r.role || r.app_role || r.appRole);
       const isDelegatedAdmin =
         baseRole === 'admin' ||
-        (profile?.permissions && typeof profile.permissions === 'object' && (profile.permissions as Record<string, unknown>).isAdmin === true) ||
-        profile?.adminPermissions !== undefined ||
-        model?.adminPermissions !== undefined;
-      const role = ADMIN_ALIASES.has(email.toLowerCase()) ? 'admin' : isDelegatedAdmin ? 'admin' : baseRole;
-      const profileId = String(profile?.profileId || profile?.id || model?.id || uid);
-      const status = String(profile?.status || 'active');
-      const mustChangePassword = Boolean(profile?.mustChangePassword || profile?.must_change_password || model?.mustChangePassword);
-      const permissions = (profile?.permissions && typeof profile.permissions === 'object') ? profile.permissions : (model?.permissions && typeof model.permissions === 'object') ? model.permissions : (role === 'admin' ? { all: true, isAdmin: true } : { isActive: true });
-      const adminPermissions = role === 'admin' ? (profile?.adminPermissions || model?.adminPermissions || undefined) : undefined;
-      const contestId = profile?.contestId ? String(profile.contestId) : model?.contestId ? String(model.contestId) : null;
+        (r.permissions && typeof r.permissions === 'object' && r.permissions.isAdmin === true) ||
+        r.adminPermissions !== undefined;
+      const role = ADMIN_ALIASES.has(email) ? 'admin' : isDelegatedAdmin ? 'admin' : baseRole;
+      const profileId = String(r.profileId || r.id || uid);
+      const status = String(r.status || 'active');
+      const mustChangePassword = Boolean(r.mustChangePassword || r.must_change_password);
+      const permissions = (r.permissions && typeof r.permissions === 'object') ? r.permissions : (role === 'admin' ? { all: true, isAdmin: true } : { isActive: true });
+      const adminPermissions = role === 'admin' ? (r.adminPermissions || undefined) : undefined;
+      const contestId = r.contestId ? String(r.contestId) : null;
 
       const central = {
         id: uid,
@@ -130,20 +124,128 @@ async function migrate() {
         permissions,
         adminPermissions,
         contestId,
-        source,
+        source: sourceLabel,
         migratedAt: new Date().toISOString(),
       };
 
       await firebaseDatabasePut(`users/${uid}`, central);
       migrated++;
-      if (migrated % 50 === 0) console.log(`[migration] ${migrated} migrated...`);
+      if (migrated % 50 === 0) console.log(`[migration] ${sourceLabel}: ${migrated} migrated...`);
     } catch (err) {
       errors++;
-      console.error(`[migration] failed for ${uid}:`, err);
+      console.error(`[migration] ${sourceLabel} failed for ${id}:`, err);
     }
   }
 
-  console.log(`[migration] done: ${migrated} migrated, ${skipped} skipped, ${errors} errors`);
+  console.log(`[migration] ${sourceLabel} done: ${migrated} migrated, ${skipped} skipped, ${errors} errors`);
+  return { migrated, skipped, errors };
+}
+
+async function migrateModels() {
+  console.log(`[migration] scanning models...`);
+  const data = await firebaseDatabaseGet('models').catch(() => null);
+  if (!data || typeof data !== 'object') {
+    console.log(`[migration] models: empty or missing`);
+    return { migrated: 0, skipped: 0, errors: 0 };
+  }
+
+  const entries = Object.entries(data).filter(([key]) => key !== '.priority' && key !== '.value' && !key.startsWith('.'));
+  console.log(`[migration] models: ${entries.length} entries found`);
+
+  let migrated = 0;
+  let skipped = 0;
+  let errors = 0;
+
+  for (const [id, record] of entries) {
+    try {
+      if (!record || typeof record !== 'object') {
+        skipped++;
+        continue;
+      }
+      const r = record;
+      const email = String(r.email || r.loginEmail || r.login_email || '').toLowerCase();
+      if (!email) {
+        skipped++;
+        continue;
+      }
+
+      const uid = String(r.authUserId || r.firebaseUid || id);
+      const existing = await firebaseDatabaseGet(`users/${uid}`).catch(() => null);
+      if (existing && typeof existing === 'object' && existing.email) {
+        skipped++;
+        continue;
+      }
+
+      const name = String(r.name || r.displayName || email.split('@')[0] || uid);
+      const identifier = String(r.identifier || r.matricule || r.username || email.split('@')[0] || uid);
+      const baseRole = 'student';
+      const isDelegatedAdmin =
+        (r.permissions && typeof r.permissions === 'object' && r.permissions.isAdmin === true) ||
+        r.adminPermissions !== undefined;
+      const role = ADMIN_ALIASES.has(email) ? 'admin' : isDelegatedAdmin ? 'admin' : baseRole;
+      const profileId = String(r.id || uid);
+      const status = String(r.status || 'active');
+      const mustChangePassword = Boolean(r.mustChangePassword);
+      const permissions = (r.permissions && typeof r.permissions === 'object') ? r.permissions : (role === 'admin' ? { all: true, isAdmin: true } : { isActive: true });
+      const adminPermissions = role === 'admin' ? (r.adminPermissions || undefined) : undefined;
+      const contestId = r.contestId ? String(r.contestId) : null;
+
+      const central = {
+        id: uid,
+        uid,
+        email,
+        name,
+        identifier,
+        role,
+        profileId,
+        status,
+        mustChangePassword,
+        permissions,
+        adminPermissions,
+        contestId,
+        source: 'models',
+        migratedAt: new Date().toISOString(),
+      };
+
+      await firebaseDatabasePut(`users/${uid}`, central);
+      migrated++;
+      if (migrated % 50 === 0) console.log(`[migration] models: ${migrated} migrated...`);
+    } catch (err) {
+      errors++;
+      console.error(`[migration] models failed for ${id}:`, err);
+    }
+  }
+
+  console.log(`[migration] models done: ${migrated} migrated, ${skipped} skipped, ${errors} errors`);
+  return { migrated, skipped, errors };
+}
+
+async function migrate() {
+  console.log('[migration] starting migration to central users/{uid}...');
+
+  let totalMigrated = 0;
+  let totalSkipped = 0;
+  let totalErrors = 0;
+
+  const sources = [
+    { key: 'users', label: 'users' },
+    { key: 'userProfiles', label: 'userProfiles' },
+    { key: 'authProfiles', label: 'authProfiles' },
+  ];
+
+  for (const source of sources) {
+    const result = await migrateNode(source.key, source.label);
+    totalMigrated += result.migrated;
+    totalSkipped += result.skipped;
+    totalErrors += result.errors;
+  }
+
+  const modelsResult = await migrateModels();
+  totalMigrated += modelsResult.migrated;
+  totalSkipped += modelsResult.skipped;
+  totalErrors += modelsResult.errors;
+
+  console.log(`[migration] total: ${totalMigrated} migrated, ${totalSkipped} skipped, ${totalErrors} errors`);
 }
 
 migrate().catch((err) => {
