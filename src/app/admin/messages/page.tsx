@@ -1,2 +1,5 @@
-import LegacyRoute from '@/app/_legacy/LegacyRoute';
-export default function Page() { return <LegacyRoute component="AdminMessages" role="admin" />; }
+import AdminMessagingPage from '@/components/AdminMessagingPage';
+
+export default function Page() {
+  return <AdminMessagingPage />;
+}
