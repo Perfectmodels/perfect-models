@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import FashionDayPage from '@/features/fashion-day/FashionDayPage';
 import JsonLd from '@/components/JsonLd';
 import { getFashionDayEvents } from '@/lib/public-content';
@@ -11,7 +10,6 @@ export async function generateMetadata(): Promise<Metadata> {
   const events = (await getFashionDayEvents()).slice().sort((a, b) => b.edition - a.edition);
   const latest = events[0];
   if (!latest) return buildPageMetadata(MARKETING_PAGES.fashionDay);
-
   return buildPageMetadata({
     ...MARKETING_PAGES.fashionDay,
     title: `Perfect Fashion Day — Édition ${latest.edition} : ${latest.theme}`,
@@ -30,25 +28,10 @@ export default async function Page() {
     name: `Perfect Fashion Day — Édition ${event.edition} : ${event.theme}`,
     description: event.description,
     startDate: event.date,
-    eventStatus:
-      event.date && new Date(`${event.date}T23:59:59`).getTime() >= Date.now()
-        ? 'https://schema.org/EventScheduled'
-        : 'https://schema.org/EventCompleted',
+    eventStatus: event.date && new Date(`${event.date}T23:59:59`).getTime() >= Date.now() ? 'https://schema.org/EventScheduled' : 'https://schema.org/EventCompleted',
     eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
-    location: {
-      '@type': 'Place',
-      name: event.location || 'Libreville, Gabon',
-      address: {
-        '@type': 'PostalAddress',
-        addressLocality: 'Libreville',
-        addressCountry: 'GA',
-      },
-    },
-    image: event.coverImageUrl
-      ? [absoluteUrl(event.coverImageUrl)]
-      : event.galleryImages?.[0]
-        ? [absoluteUrl(event.galleryImages[0])]
-        : undefined,
+    location: { '@type': 'Place', name: event.location || 'Libreville, Gabon', address: { '@type': 'PostalAddress', addressLocality: 'Libreville', addressCountry: 'GA' } },
+    image: event.coverImageUrl ? [absoluteUrl(event.coverImageUrl)] : event.galleryImages?.[0] ? [absoluteUrl(event.galleryImages[0])] : undefined,
     organizer: { '@id': `${SITE_URL}/#organization` },
     url: `${SITE_URL}/fashion-day`,
     inLanguage: 'fr-GA',
@@ -57,11 +40,6 @@ export default async function Page() {
   return (
     <>
       {eventSchemas.length > 0 && <JsonLd data={eventSchemas} />}
-      <div className="border-b border-pm-gold/20 bg-black px-4 py-3 text-center">
-        <Link href="/fashion-day/edition-2" className="text-[10px] font-black uppercase tracking-[0.3em] text-pm-gold hover:underline sm:text-xs">
-          Consulter le programme officiel · PFD Édition 2 · L’Art de se Révéler →
-        </Link>
-      </div>
       <FashionDayPage />
     </>
   );
