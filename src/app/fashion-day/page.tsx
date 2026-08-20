@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import FashionDayPage from '@/features/fashion-day/FashionDayPage';
 import JsonLd from '@/components/JsonLd';
 import { getFashionDayEvents } from '@/lib/public-content';
@@ -56,6 +57,11 @@ export default async function Page() {
   return (
     <>
       {eventSchemas.length > 0 && <JsonLd data={eventSchemas} />}
+      <div className="border-b border-pm-gold/20 bg-black px-4 py-3 text-center">
+        <Link href="/fashion-day/edition-2" className="text-[10px] font-black uppercase tracking-[0.3em] text-pm-gold hover:underline sm:text-xs">
+          Consulter le programme officiel · PFD Édition 2 · L’Art de se Révéler →
+        </Link>
+      </div>
       <FashionDayPage />
     </>
   );
