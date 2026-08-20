@@ -7,8 +7,8 @@
     "node": ">=20.9.0"
   },
   "scripts": {
-    "dev": "next dev --webpack",
-    "build": "next build --webpack",
+    "dev": "next dev",
+    "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "migrate:users": "node --experimental-vm-modules scripts/migrate-users-to-central.mjs"
