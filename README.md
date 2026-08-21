@@ -20,7 +20,7 @@ Les anciens projets natifs Android/iOS ne font plus partie du dépôt. PMM est a
 
 ## Fonctionnalités principales
 
-### Site public
+## Site public
 
 - Présentation de l’agence
 - Catalogue des mannequins et profils publics
