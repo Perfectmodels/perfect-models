@@ -2,6 +2,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { useData } from '@/contexts/DataContext';
+import { INITIAL_BUSINESS_CONTACTS } from '@/data/perfect-models-business-contacts';
 
 type Tab = 'inbox' | 'sent' | 'campaigns' | 'contacts' | 'compose';
 type TemplateId = 'partnership' | 'services' | 'sponsorship' | 'casting' | 'shooting' | 'followup';
@@ -16,6 +17,11 @@ const TEMPLATES: Record<TemplateId, { label: string; subject: string; body: stri
 };
 
 const CONTACTS_KEY = 'pmm_messaging_contacts';
+const EXCLUDED_PREFIXES = ['rh@', 'recrutement@', 'recrutement.', 'ressources.humaines@', 'capital.humain@', 'capitalhumain@', 'cv@', 'jobs@', 'emploi@', 'emplois@', 'recruittalents@', 'recruitment@'];
+const isCommercialContact = (email: string) => {
+  const value = email.trim().toLowerCase();
+  return !EXCLUDED_PREFIXES.some(prefix => value.startsWith(prefix)) && !value.endsWith('@gmail.com') && !value.endsWith('@yahoo.com') && !value.endsWith('@outlook.com');
+};
 
 export default function AdminMessagingPage() {
   const { data, addDocument } = useData();
@@ -29,8 +35,14 @@ export default function AdminMessagingPage() {
   const [contactEmail, setContactEmail] = useState('');
   const [contactCategory, setContactCategory] = useState('Entreprise');
   const [contacts, setContacts] = useState<{id:string;name:string;email:string;category:string}[]>(() => {
-    if (typeof window === 'undefined') return [];
-    try { return JSON.parse(localStorage.getItem(CONTACTS_KEY) || '[]'); } catch { return []; }
+    if (typeof window === 'undefined') return INITIAL_BUSINESS_CONTACTS;
+    try {
+      const stored = JSON.parse(localStorage.getItem(CONTACTS_KEY) || 'null');
+      if (Array.isArray(stored)) return stored.filter((c: any) => c?.email && isCommercialContact(c.email));
+    } catch {}
+    const seeded = INITIAL_BUSINESS_CONTACTS.filter(c => isCommercialContact(c.email));
+    localStorage.setItem(CONTACTS_KEY, JSON.stringify(seeded));
+    return seeded;
   });
 
   const sentLogs = useMemo(() => ((data as any)?.messagingLogs || []).filter((x: any) => x.direction === 'outbound').sort((a:any,b:any) => String(b.createdAt).localeCompare(String(a.createdAt))), [data]);
@@ -40,14 +52,16 @@ export default function AdminMessagingPage() {
   const useTemplate = (id: TemplateId) => { const t = TEMPLATES[id]; setSubject(t.subject); setBody(t.body); setTab('compose'); };
 
   const saveContact = () => {
-    if (!contactName.trim() || !contactEmail.includes('@')) return;
-    const next = [...contacts, { id: crypto.randomUUID(), name: contactName.trim(), email: contactEmail.trim(), category: contactCategory }];
-    setContacts(next); localStorage.setItem(CONTACTS_KEY, JSON.stringify(next)); setContactName(''); setContactEmail(''); setNotice('Contact enregistré.');
+    if (!contactName.trim() || !contactEmail.includes('@') || !isCommercialContact(contactEmail)) { setNotice('Seuls les contacts professionnels non-RH sont autorisés.'); return; }
+    const email = contactEmail.trim().toLowerCase();
+    if (contacts.some(c => c.email.toLowerCase() === email)) { setNotice('Ce contact existe déjà.'); return; }
+    const next = [...contacts, { id: crypto.randomUUID(), name: contactName.trim(), email, category: contactCategory }];
+    setContacts(next); localStorage.setItem(CONTACTS_KEY, JSON.stringify(next)); setContactName(''); setContactEmail(''); setNotice('Contact professionnel enregistré.');
   };
 
   const send = async (campaign = false) => {
-    const recipients = to.split(/[\n,;]+/).map(x => x.trim()).filter(x => x.includes('@')).map(email => ({ email }));
-    if (!subject.trim() || !body.trim() || !recipients.length) { setNotice('Renseignez un objet, un message et au moins un destinataire.'); return; }
+    const recipients = to.split(/[\n,;]+/).map(x => x.trim()).filter(x => x.includes('@') && isCommercialContact(x)).map(email => ({ email }));
+    if (!subject.trim() || !body.trim() || !recipients.length) { setNotice('Renseignez un objet, un message et au moins un destinataire professionnel.'); return; }
     setSending(true); setNotice('');
     try {
       for (let i = 0; i < recipients.length; i += 25) {
