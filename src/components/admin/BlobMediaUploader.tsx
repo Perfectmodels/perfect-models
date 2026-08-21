@@ -54,24 +54,8 @@ export default function BlobMediaUploader({
     }
   };
 
-  const uploadSingle = async (file: File, total: number, index: number) => {
+  const uploadSingle = async (file: File, index: number) => {
     validateFile(file);
-
-    if (kind === 'image') {
-      const form = new FormData();
-      form.append('file', file);
-      form.append('scope', scope);
-      const response = await fetch('/api/media/imgbb', {
-        method: 'POST',
-        credentials: 'include',
-        body: form,
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok || !data?.url) {
-        throw new Error(data?.error || "Échec de l'upload vers ImgBB.");
-      }
-      return data.url as string;
-    }
 
     const pathname = `pmm/${scope}/${Date.now()}-${index}-${safeFilename(file.name)}`;
     const blob = await upload(pathname, file, {
@@ -80,9 +64,10 @@ export default function BlobMediaUploader({
       clientPayload: JSON.stringify({ kind, scope }),
       multipart: file.size > 100 * 1024 * 1024,
       onUploadProgress: ({ percentage }) => {
-        if (total === 1) setProgress(Math.round(percentage));
+        if (!multi) setProgress(Math.round(percentage));
       },
     });
+
     return blob.url;
   };
 
@@ -123,10 +108,10 @@ export default function BlobMediaUploader({
         const index = cursor++;
         const file = validFiles[index];
         try {
-          const url = await uploadSingle(file, validFiles.length, index);
+          const url = await uploadSingle(file, index);
           onChange(url);
         } catch (cause: any) {
-          if (!firstError) firstError = `${file.name}: ${cause?.message || "Échec du téléversement."}`;
+          if (!firstError) firstError = `${file.name}: ${cause?.message || 'Échec du téléversement.'}`;
         } finally {
           completed += 1;
           setUploadedCount(completed);
@@ -216,7 +201,7 @@ export default function BlobMediaUploader({
 
       {!compact && (
         <p className="text-[10px] text-white/30">
-          {kind === 'image' ? 'JPG, PNG, WEBP, GIF ou AVIF — téléversement via ImgBB.' : 'MP4, WebM ou MOV — 1 Go max. Les gros fichiers utilisent Vercel Blob.'}
+          {kind === 'image' ? 'JPG, PNG, WEBP, GIF ou AVIF — stockage sécurisé via Vercel Blob.' : 'MP4, WebM ou MOV — 1 Go max. Stockage via Vercel Blob.'}
         </p>
       )}
       {multi && !uploading && <p className="text-[10px] text-white/30">Sélection multiple activée — vous pouvez choisir plus de 10 photos en une seule fois.</p>}
