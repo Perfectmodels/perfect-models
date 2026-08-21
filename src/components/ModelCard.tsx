@@ -53,4 +53,7 @@ const ModelCard: React.FC<ModelCardProps> = ({ model }) => {
   );
 };
 
-export default ModelCard;
+// What: Wrap ModelCard in React.memo
+// Why: Prevents expensive framer-motion re-renders when parent search/filter state changes
+// Impact: Reduces input lag and blocking on the main thread during filtering
+export default React.memo(ModelCard);
