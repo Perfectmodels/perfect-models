@@ -4,7 +4,7 @@
  */
 import React, { useRef, useState, useCallback } from 'react';
 import { PhotoIcon, XMarkIcon, ArrowUpTrayIcon, Square2StackIcon } from '@heroicons/react/24/outline';
-import MediaPicker from "./admin/MediaPicker";
+import MediaPicker from './admin/MediaPicker';
 import {
   uploadToImgbb,
   validateFile,
@@ -41,6 +41,12 @@ const ImgBBUploader: React.FC<ImgBBUploaderProps> = ({
   const { data } = useData();
   const apiKey = data?.apiKeys?.imgbbApiKey || import.meta.env.VITE_IMGBB_API_KEY || '';
 
+  const isPublicCastingPage = typeof window !== 'undefined' && (
+    window.location.pathname === '/casting' ||
+    window.location.pathname === '/casting-formulaire' ||
+    window.location.pathname.startsWith('/casting/')
+  );
+
   const registerInMediaLibrary = useCallback(async (url: string, file: File) => {
     try {
       const response = await fetch('/api/data/gallery', {
@@ -60,8 +66,6 @@ const ImgBBUploader: React.FC<ImgBBUploaderProps> = ({
         }),
       });
       if (!response.ok) {
-        // The image itself was uploaded successfully; library registration must
-        // never make the primary upload fail.
         console.warn('Impossible d’enregistrer le média dans la médiathèque');
       }
     } catch (libraryError) {
@@ -74,22 +78,19 @@ const ImgBBUploader: React.FC<ImgBBUploaderProps> = ({
     const err = validateFile(file, 'image');
     if (err) { setError(err); return; }
 
-    if (!apiKey) {
-      setError('Clé API ImgBB non configurée. Configurez-la dans les paramètres.');
-      return;
-    }
-
     try {
-      setProgress(0);
+      setProgress(10);
       const url = await uploadToImgbb(file, apiKey, setProgress);
-      await registerInMediaLibrary(url, file);
+      if (!isPublicCastingPage) {
+        await registerInMediaLibrary(url, file);
+      }
       onChange(url);
     } catch (e: any) {
       setError(e.message || "Erreur lors de l'upload");
     } finally {
       setProgress(null);
     }
-  }, [apiKey, onChange, registerInMediaLibrary]);
+  }, [apiKey, isPublicCastingPage, onChange, registerInMediaLibrary]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -152,14 +153,18 @@ const ImgBBUploader: React.FC<ImgBBUploaderProps> = ({
               {urlMode ? 'Masquer URL' : 'Ou coller une URL'}
             </button>
           )}
-          <button type="button" onClick={() => setShowPicker(true)} className="text-[9px] text-pm-gold/60 hover:text-pm-gold underline transition-colors flex items-center gap-1">
-            <Square2StackIcon className="w-3 h-3" /> Bibliothèque
-          </button>
+          {!isPublicCastingPage && (
+            <button type="button" onClick={() => setShowPicker(true)} className="text-[9px] text-pm-gold/60 hover:text-pm-gold underline transition-colors flex items-center gap-1">
+              <Square2StackIcon className="w-3 h-3" /> Bibliothèque
+            </button>
+          )}
         </div>
         {urlMode && <input type="text" value={value} onChange={e => onChange(e.target.value)} placeholder="https://..." className="admin-input" />}
       </div>
 
-      <MediaPicker isOpen={showPicker} onClose={() => setShowPicker(false)} onSelect={(urls) => onChange(urls[0])} multiple={false} resourceType="image" />
+      {!isPublicCastingPage && (
+        <MediaPicker isOpen={showPicker} onClose={() => setShowPicker(false)} onSelect={(urls) => onChange(urls[0])} multiple={false} resourceType="image" />
+      )}
       {error && <p className="text-xs text-red-400">{error}</p>}
     </div>
   );
