@@ -20,6 +20,7 @@ const IMAGE_TYPES = 'image/jpeg,image/png,image/webp,image/gif,image/avif';
 const VIDEO_TYPES = 'video/mp4,video/webm,video/quicktime';
 const IMAGE_MAX = 15 * 1024 * 1024;
 const VIDEO_MAX = 1024 * 1024 * 1024;
+const MULTI_UPLOAD_CONCURRENCY = 3;
 
 const safeFilename = (name: string) =>
   name.toLowerCase().replace(/[^a-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '') || 'media';
@@ -36,55 +37,111 @@ export default function BlobMediaUploader({
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [selectedCount, setSelectedCount] = useState(0);
+  const [uploadedCount, setUploadedCount] = useState(0);
   const [error, setError] = useState('');
 
   const accept = kind === 'image' ? IMAGE_TYPES : VIDEO_TYPES;
   const maxBytes = kind === 'image' ? IMAGE_MAX : VIDEO_MAX;
+  const multi = kind === 'image' && compact;
 
-  const handleFile = async (file: File) => {
-    setError('');
+  const validateFile = (file: File) => {
     if (!file.type.startsWith(`${kind}/`) && !(kind === 'video' && file.type === 'video/quicktime')) {
-      setError(kind === 'image' ? 'Format image non accepté.' : 'Format vidéo non accepté. Utilisez MP4, WebM ou MOV.');
-      return;
+      throw new Error(kind === 'image' ? 'Format image non accepté.' : 'Format vidéo non accepté. Utilisez MP4, WebM ou MOV.');
     }
     if (file.size > maxBytes) {
-      setError(kind === 'image' ? 'Image trop lourde (15 Mo maximum).' : 'Vidéo trop lourde (1 Go maximum).');
+      throw new Error(kind === 'image' ? 'Image trop lourde (15 Mo maximum).' : 'Vidéo trop lourde (1 Go maximum).');
+    }
+  };
+
+  const uploadSingle = async (file: File, total: number, index: number) => {
+    validateFile(file);
+
+    if (kind === 'image') {
+      const form = new FormData();
+      form.append('file', file);
+      form.append('scope', scope);
+      const response = await fetch('/api/media/imgbb', {
+        method: 'POST',
+        credentials: 'include',
+        body: form,
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data?.url) {
+        throw new Error(data?.error || "Échec de l'upload vers ImgBB.");
+      }
+      return data.url as string;
+    }
+
+    const pathname = `pmm/${scope}/${Date.now()}-${index}-${safeFilename(file.name)}`;
+    const blob = await upload(pathname, file, {
+      access: 'public',
+      handleUploadUrl: '/api/media/client-upload',
+      clientPayload: JSON.stringify({ kind, scope }),
+      multipart: file.size > 100 * 1024 * 1024,
+      onUploadProgress: ({ percentage }) => {
+        if (total === 1) setProgress(Math.round(percentage));
+      },
+    });
+    return blob.url;
+  };
+
+  const handleFiles = async (files: File[]) => {
+    if (!files.length) return;
+    setError('');
+    setUploading(true);
+    setProgress(0);
+    setSelectedCount(files.length);
+    setUploadedCount(0);
+
+    const validFiles: File[] = [];
+    const validationErrors: string[] = [];
+
+    for (const file of files) {
+      try {
+        validateFile(file);
+        validFiles.push(file);
+      } catch (cause: any) {
+        validationErrors.push(`${file.name}: ${cause?.message || 'fichier invalide'}`);
+      }
+    }
+
+    if (!validFiles.length) {
+      setError(validationErrors.join(' '));
+      setUploading(false);
+      setSelectedCount(0);
+      if (inputRef.current) inputRef.current.value = '';
       return;
     }
 
-    setUploading(true);
-    setProgress(0);
-    try {
-      if (kind === 'image') {
-        const form = new FormData();
-        form.append('file', file);
-        form.append('scope', scope);
-        setProgress(15);
-        const response = await fetch('/api/media/imgbb', {
-          method: 'POST',
-          credentials: 'include',
-          body: form,
-        });
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok || !data?.url) {
-          throw new Error(data?.error || "Échec de l'upload vers ImgBB.");
-        }
-        setProgress(100);
-        onChange(data.url);
-        return;
-      }
+    let completed = 0;
+    let firstError = validationErrors[0] || '';
+    let cursor = 0;
 
-      const pathname = `pmm/${scope}/${Date.now()}-${safeFilename(file.name)}`;
-      const blob = await upload(pathname, file, {
-        access: 'public',
-        handleUploadUrl: '/api/media/client-upload',
-        clientPayload: JSON.stringify({ kind, scope }),
-        multipart: file.size > 100 * 1024 * 1024,
-        onUploadProgress: ({ percentage }) => setProgress(Math.round(percentage)),
-      });
-      onChange(blob.url);
-    } catch (cause: any) {
-      setError(cause?.message || "Échec du téléversement du média.");
+    const worker = async () => {
+      while (cursor < validFiles.length) {
+        const index = cursor++;
+        const file = validFiles[index];
+        try {
+          const url = await uploadSingle(file, validFiles.length, index);
+          onChange(url);
+        } catch (cause: any) {
+          if (!firstError) firstError = `${file.name}: ${cause?.message || "Échec du téléversement."}`;
+        } finally {
+          completed += 1;
+          setUploadedCount(completed);
+          setProgress(Math.round((completed / validFiles.length) * 100));
+        }
+      }
+    };
+
+    try {
+      const workers = Array.from(
+        { length: Math.min(MULTI_UPLOAD_CONCURRENCY, validFiles.length) },
+        () => worker(),
+      );
+      await Promise.all(workers);
+      if (firstError) setError(firstError);
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = '';
@@ -99,7 +156,7 @@ export default function BlobMediaUploader({
         </label>
       )}
 
-      {value && (
+      {value && !multi && (
         <div className="relative overflow-hidden rounded-lg border border-pm-gold/20 bg-black">
           {kind === 'image' ? (
             <img src={value} alt="Aperçu" className="h-44 w-full object-cover" />
@@ -126,7 +183,17 @@ export default function BlobMediaUploader({
         } font-bold uppercase tracking-widest transition-colors`}
       >
         <ArrowUpTrayIcon className="h-4 w-4" />
-        {uploading ? `Téléversement ${progress}%` : value ? 'Remplacer' : kind === 'image' ? 'Téléverser une image' : 'Téléverser la vidéo'}
+        {uploading
+          ? multi
+            ? `Téléversement ${uploadedCount}/${selectedCount} — ${progress}%`
+            : `Téléversement ${progress}%`
+          : multi
+            ? 'Ajouter plusieurs images'
+            : value
+              ? 'Remplacer'
+              : kind === 'image'
+                ? 'Téléverser une image'
+                : 'Téléverser la vidéo'}
       </button>
 
       {uploading && (
@@ -140,9 +207,10 @@ export default function BlobMediaUploader({
         className="hidden"
         type="file"
         accept={accept}
+        multiple={multi}
         onChange={(event) => {
-          const file = event.target.files?.[0];
-          if (file) void handleFile(file);
+          const files = Array.from(event.target.files ?? []);
+          if (files.length) void handleFiles(files);
         }}
       />
 
@@ -151,6 +219,7 @@ export default function BlobMediaUploader({
           {kind === 'image' ? 'JPG, PNG, WEBP, GIF ou AVIF — téléversement via ImgBB.' : 'MP4, WebM ou MOV — 1 Go max. Les gros fichiers utilisent Vercel Blob.'}
         </p>
       )}
+      {multi && !uploading && <p className="text-[10px] text-white/30">Sélection multiple activée — vous pouvez choisir plus de 10 photos en une seule fois.</p>}
       {error && <p className="text-xs text-red-400">{error}</p>}
     </div>
   );
