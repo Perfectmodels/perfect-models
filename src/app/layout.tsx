@@ -10,6 +10,7 @@ import {
   organizationJsonLd,
   websiteJsonLd,
 } from '@/lib/seo';
+import { Analytics } from '@vercel/analytics/next';
 
 const googleVerification =
   process.env.GOOGLE_SITE_VERIFICATION || process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || undefined;
@@ -103,6 +104,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <JsonLd data={[organizationJsonLd, websiteJsonLd]} />
         <noscript>JavaScript est nécessaire pour utiliser le site Perfect Models Management.</noscript>
         <ClientShell>{children}</ClientShell>
+        <Analytics />
       </body>
     </html>
   );
