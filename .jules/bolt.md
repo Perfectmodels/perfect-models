@@ -1,0 +1,3 @@
+## 2024-05-18 - React.memo for Expensive List Items
+**Learning:** To prevent input lag and thread blocking in parent components managing search/filter state, always wrap child list item components containing expensive render operations (like framer-motion animations) in React.memo(). Additionally, when memoizing a component typed with React.FC, wrap it at the export statement to avoid TypeScript errors.
+**Action:** When implementing search or filter inputs that re-render lists of complex components, export the list item component using `React.memo(ComponentName)` to optimize performance.
