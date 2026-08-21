@@ -53,4 +53,7 @@ const ModelCard: React.FC<ModelCardProps> = ({ model }) => {
   );
 };
 
-export default ModelCard;
+// 💡 What: Wrapped ModelCard in React.memo
+// 🎯 Why: To prevent unnecessary re-renders when parent components (like Models grid or Home page) re-render
+// 📊 Impact: Improves rendering performance of lists and grids containing ModelCards by skipping reconciliation when the model prop hasn't changed
+export default React.memo(ModelCard);
