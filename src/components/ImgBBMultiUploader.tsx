@@ -106,7 +106,8 @@ const ImgBBMultiUploader: React.FC<ImgBBMultiUploaderProps> = ({
               <button
                 type="button"
                 onClick={() => removeUrl(i)}
-                className="absolute top-1 right-1 bg-black/70 rounded-full p-0.5 text-white/60 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute top-1 right-1 bg-black/70 rounded-full p-0.5 text-white/60 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity focus-visible:opacity-100 focus-visible:ring-2 focus-visible:outline-none"
+                aria-label="Supprimer l'image"
               >
                 <XMarkIcon className="w-3.5 h-3.5" />
               </button>
