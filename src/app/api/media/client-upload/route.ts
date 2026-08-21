@@ -23,6 +23,9 @@ const parsePayload = (value?: string | null): ClientPayload => {
   }
 };
 
+const normalizeScope = (value: string) =>
+  value.replace(/[^a-z0-9/_-]+/gi, '-').replace(/^\/+|\/+$/g, '') || 'media';
+
 export async function POST(request: Request): Promise<NextResponse> {
   try {
     const body = (await request.json()) as HandleUploadBody;
@@ -30,18 +33,17 @@ export async function POST(request: Request): Promise<NextResponse> {
       body,
       request,
       onBeforeGenerateToken: async (pathname, clientPayload) => {
-        const profile = await getCurrentAppProfile();
-        if (!profile || profile.role !== 'admin') {
+        const payload = parsePayload(clientPayload);
+        const kind = payload.kind === 'video' ? 'video' : 'image';
+        const scope = normalizeScope(String(payload.scope || 'media'));
+
+        // Casting submissions are intentionally allowed without an admin session.
+        const isPublicCasting = scope === 'casting';
+        const profile = isPublicCasting ? null : await getCurrentAppProfile();
+        if (!isPublicCasting && (!profile || profile.role !== 'admin')) {
           throw new Error('Accès administrateur requis pour téléverser ce média.');
         }
 
-        const payload = parsePayload(clientPayload);
-        const kind = payload.kind === 'video' ? 'video' : 'image';
-        const scope = String(payload.scope || 'media').replace(/[^a-z0-9/_-]+/gi, '-');
-
-        if (!scope.startsWith('fashion-day/')) {
-          throw new Error('Scope média non autorisé.');
-        }
         if (!pathname.startsWith(`pmm/${scope}/`)) {
           throw new Error('Chemin de stockage non autorisé.');
         }
@@ -51,14 +53,15 @@ export async function POST(request: Request): Promise<NextResponse> {
           maximumSizeInBytes: kind === 'video' ? VIDEO_MAX : IMAGE_MAX,
           addRandomSuffix: true,
           tokenPayload: JSON.stringify({
-            userId: profile.userId,
+            userId: profile?.userId || null,
             kind,
             scope,
+            publicCasting: isPublicCasting,
           }),
         };
       },
       onUploadCompleted: async () => {
-        // L'URL Blob est enregistrée avec l'édition Fashion Day par l'interface admin.
+        // Le module appelant persiste l'URL dans ses données métier.
       },
     });
 
