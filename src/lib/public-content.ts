@@ -1,6 +1,7 @@
 import type { Article, Model, Service, FashionDayEvent } from '@/types';
 import { collectionToArray, getCollection } from '@/lib/app-data';
 import { articles as seedArticles } from '@/constants/magazineData';
+import { magazineAdditions } from '@/constants/magazineAdditions';
 import { agencyServices as seedServices, models as seedModels } from '@/constants/data';
 
 async function safeCollection(key: string) {
@@ -23,7 +24,9 @@ function uniqueBy<T>(items: T[], keyOf: (item: T) => string) {
 
 export async function getPublicArticles(): Promise<Article[]> {
   const remote = await safeCollection('articles');
-  const source = (remote.length ? remote : seedArticles) as Article[];
+  // CMS articles take precedence; editorial additions are merged so new stories
+  // remain visible even when the remote collection already contains content.
+  const source = [...(remote as Article[]), ...magazineAdditions, ...seedArticles] as Article[];
   const published = source.filter((article) => article && article.status !== 'draft' && Boolean(article.slug));
   return uniqueBy(published, (article) => String(article.slug));
 }
