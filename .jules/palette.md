@@ -1,0 +1,3 @@
+## 2024-05-18 - Hover-revealed Icon Buttons Accessibility
+**Learning:** Icon-only action buttons (like delete) inside image preview components were using `opacity-0` for hover effects, making them invisible and inaccessible to keyboard users during tab navigation.
+**Action:** Always combine `opacity-0 group-hover:opacity-100` with `focus-visible:opacity-100 focus-visible:ring-2 focus-visible:outline-none` and provide an explicit `aria-label` for all transient/hover actions.
