@@ -14,16 +14,6 @@ const MAX_IMAGE_SIZE = 4.5 * 1024 * 1024;
 
 export async function POST(request: Request) {
   try {
-    const profile = await getCurrentAppProfile();
-    if (!profile || profile.role !== 'admin') {
-      return NextResponse.json({ error: 'Accès administrateur requis.' }, { status: 403 });
-    }
-
-    const apiKey = process.env.IMGBB_API_KEY || process.env.VITE_IMGBB_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json({ error: 'Clé ImgBB non configurée sur le serveur.' }, { status: 503 });
-    }
-
     const form = await request.formData();
     const file = form.get('file');
     const scope = String(form.get('scope') || 'media').replace(/[^a-z0-9/_-]+/gi, '-');
@@ -36,6 +26,21 @@ export async function POST(request: Request) {
     }
     if (file.size > MAX_IMAGE_SIZE) {
       return NextResponse.json({ error: 'Image trop lourde (4,5 Mo maximum).' }, { status: 413 });
+    }
+
+    // The public casting form is intentionally upload-only: it may upload
+    // candidate photos, but it must never gain access to the media library.
+    const isPublicCastingUpload = scope === 'casting';
+    if (!isPublicCastingUpload) {
+      const profile = await getCurrentAppProfile();
+      if (!profile || profile.role !== 'admin') {
+        return NextResponse.json({ error: 'Accès administrateur requis.' }, { status: 403 });
+      }
+    }
+
+    const apiKey = process.env.IMGBB_API_KEY || process.env.VITE_IMGBB_API_KEY;
+    if (!apiKey) {
+      return NextResponse.json({ error: 'Clé ImgBB non configurée sur le serveur.' }, { status: 503 });
     }
 
     const uploadForm = new FormData();
