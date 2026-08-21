@@ -8,8 +8,6 @@ import {
   SparklesIcon, XMarkIcon, PhotoIcon,
 } from '@heroicons/react/24/outline';
 import ImageUploader from '../components/ImageUploader';
-import ArticleGenerator from '../components/ArticleGenerator';
-import AIAssistant from '../components/AIAssistant';
 import ArticlePreview from '../components/ArticlePreview';
 import { uploadToImgbb } from '../utils/imgbbService';
 
@@ -211,8 +209,6 @@ interface ArticleFormProps {
 
 const ArticleForm: React.FC<ArticleFormProps> = ({ article, onSave, onCancel, isCreating }) => {
   const [formData, setFormData] = useState<Article>(article);
-  const [isAIOpen, setIsAIOpen] = useState(false);
-  const [activeAIField, setActiveAIField] = useState<{ fieldName: string; prompt: string; schema?: any } | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const autoSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -252,22 +248,6 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, onSave, onCancel, is
     onSave(toSave);
   };
 
-  const openAI = (fieldName: string, prompt: string, schema?: any) => {
-    setActiveAIField({ fieldName, prompt, schema });
-    setIsAIOpen(true);
-  };
-
-  const handleAIInsert = (content: string) => {
-    if (!activeAIField) return;
-    if (activeAIField.fieldName === 'content') {
-      try { set({ content: JSON.parse(content) }); } catch { set({ content: [{ type: 'paragraph', text: content }] }); }
-    } else if (activeAIField.fieldName === 'tags') {
-      set({ tags: content.split(',').map(t => t.trim()) });
-    } else {
-      set({ [activeAIField.fieldName]: content });
-    }
-  };
-
   const tagInput = (val: string) => set({ tags: val.split(',').map(t => t.trim()).filter(Boolean) });
   const brandInput = (val: string) => set({ brands: val.split(',').map(t => t.trim()).filter(Boolean) });
 
@@ -296,10 +276,7 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, onSave, onCancel, is
             <p className="text-[10px] font-black uppercase tracking-widest text-pm-gold/40">Métadonnées</p>
 
             <div>
-              <div className="flex justify-between items-center mb-1">
-                <label className="admin-label !mb-0">Titre *</label>
-                <AIBtn onClick={() => openAI('title', 'Génère 5 titres accrocheurs pour un article de mode.')} />
-              </div>
+              <label className="admin-label">Titre *</label>
               <input value={formData.title} onChange={e => set({ title: e.target.value })} placeholder="Titre de l'article" className="admin-input" />
             </div>
 
@@ -330,19 +307,13 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, onSave, onCancel, is
             </div>
 
             <div>
-              <div className="flex justify-between items-center mb-1">
-                <label className="admin-label !mb-0">Extrait</label>
-                <AIBtn onClick={() => openAI('excerpt', `Rédige un résumé de 2 phrases pour un article intitulé "${formData.title}".`)} />
-              </div>
+              <label className="admin-label">Extrait</label>
               <textarea value={formData.excerpt} onChange={e => set({ excerpt: e.target.value })} rows={3} placeholder="Résumé de l'article…" className="admin-input admin-textarea" />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <div className="flex justify-between items-center mb-1">
-                  <label className="admin-label !mb-0">Tags (virgule)</label>
-                  <AIBtn onClick={() => openAI('tags', `Génère 5 tags SEO pour un article sur "${formData.title}". Sépare par des virgules.`)} />
-                </div>
+                <label className="admin-label">Tags (virgule)</label>
                 <input value={(formData.tags ?? []).join(', ')} onChange={e => tagInput(e.target.value)} placeholder="mode, défilé, Libreville…" className="admin-input" />
               </div>
               <div>
@@ -354,10 +325,7 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, onSave, onCancel, is
 
           {/* Éditeur de blocs */}
           <div className="admin-section-wrapper space-y-4">
-            <div className="flex justify-between items-center">
-              <p className="text-[10px] font-black uppercase tracking-widest text-pm-gold/40">Contenu — Éditeur par blocs</p>
-              <AIBtn onClick={() => openAI('content', `Rédige un article complet sur "${formData.title}" en JSON avec des blocs paragraph, heading, quote.`, { type: 'array' })} label="Générer avec IA" />
-            </div>
+            <p className="text-[10px] font-black uppercase tracking-widest text-pm-gold/40">Contenu — Éditeur par blocs</p>
             <BlockEditor blocks={formData.content} onChange={blocks => set({ content: blocks })} />
           </div>
 
@@ -378,11 +346,6 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, onSave, onCancel, is
           </div>
         </div>
       </div>
-
-      {activeAIField && (
-        <AIAssistant isOpen={isAIOpen} onClose={() => setIsAIOpen(false)} onInsertContent={handleAIInsert}
-          fieldName={activeAIField.fieldName} initialPrompt={activeAIField.prompt} jsonSchema={activeAIField.schema} />
-      )}
 
       {isPreviewOpen && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4" onClick={() => setIsPreviewOpen(false)}>
@@ -412,7 +375,6 @@ const AdminMagazine: React.FC = () => {
   const [localArticles, setLocalArticles] = useState<Article[]>([]);
   const [editingArticle, setEditingArticle] = useState<Article | null>(null);
   const [isCreating, setIsCreating] = useState(false);
-  const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
   const [filter, setFilter] = useState<'all' | 'published' | 'draft'>('all');
 
   useEffect(() => {
@@ -450,12 +412,6 @@ const AdminMagazine: React.FC = () => {
     await saveData({ ...data, articles: (data.articles ?? []).map(a => a.slug === article.slug ? updated : a) });
   };
 
-  const handleArticleGenerated = (generatedData: Partial<Article>) => {
-    setIsCreating(true);
-    setEditingArticle({ ...newArticle(), ...generatedData });
-    setIsGeneratorOpen(false);
-  };
-
   if (editingArticle) {
     return <ArticleForm article={editingArticle} onSave={handleFormSave} onCancel={() => { setEditingArticle(null); setIsCreating(false); }} isCreating={isCreating} />;
   }
@@ -477,9 +433,6 @@ const AdminMagazine: React.FC = () => {
             <p className="admin-page-subtitle">CMS headless — articles Focus Model 241.</p>
           </div>
           <div className="flex items-center gap-3">
-            <button onClick={() => setIsGeneratorOpen(true)} className="action-btn-outline !flex !items-center !gap-2">
-              <SparklesIcon className="w-5 h-5" /> Générer avec IA
-            </button>
             <button onClick={() => { setIsCreating(true); setEditingArticle(newArticle()); }} className="action-btn !flex !items-center !gap-2">
               <PlusIcon className="w-5 h-5" /> Nouvel Article
             </button>
@@ -533,7 +486,6 @@ const AdminMagazine: React.FC = () => {
           ))}
         </div>
       </div>
-      <ArticleGenerator isOpen={isGeneratorOpen} onClose={() => setIsGeneratorOpen(false)} onArticleGenerated={handleArticleGenerated} />
     </div>
   );
 };

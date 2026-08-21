@@ -4,12 +4,9 @@ import { motion } from 'framer-motion';
 import SEO from '../components/SEO';
 import { useData } from '../contexts/DataContext';
 import Loading from '../components/Loading';
-import { magazineAdditions } from '../constants/magazineAdditions';
-import { dorcasArticle } from '../constants/dorcasArticle';
+
 
 const PAGE_SIZE = 9;
-
-const editorialArticles = [...magazineAdditions, dorcasArticle];
 
 const Magazine: React.FC = () => {
   const { data, isInitialized } = useData();
@@ -18,12 +15,11 @@ const Magazine: React.FC = () => {
   const [page, setPage] = useState(1);
 
   const published = useMemo(() => {
-    const remote = (data?.articles || []).filter(article => article && article.status !== 'draft' && Boolean(article.slug));
-    const source = remote.length ? remote : editorialArticles;
     const seen = new Set<string>();
-    return source
+    return (data?.articles || [])
       .filter(article => {
-        if (!article || !article.slug || seen.has(article.slug)) return false;
+        if (!article || !article.slug || article.status === 'draft') return false;
+        if (seen.has(article.slug)) return false;
         seen.add(article.slug);
         return true;
       })

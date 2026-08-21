@@ -462,14 +462,26 @@ const FashionDay: React.FC = () => {
                   <h3 className="text-2xl sm:text-3xl font-playfair font-black">Les Mannequins Vedettes</h3>
                 </div>
                 <MarqueeTrack duration={Math.max(20, selectedEdition.featuredModels.length * 4)}>
-                  {selectedEdition.featuredModels.map((name, i) => (
-                    <span
-                      key={i}
-                      className="inline-flex items-center px-3 sm:px-4 py-1.5 border border-pm-gold/20 text-white/70 font-playfair text-sm italic hover:border-pm-gold hover:text-pm-gold transition-colors cursor-default flex-shrink-0 mx-1 sm:mx-1.5"
-                    >
-                      {name}
-                    </span>
-                  ))}
+                  {selectedEdition.featuredModels.map((name, i) => {
+                    const matchedModel = data.models?.find(m => m.name.toLowerCase() === name.toLowerCase());
+                    return matchedModel ? (
+                      <Link
+                        key={i}
+                        to={`/mannequins/${matchedModel.id}`}
+                        className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 border border-pm-gold text-pm-gold font-playfair text-sm italic hover:bg-pm-gold hover:text-pm-dark transition-all cursor-pointer flex-shrink-0 mx-1 sm:mx-1.5"
+                      >
+                        <span>{name}</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest bg-pm-gold/20 px-1.5 py-0.5 rounded">Voir profil</span>
+                      </Link>
+                    ) : (
+                      <span
+                        key={i}
+                        className="inline-flex items-center px-3 sm:px-4 py-1.5 border border-pm-gold/20 text-white/70 font-playfair text-sm italic hover:border-pm-gold hover:text-pm-gold transition-colors cursor-default flex-shrink-0 mx-1 sm:mx-1.5"
+                      >
+                        {name}
+                      </span>
+                    );
+                  })}
                 </MarqueeTrack>
               </section>
             )}

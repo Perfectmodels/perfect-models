@@ -33,6 +33,20 @@ const ModelCard: React.FC<ModelCardProps> = ({ model }) => {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-pm-dark via-transparent to-transparent opacity-40 group-hover:opacity-80 transition-opacity duration-700"></div>
 
+        {/* Badges croisés */}
+        <div className="absolute top-4 left-4 flex flex-col gap-1.5 z-10">
+          {(model.fashionDayEditions?.length ?? 0) > 0 && (
+            <span className="px-2.5 py-1 bg-pm-gold text-pm-dark text-[9px] font-black uppercase tracking-widest rounded-full shadow-lg">
+              PFD Talent
+            </span>
+          )}
+          {model.level === 'Pro' && (
+            <span className="px-2.5 py-1 bg-black/80 border border-pm-gold/40 text-pm-gold text-[9px] font-black uppercase tracking-widest rounded-full backdrop-blur-sm">
+              PRO
+            </span>
+          )}
+        </div>
+
         <div className="absolute bottom-0 left-0 p-5 sm:p-8 lg:p-10 w-full transform translate-y-4 group-hover:translate-y-0 transition-transform duration-700">
           <div className="overflow-hidden">
             <motion.h3 className="text-2xl sm:text-3xl lg:text-4xl font-playfair font-black text-white tracking-tight">

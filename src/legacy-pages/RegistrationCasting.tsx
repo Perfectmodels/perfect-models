@@ -111,6 +111,31 @@ const RegistrationCasting: React.FC = () => {
                                         <option value="Femme">Femme</option>
                                         <option value="Homme">Homme</option>
                                     </FormSelect>
+                                    <FormSelect label="Nationalité" name="nationality" value={formData.nationality} onChange={handleChange}>
+                                        <option value="">Sélectionner une nationalité…</option>
+                                        <option value="Gabonaise">Gabonaise 🇬🇦</option>
+                                        <option value="Camerounaise">Camerounaise 🇨🇲</option>
+                                        <option value="Ivoirienne">Ivoirienne 🇨🇮</option>
+                                        <option value="Congolaise (RDC)">Congolaise (RDC) 🇨🇩</option>
+                                        <option value="Congolaise (Brazzaville)">Congolaise (Brazzaville) 🇨🇬</option>
+                                        <option value="Sénégalaise">Sénégalaise 🇸🇳</option>
+                                        <option value="Togolaise">Togolaise 🇹🇬</option>
+                                        <option value="Béninoise">Béninoise 🇧🇯</option>
+                                        <option value="Autre">Autre</option>
+                                    </FormSelect>
+                                    <FormSelect label="Ville" name="city" value={formData.city} onChange={handleChange}>
+                                        <option value="">Sélectionner une ville…</option>
+                                        <option value="Libreville">Libreville</option>
+                                        <option value="Akanda">Akanda</option>
+                                        <option value="Owendo">Owendo</option>
+                                        <option value="Port-Gentil">Port-Gentil</option>
+                                        <option value="Franceville">Franceville</option>
+                                        <option value="Oyem">Oyem</option>
+                                        <option value="Moanda">Moanda</option>
+                                        <option value="Lambaréné">Lambaréné</option>
+                                        <option value="Mouila">Mouila</option>
+                                        <option value="Autre">Autre</option>
+                                    </FormSelect>
                                     <FormInput label="Téléphone" name="phone" value={formData.phone} onChange={handleChange} />
                                     <FormInput label="Email" name="email" type="email" value={formData.email} onChange={handleChange} />
                                 </Section>

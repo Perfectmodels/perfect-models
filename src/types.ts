@@ -1,4 +1,15 @@
 
+export interface ModelCollaboration {
+  id: string;
+  title: string;
+  clientOrBrand?: string;
+  type?: 'Fashion Day' | 'Shooting' | 'Défilé' | 'Campagne' | 'Presse' | 'Autre';
+  date?: string;
+  imageUrl?: string;
+  galleryImages?: string[];
+  link?: string;
+}
+
 export interface Model {
   id: string;
   name: string;
@@ -14,6 +25,9 @@ export interface Model {
   imageUrl: string;
   portfolioImages?: string[];
   distinctions?: ModelDistinction[];
+  collaborations?: ModelCollaboration[];
+  fashionDayEditions?: number[];
+  taggedGalleryIds?: string[];
   isPublic?: boolean; 
   level?: 'Pro' | 'Débutant';
   permissions?: UserPermissions;

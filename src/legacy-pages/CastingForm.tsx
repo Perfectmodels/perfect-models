@@ -229,9 +229,47 @@ const CastingForm: React.FC = () => {
               <Field label="Prénom *"><input value={form.firstName} onChange={event => update('firstName', event.target.value)} autoComplete="given-name" className={inputCls} /></Field>
               <Field label="Nom *"><input value={form.lastName} onChange={event => update('lastName', event.target.value)} autoComplete="family-name" className={inputCls} /></Field>
               <Field label="Date de naissance *"><input type="date" value={form.birthDate} onChange={event => update('birthDate', event.target.value)} className={inputCls} /></Field>
-              <Field label="Genre *"><select value={form.gender} onChange={event => update('gender', event.target.value)} className={inputCls}><option>Femme</option><option>Homme</option></select></Field>
-              <Field label="Nationalité"><input value={form.nationality} onChange={event => update('nationality', event.target.value)} placeholder="Ex. Gabonaise" className={inputCls} /></Field>
-              <Field label="Ville *"><input value={form.city} onChange={event => update('city', event.target.value)} autoComplete="address-level2" placeholder="Ex. Libreville" className={inputCls} /></Field>
+              <Field label="Genre *">
+                <select value={form.gender} onChange={event => update('gender', event.target.value)} className={inputCls}>
+                  <option value="Femme">Femme</option>
+                  <option value="Homme">Homme</option>
+                </select>
+              </Field>
+              <Field label="Nationalité *">
+                <select value={form.nationality} onChange={event => update('nationality', event.target.value)} className={inputCls}>
+                  <option value="" disabled>Sélectionnez une nationalité…</option>
+                  <option value="Gabonaise">Gabonaise 🇬🇦</option>
+                  <option value="Camerounaise">Camerounaise 🇨🇲</option>
+                  <option value="Ivoirienne">Ivoirienne 🇨🇮</option>
+                  <option value="Congolaise (RDC)">Congolaise (RDC) 🇨🇩</option>
+                  <option value="Congolaise (Brazzaville)">Congolaise (Brazzaville) 🇨🇬</option>
+                  <option value="Sénégalaise">Sénégalaise 🇸🇳</option>
+                  <option value="Togolaise">Togolaise 🇹🇬</option>
+                  <option value="Béninoise">Béninoise 🇧🇯</option>
+                  <option value="Guinéenne">Guinéenne 🇬🇳</option>
+                  <option value="Malienne">Malienne 🇲🇱</option>
+                  <option value="Tchadienne">Tchadienne 🇹🇩</option>
+                  <option value="Autre">Autre nationalité</option>
+                </select>
+              </Field>
+              <Field label="Ville *">
+                <select value={form.city} onChange={event => update('city', event.target.value)} className={inputCls}>
+                  <option value="" disabled>Sélectionnez une ville…</option>
+                  <option value="Libreville">Libreville</option>
+                  <option value="Akanda">Akanda</option>
+                  <option value="Owendo">Owendo</option>
+                  <option value="Port-Gentil">Port-Gentil</option>
+                  <option value="Franceville">Franceville</option>
+                  <option value="Oyem">Oyem</option>
+                  <option value="Moanda">Moanda</option>
+                  <option value="Lambaréné">Lambaréné</option>
+                  <option value="Mouila">Mouila</option>
+                  <option value="Tchibanga">Tchibanga</option>
+                  <option value="Makokou">Makokou</option>
+                  <option value="Koula-Moutou">Koula-Moutou</option>
+                  <option value="Autre">Autre ville</option>
+                </select>
+              </Field>
               <Field label="Email *"><input type="email" value={form.email} onChange={event => update('email', event.target.value)} autoComplete="email" className={inputCls} /></Field>
               <Field label="Téléphone *"><input type="tel" value={form.phone} onChange={event => update('phone', event.target.value)} autoComplete="tel" placeholder="+241 ..." className={inputCls} /></Field>
             </div>
@@ -251,8 +289,30 @@ const CastingForm: React.FC = () => {
                   <input type="number" min="1" value={form[field as keyof FormData]} onChange={event => update(field as keyof FormData, event.target.value)} placeholder={placeholder} className={inputCls} />
                 </Field>
               ))}
-              <Field label="Couleur des yeux"><input value={form.eyeColor} onChange={event => update('eyeColor', event.target.value)} className={inputCls} /></Field>
-              <Field label="Couleur des cheveux"><input value={form.hairColor} onChange={event => update('hairColor', event.target.value)} className={inputCls} /></Field>
+              <Field label="Couleur des yeux">
+                <select value={form.eyeColor} onChange={event => update('eyeColor', event.target.value)} className={inputCls}>
+                  <option value="">Non spécifié</option>
+                  <option value="Marrons">Marrons</option>
+                  <option value="Noirs">Noirs</option>
+                  <option value="Noisette">Noisette</option>
+                  <option value="Verts">Verts</option>
+                  <option value="Bleus">Bleus</option>
+                  <option value="Gris">Gris</option>
+                  <option value="Autre">Autre</option>
+                </select>
+              </Field>
+              <Field label="Couleur des cheveux">
+                <select value={form.hairColor} onChange={event => update('hairColor', event.target.value)} className={inputCls}>
+                  <option value="">Non spécifié</option>
+                  <option value="Noirs">Noirs</option>
+                  <option value="Châtains">Châtains</option>
+                  <option value="Bruns">Bruns</option>
+                  <option value="Blonds">Blonds</option>
+                  <option value="Tressés / Dreads">Tressés / Dreads</option>
+                  <option value="Rasés / Chauve">Rasés / Chauve</option>
+                  <option value="Autre">Autre</option>
+                </select>
+              </Field>
             </div>
           )}
 

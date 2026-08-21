@@ -1,5 +1,4 @@
 import { collectionToArray, getCollection } from '@/lib/app-data';
-import { articles as seedArticles } from '@/constants/magazineData';
 
 const BASE = 'https://perfectmodels.online';
 const esc = (value: string) => String(value || '')
@@ -11,7 +10,7 @@ const esc = (value: string) => String(value || '')
 
 export async function GET() {
   const dbArticles = collectionToArray(await getCollection('articles'));
-  const articles = (dbArticles.length ? dbArticles : seedArticles).slice(0, 30);
+  const articles = dbArticles.slice(0, 30);
   const items = articles.map((article: any) => {
     const slug = article.slug || article.id;
     const url = `${BASE}/magazine/${slug}`;

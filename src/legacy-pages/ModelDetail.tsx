@@ -10,6 +10,7 @@ import { useData } from '../contexts/DataContext';
 import SEO from '../components/SEO';
 import Loading from '../components/Loading';
 import ModelCard from '../components/ModelCard';
+import ModelCrossLinks from '../components/ModelCrossLinks';
 
 const ModelDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -189,6 +190,8 @@ const ModelDetail: React.FC = () => {
             </div>
           </section>
         )}
+
+        <ModelCrossLinks model={model} />
 
         {similarModels.length > 0 && (
           <section className="mt-20 sm:mt-28">

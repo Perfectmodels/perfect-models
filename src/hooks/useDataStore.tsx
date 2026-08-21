@@ -4,6 +4,7 @@ import { ref, onValue, set } from '../compat/firebase/database';
 import { Model, FashionDayEvent, Service, AchievementCategory, ModelDistinction, Testimonial, ContactInfo, SiteImages, Partner, ApiKeys, CastingApplication, FashionDayApplication, NewsItem, ForumThread, ForumReply, Article, Module, ArticleComment, RecoveryRequest, JuryMember, RegistrationStaff, BookingRequest, ContactMessage, FAQCategory, Absence, MonthlyPayment, PhotoshootBrief, NavLink } from '../types';
 import { models as initialModels, siteConfig as initialSiteConfig, contactInfo as initialContactInfo, siteImages as initialSiteImages, apiKeys as initialApiKeys, castingApplications as initialCastingApplications, fashionDayApplications as initialFashionDayApplications, forumThreads as initialForumThreads, forumReplies as initialForumReplies, articleComments as initialArticleComments, recoveryRequests as initialRecoveryRequests, bookingRequests as initialBookingRequests, contactMessages as initialContactMessages, absences as initialAbsences, monthlyPayments as initialMonthlyPayments, photoshootBriefs as initialPhotoshootBriefs, newsItems as initialNewsItems, navLinks as initialNavLinks, fashionDayEvents as initialFashionDayEvents, socialLinks as initialSocialLinks, agencyTimeline as initialAgencyTimeline, agencyInfo as initialAgencyInfo, modelDistinctions as initialModelDistinctions, agencyServices as initialAgencyServices, agencyAchievements as initialAgencyAchievements, agencyPartners as initialAgencyPartners, testimonials as initialTestimonials, juryMembers as initialJuryMembers, registrationStaff as initialRegistrationStaff, faqData as initialFaqData } from '../constants/data';
 import { articles as initialArticles } from '../constants/magazineData';
+// NOTE: initialArticles is kept as a typed placeholder but NOT used as fallback data.
 import { courseData as initialCourseData } from '../constants/courseData';
 
 export interface GalleryAlbum {
@@ -70,7 +71,7 @@ export const useDataStore = () => {
         absences: initialAbsences, monthlyPayments: initialMonthlyPayments, photoshootBriefs: initialPhotoshootBriefs, newsItems: initialNewsItems, navLinks: initialNavLinks,
         fashionDayEvents: initialFashionDayEvents, socialLinks: initialSocialLinks, agencyTimeline: initialAgencyTimeline, agencyInfo: initialAgencyInfo,
         modelDistinctions: initialModelDistinctions, agencyServices: initialAgencyServices, agencyAchievements: initialAgencyAchievements, agencyPartners: initialAgencyPartners,
-        testimonials: initialTestimonials, articles: initialArticles, courseData: initialCourseData, juryMembers: initialJuryMembers, registrationStaff: initialRegistrationStaff,
+        testimonials: initialTestimonials, articles: [], courseData: initialCourseData, juryMembers: initialJuryMembers, registrationStaff: initialRegistrationStaff,
         faqData: initialFaqData, galleryAlbums: [],
     }), []);
 
@@ -84,7 +85,7 @@ export const useDataStore = () => {
                     ...initialData,
                     ...dbData,
                     models: (dbData.models && dbData.models.length > 0) ? dbData.models : initialData.models,
-                    articles: (dbData.articles && dbData.articles.length > 0) ? dbData.articles : initialData.articles,
+                    articles: (dbData.articles && dbData.articles.length > 0) ? dbData.articles : [],
                     courseData: (dbData.courseData && dbData.courseData.length > 0) ? dbData.courseData : initialData.courseData,
                     newsItems: (dbData.newsItems && dbData.newsItems.length > 0) ? dbData.newsItems : initialData.newsItems,
                     testimonials: (dbData.testimonials && dbData.testimonials.length > 0) ? dbData.testimonials : initialData.testimonials,

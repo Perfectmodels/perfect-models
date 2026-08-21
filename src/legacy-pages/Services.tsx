@@ -41,12 +41,20 @@ const ServiceListItem: React.FC<{ service: Service }> = ({ service }) => {
                     </div>
                 )}
                 
-                <Link 
-                    to={service.buttonLink}
-                    className="inline-block px-8 py-3 bg-pm-gold text-pm-dark font-bold uppercase tracking-widest text-sm rounded-full transition-all duration-300 hover:bg-white hover:scale-105 shadow-lg shadow-pm-gold/20"
-                >
-                    {service.buttonText}
-                </Link>
+                <div className="flex flex-wrap gap-4 items-center">
+                    <Link 
+                        to={service.buttonLink}
+                        className="inline-block px-8 py-3 bg-pm-gold text-pm-dark font-bold uppercase tracking-widest text-sm rounded-full transition-all duration-300 hover:bg-white hover:scale-105 shadow-lg shadow-pm-gold/20"
+                    >
+                        {service.buttonText}
+                    </Link>
+                    <Link
+                        to={`/mannequins`}
+                        className="inline-block px-6 py-3 border border-pm-gold/40 text-pm-gold font-bold uppercase tracking-widest text-xs rounded-full hover:bg-pm-gold/10 transition-all"
+                    >
+                        Voir nos mannequins éligibles →
+                    </Link>
+                </div>
             </div>
         </div>
     );

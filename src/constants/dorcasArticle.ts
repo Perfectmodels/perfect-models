@@ -1,42 +1,8 @@
 import type { Article } from '../types';
 
-export const dorcasArticle: Article = {
-  slug: 'dorcas-moira-saphou-perle-myenne-perfect-models-miss-gabon-maroc-2026',
-  title: 'Dorcas Moïra SAPHOU : La perle Myènè de Perfect Models Management à la conquête de Miss Gabon Maroc 2026',
-  category: 'Actualités · Portrait · Concours',
-  excerpt: "Candidate N°09 de Miss Gabon Maroc 2026, mannequin modèle photo de Perfect Models Management, Dorcas Moïra SAPHOU s’impose parmi les profils les plus soutenus de l’édition. Portrait d’une jeune femme qui allie beauté naturelle, résilience et fierté culturelle.",
-  imageUrl: '',
-  author: 'Perfect Models Management',
-  date: '2026-08-21',
-  status: 'published',
-  isFeatured: false,
-  tags: ['Dorcas Moïra SAPHOU', 'Miss Gabon Maroc 2026', 'Perfect Models Management', 'Myènè', 'Ogooué-Maritime', 'Diaspora gabonaise', 'Culture gabonaise', 'Casablanca'],
-  reactions: { likes: 0, dislikes: 0 },
-  viewCount: 0,
-  content: [
-    { type: 'paragraph', text: "Elle est la candidate N°09 qui affole les compteurs. Mannequin modèle photo de l'agence Perfect Models Management, Dorcas Moïra SAPHOU est l'une des finalistes les plus soutenues du concours Miss Gabon Maroc 2026. Portrait d'une jeune femme qui allie beauté naturelle, résilience et fierté culturelle." },
-    { type: 'heading', level: 2, text: 'Qui est Dorcas Moïra SAPHOU ?' },
-    { type: 'paragraph', text: 'À 25 ans, pour 1m75, Dorcas Moïra SAPHOU incarne la nouvelle génération de mannequins gabonais de la diaspora.' },
-    { type: 'paragraph', text: 'Sur son affiche officielle, elle apparaît dans un style épuré qui a fait sa signature : t-shirt blanc, jean large bleu, grande coiffure afro assumée, bagues dorées et sourire franc. Deux photos, une en gros plan et une en pied devant un rideau vert émeraude, résument son identité : naturelle, moderne et fière.' },
-    { type: 'paragraph', text: 'La fiche officielle la présente ainsi : Mannequin modèle photo et community manager freelance à Casablanca · 25 ans · 175 cm · Candidate N°09.' },
-    { type: 'paragraph', text: 'Originaire de Port-Gentil, elle représente avec honneur la province de l’Ogooué-Maritime (G8) et l’ethnie Myènè, plus précisément Myènè-Vili, une identité qu’elle revendique fièrement sur son bandeau « MYENE OGOOUE MARITIME ».' },
-    { type: 'heading', level: 2, text: 'Miss Gabon Maroc 2026 : plus qu’un concours, une mission culturelle' },
-    { type: 'paragraph', text: 'Organisé par l’Association Culturelle Gabonaise au Maroc (ACGM), sous le haut patronage de Mme Unielle Oupolo, épouse de l’Ambassadeur du Gabon au Maroc, Miss Gabon Maroc 2026 est présenté comme un rendez-vous de valorisation de la culture gabonaise à l’étranger.' },
-    { type: 'paragraph', text: 'Le concours met en lumière la beauté, l’intelligence et l’engagement des jeunes Gabonaises vivant au Maroc. La mécanique communautaire « 1 like = 1 vote » a notamment contribué à la mobilisation autour de Dorcas.' },
-    { type: 'paragraph', text: 'Selon les chiffres fournis pour sa présentation, elle comptait 880 likes et 160 commentaires sur Instagram ainsi que 710 likes sur Facebook. Les commentaires cités témoignent de l’enthousiasme d’une partie de sa communauté et de la diaspora.' },
-    { type: 'heading', level: 2, text: 'Un discours de résilience et de sagesse' },
-    { type: 'paragraph', text: 'Dans sa vidéo de présentation officielle tournée à Casablanca, entre une rue de la ville, son bureau et une plage à la nuit tombée, Dorcas revient avec sincérité sur son parcours.' },
-    { type: 'paragraph', text: 'Elle rappelle avoir déjà concouru trois ans auparavant, lorsque le concours avait été interrompu. Loin d’y voir un échec, elle présente cette expérience comme une leçon de croissance : « Ce n’est pas un échec, mais une croissance ». ' },
-    { type: 'paragraph', text: 'Pour sa séquence culturelle, elle revêt une tenue traditionnelle en raphia avec coiffe, au coucher du soleil. Elle y délivre le proverbe Orungu « Nkoula mori moriyondondo », qu’elle associe à la responsabilité et à la patience.' },
-    { type: 'paragraph', text: 'Son message pour la jeunesse est fondé sur une idée simple : le changement social ne vient pas nécessairement d’un acte spectaculaire, mais de l’accumulation de petits gestes répétés. Il ne faut pas attendre les leaders ou la société pour changer ; il faut commencer par soi-même.' },
-    { type: 'heading', level: 2, text: 'L’empreinte Perfect Models Management' },
-    { type: 'paragraph', text: 'Mannequin modèle photo chez Perfect Models Management, Dorcas Moïra SAPHOU illustre la vision de l’agence : révéler des profils à la fois photogéniques, professionnels et porteurs de valeurs.' },
-    { type: 'paragraph', text: 'Formée au mannequinat éditorial, à l’aise aussi bien en studio qu’en campagne street-style, elle est également community manager freelance. Cette double casquette fait d’elle une candidate capable de gérer son image, de créer du contenu et de fédérer une communauté.' },
-    { type: 'paragraph', text: 'Cette polyvalence lui vaut également d’être mise en avant comme favorite par certains médias de la diaspora, notamment NdossTV, selon les éléments fournis pour cet article.' },
-    { type: 'heading', level: 2, text: 'La finale approche' },
-    { type: 'paragraph', text: 'La finale de Miss Gabon Maroc 2026 réunira les représentantes des neuf provinces du Gabon autour d’un même objectif : célébrer la culture gabonaise au Maroc et désigner celle qui portera la couronne pendant un an.' },
-    { type: 'paragraph', text: 'Pour Dorcas Moïra SAPHOU, l’objectif est clair : porter haut les couleurs Myènè, faire rayonner l’Ogooué-Maritime et démontrer qu’il est possible d’être mannequin, entrepreneure et ambassadrice culturelle à la fois.' },
-    { type: 'paragraph', text: 'L’agence Perfect Models Management et la communauté gabonaise du Maroc sont derrière elle. Reste à transformer les likes en couronne.' },
-    { type: 'quote', text: 'Pour soutenir Dorcas Moïra SAPHOU — Candidate N°09 : rendez-vous sur les pages officielles de l’ACGM @a__c__g__m et @miss_gabon_maroc2026. 1 like = 1 vote.' },
-  ],
-};
+/**
+ * Ce fichier est intentionnellement vide.
+ * Tous les articles sont désormais gérés exclusivement via la base de données Firebase.
+ * Pour publier ou modifier un article, utilisez le panneau d'administration → Magazine.
+ */
+export const dorcasArticle: Article = {} as Article;

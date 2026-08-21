@@ -1,7 +1,5 @@
 import type { Article, Model, Service, FashionDayEvent } from '@/types';
 import { collectionToArray, getCollection } from '@/lib/app-data';
-import { articles as seedArticles } from '@/constants/magazineData';
-import { magazineAdditions } from '@/constants/magazineAdditions';
 import { agencyServices as seedServices, models as seedModels } from '@/constants/data';
 
 async function safeCollection(key: string) {
@@ -24,8 +22,7 @@ function uniqueBy<T>(items: T[], keyOf: (item: T) => string) {
 
 export async function getPublicArticles(): Promise<Article[]> {
   const remote = await safeCollection('articles');
-  const source = (remote.length ? remote : [...magazineAdditions, ...seedArticles]) as Article[];
-  const published = source.filter((article) => article && article.status !== 'draft' && Boolean(article.slug));
+  const published = (remote as Article[]).filter((article) => article && article.status !== 'draft' && Boolean(article.slug));
   return uniqueBy(published, (article) => String(article.slug));
 }
 

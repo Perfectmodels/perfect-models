@@ -7,10 +7,6 @@ import { useData } from '../contexts/DataContext';
 import { ArticleContent, ArticleComment, Article } from '../types';
 import { ChevronLeftIcon, UserCircleIcon, EyeIcon, HandThumbUpIcon, HandThumbDownIcon, ShareIcon, XMarkIcon, CheckIcon, ClipboardDocumentIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 import { FacebookIcon, TwitterIcon, WhatsAppIcon } from '../components/icons/SocialIcons';
-import { magazineAdditions } from '../constants/magazineAdditions';
-import { dorcasArticle } from '../constants/dorcasArticle';
-
-const editorialArticles = [...magazineAdditions, dorcasArticle];
 
 // --- Helper & Modal Components for Sharing ---
 const generateShortLink = async (
@@ -187,11 +183,10 @@ const ArticleDetail: React.FC = () => {
 
 
   const allArticles = useMemo(() => {
-    const remote = (data?.articles || []).filter(a => a && a.status !== 'draft' && Boolean(a.slug));
-    const source = remote.length ? remote : editorialArticles;
     const seen = new Set<string>();
-    return source.filter(a => {
-      if (!a || !a.slug || seen.has(a.slug)) return false;
+    return (data?.articles || []).filter(a => {
+      if (!a || !a.slug || a.status === 'draft') return false;
+      if (seen.has(a.slug)) return false;
       seen.add(a.slug);
       return true;
     });
@@ -397,6 +392,35 @@ const ArticleDetail: React.FC = () => {
                 )}
               </footer>
             )}
+
+            {/* Mannequins & Talents cités */}
+            {data?.models && (() => {
+              const articleText = `${article.title} ${article.excerpt} ${article.tags?.join(' ')} ${safeContent.map(c => 'text' in c ? c.text : '').join(' ')}`.toLowerCase();
+              const mentionedModels = data.models.filter(m => m.isPublic !== false && articleText.includes(m.name.toLowerCase()));
+              if (mentionedModels.length === 0) return null;
+              return (
+                <div className="mt-8 pt-6 border-t border-pm-gold/20">
+                  <p className="font-bold text-pm-gold mb-3 text-xs uppercase tracking-widest">
+                    Talents cités dans cet article :
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {mentionedModels.map(m => (
+                      <Link
+                        key={m.id}
+                        to={`/mannequins/${m.id}`}
+                        className="flex items-center gap-3 p-3 bg-pm-dark border border-white/10 rounded-xl hover:border-pm-gold transition-all group"
+                      >
+                        <img src={m.imageUrl} alt={m.name} className="w-10 h-10 rounded-full object-cover shrink-0 border border-pm-gold/30" />
+                        <div>
+                          <p className="text-sm font-bold text-white group-hover:text-pm-gold transition-colors">{m.name}</p>
+                          <span className="text-[9px] font-black uppercase tracking-widest text-pm-gold/60">Voir le profil</span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
           </article>
           <section className="mt-12 pt-8 border-t border-pm-gold/20">
             <h2 className="text-3xl font-playfair text-pm-gold mb-6">Espace de Discussion ({comments.length})</h2>

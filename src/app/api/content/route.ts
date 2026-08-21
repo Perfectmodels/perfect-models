@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { collectionToArray, getCollection } from '@/lib/app-data';
-import { articles as seedArticles } from '@/constants/magazineData';
 import { agencyServices as seedServices, models as seedModels } from '@/constants/data';
 
 const BASE = 'https://perfectmodels.online';
@@ -31,7 +30,7 @@ export async function GET(request: NextRequest) {
   const serviceSource = collectionToArray(servicesRaw);
   const modelSource = collectionToArray(modelsRaw);
 
-  const articles = (articleSource.length ? articleSource : seedArticles).map((article: any) => ({
+  const articles = articleSource.map((article: any) => ({
     ...article,
     slug: article.slug || article.id,
     url: `${BASE}/magazine/${article.slug || article.id}`,

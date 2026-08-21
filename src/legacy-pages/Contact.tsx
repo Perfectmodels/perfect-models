@@ -273,9 +273,21 @@ const Contact: React.FC = () => {
                         <input type="email" value={bk.clientEmail} onChange={e => setBk(p => ({ ...p, clientEmail: e.target.value }))} required placeholder="vous@exemple.com" className={inputCls} />
                       </Field>
                     </div>
-                    <Field label="Société (optionnel)">
-                      <input value={bk.clientCompany} onChange={e => setBk(p => ({ ...p, clientCompany: e.target.value }))} placeholder="Nom de votre entreprise" className={inputCls} />
-                    </Field>
+                    <div className="grid sm:grid-cols-2 gap-5">
+                      <Field label="Société (optionnel)">
+                        <input value={bk.clientCompany} onChange={e => setBk(p => ({ ...p, clientCompany: e.target.value }))} placeholder="Nom de votre entreprise" className={inputCls} />
+                      </Field>
+                      <Field label="Type de prestation / projet *">
+                        <select value={(bk as any).serviceType || 'Défilé de mode'} onChange={e => setBk(p => ({ ...p, serviceType: e.target.value } as any))} className={inputCls}>
+                          <option value="Défilé de mode / Runway">Défilé de mode / Runway</option>
+                          <option value="Shooting photo / Campagne">Shooting photo / Campagne</option>
+                          <option value="Vidéo / Tournage clip / Pub TV">Vidéo / Tournage clip / Pub TV</option>
+                          <option value="Événementiel & Accueil">Événementiel & Accueil (Hôtes / Hôtesses)</option>
+                          <option value="Essayage / Showroom">Essayage / Showroom</option>
+                          <option value="Autre prestation">Autre prestation</option>
+                        </select>
+                      </Field>
+                    </div>
                     <Field label="Mannequin(s) souhaité(s) *">
                       <input value={bk.requestedModels} onChange={e => setBk(p => ({ ...p, requestedModels: e.target.value }))} required placeholder="Ex: Amina K., ou plusieurs noms" className={inputCls} />
                     </Field>

@@ -104,6 +104,30 @@ export const models: Model[] = [
     },
   },
   {
+    id: 'grace-elsa',
+    name: 'Grace Elsa',
+    username: 'Man-PMMGE01',
+    password: 'graceelsa2026',
+    level: 'Pro',
+    height: '1m78',
+    gender: 'Femme',
+    location: 'Libreville',
+    imageUrl: '/images/grace-elsa.jpg',
+    isPublic: true,
+    portfolioImages: [
+      '/images/grace-elsa.jpg',
+    ],
+    fashionDayEditions: [3],
+    distinctions: [
+      { name: "Perfect Fashion Day 3", titles: ["Égérie Officielle de la 3e Édition"] }
+    ],
+    measurements: { chest: '84cm', waist: '61cm', hips: '89cm', shoeSize: '39' },
+    categories: ['Égérie', 'Défilé', 'Haute Couture', 'Beauté'],
+    experience: "Égérie Officielle de la 3e Édition du Perfect Fashion Day. Visage emblématique de l'agence Perfect Models Management pour les campagnes majeures et les défilés de mode au Gabon.",
+    journey: "Couronnée Égérie lors de la 3e édition du Perfect Fashion Day, Grace Elsa s'est distinguée par son élégance naturelle, son port altier et son charisme exceptionnel.",
+    quizScores: {},
+  },
+  {
     id: 'aj-caramela',
     name: 'AJ Caramela',
     username: 'Man-PMMA01',
