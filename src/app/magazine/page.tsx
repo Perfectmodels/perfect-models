@@ -1,8 +1,5 @@
-import LegacyRoute from '@/app/_legacy/LegacyRoute';
-import { buildPageMetadata, MARKETING_PAGES } from '@/lib/seo';
+import { redirect } from 'next/navigation';
 
-export const metadata = buildPageMetadata(MARKETING_PAGES.magazine);
-
-export default function Page() {
-  return <LegacyRoute component="Magazine" />;
+export default function LegacyMagazineRoute() {
+  redirect('/blog');
 }
