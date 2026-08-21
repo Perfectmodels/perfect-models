@@ -1,2 +1,5 @@
-import LegacyRoute from '@/app/_legacy/LegacyRoute';
-export default function Page() { return <LegacyRoute component="AdminNews" role="admin" />; }
+import AdminMagazinePage from '@/components/AdminMagazinePage';
+
+export default function Page() {
+  return <AdminMagazinePage />;
+}
