@@ -1,0 +1,3 @@
+## 2026-07-01 - Memoizing Framer Motion List Items
+**Learning:** In React TypeScript projects, when parent components manage search/filter state (e.g., `Models.tsx`), child list item components containing expensive render operations like `framer-motion` animations must be memoized to prevent input lag and thread blocking. Furthermore, wrapping at the export statement avoids TypeScript errors where `MemoExoticComponent` is not assignable to `React.FC`.
+**Action:** Always wrap child list item components containing expensive render operations in `React.memo()` at the export statement (e.g., `export default React.memo(Comp)`).

@@ -53,4 +53,5 @@ const ModelCard: React.FC<ModelCardProps> = ({ model }) => {
   );
 };
 
-export default ModelCard;
+// Memoized to prevent unnecessary re-renders of expensive framer-motion animations when parent search/filter state changes
+export default React.memo(ModelCard);
