@@ -20,4 +20,4 @@ Cette branche est réservée aux validations Vercel distantes. Elle ne doit pas 
 
 Commit de validation ajouté le 9 août 2026 pour forcer une nouvelle Preview Vercel depuis l’état courant de `main`.
 
-Voir [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) pour la checklist.
+Voir [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) pour la checkl
