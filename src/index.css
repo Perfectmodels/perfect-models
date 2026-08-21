@@ -3,48 +3,25 @@
 @tailwind utilities;
 
 @layer base {
-  body {
-    @apply bg-pm-dark text-pm-off-white font-montserrat antialiased selection:bg-pm-gold selection:text-pm-dark overflow-x-hidden;
-  }
-  h1, h2, h3, h4 {
-    @apply font-playfair leading-[1.1] tracking-tight;
-  }
-  @media print {
-    .print-hide { @apply hidden; }
-    .printable-content { @apply block; }
-    body { @apply bg-white text-black; }
-  }
+  body { @apply bg-pm-dark text-pm-off-white font-montserrat antialiased selection:bg-pm-gold selection:text-pm-dark overflow-x-hidden; }
+  h1, h2, h3, h4 { @apply font-playfair leading-[1.1] tracking-tight; }
+  @media print { .print-hide { @apply hidden; } .printable-content { @apply block; } body { @apply bg-white text-black; } }
 }
 
 @layer components {
-  .page-container {
-    @apply max-w-[1800px] mx-auto px-4 sm:px-8 lg:px-20 py-16 sm:py-24 lg:py-32;
-  }
-  .section-label {
-    @apply text-pm-gold text-[10px] font-black tracking-[0.4em] sm:tracking-[0.5em] uppercase mb-4 sm:mb-8 block;
-  }
-  .btn-premium {
-    @apply relative overflow-hidden px-6 sm:px-10 lg:px-12 py-4 sm:py-5 font-bold uppercase tracking-[0.2em] sm:tracking-[0.3em] text-[10px] sm:text-[11px] transition-all duration-700 border border-pm-gold/40 hover:border-pm-gold hover:text-pm-dark z-10 inline-block text-center cursor-pointer;
-  }
-  .btn-premium::before {
-    content: '';
-    @apply absolute inset-0 bg-pm-gold translate-y-full transition-transform duration-700 ease-[cubic-bezier(0.19,1,0.22,1)] -z-10;
-  }
+  .page-container { @apply max-w-[1800px] mx-auto px-4 sm:px-8 lg:px-20 py-16 sm:py-24 lg:py-32; }
+  .section-label { @apply text-pm-gold text-[10px] font-black tracking-[0.4em] sm:tracking-[0.5em] uppercase mb-4 sm:mb-8 block; }
+  .btn-premium { @apply relative overflow-hidden px-6 sm:px-10 lg:px-12 py-4 sm:py-5 font-bold uppercase tracking-[0.2em] sm:tracking-[0.3em] text-[10px] sm:text-[11px] transition-all duration-700 border border-pm-gold/40 hover:border-pm-gold hover:text-pm-dark z-10 inline-block text-center cursor-pointer; }
+  .btn-premium::before { content: ''; @apply absolute inset-0 bg-pm-gold translate-y-full transition-transform duration-700 ease-[cubic-bezier(0.19,1,0.22,1)] -z-10; }
   .btn-premium:hover::before { @apply translate-y-0; }
   .glass-card { @apply bg-white/[0.03] backdrop-blur-2xl border border-white/10; }
   .gold-gradient-text { @apply text-pm-gold-light; }
   .admin-label { @apply block text-[10px] font-black text-pm-gold/60 uppercase tracking-[0.2em] mb-2; }
-  .admin-input, .admin-textarea, .admin-select {
-    @apply w-full bg-transparent border-b border-white/10 py-3 px-0 text-pm-off-white transition-all duration-500 placeholder:text-white/10 focus:outline-none focus:border-pm-gold;
-  }
+  .admin-input, .admin-textarea, .admin-select { @apply w-full bg-transparent border-b border-white/10 py-3 px-0 text-pm-off-white transition-all duration-500 placeholder:text-white/10 focus:outline-none focus:border-pm-gold; }
   .admin-textarea { @apply min-h-[100px] resize-none; }
-  .contact-input {
-    @apply w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-pm-off-white placeholder:text-white/20 transition-all duration-300 focus:outline-none focus:border-pm-gold focus:bg-white/10;
-  }
+  .contact-input { @apply w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-pm-off-white placeholder:text-white/20 transition-all duration-300 focus:outline-none focus:border-pm-gold focus:bg-white/10; }
   .contact-input option { @apply bg-pm-dark text-pm-off-white; }
-  .login-modal-input {
-    @apply w-full rounded-xl border border-white/10 bg-white/[0.045] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/20 hover:border-white/20 focus:border-pm-gold/70 focus:ring-4 focus:ring-pm-gold/10;
-  }
+  .login-modal-input { @apply w-full rounded-xl border border-white/10 bg-white/[0.045] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/20 hover:border-white/20 focus:border-pm-gold/70 focus:ring-4 focus:ring-pm-gold/10; }
 }
 
 @layer utilities {
@@ -53,11 +30,10 @@
   .bg-dots { background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); }
 }
 
-/* Legacy editorial admin links now redirect to the canonical Blog module. */
-a[href="/admin/magazine"],
+/* Canonical editorial admin module: keep the existing link as a compatibility entry point, but display it as Blog. */
+a[href="/admin/magazine"] { display: flex !important; }
+a[href="/admin/magazine"] > span.min-w-0 { font-size: 0; }
+a[href="/admin/magazine"] > span.min-w-0::after { content: 'Blog'; font-size: 0.875rem; }
 a[href="/admin/news"] { display: none !important; }
 
-@keyframes glow {
-  0%, 100% { opacity: 0.1; filter: blur(40px); }
-  50% { opacity: 0.3; filter: blur(60px); }
-}
+@keyframes glow { 0%, 100% { opacity: 0.1; filter: blur(40px); } 50% { opacity: 0.3; filter: blur(60px); } }
