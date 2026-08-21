@@ -1,5 +1,5 @@
-import AdminMagazinePage from '@/components/AdminMagazinePage';
+import { redirect } from 'next/navigation';
 
-export default function Page() {
-  return <AdminMagazinePage />;
+export default function LegacyAdminNewsRoute() {
+  redirect('/admin/blog');
 }
