@@ -53,4 +53,8 @@ const ModelCard: React.FC<ModelCardProps> = ({ model }) => {
   );
 };
 
-export default ModelCard;
+// ⚡ Bolt Optimization
+// What: Wrapped ModelCard in React.memo()
+// Why: Prevents unnecessary re-renders of the expensive framer-motion list items when parent state (like search input in Models.tsx) changes.
+// Impact: Reduces rendering time and eliminates input lag in the models grid during text search and filtering.
+export default React.memo(ModelCard);
