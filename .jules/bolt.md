@@ -1,0 +1,3 @@
+## 2024-10-25 - React.memo on Framer Motion list items
+**Learning:** In lists with components that use heavy render operations like `framer-motion` animations, failing to memoize the item component causes significant input lag when the parent manages search/filter state, because every keystroke triggers a re-render of all animated list items.
+**Action:** Always wrap child list item components with expensive render operations (like framer-motion) in `React.memo()` to prevent input lag in parent components managing search/filter state. Also remember to apply `React.memo()` at the export statement in TypeScript to avoid `MemoExoticComponent` type errors.

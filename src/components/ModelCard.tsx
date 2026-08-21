@@ -53,4 +53,8 @@ const ModelCard: React.FC<ModelCardProps> = ({ model }) => {
   );
 };
 
-export default ModelCard;
+// ⚡ Bolt: React.memo() added to prevent unnecessary re-renders
+// 💡 What: Wrapped ModelCard in React.memo()
+// 🎯 Why: To prevent input lag and thread blocking when parent search/filter state changes.
+// 📊 Impact: Eliminates redundant re-renders of all list items on every keystroke, reducing CPU usage and input lag.
+export default React.memo(ModelCard);
