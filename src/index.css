@@ -81,6 +81,14 @@
   }
 }
 
+/* Legacy editorial admin links now redirect to the canonical Blog module. */
+@media (min-width: 1024px) {
+  a[href="/admin/magazine"],
+  a[href="/admin/news"] {
+    display: none !important;
+  }
+}
+
 @keyframes glow {
   0%, 100% { opacity: 0.1; filter: blur(40px); }
   50% { opacity: 0.3; filter: blur(60px); }
