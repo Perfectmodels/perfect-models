@@ -53,4 +53,7 @@ const ModelCard: React.FC<ModelCardProps> = ({ model }) => {
   );
 };
 
-export default ModelCard;
+// What: Wrapped ModelCard export with React.memo()
+// Why: The Models page maintains search and filter state. Without memoization, every keystroke in the search input forces a re-render of all instances, running expensive framer-motion layout animations.
+// Impact: Prevents input lag and main thread blocking during search by avoiding unnecessary re-renders of list items.
+export default React.memo(ModelCard);
