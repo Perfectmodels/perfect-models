@@ -24,9 +24,7 @@ function uniqueBy<T>(items: T[], keyOf: (item: T) => string) {
 
 export async function getPublicArticles(): Promise<Article[]> {
   const remote = await safeCollection('articles');
-  // CMS articles take precedence; editorial additions are merged so new stories
-  // remain visible even when the remote collection already contains content.
-  const source = [...(remote as Article[]), ...magazineAdditions, ...seedArticles] as Article[];
+  const source = (remote.length ? remote : [...magazineAdditions, ...seedArticles]) as Article[];
   const published = source.filter((article) => article && article.status !== 'draft' && Boolean(article.slug));
   return uniqueBy(published, (article) => String(article.slug));
 }

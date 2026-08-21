@@ -18,12 +18,12 @@ const Magazine: React.FC = () => {
   const [page, setPage] = useState(1);
 
   const published = useMemo(() => {
-    const remote = (data?.articles || []).filter(article => article.status !== 'draft');
-    const merged = [...remote, ...editorialArticles].filter(article => article && article.status !== 'draft' && Boolean(article.slug));
+    const remote = (data?.articles || []).filter(article => article && article.status !== 'draft' && Boolean(article.slug));
+    const source = remote.length ? remote : editorialArticles;
     const seen = new Set<string>();
-    return merged
+    return source
       .filter(article => {
-        if (seen.has(article.slug)) return false;
+        if (!article || !article.slug || seen.has(article.slug)) return false;
         seen.add(article.slug);
         return true;
       })

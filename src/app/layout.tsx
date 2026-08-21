@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import '../index.css';
 import ClientShell from './ClientShell';
+import { Analytics } from '@vercel/analytics/react';
 import JsonLd from '@/components/JsonLd';
 import {
   DEFAULT_DESCRIPTION,
@@ -103,6 +104,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <JsonLd data={[organizationJsonLd, websiteJsonLd]} />
         <noscript>JavaScript est nécessaire pour utiliser le site Perfect Models Management.</noscript>
         <ClientShell>{children}</ClientShell>
+        <Analytics />
       </body>
     </html>
   );

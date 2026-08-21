@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import NotFound from './NotFound';
 import SEO from '../components/SEO';
@@ -7,6 +7,10 @@ import { useData } from '../contexts/DataContext';
 import { ArticleContent, ArticleComment, Article } from '../types';
 import { ChevronLeftIcon, UserCircleIcon, EyeIcon, HandThumbUpIcon, HandThumbDownIcon, ShareIcon, XMarkIcon, CheckIcon, ClipboardDocumentIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 import { FacebookIcon, TwitterIcon, WhatsAppIcon } from '../components/icons/SocialIcons';
+import { magazineAdditions } from '../constants/magazineAdditions';
+import { dorcasArticle } from '../constants/dorcasArticle';
+
+const editorialArticles = [...magazineAdditions, dorcasArticle];
 
 // --- Helper & Modal Components for Sharing ---
 const generateShortLink = async (
@@ -182,7 +186,18 @@ const ArticleDetail: React.FC = () => {
   const articleRef = useRef<HTMLElement>(null);
 
 
-  const article = data?.articles.find(a => a.slug === slug && a.status !== 'draft');
+  const allArticles = useMemo(() => {
+    const remote = (data?.articles || []).filter(a => a && a.status !== 'draft' && Boolean(a.slug));
+    const source = remote.length ? remote : editorialArticles;
+    const seen = new Set<string>();
+    return source.filter(a => {
+      if (!a || !a.slug || seen.has(a.slug)) return false;
+      seen.add(a.slug);
+      return true;
+    });
+  }, [data?.articles]);
+
+  const article = allArticles.find(a => a.slug === slug);
   
   useEffect(() => {
     if (!slug || !data || !article) return;
