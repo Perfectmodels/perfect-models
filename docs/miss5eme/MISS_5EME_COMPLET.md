@@ -44,7 +44,7 @@ Publication éventuelle des résultats
 - Neon Auth
 - `auth_profiles`
 - Neon PostgreSQL via API Next.js
-- Vercel Blob pour les photos
+- ImgBB via `/api/media/imgbb` pour les photos
 
 Les anciennes implémentations Firebase et les identifiants partagés ne font pas partie de l’architecture de référence.
 

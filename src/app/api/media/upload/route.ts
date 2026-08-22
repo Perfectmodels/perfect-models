@@ -1,16 +1,7 @@
-import { get, put } from '@vercel/blob';
+import { get } from '@vercel/blob';
 import { NextResponse } from 'next/server';
-import { getCurrentAppProfile } from '@/lib/auth/profile';
 
 export const runtime = 'nodejs';
-
-const TYPES = new Set([
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-  'image/gif',
-  'image/avif',
-]);
 
 export async function GET(request: Request) {
   const pathname = new URL(request.url).searchParams.get('pathname');
@@ -34,38 +25,9 @@ export async function GET(request: Request) {
   });
 }
 
-export async function POST(request: Request) {
-  const profile = await getCurrentAppProfile();
-  const form = await request.formData();
-  const file = form.get('file');
-  const scope = String(form.get('scope') || 'media');
-
-  if (!(file instanceof File)) {
-    return NextResponse.json({ error: 'Fichier requis.' }, { status: 400 });
-  }
-
-  if (!TYPES.has(file.type)) {
-    return NextResponse.json({ error: 'Format image non accepté.' }, { status: 415 });
-  }
-
-  if (file.size > 4.5 * 1024 * 1024) {
-    return NextResponse.json(
-      { error: 'Image trop lourde (4,5 Mo maximum).' },
-      { status: 413 },
-    );
-  }
-
-  if (!profile && scope !== 'casting') {
-    return NextResponse.json({ error: 'Connexion requise.' }, { status: 401 });
-  }
-
-  const safe = file.name.toLowerCase().replace(/[^a-z0-9._-]+/g, '-');
-  const blob = await put(`pmm/${scope}/${Date.now()}-${safe}`, file, {
-    access: 'private',
-    addRandomSuffix: true,
-  });
-
-  const url = `/api/media/upload?pathname=${encodeURIComponent(blob.pathname)}`;
-
-  return NextResponse.json({ url, pathname: blob.pathname });
+export async function POST() {
+  return NextResponse.json(
+    { error: 'Ce téléversement est désactivé. Utilisez /api/media/imgbb pour les images.' },
+    { status: 410 },
+  );
 }

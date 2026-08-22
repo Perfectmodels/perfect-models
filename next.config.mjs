@@ -2,7 +2,10 @@ import path from 'path';
 
 const legacyViteEnv = Object.fromEntries(
   Object.entries(process.env)
-    .filter(([key]) => key.startsWith('VITE_') || key.startsWith('NEXT_VITE_'))
+    .filter(([key]) =>
+      (key.startsWith('VITE_') || key.startsWith('NEXT_VITE_')) &&
+      !['VITE_IMGBB_API_KEY', 'NEXT_VITE_IMGBB_API_KEY'].includes(key),
+    )
     .map(([key, value]) => [key.replace(/^NEXT_/, ''), value]),
 );
 

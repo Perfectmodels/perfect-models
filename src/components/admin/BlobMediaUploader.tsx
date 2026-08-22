@@ -4,144 +4,70 @@ import React, { useRef, useState } from 'react';
 import { upload } from '@vercel/blob/client';
 import { ArrowUpTrayIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
-type MediaKind = 'image' | 'video';
-
 interface BlobMediaUploaderProps {
-  kind: MediaKind;
   value?: string;
   onChange: (url: string) => void;
   scope: string;
   label?: string;
-  compact?: boolean;
   required?: boolean;
 }
 
-const IMAGE_TYPES = 'image/jpeg,image/png,image/webp,image/gif,image/avif';
-const VIDEO_TYPES = 'video/mp4,video/webm,video/quicktime';
-const IMAGE_MAX = 15 * 1024 * 1024;
+const VIDEO_TYPES = new Set(['video/mp4', 'video/webm', 'video/quicktime']);
+const VIDEO_ACCEPT = Array.from(VIDEO_TYPES).join(',');
 const VIDEO_MAX = 1024 * 1024 * 1024;
-const MULTI_UPLOAD_CONCURRENCY = 3;
 
 const safeFilename = (name: string) =>
   name.toLowerCase().replace(/[^a-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '') || 'media';
 
 export default function BlobMediaUploader({
-  kind,
   value = '',
   onChange,
   scope,
   label,
-  compact = false,
   required = false,
 }: BlobMediaUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [selectedCount, setSelectedCount] = useState(0);
-  const [uploadedCount, setUploadedCount] = useState(0);
   const [error, setError] = useState('');
 
-  const accept = kind === 'image' ? IMAGE_TYPES : VIDEO_TYPES;
-  const maxBytes = kind === 'image' ? IMAGE_MAX : VIDEO_MAX;
-  const multi = kind === 'image' && compact;
-
   const validateFile = (file: File) => {
-    if (!file.type.startsWith(`${kind}/`) && !(kind === 'video' && file.type === 'video/quicktime')) {
-      throw new Error(kind === 'image' ? 'Format image non accepté.' : 'Format vidéo non accepté. Utilisez MP4, WebM ou MOV.');
+    if (!VIDEO_TYPES.has(file.type)) {
+      throw new Error('Format vidéo non accepté. Utilisez MP4, WebM ou MOV.');
     }
-    if (file.size > maxBytes) {
-      throw new Error(kind === 'image' ? 'Image trop lourde (15 Mo maximum).' : 'Vidéo trop lourde (1 Go maximum).');
+    if (file.size > VIDEO_MAX) {
+      throw new Error('Vidéo trop lourde (1 Go maximum).');
     }
   };
 
-  const uploadSingle = async (file: File, total: number, index: number) => {
-    validateFile(file);
-
-    if (kind === 'image') {
-      const form = new FormData();
-      form.append('file', file);
-      form.append('scope', scope);
-      const response = await fetch('/api/media/imgbb', {
-        method: 'POST',
-        credentials: 'include',
-        body: form,
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok || !data?.url) {
-        throw new Error(data?.error || "Échec de l'upload vers ImgBB.");
-      }
-      return data.url as string;
-    }
-
-    const pathname = `pmm/${scope}/${Date.now()}-${index}-${safeFilename(file.name)}`;
+  const uploadSingle = async (file: File) => {
+    const pathname = `pmm/${scope}/${Date.now()}-${safeFilename(file.name)}`;
     const blob = await upload(pathname, file, {
       access: 'public',
       handleUploadUrl: '/api/media/client-upload',
-      clientPayload: JSON.stringify({ kind, scope }),
+      clientPayload: JSON.stringify({ kind: 'video', scope }),
       multipart: file.size > 100 * 1024 * 1024,
-      onUploadProgress: ({ percentage }) => {
-        if (total === 1) setProgress(Math.round(percentage));
-      },
+      onUploadProgress: ({ percentage }) => setProgress(Math.round(percentage)),
     });
     return blob.url;
   };
 
-  const handleFiles = async (files: File[]) => {
-    if (!files.length) return;
+  const handleFile = async (file: File) => {
     setError('');
-    setUploading(true);
     setProgress(0);
-    setSelectedCount(files.length);
-    setUploadedCount(0);
 
-    const validFiles: File[] = [];
-    const validationErrors: string[] = [];
-
-    for (const file of files) {
-      try {
-        validateFile(file);
-        validFiles.push(file);
-      } catch (cause: any) {
-        validationErrors.push(`${file.name}: ${cause?.message || 'fichier invalide'}`);
-      }
-    }
-
-    if (!validFiles.length) {
-      setError(validationErrors.join(' '));
-      setUploading(false);
-      setSelectedCount(0);
-      if (inputRef.current) inputRef.current.value = '';
+    try {
+      validateFile(file);
+    } catch (cause: any) {
+      setError(cause?.message || 'Fichier vidéo invalide.');
       return;
     }
 
-    let completed = 0;
-    let firstError = validationErrors[0] || '';
-    let cursor = 0;
-
-    const worker = async () => {
-      while (cursor < validFiles.length) {
-        const index = cursor++;
-        const file = validFiles[index];
-        try {
-          const url = await uploadSingle(file, validFiles.length, index);
-          onChange(url);
-        } catch (cause: any) {
-          if (!firstError) firstError = `${file.name}: ${cause?.message || "Échec du téléversement."}`;
-        } finally {
-          completed += 1;
-          setUploadedCount(completed);
-          setProgress(Math.round((completed / validFiles.length) * 100));
-        }
-      }
-    };
-
+    setUploading(true);
     try {
-      const workers = Array.from(
-        { length: Math.min(MULTI_UPLOAD_CONCURRENCY, validFiles.length) },
-        () => worker(),
-      );
-      await Promise.all(workers);
-      if (firstError) setError(firstError);
+      onChange(await uploadSingle(file));
+    } catch (cause: any) {
+      setError(cause?.message || 'Échec du téléversement de la vidéo.');
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = '';
@@ -156,13 +82,9 @@ export default function BlobMediaUploader({
         </label>
       )}
 
-      {value && !multi && (
+      {value && (
         <div className="relative overflow-hidden rounded-lg border border-pm-gold/20 bg-black">
-          {kind === 'image' ? (
-            <img src={value} alt="Aperçu" className="h-44 w-full object-cover" />
-          ) : (
-            <video src={value} controls preload="metadata" className="max-h-72 w-full bg-black" />
-          )}
+          <video src={value} controls preload="metadata" className="max-h-72 w-full bg-black" />
           <button
             type="button"
             onClick={() => onChange('')}
@@ -178,22 +100,10 @@ export default function BlobMediaUploader({
         type="button"
         onClick={() => inputRef.current?.click()}
         disabled={uploading}
-        className={`inline-flex items-center justify-center gap-2 border border-pm-gold/30 text-pm-gold hover:bg-pm-gold/10 disabled:opacity-50 ${
-          compact ? 'px-3 py-2 text-[10px]' : 'w-full rounded-lg border-dashed px-4 py-5 text-xs'
-        } font-bold uppercase tracking-widest transition-colors`}
+        className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-pm-gold/30 px-4 py-5 text-xs font-bold uppercase tracking-widest text-pm-gold transition-colors hover:bg-pm-gold/10 disabled:opacity-50"
       >
         <ArrowUpTrayIcon className="h-4 w-4" />
-        {uploading
-          ? multi
-            ? `Téléversement ${uploadedCount}/${selectedCount} — ${progress}%`
-            : `Téléversement ${progress}%`
-          : multi
-            ? 'Ajouter plusieurs images'
-            : value
-              ? 'Remplacer'
-              : kind === 'image'
-                ? 'Téléverser une image'
-                : 'Téléverser la vidéo'}
+        {uploading ? `Téléversement ${progress}%` : value ? 'Remplacer' : 'Téléverser la vidéo'}
       </button>
 
       {uploading && (
@@ -206,20 +116,14 @@ export default function BlobMediaUploader({
         ref={inputRef}
         className="hidden"
         type="file"
-        accept={accept}
-        multiple={multi}
+        accept={VIDEO_ACCEPT}
         onChange={(event) => {
-          const files = Array.from(event.target.files ?? []);
-          if (files.length) void handleFiles(files);
+          const file = event.target.files?.[0];
+          if (file) void handleFile(file);
         }}
       />
 
-      {!compact && (
-        <p className="text-[10px] text-white/30">
-          {kind === 'image' ? 'JPG, PNG, WEBP, GIF ou AVIF — téléversement via ImgBB.' : 'MP4, WebM ou MOV — 1 Go max. Les gros fichiers utilisent Vercel Blob.'}
-        </p>
-      )}
-      {multi && !uploading && <p className="text-[10px] text-white/30">Sélection multiple activée — vous pouvez choisir plus de 10 photos en une seule fois.</p>}
+      <p className="text-[10px] text-white/30">MP4, WebM ou MOV — 1 Go max. Les gros fichiers utilisent Vercel Blob.</p>
       {error && <p className="text-xs text-red-400">{error}</p>}
     </div>
   );

@@ -11,13 +11,14 @@ import {
   ACCEPTED_IMAGE_TYPES,
   MAX_IMAGE_SIZE_MB,
 } from '../utils/imgbbService';
-import { useData } from '../contexts/DataContext';
 
 interface ImgBBUploaderProps {
   label?: string;
   value: string;
   onChange: (url: string) => void;
   folder?: string;
+  scope?: string;
+  publicMode?: boolean;
   allowUrl?: boolean;
   compact?: boolean;
   className?: string;
@@ -28,6 +29,8 @@ const ImgBBUploader: React.FC<ImgBBUploaderProps> = ({
   value,
   onChange,
   folder,
+  scope,
+  publicMode = false,
   allowUrl = true,
   compact = false,
   className = '',
@@ -38,14 +41,7 @@ const ImgBBUploader: React.FC<ImgBBUploaderProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [urlMode, setUrlMode] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
-  const { data } = useData();
-  const apiKey = data?.apiKeys?.imgbbApiKey || import.meta.env.VITE_IMGBB_API_KEY || '';
-
-  const isPublicCastingPage = typeof window !== 'undefined' && (
-    window.location.pathname === '/casting' ||
-    window.location.pathname === '/casting-formulaire' ||
-    window.location.pathname.startsWith('/casting/')
-  );
+  const uploadScope = scope || folder || 'media';
 
   const registerInMediaLibrary = useCallback(async (url: string, file: File) => {
     try {
@@ -80,8 +76,8 @@ const ImgBBUploader: React.FC<ImgBBUploaderProps> = ({
 
     try {
       setProgress(10);
-      const url = await uploadToImgbb(file, apiKey, setProgress);
-      if (!isPublicCastingPage) {
+      const url = await uploadToImgbb(file, { scope: uploadScope, onProgress: setProgress });
+      if (!publicMode) {
         await registerInMediaLibrary(url, file);
       }
       onChange(url);
@@ -90,7 +86,7 @@ const ImgBBUploader: React.FC<ImgBBUploaderProps> = ({
     } finally {
       setProgress(null);
     }
-  }, [apiKey, isPublicCastingPage, onChange, registerInMediaLibrary]);
+  }, [onChange, publicMode, registerInMediaLibrary, uploadScope]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -153,7 +149,7 @@ const ImgBBUploader: React.FC<ImgBBUploaderProps> = ({
               {urlMode ? 'Masquer URL' : 'Ou coller une URL'}
             </button>
           )}
-          {!isPublicCastingPage && (
+          {!publicMode && (
             <button type="button" onClick={() => setShowPicker(true)} className="text-[9px] text-pm-gold/60 hover:text-pm-gold underline transition-colors flex items-center gap-1">
               <Square2StackIcon className="w-3 h-3" /> Bibliothèque
             </button>
@@ -162,7 +158,7 @@ const ImgBBUploader: React.FC<ImgBBUploaderProps> = ({
         {urlMode && <input type="text" value={value} onChange={e => onChange(e.target.value)} placeholder="https://..." className="admin-input" />}
       </div>
 
-      {!isPublicCastingPage && (
+      {!publicMode && (
         <MediaPicker isOpen={showPicker} onClose={() => setShowPicker(false)} onSelect={(urls) => onChange(urls[0])} multiple={false} resourceType="image" />
       )}
       {error && <p className="text-xs text-red-400">{error}</p>}

@@ -126,7 +126,7 @@ const AdminSettings: React.FC = () => {
                         <div>
                             <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/20 mb-5">Images & Stockage</p>
                             <div className="space-y-4">
-                                <SecretInput label="Clé API ImgBB" value={localData.apiKeys.imgbbApiKey || ''} onChange={v => handleSimpleChange('apiKeys', 'imgbbApiKey', v)} />
+                                <p className="rounded-lg border border-pm-gold/20 bg-pm-gold/5 px-4 py-3 text-xs text-white/50">ImgBB est configuré exclusivement côté serveur avec la variable Vercel <code>IMGBB_API_KEY</code>.</p>
                                 <SecretInput label="Dropbox Access Token" value={localData.apiKeys.dropboxAccessToken || ''} onChange={v => handleSimpleChange('apiKeys', 'dropboxAccessToken', v)} />
                             </div>
                         </div>

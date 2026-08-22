@@ -22,7 +22,7 @@ Le module permet d’organiser la notation d’un concours avec :
 - **Authentification** : Neon Auth.
 - **Profils** : `auth_profiles` avec rôle `jury`, `jury-contest` ou permission dédiée.
 - **Données** : Neon PostgreSQL via API Next.js.
-- **Médias candidates** : Vercel Blob.
+- **Photos candidates** : ImgBB via la route serveur `/api/media/imgbb`.
 
 Aucun accès ne doit reposer sur un PIN commun codé en dur, une valeur documentée dans Git ou une simple donnée `sessionStorage` considérée comme preuve d’identité.
 

@@ -48,11 +48,11 @@ Vérifier les redirections et l’interdiction d’accès aux pages d’administ
 - absence de données sensibles dans les réponses publiques ;
 - absence de mot de passe en clair dans les collections applicatives.
 
-## 5. Médias Vercel Blob
+## 5. Médias ImgBB et Vercel Blob
 
-- upload d’une image ;
+- upload ImgBB d’une image ;
 - affichage après rechargement ;
-- upload d’une cover Fashion Day ;
+- upload ImgBB d’une cover Fashion Day ;
 - upload d’un spot vidéo ;
 - progression d’upload ;
 - lecture vidéo ;
@@ -95,6 +95,6 @@ Le lot est prêt pour production uniquement si :
 - les principales pages répondent ;
 - l’authentification fonctionne ;
 - les écritures Neon fonctionnent ;
-- les médias Blob fonctionnent ;
+- les images ImgBB et les vidéos Blob fonctionnent ;
 - le module Fashion Day fonctionne de bout en bout ;
 - aucune régression bloquante n’est constatée.

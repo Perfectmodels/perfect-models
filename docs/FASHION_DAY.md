@@ -46,11 +46,7 @@ La nouvelle édition ne peut pas être enregistrée sans cover.
 
 ## Covers
 
-Chaque édition utilise le chemin Blob logique :
-
-```text
-pmm/fashion-day/editions/{edition}/cover/
-```
+Chaque cover est téléversée vers ImgBB par `/api/media/imgbb` avec un scope logique `fashion-day/editions/{edition}/cover`. Seule l’URL ImgBB finale est enregistrée avec l’édition.
 
 Sur la page publique, l’ordre de priorité du hero est :
 
@@ -95,13 +91,7 @@ Le token d’upload est délivré uniquement à un compte ayant le rôle `admin`
 
 ## Galerie et participants
 
-Les galeries d’édition sont stockées sous :
-
-```text
-pmm/fashion-day/editions/{edition}/gallery/
-```
-
-Les photos de stylistes et artistes utilisent des sous-scopes dédiés à l’édition. Les URLs sont ensuite sauvegardées dans les données de l’édition.
+Les galeries d’édition, les photos de stylistes et les photos d’artistes passent elles aussi par ImgBB avec des scopes dédiés. Les URLs finales sont ensuite sauvegardées dans les données de l’édition.
 
 ## Page publique
 
@@ -118,6 +108,7 @@ Changer d’édition ne mélange jamais les médias de deux éditions.
 ## Sécurité
 
 - La page admin vérifie le rôle côté serveur.
+- L’API ImgBB conserve la clé hors du navigateur et vérifie le rôle pour les scopes administratifs.
 - L’API de génération du token Blob vérifie de nouveau le rôle admin.
 - Les types et tailles de fichiers sont contrôlés côté client et côté serveur.
 - Le token permanent Blob n’est jamais envoyé au navigateur.

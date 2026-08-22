@@ -7,7 +7,7 @@ Cette Preview sert à vérifier l’état exact de `main` sur Vercel sans touche
 - build Next.js ;
 - authentification Neon ;
 - lecture/écriture Neon PostgreSQL ;
-- médias Vercel Blob ;
+- images ImgBB et vidéos Vercel Blob ;
 - navigation publique et admin ;
 - module Perfect Fashion Day avec cover par édition ;
 - spot YouTube ou vidéo Blob.
