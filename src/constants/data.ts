@@ -47,7 +47,6 @@ export const apiKeys: ApiKeys = {
     webApiKey: import.meta.env.VITE_FIREBASE_DYNAMIC_LINKS_API_KEY || '',
     domainUriPrefix: import.meta.env.VITE_FIREBASE_DYNAMIC_LINKS_DOMAIN || ''
   },
-  imgbbApiKey: import.meta.env.VITE_IMGBB_API_KEY || '',
   brevoApiKey: import.meta.env.VITE_BREVO_API_KEY || '',
   dropboxAppKey: import.meta.env.VITE_DROPBOX_APP_KEY || '',
   dropboxAccessToken: import.meta.env.VITE_DROPBOX_ACCESS_TOKEN || '',

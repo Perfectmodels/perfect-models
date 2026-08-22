@@ -12,6 +12,41 @@ const IMAGE_TYPES = new Set([
 ]);
 const MAX_IMAGE_SIZE = 4.5 * 1024 * 1024;
 
+function getImgBBConfiguration() {
+  if (process.env.IMGBB_API_KEY) {
+    return { apiKey: process.env.IMGBB_API_KEY, configuration: 'server' as const };
+  }
+
+  // Temporary migration path. This legacy name is explicitly excluded from
+  // the client bundle in next.config.mjs and is consumed only by this route.
+  if (process.env.VITE_IMGBB_API_KEY) {
+    return { apiKey: process.env.VITE_IMGBB_API_KEY, configuration: 'legacy-server' as const };
+  }
+
+  return { apiKey: '', configuration: 'missing' as const };
+}
+
+function isSameOrigin(request: Request) {
+  const origin = request.headers.get('origin');
+  const host = request.headers.get('x-forwarded-host') || request.headers.get('host');
+
+  if (!origin || !host) return false;
+
+  try {
+    return new URL(origin).host === host;
+  } catch {
+    return false;
+  }
+}
+
+export function GET() {
+  const { apiKey, configuration } = getImgBBConfiguration();
+  return NextResponse.json(
+    { provider: 'imgbb', configured: Boolean(apiKey), configuration },
+    { status: apiKey ? 200 : 503, headers: { 'Cache-Control': 'no-store' } },
+  );
+}
+
 export async function POST(request: Request) {
   try {
     const form = await request.formData();
@@ -31,14 +66,19 @@ export async function POST(request: Request) {
     // The public casting form is intentionally upload-only: it may upload
     // candidate photos, but it must never gain access to the media library.
     const isPublicCastingUpload = scope === 'casting';
+    if (isPublicCastingUpload && !isSameOrigin(request)) {
+      return NextResponse.json({ error: 'Origine de téléversement non autorisée.' }, { status: 403 });
+    }
     if (!isPublicCastingUpload) {
       const profile = await getCurrentAppProfile();
-      if (!profile || profile.role !== 'admin') {
-        return NextResponse.json({ error: 'Accès administrateur requis.' }, { status: 403 });
+      const isAdminUpload = profile?.role === 'admin';
+      const isOwnModelMedia = profile?.role === 'student' && scope.startsWith('models/');
+      if (!isAdminUpload && !isOwnModelMedia) {
+        return NextResponse.json({ error: 'Accès autorisé requis.' }, { status: 403 });
       }
     }
 
-    const apiKey = process.env.IMGBB_API_KEY || process.env.VITE_IMGBB_API_KEY;
+    const { apiKey } = getImgBBConfiguration();
     if (!apiKey) {
       return NextResponse.json({ error: 'Clé ImgBB non configurée sur le serveur.' }, { status: 503 });
     }

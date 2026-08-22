@@ -27,7 +27,7 @@ API Next.js
 Neon PostgreSQL
 ```
 
-Les photos éventuelles sont stockées dans Vercel Blob.
+Les photos éventuelles sont stockées dans ImgBB via la route serveur `/api/media/imgbb`.
 
 ## Authentification
 

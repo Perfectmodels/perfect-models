@@ -10,13 +10,13 @@ import {
   ACCEPTED_IMAGE_TYPES,
   MAX_IMAGE_SIZE_MB,
 } from '../utils/imgbbService';
-import { useData } from '../contexts/DataContext';
 
 interface ImgBBMultiUploaderProps {
   label?: string;
   values: string[];
   onChange: (urls: string[]) => void;
   maxFiles?: number;
+  scope?: string;
 }
 
 interface UploadingItem {
@@ -31,22 +31,15 @@ const ImgBBMultiUploader: React.FC<ImgBBMultiUploaderProps> = ({
   values,
   onChange,
   maxFiles = 20,
+  scope = 'media',
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState<UploadingItem[]>([]);
   const [dragging, setDragging] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
-  const { data } = useData();
-  const apiKey = data?.apiKeys?.imgbbApiKey || import.meta.env.VITE_IMGBB_API_KEY || '';
-
   const handleFiles = useCallback(async (files: FileList | File[]) => {
     const fileArray = Array.from(files).slice(0, maxFiles - values.length);
     if (!fileArray.length) return;
-
-    if (!apiKey) {
-      alert('Clé API ImgBB non configurée.');
-      return;
-    }
 
     const items: UploadingItem[] = fileArray.map(f => ({
       id: `${Date.now()}-${f.name}`,
@@ -62,8 +55,11 @@ const ImgBBMultiUploader: React.FC<ImgBBMultiUploaderProps> = ({
           setUploading(prev => prev.map(u => u.id === items[idx].id ? { ...u, error: err } : u));
           throw new Error(err);
         }
-        const url = await uploadToImgbb(file, apiKey, (pct) => {
-          setUploading(prev => prev.map(u => u.id === items[idx].id ? { ...u, progress: pct } : u));
+        const url = await uploadToImgbb(file, {
+          scope,
+          onProgress: (pct) => {
+            setUploading(prev => prev.map(u => u.id === items[idx].id ? { ...u, progress: pct } : u));
+          },
         });
         return url;
       })
@@ -77,7 +73,7 @@ const ImgBBMultiUploader: React.FC<ImgBBMultiUploaderProps> = ({
     setTimeout(() => {
       setUploading(prev => prev.filter(u => items.find(i => i.id === u.id && u.error)));
     }, 800);
-  }, [values, onChange, maxFiles, apiKey]);
+  }, [values, onChange, maxFiles, scope]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) handleFiles(e.target.files);

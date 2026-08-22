@@ -352,7 +352,13 @@ const CastingForm: React.FC = () => {
               ].map(([label, field]) => (
                 <div key={field}>
                   <label className={labelCls}>{label}</label>
-                  <ImgBBUploader value={form[field as keyof FormData]} onChange={(url: string) => update(field as keyof FormData, url)} />
+                  <ImgBBUploader
+                    value={form[field as keyof FormData]}
+                    onChange={(url: string) => update(field as keyof FormData, url)}
+                    scope="casting"
+                    publicMode
+                    allowUrl={false}
+                  />
                 </div>
               ))}
 

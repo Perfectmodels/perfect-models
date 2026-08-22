@@ -17,17 +17,18 @@ Les assets du site sont servis depuis `public/` et utilisés par Next.js pour :
 - Conserver les logos officiels dans une qualité suffisante.
 - Éviter d’ajouter plusieurs copies identiques sous des noms différents.
 - Préférer WEBP/AVIF pour les visuels web lorsque le workflow le permet.
-- Les médias administrables (covers, galeries, spots) doivent être stockés dans Vercel Blob et non ajoutés manuellement dans `public/`.
+- Les images administrables (covers, galeries, profils) doivent être stockées dans ImgBB via `/api/media/imgbb` et non ajoutées manuellement dans `public/`.
+- Les fichiers vidéo administrables restent stockés dans Vercel Blob.
 - Ne pas réintroduire `resources/`, `android/`, `ios/` ou des commandes Capacitor dans la documentation web actuelle.
 
 ## Covers et médias dynamiques
 
-Perfect Fashion Day utilise Vercel Blob :
+Perfect Fashion Day utilise des scopes ImgBB pour les images et Vercel Blob pour les spots vidéo :
 
 ```text
-pmm/fashion-day/editions/{edition}/cover/
-pmm/fashion-day/editions/{edition}/gallery/
-pmm/fashion-day/editions/{edition}/spot/
+ImgBB: fashion-day/editions/{edition}/cover
+ImgBB: fashion-day/editions/{edition}/gallery
+Blob:  pmm/fashion-day/editions/{edition}/spot/
 ```
 
 Ces fichiers ne sont pas versionnés dans Git.

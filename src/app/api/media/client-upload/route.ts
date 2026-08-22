@@ -4,13 +4,11 @@ import { getCurrentAppProfile } from '@/lib/auth/profile';
 
 export const runtime = 'nodejs';
 
-const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif'];
 const VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/quicktime'];
-const IMAGE_MAX = 15 * 1024 * 1024;
 const VIDEO_MAX = 1024 * 1024 * 1024;
 
 type ClientPayload = {
-  kind?: 'image' | 'video';
+  kind?: 'video';
   scope?: string;
 };
 
@@ -36,7 +34,10 @@ export async function POST(request: Request): Promise<NextResponse> {
         }
 
         const payload = parsePayload(clientPayload);
-        const kind = payload.kind === 'video' ? 'video' : 'image';
+        if (payload.kind !== 'video') {
+          throw new Error('Les images doivent être téléversées via ImgBB.');
+        }
+        const kind = 'video' as const;
         const scope = String(payload.scope || 'media').replace(/[^a-z0-9/_-]+/gi, '-');
 
         if (!scope.startsWith('fashion-day/')) {
@@ -47,8 +48,8 @@ export async function POST(request: Request): Promise<NextResponse> {
         }
 
         return {
-          allowedContentTypes: kind === 'video' ? VIDEO_TYPES : IMAGE_TYPES,
-          maximumSizeInBytes: kind === 'video' ? VIDEO_MAX : IMAGE_MAX,
+          allowedContentTypes: VIDEO_TYPES,
+          maximumSizeInBytes: VIDEO_MAX,
           addRandomSuffix: true,
           tokenPayload: JSON.stringify({
             userId: profile.userId,

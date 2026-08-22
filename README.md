@@ -11,7 +11,8 @@ Plateforme web officielle de **Perfect Models Management (PMM)** : site institut
 - **Tailwind CSS**
 - **Neon PostgreSQL** — données applicatives
 - **Neon Auth** — authentification et rôles
-- **Vercel Blob** — images et vidéos
+- **ImgBB** — stockage de toutes les images via une route serveur unique
+- **Vercel Blob** — fichiers vidéo uniquement
 - **Vercel** — previews et production
 
 Le runtime applicatif ne dépend plus du SDK Google Firebase. Quelques fichiers de compatibilité portant encore des noms `firebase*` peuvent subsister pendant la modernisation des anciens écrans React ; ils redirigent vers les API Next/Neon et ne constituent pas une connexion au SDK Firebase.
@@ -105,11 +106,14 @@ Les secrets ne doivent jamais être ajoutés au dépôt ni exposés dans des var
 
 ## Médias
 
-Les médias sont stockés dans Vercel Blob.
+Toutes les nouvelles images sont téléversées vers ImgBB par la route serveur `/api/media/imgbb`.
 
-- Images courantes : upload serveur ou client selon le module.
-- Covers Fashion Day : upload Blob client authentifié.
+- La clé `IMGBB_API_KEY` reste exclusivement côté serveur.
+- L’ancien nom `VITE_IMGBB_API_KEY` est accepté temporairement uniquement côté serveur et explicitement exclu du bundle client pendant la migration Vercel.
+- Casting public : upload ImgBB limité au scope `casting`, sans accès à la médiathèque.
+- Images administratives et profils : upload ImgBB avec contrôle du rôle côté serveur.
 - Spots Fashion Day : YouTube ou upload Blob client authentifié.
+- L’ancienne route Blob image est conservée en lecture seule pour ne pas casser les médias historiques.
 - Les gros fichiers vidéo sont téléversés directement du navigateur vers Blob afin d’éviter le transit par une Function Next.js.
 
 ## Développement
@@ -135,6 +139,7 @@ DATABASE_URL
 NEON_AUTH_BASE_URL
 NEON_AUTH_COOKIE_SECRET
 BLOB_READ_WRITE_TOKEN
+IMGBB_API_KEY
 ```
 
 D’autres variables peuvent exister pour des services métier encore utilisés par certains modules. Ne jamais documenter leur valeur réelle.

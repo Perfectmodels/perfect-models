@@ -71,7 +71,7 @@ Une vérification frontend n’est jamais considérée comme une barrière de s�
 
 ## Uploads concurrents
 
-Les fichiers Vercel Blob utilisent des noms suffixés aléatoirement afin de réduire les collisions. Pour les gros fichiers, le multipart permet de reprendre les parties échouées sans recommencer nécessairement tout le transfert.
+Les images ImgBB reçoivent un nom logique horodaté et une URL finale unique. Les vidéos Vercel Blob utilisent des noms suffixés aléatoirement afin de réduire les collisions ; pour ces gros fichiers, le multipart permet de reprendre les parties échouées sans recommencer nécessairement tout le transfert.
 
 Le fichier n’est associé à une édition Fashion Day qu’après obtention de son URL finale et sauvegarde de l’édition.
 
@@ -94,7 +94,7 @@ Cette séparation évite le mélange logique des médias entre deux éditions.
 ## Données sensibles
 
 - aucun mot de passe en clair ;
-- aucun token Blob dans le frontend ;
+- aucune clé ImgBB ni token Blob permanent dans le frontend ;
 - aucune chaîne `DATABASE_URL` dans le navigateur ;
 - aucune clé privée dans `app_collections` ;
 - les collections privées restent filtrées par les politiques serveur.

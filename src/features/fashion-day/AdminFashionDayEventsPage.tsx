@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import { useData } from '@/contexts/DataContext';
 import type { Artist, FashionDayEvent, Stylist } from '@/types';
 import BlobMediaUploader from '@/components/admin/BlobMediaUploader';
+import ImgBBUploader from '@/components/ImgBBUploader';
+import ImgBBMultiUploader from '@/components/ImgBBMultiUploader';
 
 type FashionDayEdition = FashionDayEvent & { coverImageUrl?: string };
 type Person = Stylist | Artist;
@@ -77,19 +79,11 @@ function PeopleEditor({
               <TrashIcon className="h-4 w-4" />
             </button>
           </div>
-          {(person.images ?? []).length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {(person.images ?? []).map((url, imageIndex) => (
-                <div key={`${url}-${imageIndex}`} className="relative h-20 w-20 overflow-hidden rounded-lg border border-white/10">
-                  <img src={url} alt="" className="h-full w-full object-cover" />
-                  <button type="button" onClick={() => update(index, { images: (person.images ?? []).filter((_, i) => i !== imageIndex) })} className="absolute right-1 top-1 rounded-full bg-black/80 p-1 text-white/70">
-                    <XMarkIcon className="h-3 w-3" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-          <BlobMediaUploader kind="image" value="" compact scope={`${scope}/${index}`} onChange={(url) => update(index, { images: [...(person.images ?? []), url] })} />
+          <ImgBBMultiUploader
+            values={person.images ?? []}
+            onChange={(images) => update(index, { images })}
+            scope={`${scope}/${index}`}
+          />
         </div>
       ))}
     </section>
@@ -100,19 +94,11 @@ function GalleryEditor({ value, edition, onChange }: { value: string[]; edition:
   return (
     <section className="space-y-3 rounded-xl border border-white/5 bg-white/[0.02] p-4">
       <h3 className="font-playfair text-xl font-bold text-pm-gold">Galerie de l’édition</h3>
-      {value.length > 0 && (
-        <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 md:grid-cols-7">
-          {value.map((url, index) => (
-            <div key={`${url}-${index}`} className="relative aspect-square overflow-hidden rounded-lg border border-white/10">
-              <img src={url} alt="" className="h-full w-full object-cover" />
-              <button type="button" onClick={() => onChange(value.filter((_, i) => i !== index))} className="absolute right-1 top-1 rounded-full bg-black/80 p-1 text-white/70">
-                <XMarkIcon className="h-3 w-3" />
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-      <BlobMediaUploader kind="image" value="" compact scope={`fashion-day/editions/${edition}/gallery`} onChange={(url) => onChange([...value, url])} />
+      <ImgBBMultiUploader
+        values={value}
+        onChange={onChange}
+        scope={`fashion-day/editions/${edition}/gallery`}
+      />
     </section>
   );
 }
@@ -240,7 +226,13 @@ export default function AdminFashionDayEventsPage() {
                 <Field label="Promoteur"><input className={inputClass} value={draft.promoter ?? ''} onChange={(e) => update({ promoter: e.target.value })} /></Field>
                 <div className="sm:col-span-2"><Field label="Description"><textarea className={`${inputClass} min-h-28`} value={draft.description} onChange={(e) => update({ description: e.target.value })} /></Field></div>
               </div>
-              <BlobMediaUploader kind="image" required label="Cover propre à cette édition" scope={`fashion-day/editions/${draft.edition}/cover`} value={draft.coverImageUrl ?? ''} onChange={(coverImageUrl) => update({ coverImageUrl })} />
+              <ImgBBUploader
+                label="Cover propre à cette édition *"
+                scope={`fashion-day/editions/${draft.edition}/cover`}
+                value={draft.coverImageUrl ?? ''}
+                onChange={(coverImageUrl) => update({ coverImageUrl })}
+                allowUrl={false}
+              />
             </div>
 
             <section className="space-y-4 rounded-xl border border-pm-gold/10 bg-pm-gold/[0.03] p-4">
@@ -259,7 +251,7 @@ export default function AdminFashionDayEventsPage() {
                 <Field label="Lien YouTube"><input className={inputClass} value={draft.announcementVideoEmbedUrl ?? ''} onChange={(e) => update({ announcementVideoEmbedUrl: e.target.value, announcementVideoUrl: '' })} placeholder="https://www.youtube.com/watch?v=..." /></Field>
               )}
               {videoMode === 'blob' && (
-                <BlobMediaUploader kind="video" label="Fichier du spot" scope={`fashion-day/editions/${draft.edition}/spot`} value={draft.announcementVideoUrl ?? ''} onChange={(announcementVideoUrl) => update({ announcementVideoUrl, announcementVideoEmbedUrl: '' })} />
+                <BlobMediaUploader label="Fichier du spot" scope={`fashion-day/editions/${draft.edition}/spot`} value={draft.announcementVideoUrl ?? ''} onChange={(announcementVideoUrl) => update({ announcementVideoUrl, announcementVideoEmbedUrl: '' })} />
               )}
             </section>
 

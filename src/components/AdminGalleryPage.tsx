@@ -19,7 +19,7 @@ export default function AdminGalleryPage() {
 
   const uploadImages = async (files: FileList | null) => {
     if (!files?.length) return; setUploading(true); setError('');
-    try { const uploaded: string[] = []; for (const file of Array.from(files)) { const body = new FormData(); body.append('file', file); body.append('scope', 'gallery'); const response = await fetch('/api/media/upload', { method: 'POST', body, credentials: 'include' }); const json = await response.json().catch(() => ({})); if (!response.ok) throw new Error(json.error || `Upload impossible pour ${file.name}`); uploaded.push(String(json.url)); } setForm((current) => ({ ...current, images: [...current.images, ...uploaded], coverImage: current.coverImage || uploaded[0] || '' })); }
+    try { const uploaded: string[] = []; for (const file of Array.from(files)) { const body = new FormData(); body.append('file', file); body.append('scope', 'gallery'); const response = await fetch('/api/media/imgbb', { method: 'POST', body, credentials: 'include' }); const json = await response.json().catch(() => ({})); if (!response.ok) throw new Error(json.error || `Upload impossible pour ${file.name}`); uploaded.push(String(json.url)); } setForm((current) => ({ ...current, images: [...current.images, ...uploaded], coverImage: current.coverImage || uploaded[0] || '' })); }
     catch (e: any) { setError(e?.message || 'Erreur pendant l’upload.'); } finally { setUploading(false); }
   };
 

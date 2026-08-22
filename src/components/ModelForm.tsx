@@ -131,6 +131,7 @@ const ModelForm: React.FC<ModelFormProps> = ({ model, onSave, onCancel, isCreati
                             values={formData.portfolioImages || []}
                             onChange={(urls) => setFormData(prev => ({ ...prev, portfolioImages: urls }))}
                             maxFiles={20}
+                            scope="models/portfolio"
                         />
                     </Section>
                 </div>
@@ -139,7 +140,7 @@ const ModelForm: React.FC<ModelFormProps> = ({ model, onSave, onCancel, isCreati
                 <div className="lg:col-span-4 space-y-16">
                     <div className="glass-card p-10 space-y-10">
                         <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-pm-gold mb-8">Photo Principale</h3>
-                        <ImgBBUploader label="" value={formData.imageUrl} onChange={handleImageChange} folder="models/profile" allowUrl />
+                        <ImgBBUploader label="" value={formData.imageUrl} onChange={handleImageChange} scope="models/profile" allowUrl />
                         <p className="text-[10px] text-white/20 italic">Cette image représente le mannequin sur la page du répertoire.</p>
                     </div>
 

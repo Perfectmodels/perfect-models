@@ -8,7 +8,7 @@ import SEO from '../components/SEO';
 import { useData } from '../contexts/DataContext';
 import { FashionDayEvent, Stylist, Artist } from '../types';
 import { uploadToImgbb } from '../utils/imgbbService';
-import ImgBBUploader from '../components/ImgBBUploader';
+import BlobMediaUploader from '../components/admin/BlobMediaUploader';
 import { useToast } from '../components/ui/Toast';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -35,10 +35,9 @@ interface PersonEditorProps<T extends Stylist | Artist> {
   items: T[];
   onChange: (items: T[]) => void;
   emptyItem: T;
-  imgbbApiKey?: string;
 }
 
-function PersonEditor<T extends Stylist | Artist>({ title, items, onChange, emptyItem, imgbbApiKey }: PersonEditorProps<T>) {
+function PersonEditor<T extends Stylist | Artist>({ title, items, onChange, emptyItem }: PersonEditorProps<T>) {
   const [open, setOpen] = useState<number | null>(null);
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
   const { success, error } = useToast();
@@ -52,14 +51,9 @@ function PersonEditor<T extends Stylist | Artist>({ title, items, onChange, empt
   const handleImageUpload = async (i: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!imgbbApiKey?.trim()) {
-      showToast('Configurez d’abord la clé ImgBB dans les paramètres admin.', false);
-      return;
-    }
-
     setUploadingIndex(i);
     try {
-      const url = await uploadToImgbb(file, imgbbApiKey);
+      const url = await uploadToImgbb(file, { scope: 'fashion-day/people' });
       update(i, { images: [...(items[i]?.images ?? []), url] } as Partial<T>);
       showToast('Photo ajoutée', true);
     } catch (error: any) {
@@ -230,7 +224,6 @@ const EventEditor: React.FC<{
 }> = ({ event, allModels, onSave, onCancel }) => {
   const [ev, setEv] = useState<FashionDayEvent>(JSON.parse(JSON.stringify(event)));
   const [uploadingImage, setUploadingImage] = useState(false);
-  const { data } = useData();
   const { success, error } = useToast();
   const showToast = (message: string, isSuccess: boolean) => isSuccess ? success(message) : error(message);
 
@@ -238,14 +231,11 @@ const EventEditor: React.FC<{
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !data?.apiKeys?.imgbbApiKey) {
-      showToast('Configurez d’abord la clé ImgBB dans les paramètres admin.', false);
-      return;
-    }
+    if (!file) return;
 
     setUploadingImage(true);
     try {
-      const url = await uploadToImgbb(file, data.apiKeys.imgbbApiKey);
+      const url = await uploadToImgbb(file, { scope: 'fashion-day/gallery' });
       set({ galleryImages: [...(ev.galleryImages ?? []), url] });
       showToast('Image ajoutée à la galerie', true);
     } catch (error: any) {
@@ -340,7 +330,6 @@ const EventEditor: React.FC<{
         items={ev.stylists ?? []}
         onChange={stylists => set({ stylists })}
         emptyItem={{ name: '', description: '', images: [] }}
-        imgbbApiKey={data?.apiKeys?.imgbbApiKey || import.meta.env.VITE_IMGBB_API_KEY || ''}
       />
 
       <hr className="border-pm-gold/10" />
@@ -351,7 +340,6 @@ const EventEditor: React.FC<{
         items={ev.artists ?? []}
         onChange={artists => set({ artists })}
         emptyItem={{ name: '', description: '', images: [] }}
-        imgbbApiKey={data?.apiKeys?.imgbbApiKey || import.meta.env.VITE_IMGBB_API_KEY || ''}
       />
 
       <hr className="border-pm-gold/10" />
@@ -469,12 +457,10 @@ const AdminFashionDayEvents: React.FC = () => {
             </div>
             <div className="sm:col-span-2">
               <Field label="Spot d'Annonce (Vidéo)">
-                <ImgBBUploader
+                <BlobMediaUploader
                   value={form.announcementVideoUrl ?? ''}
                   onChange={url => setForm(f => ({ ...f, announcementVideoUrl: url }))}
-                  resourceType="video"
-                  folder="fashion-day/announcements"
-                  allowUrl
+                  scope="fashion-day/announcements"
                 />
               </Field>
             </div>

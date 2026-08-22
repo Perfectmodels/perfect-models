@@ -63,10 +63,11 @@ Cette branche sert à valider la migration Next.js + Neon ainsi que les nouveaux
 - modification d’un profil ;
 - vérification qu’aucun secret n’est exposé dans les réponses publiques.
 
-### Vercel Blob
+### ImgBB et Vercel Blob
 
-- upload image ;
-- upload cover Fashion Day ;
+- upload ImgBB d’une image ;
+- affichage de l’URL ImgBB après rechargement ;
+- upload ImgBB d’une cover Fashion Day ;
 - upload petit spot vidéo ;
 - upload multipart d’une vidéo volumineuse si nécessaire ;
 - lecture du média depuis la Preview.
@@ -90,6 +91,7 @@ DATABASE_URL
 NEON_AUTH_BASE_URL
 NEON_AUTH_COOKIE_SECRET
 BLOB_READ_WRITE_TOKEN
+IMGBB_API_KEY
 ```
 
 Ne jamais copier leurs valeurs dans Git ou dans un document Markdown.

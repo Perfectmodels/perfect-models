@@ -1,6 +1,6 @@
 # Documentation Perfect Models Management
 
-Cet index décrit la documentation **actuelle** de la plateforme PMM. Les anciens guides Android, iOS, Firebase Push et Capacitor ont été retirés de l’architecture active : le projet est désormais une plateforme web Next.js connectée à Neon et Vercel Blob.
+Cet index décrit la documentation **actuelle** de la plateforme PMM. Les anciens guides Android, iOS, Firebase Push et Capacitor ont été retirés de l’architecture active : le projet est désormais une plateforme web Next.js dont les images passent par ImgBB et les vidéos volumineuses par Vercel Blob.
 
 ## Documentation de référence
 
@@ -51,7 +51,8 @@ Documents :
 - Web : Next.js App Router
 - Base : Neon PostgreSQL
 - Auth : Neon Auth
-- Médias : Vercel Blob
+- Images : ImgBB via API serveur
+- Vidéos : Vercel Blob
 - Hébergement : Vercel
 - Dépôt : `Perfectmodels/perfect-models`
 - Branche de preview de migration : `preview/neon-next-migration`

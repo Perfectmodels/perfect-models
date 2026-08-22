@@ -341,7 +341,6 @@ export interface ApiKeys {
     webApiKey?: string;
     domainUriPrefix: string;
   };
-  imgbbApiKey?: string;
   brevoApiKey?: string;
   dropboxAppKey?: string;
   dropboxAccessToken?: string;
