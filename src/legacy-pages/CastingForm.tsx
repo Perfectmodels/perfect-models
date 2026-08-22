@@ -1,6 +1,14 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { CheckIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import {
+  CheckIcon,
+  ChevronDownIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  MagnifyingGlassIcon,
+  MinusIcon,
+  PlusIcon,
+} from '@heroicons/react/24/outline';
 import SEO from '../components/SEO';
 import { useData } from '../contexts/DataContext';
 import { invalidateCache } from '../hooks/useFirebaseCollection';
@@ -9,6 +17,112 @@ import { notifyAdmin } from '../utils/adminNotify';
 import { sendCastingConfirmationToUser, sendCastingNotificationToAdmin } from '../utils/brevoService';
 
 const STEPS = ['Infos personnelles', 'Mensurations', 'Expérience', 'Photos & consentement'];
+
+type PickerOption = {
+  value: string;
+  label: string;
+};
+
+const NATIONALITIES: PickerOption[] = [
+  { value: 'Gabonaise', label: '🇬🇦 Gabon' },
+  { value: 'Camerounaise', label: '🇨🇲 Cameroun' },
+  { value: 'Équato-guinéenne', label: '🇬🇶 Guinée équatoriale' },
+  { value: 'Congolaise (Brazzaville)', label: '🇨🇬 Congo-Brazzaville' },
+  { value: 'Congolaise (RDC)', label: '🇨🇩 République démocratique du Congo' },
+  { value: 'Centrafricaine', label: '🇨🇫 République centrafricaine' },
+  { value: 'Tchadienne', label: '🇹🇩 Tchad' },
+  { value: 'Angolaise', label: '🇦🇴 Angola' },
+  { value: 'Béninoise', label: '🇧🇯 Bénin' },
+  { value: 'Burkinabè', label: '🇧🇫 Burkina Faso' },
+  { value: 'Cap-verdienne', label: '🇨🇻 Cap-Vert' },
+  { value: 'Ghanéenne', label: '🇬🇭 Ghana' },
+  { value: 'Guinéenne', label: '🇬🇳 Guinée' },
+  { value: 'Ivoirienne', label: "🇨🇮 Côte d'Ivoire" },
+  { value: 'Malienne', label: '🇲🇱 Mali' },
+  { value: 'Nigériane', label: '🇳🇬 Nigeria' },
+  { value: 'Sénégalaise', label: '🇸🇳 Sénégal' },
+  { value: 'Togolaise', label: '🇹🇬 Togo' },
+  { value: 'Rwandaise', label: '🇷🇼 Rwanda' },
+  { value: 'Burundaise', label: '🇧🇮 Burundi' },
+  { value: 'Kényane', label: '🇰🇪 Kenya' },
+  { value: 'Sud-africaine', label: '🇿🇦 Afrique du Sud' },
+  { value: 'Marocaine', label: '🇲🇦 Maroc' },
+  { value: 'Algérienne', label: '🇩🇿 Algérie' },
+  { value: 'Tunisienne', label: '🇹🇳 Tunisie' },
+  { value: 'Française', label: '🇫🇷 France' },
+];
+
+const CITIES: PickerOption[] = [
+  { value: 'Libreville', label: 'Estuaire · Gabon' },
+  { value: 'Akanda', label: 'Estuaire · Gabon' },
+  { value: 'Owendo', label: 'Estuaire · Gabon' },
+  { value: 'Ntoum', label: 'Estuaire · Gabon' },
+  { value: 'Kango', label: 'Estuaire · Gabon' },
+  { value: 'Port-Gentil', label: 'Ogooué-Maritime · Gabon' },
+  { value: 'Gamba', label: 'Ogooué-Maritime · Gabon' },
+  { value: 'Franceville', label: 'Haut-Ogooué · Gabon' },
+  { value: 'Moanda', label: 'Haut-Ogooué · Gabon' },
+  { value: 'Oyem', label: 'Woleu-Ntem · Gabon' },
+  { value: 'Bitam', label: 'Woleu-Ntem · Gabon' },
+  { value: 'Mitzic', label: 'Woleu-Ntem · Gabon' },
+  { value: 'Lambaréné', label: 'Moyen-Ogooué · Gabon' },
+  { value: 'Ndjolé', label: 'Moyen-Ogooué · Gabon' },
+  { value: 'Mouila', label: 'Ngounié · Gabon' },
+  { value: 'Fougamou', label: 'Ngounié · Gabon' },
+  { value: 'Tchibanga', label: 'Nyanga · Gabon' },
+  { value: 'Mayumba', label: 'Nyanga · Gabon' },
+  { value: 'Makokou', label: 'Ogooué-Ivindo · Gabon' },
+  { value: 'Koula-Moutou', label: 'Ogooué-Lolo · Gabon' },
+  { value: 'Lastoursville', label: 'Ogooué-Lolo · Gabon' },
+  { value: 'Brazzaville', label: 'République du Congo' },
+  { value: 'Pointe-Noire', label: 'République du Congo' },
+  { value: 'Douala', label: 'Cameroun' },
+  { value: 'Yaoundé', label: 'Cameroun' },
+  { value: 'Malabo', label: 'Guinée équatoriale' },
+  { value: 'Kinshasa', label: 'RDC' },
+  { value: 'Abidjan', label: "Côte d'Ivoire" },
+  { value: 'Dakar', label: 'Sénégal' },
+  { value: 'Paris', label: 'France' },
+];
+
+const PHONE_PREFIXES = [
+  { code: '+241', label: '🇬🇦 +241', country: 'Gabon' },
+  { code: '+237', label: '🇨🇲 +237', country: 'Cameroun' },
+  { code: '+240', label: '🇬🇶 +240', country: 'Guinée équatoriale' },
+  { code: '+242', label: '🇨🇬 +242', country: 'Congo-Brazzaville' },
+  { code: '+243', label: '🇨🇩 +243', country: 'RDC' },
+  { code: '+236', label: '🇨🇫 +236', country: 'Centrafrique' },
+  { code: '+235', label: '🇹🇩 +235', country: 'Tchad' },
+  { code: '+244', label: '🇦🇴 +244', country: 'Angola' },
+  { code: '+229', label: '🇧🇯 +229', country: 'Bénin' },
+  { code: '+225', label: '🇨🇮 +225', country: "Côte d'Ivoire" },
+  { code: '+224', label: '🇬🇳 +224', country: 'Guinée' },
+  { code: '+223', label: '🇲🇱 +223', country: 'Mali' },
+  { code: '+234', label: '🇳🇬 +234', country: 'Nigeria' },
+  { code: '+221', label: '🇸🇳 +221', country: 'Sénégal' },
+  { code: '+228', label: '🇹🇬 +228', country: 'Togo' },
+  { code: '+33', label: '🇫🇷 +33', country: 'France' },
+];
+
+const EYE_COLORS = [
+  { value: 'Noirs', swatch: '#171717' },
+  { value: 'Marrons', swatch: '#5A3825' },
+  { value: 'Noisette', swatch: '#92734A' },
+  { value: 'Verts', swatch: '#4F6F52' },
+  { value: 'Bleus', swatch: '#537FA5' },
+  { value: 'Gris', swatch: '#8B9299' },
+  { value: 'Autre', swatch: 'linear-gradient(135deg, #D4AF37, #537FA5)' },
+];
+
+const HAIR_COLORS = [
+  { value: 'Noirs', swatch: '#101010' },
+  { value: 'Bruns', swatch: '#3A241A' },
+  { value: 'Châtains', swatch: '#6C4A32' },
+  { value: 'Blonds', swatch: '#C7A869' },
+  { value: 'Roux', swatch: '#9E4A2F' },
+  { value: 'Colorés', swatch: 'linear-gradient(135deg, #9B5DE5, #F15BB5, #FEE440)' },
+  { value: 'Autre', swatch: 'linear-gradient(135deg, #D4AF37, #537FA5)' },
+];
 
 const EMPTY = {
   firstName: '',
@@ -37,11 +151,18 @@ const EMPTY = {
 
 type FormData = typeof EMPTY;
 
-const inputCls = 'w-full bg-black/40 border border-pm-gold/20 rounded-lg px-4 py-3 text-sm text-pm-off-white placeholder:text-white/20 focus:outline-none focus:border-pm-gold transition-colors';
+const inputCls = 'w-full min-h-12 bg-black/40 border border-pm-gold/20 rounded-xl px-4 py-3 text-sm text-pm-off-white placeholder:text-white/25 focus:outline-none focus:border-pm-gold focus:ring-2 focus:ring-pm-gold/10 transition-colors';
 const labelCls = 'text-xs uppercase tracking-widest text-pm-off-white/40 mb-1.5 block';
 
 const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 const isValidPhone = (value: string) => value.replace(/\D/g, '').length >= 8;
+
+const yearsAgo = (years: number) => {
+  const date = new Date();
+  date.setHours(12, 0, 0, 0);
+  date.setFullYear(date.getFullYear() - years);
+  return date.toISOString().slice(0, 10);
+};
 
 const CastingForm: React.FC = () => {
   const navigate = useNavigate();
@@ -52,8 +173,12 @@ const CastingForm: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState('');
+  const birthDateLimits = useMemo(() => ({ min: yearsAgo(80), max: yearsAgo(14) }), []);
 
-  const update = (field: keyof FormData, value: string) => setForm(current => ({ ...current, [field]: value }));
+  const update = (field: keyof FormData, value: string) => {
+    setForm(current => ({ ...current, [field]: value }));
+    if (error) setError('');
+  };
 
   const age = useMemo(() => {
     if (!form.birthDate) return null;
@@ -80,6 +205,20 @@ const CastingForm: React.FC = () => {
       const height = Number(form.height);
       if (!form.height || Number.isNaN(height) || height < 120 || height > 230) {
         return 'Indiquez une taille valide en centimètres.';
+      }
+      const optionalMeasurements: Array<[keyof FormData, number, number, string]> = [
+        ['weight', 25, 300, 'poids'],
+        ['chest', 30, 250, 'tour de poitrine'],
+        ['waist', 30, 250, 'tour de taille'],
+        ['hips', 30, 250, 'tour de hanches'],
+        ['shoeSize', 20, 55, 'pointure'],
+      ];
+      for (const [field, min, max, label] of optionalMeasurements) {
+        const rawValue = form[field];
+        const numericValue = Number(rawValue);
+        if (rawValue && (!Number.isFinite(numericValue) || numericValue < min || numericValue > max)) {
+          return `Vérifiez la valeur indiquée pour ${label}.`;
+        }
       }
     }
 
@@ -226,93 +365,97 @@ const CastingForm: React.FC = () => {
         <div className="bg-black/30 border border-pm-gold/10 rounded-2xl p-5 sm:p-8">
           {step === 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-              <Field label="Prénom *"><input value={form.firstName} onChange={event => update('firstName', event.target.value)} autoComplete="given-name" className={inputCls} /></Field>
-              <Field label="Nom *"><input value={form.lastName} onChange={event => update('lastName', event.target.value)} autoComplete="family-name" className={inputCls} /></Field>
-              <Field label="Date de naissance *"><input type="date" value={form.birthDate} onChange={event => update('birthDate', event.target.value)} className={inputCls} /></Field>
-              <Field label="Genre *">
-                <select value={form.gender} onChange={event => update('gender', event.target.value)} className={inputCls}>
-                  <option value="Femme">Femme</option>
-                  <option value="Homme">Homme</option>
-                </select>
+              <Field label="Prénom *" htmlFor="casting-first-name">
+                <input id="casting-first-name" required maxLength={80} value={form.firstName} onChange={event => update('firstName', event.target.value)} autoComplete="given-name" placeholder="Votre prénom" className={inputCls} />
               </Field>
-              <Field label="Nationalité *">
-                <select value={form.nationality} onChange={event => update('nationality', event.target.value)} className={inputCls}>
-                  <option value="" disabled>Sélectionnez une nationalité…</option>
-                  <option value="Gabonaise">Gabonaise 🇬🇦</option>
-                  <option value="Camerounaise">Camerounaise 🇨🇲</option>
-                  <option value="Ivoirienne">Ivoirienne 🇨🇮</option>
-                  <option value="Congolaise (RDC)">Congolaise (RDC) 🇨🇩</option>
-                  <option value="Congolaise (Brazzaville)">Congolaise (Brazzaville) 🇨🇬</option>
-                  <option value="Sénégalaise">Sénégalaise 🇸🇳</option>
-                  <option value="Togolaise">Togolaise 🇹🇬</option>
-                  <option value="Béninoise">Béninoise 🇧🇯</option>
-                  <option value="Guinéenne">Guinéenne 🇬🇳</option>
-                  <option value="Malienne">Malienne 🇲🇱</option>
-                  <option value="Tchadienne">Tchadienne 🇹🇩</option>
-                  <option value="Autre">Autre nationalité</option>
-                </select>
+              <Field label="Nom *" htmlFor="casting-last-name">
+                <input id="casting-last-name" required maxLength={80} value={form.lastName} onChange={event => update('lastName', event.target.value)} autoComplete="family-name" placeholder="Votre nom" className={inputCls} />
               </Field>
-              <Field label="Ville *">
-                <select value={form.city} onChange={event => update('city', event.target.value)} className={inputCls}>
-                  <option value="" disabled>Sélectionnez une ville…</option>
-                  <option value="Libreville">Libreville</option>
-                  <option value="Akanda">Akanda</option>
-                  <option value="Owendo">Owendo</option>
-                  <option value="Port-Gentil">Port-Gentil</option>
-                  <option value="Franceville">Franceville</option>
-                  <option value="Oyem">Oyem</option>
-                  <option value="Moanda">Moanda</option>
-                  <option value="Lambaréné">Lambaréné</option>
-                  <option value="Mouila">Mouila</option>
-                  <option value="Tchibanga">Tchibanga</option>
-                  <option value="Makokou">Makokou</option>
-                  <option value="Koula-Moutou">Koula-Moutou</option>
-                  <option value="Autre">Autre ville</option>
-                </select>
+              <Field
+                label="Date de naissance *"
+                htmlFor="casting-birth-date"
+                hint={age === null ? 'Candidatures de 14 à 80 ans' : `${age} ans`}
+              >
+                <input
+                  id="casting-birth-date"
+                  type="date"
+                  required
+                  min={birthDateLimits.min}
+                  max={birthDateLimits.max}
+                  value={form.birthDate}
+                  onChange={event => update('birthDate', event.target.value)}
+                  autoComplete="bday"
+                  className={inputCls}
+                />
               </Field>
-              <Field label="Email *"><input type="email" value={form.email} onChange={event => update('email', event.target.value)} autoComplete="email" className={inputCls} /></Field>
-              <Field label="Téléphone *"><input type="tel" value={form.phone} onChange={event => update('phone', event.target.value)} autoComplete="tel" placeholder="+241 ..." className={inputCls} /></Field>
+              <div>
+                <span id="casting-gender-label" className={labelCls}>Genre *</span>
+                <div role="radiogroup" aria-labelledby="casting-gender-label" className="grid grid-cols-2 gap-2">
+                  {[
+                    ['Femme', 'F'],
+                    ['Homme', 'H'],
+                  ].map(([value, short]) => (
+                    <button
+                      key={value}
+                      type="button"
+                      role="radio"
+                      aria-checked={form.gender === value}
+                      onClick={() => update('gender', value)}
+                      className={`min-h-12 rounded-xl border px-3 py-2.5 text-left transition-colors ${form.gender === value ? 'border-pm-gold bg-pm-gold/10 text-pm-gold' : 'border-pm-gold/20 bg-black/40 text-white/55 hover:border-pm-gold/50'}`}
+                    >
+                      <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/5 text-[10px] font-black">{short}</span>
+                      <span className="text-sm font-bold">{value}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <Field label="Nationalité *" htmlFor="casting-nationality" hint="Recherchez ou saisissez une autre nationalité">
+                <SearchablePicker
+                  id="casting-nationality"
+                  value={form.nationality}
+                  onChange={value => update('nationality', value)}
+                  options={NATIONALITIES}
+                  placeholder="Ex. Gabonaise"
+                  autoComplete="country-name"
+                />
+              </Field>
+              <Field label="Ville de résidence *" htmlFor="casting-city" hint="Les autres villes peuvent être saisies librement">
+                <SearchablePicker
+                  id="casting-city"
+                  value={form.city}
+                  onChange={value => update('city', value)}
+                  options={CITIES}
+                  placeholder="Rechercher une ville…"
+                  autoComplete="address-level2"
+                />
+              </Field>
+              <Field label="Email *" htmlFor="casting-email">
+                <input id="casting-email" type="email" required maxLength={160} value={form.email} onChange={event => update('email', event.target.value)} autoComplete="email" inputMode="email" placeholder="nom@exemple.com" className={inputCls} />
+              </Field>
+              <Field label="Téléphone / WhatsApp *" htmlFor="casting-phone" hint="Choisissez d’abord l’indicatif du pays">
+                <PhoneInput id="casting-phone" value={form.phone} onChange={value => update('phone', value)} />
+              </Field>
             </div>
           )}
 
           {step === 1 && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-5">
-              {[
-                ['Taille (cm) *', 'height', '175'],
-                ['Poids (kg)', 'weight', '60'],
-                ['Poitrine (cm)', 'chest', '90'],
-                ['Tour de taille (cm)', 'waist', '65'],
-                ['Hanches (cm)', 'hips', '95'],
-                ['Pointure', 'shoeSize', '39'],
-              ].map(([label, field, placeholder]) => (
-                <Field key={field} label={label}>
-                  <input type="number" min="1" value={form[field as keyof FormData]} onChange={event => update(field as keyof FormData, event.target.value)} placeholder={placeholder} className={inputCls} />
-                </Field>
-              ))}
-              <Field label="Couleur des yeux">
-                <select value={form.eyeColor} onChange={event => update('eyeColor', event.target.value)} className={inputCls}>
-                  <option value="">Non spécifié</option>
-                  <option value="Marrons">Marrons</option>
-                  <option value="Noirs">Noirs</option>
-                  <option value="Noisette">Noisette</option>
-                  <option value="Verts">Verts</option>
-                  <option value="Bleus">Bleus</option>
-                  <option value="Gris">Gris</option>
-                  <option value="Autre">Autre</option>
-                </select>
-              </Field>
-              <Field label="Couleur des cheveux">
-                <select value={form.hairColor} onChange={event => update('hairColor', event.target.value)} className={inputCls}>
-                  <option value="">Non spécifié</option>
-                  <option value="Noirs">Noirs</option>
-                  <option value="Châtains">Châtains</option>
-                  <option value="Bruns">Bruns</option>
-                  <option value="Blonds">Blonds</option>
-                  <option value="Tressés / Dreads">Tressés / Dreads</option>
-                  <option value="Rasés / Chauve">Rasés / Chauve</option>
-                  <option value="Autre">Autre</option>
-                </select>
-              </Field>
+            <div className="space-y-7">
+              <div>
+                <h2 className="text-xl font-playfair font-black text-white">Vos mensurations</h2>
+                <p className="mt-2 text-sm text-white/40">Utilisez les boutons − et + ou saisissez directement la valeur exacte.</p>
+              </div>
+              <div className="grid grid-cols-1 min-[420px]:grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-5">
+                <NumberPicker id="casting-height" label="Taille *" value={form.height} onChange={value => update('height', value)} min={120} max={230} placeholder="175" unit="cm" required />
+                <NumberPicker id="casting-weight" label="Poids" value={form.weight} onChange={value => update('weight', value)} min={25} max={300} placeholder="60" unit="kg" />
+                <NumberPicker id="casting-chest" label="Poitrine" value={form.chest} onChange={value => update('chest', value)} min={30} max={250} placeholder="90" unit="cm" />
+                <NumberPicker id="casting-waist" label="Tour de taille" value={form.waist} onChange={value => update('waist', value)} min={30} max={250} placeholder="65" unit="cm" />
+                <NumberPicker id="casting-hips" label="Hanches" value={form.hips} onChange={value => update('hips', value)} min={30} max={250} placeholder="95" unit="cm" />
+                <NumberPicker id="casting-shoe-size" label="Pointure EU" value={form.shoeSize} onChange={value => update('shoeSize', value)} min={20} max={55} step={0.5} placeholder="39" unit="EU" />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <VisualChoicePicker label="Couleur des yeux" value={form.eyeColor} onChange={value => update('eyeColor', value)} options={EYE_COLORS} />
+                <VisualChoicePicker label="Couleur des cheveux" value={form.hairColor} onChange={value => update('hairColor', value)} options={HAIR_COLORS} />
+              </div>
             </div>
           )}
 
@@ -334,8 +477,8 @@ const CastingForm: React.FC = () => {
                   ))}
                 </div>
               </div>
-              <Field label="Instagram"><input value={form.instagram} onChange={event => update('instagram', event.target.value)} placeholder="@votre_compte" className={inputCls} /></Field>
-              <Field label="Lien portfolio"><input type="url" value={form.portfolioLink} onChange={event => update('portfolioLink', event.target.value)} placeholder="https://..." className={inputCls} /></Field>
+              <Field label="Instagram" htmlFor="casting-instagram"><input id="casting-instagram" maxLength={120} value={form.instagram} onChange={event => update('instagram', event.target.value)} autoComplete="off" placeholder="@votre_compte" className={inputCls} /></Field>
+              <Field label="Lien portfolio" htmlFor="casting-portfolio"><input id="casting-portfolio" type="url" maxLength={600} value={form.portfolioLink} onChange={event => update('portfolioLink', event.target.value)} autoComplete="url" placeholder="https://..." className={inputCls} /></Field>
             </div>
           )}
 
@@ -394,10 +537,181 @@ const CastingForm: React.FC = () => {
   );
 };
 
-const Field: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
+const SearchablePicker: React.FC<{
+  id: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: PickerOption[];
+  placeholder: string;
+  autoComplete?: string;
+}> = ({ id, value, onChange, options, placeholder, autoComplete }) => {
+  const listId = `${id}-suggestions`;
+
+  return (
+    <div className="relative">
+      <MagnifyingGlassIcon className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-pm-gold/45" />
+      <input
+        id={id}
+        list={listId}
+        required
+        maxLength={80}
+        value={value}
+        onChange={event => onChange(event.target.value)}
+        placeholder={placeholder}
+        autoComplete={autoComplete || 'off'}
+        className={`${inputCls} pl-10 pr-10`}
+      />
+      <ChevronDownIcon className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" />
+      <datalist id={listId}>
+        {options.map(option => (
+          <option key={option.value} value={option.value}>{option.label}</option>
+        ))}
+      </datalist>
+    </div>
+  );
+};
+
+const PhoneInput: React.FC<{
+  id: string;
+  value: string;
+  onChange: (value: string) => void;
+}> = ({ id, value, onChange }) => {
+  const detectedPrefix = PHONE_PREFIXES.find(option => value.startsWith(option.code))?.code || '+241';
+  const [prefix, setPrefix] = useState(detectedPrefix);
+  const nationalNumber = value.startsWith(prefix)
+    ? value.slice(prefix.length).trimStart()
+    : value.replace(/^\+\d{1,4}\s*/, '');
+
+  const changePrefix = (nextPrefix: string) => {
+    setPrefix(nextPrefix);
+    onChange(nationalNumber ? `${nextPrefix} ${nationalNumber}` : '');
+  };
+
+  return (
+    <div className="flex min-h-12 overflow-hidden rounded-xl border border-pm-gold/20 bg-black/40 focus-within:border-pm-gold focus-within:ring-2 focus-within:ring-pm-gold/10">
+      <label className="sr-only" htmlFor={`${id}-prefix`}>Indicatif du pays</label>
+      <select
+        id={`${id}-prefix`}
+        value={prefix}
+        onChange={event => changePrefix(event.target.value)}
+        autoComplete="tel-country-code"
+        className="w-[112px] shrink-0 border-r border-pm-gold/15 bg-black/20 px-3 text-sm text-pm-off-white focus:outline-none sm:w-[126px]"
+      >
+        {PHONE_PREFIXES.map(option => (
+          <option key={option.code} value={option.code}>{option.label} · {option.country}</option>
+        ))}
+      </select>
+      <input
+        id={id}
+        type="tel"
+        required
+        maxLength={30}
+        value={nationalNumber}
+        onChange={event => {
+          const nextNumber = event.target.value.replace(/[^\d\s().-]/g, '');
+          onChange(nextNumber ? `${prefix} ${nextNumber}` : '');
+        }}
+        autoComplete="tel-national"
+        inputMode="tel"
+        placeholder="074 00 00 00"
+        className="min-w-0 flex-1 bg-transparent px-3 py-3 text-sm text-pm-off-white placeholder:text-white/25 focus:outline-none"
+      />
+    </div>
+  );
+};
+
+const NumberPicker: React.FC<{
+  id: string;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  min: number;
+  max: number;
+  placeholder: string;
+  unit: string;
+  step?: number;
+  required?: boolean;
+}> = ({ id, label, value, onChange, min, max, placeholder, unit, step = 1, required = false }) => {
+  const numericValue = Number(value);
+  const isAtMin = value !== '' && Number.isFinite(numericValue) && numericValue <= min;
+  const isAtMax = value !== '' && Number.isFinite(numericValue) && numericValue >= max;
+
+  const changeBy = (direction: -1 | 1) => {
+    const current = value && Number.isFinite(numericValue) ? numericValue : Number(placeholder);
+    const next = Math.min(max, Math.max(min, current + direction * step));
+    onChange(String(next));
+  };
+
+  return (
+    <div>
+      <label className={labelCls} htmlFor={id}>{label}</label>
+      <div className="flex min-h-12 overflow-hidden rounded-xl border border-pm-gold/20 bg-black/40 focus-within:border-pm-gold focus-within:ring-2 focus-within:ring-pm-gold/10">
+        <button type="button" aria-label={`Diminuer ${label.toLowerCase()}`} onClick={() => changeBy(-1)} disabled={isAtMin} className="flex w-10 shrink-0 items-center justify-center border-r border-white/10 text-white/45 transition-colors hover:bg-pm-gold/10 hover:text-pm-gold disabled:opacity-20">
+          <MinusIcon className="h-4 w-4" />
+        </button>
+        <input
+          id={id}
+          type="number"
+          required={required}
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          onChange={event => onChange(event.target.value)}
+          inputMode="decimal"
+          placeholder={placeholder}
+          className="min-w-0 flex-1 bg-transparent px-2 py-3 text-center text-sm font-bold text-pm-off-white placeholder:text-white/20 focus:outline-none"
+        />
+        <span className="flex items-center border-l border-white/10 px-2 text-[10px] font-bold uppercase text-white/30">{unit}</span>
+        <button type="button" aria-label={`Augmenter ${label.toLowerCase()}`} onClick={() => changeBy(1)} disabled={isAtMax} className="flex w-10 shrink-0 items-center justify-center border-l border-white/10 text-white/45 transition-colors hover:bg-pm-gold/10 hover:text-pm-gold disabled:opacity-20">
+          <PlusIcon className="h-4 w-4" />
+        </button>
+      </div>
+      <p className="mt-1.5 text-[10px] text-white/25">{min}–{max} {unit}</p>
+    </div>
+  );
+};
+
+const VisualChoicePicker: React.FC<{
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: Array<{ value: string; swatch: string }>;
+}> = ({ label, value, onChange, options }) => (
   <div>
-    <label className={labelCls}>{label}</label>
+    <span className={labelCls}>{label}</span>
+    <div role="radiogroup" aria-label={label} className="flex flex-wrap gap-2">
+      {options.map(option => (
+        <button
+          key={option.value}
+          type="button"
+          role="radio"
+          aria-checked={value === option.value}
+          onClick={() => onChange(option.value)}
+          className={`inline-flex min-h-10 items-center gap-2 rounded-full border px-3 py-2 text-xs transition-colors ${value === option.value ? 'border-pm-gold bg-pm-gold/10 text-pm-gold' : 'border-white/10 bg-black/30 text-white/50 hover:border-pm-gold/40'}`}
+        >
+          <span aria-hidden="true" className="h-4 w-4 rounded-full border border-white/20" style={{ background: option.swatch }} />
+          {option.value}
+        </button>
+      ))}
+      <button
+        type="button"
+        role="radio"
+        aria-checked={value === ''}
+        onClick={() => onChange('')}
+        className={`min-h-10 rounded-full border px-3 py-2 text-xs transition-colors ${value === '' ? 'border-white/25 bg-white/5 text-white/60' : 'border-white/10 text-white/30 hover:text-white/55'}`}
+      >
+        Non précisé
+      </button>
+    </div>
+  </div>
+);
+
+const Field: React.FC<{ label: string; children: React.ReactNode; htmlFor?: string; hint?: string }> = ({ label, children, htmlFor, hint }) => (
+  <div>
+    {htmlFor ? <label className={labelCls} htmlFor={htmlFor}>{label}</label> : <span className={labelCls}>{label}</span>}
     {children}
+    {hint && <p className="mt-1.5 text-[10px] leading-relaxed text-white/30">{hint}</p>}
   </div>
 );
 
