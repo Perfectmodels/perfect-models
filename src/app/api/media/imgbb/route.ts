@@ -12,6 +12,20 @@ const IMAGE_TYPES = new Set([
 ]);
 const MAX_IMAGE_SIZE = 4.5 * 1024 * 1024;
 
+function getImgBBConfiguration() {
+  if (process.env.IMGBB_API_KEY) {
+    return { apiKey: process.env.IMGBB_API_KEY, configuration: 'server' as const };
+  }
+
+  // Temporary migration path. This legacy name is explicitly excluded from
+  // the client bundle in next.config.mjs and is consumed only by this route.
+  if (process.env.VITE_IMGBB_API_KEY) {
+    return { apiKey: process.env.VITE_IMGBB_API_KEY, configuration: 'legacy-server' as const };
+  }
+
+  return { apiKey: '', configuration: 'missing' as const };
+}
+
 function isSameOrigin(request: Request) {
   const origin = request.headers.get('origin');
   const host = request.headers.get('x-forwarded-host') || request.headers.get('host');
@@ -26,10 +40,10 @@ function isSameOrigin(request: Request) {
 }
 
 export function GET() {
-  const configured = Boolean(process.env.IMGBB_API_KEY);
+  const { apiKey, configuration } = getImgBBConfiguration();
   return NextResponse.json(
-    { provider: 'imgbb', configured },
-    { status: configured ? 200 : 503, headers: { 'Cache-Control': 'no-store' } },
+    { provider: 'imgbb', configured: Boolean(apiKey), configuration },
+    { status: apiKey ? 200 : 503, headers: { 'Cache-Control': 'no-store' } },
   );
 }
 
@@ -64,7 +78,7 @@ export async function POST(request: Request) {
       }
     }
 
-    const apiKey = process.env.IMGBB_API_KEY;
+    const { apiKey } = getImgBBConfiguration();
     if (!apiKey) {
       return NextResponse.json({ error: 'Clé ImgBB non configurée sur le serveur.' }, { status: 503 });
     }

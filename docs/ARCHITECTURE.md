@@ -59,6 +59,8 @@ Une page d’administration sensible ne doit pas se contenter de masquer les bou
 
 Toutes les nouvelles images sont stockées dans ImgBB. Le navigateur envoie le fichier à `/api/media/imgbb`; la route contrôle type, taille, scope et rôle avant d’appeler ImgBB avec la clé serveur `IMGBB_API_KEY`.
 
+Pendant la migration des variables Vercel, l’ancien nom `VITE_IMGBB_API_KEY` reste un fallback serveur uniquement. Il est explicitement filtré de la configuration client et doit être remplacé par `IMGBB_API_KEY`.
+
 La route historique `/api/media/upload` ne permet plus de téléverser des images. Son `GET` reste disponible uniquement pour lire les anciennes images Blob déjà enregistrées.
 
 ### Vidéos
