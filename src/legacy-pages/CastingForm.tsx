@@ -68,7 +68,7 @@ const CastingForm: React.FC = () => {
 
   const validateStep = (targetStep: number) => {
     if (targetStep === 0) {
-      if (!form.firstName.trim() || !form.lastName.trim() || !form.birthDate || !form.city.trim() || !form.email.trim() || !form.phone.trim()) {
+      if (!form.firstName.trim() || !form.lastName.trim() || !form.birthDate || !form.nationality.trim() || !form.city.trim() || !form.email.trim() || !form.phone.trim()) {
         return 'Complétez tous les champs obligatoires avant de continuer.';
       }
       if (!isValidEmail(form.email)) return 'Saisissez une adresse email valide.';

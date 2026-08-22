@@ -109,7 +109,7 @@ Les secrets ne doivent jamais être ajoutés au dépôt ni exposés dans des var
 Toutes les nouvelles images sont téléversées vers ImgBB par la route serveur `/api/media/imgbb`.
 
 - La clé `IMGBB_API_KEY` reste exclusivement côté serveur.
-- L’ancien nom `VITE_IMGBB_API_KEY` est accepté temporairement uniquement côté serveur et explicitement exclu du bundle client pendant la migration Vercel.
+- Les anciens noms préfixés `VITE_` ne sont plus acceptés et restent explicitement exclus du bundle client.
 - Casting public : upload ImgBB limité au scope `casting`, sans accès à la médiathèque.
 - Images administratives et profils : upload ImgBB avec contrôle du rôle côté serveur.
 - Spots Fashion Day : YouTube ou upload Blob client authentifié.

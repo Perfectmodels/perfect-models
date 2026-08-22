@@ -16,13 +16,6 @@ function getImgBBConfiguration() {
   if (process.env.IMGBB_API_KEY) {
     return { apiKey: process.env.IMGBB_API_KEY, configuration: 'server' as const };
   }
-
-  // Temporary migration path. This legacy name is explicitly excluded from
-  // the client bundle in next.config.mjs and is consumed only by this route.
-  if (process.env.VITE_IMGBB_API_KEY) {
-    return { apiKey: process.env.VITE_IMGBB_API_KEY, configuration: 'legacy-server' as const };
-  }
-
   return { apiKey: '', configuration: 'missing' as const };
 }
 

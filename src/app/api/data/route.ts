@@ -36,7 +36,7 @@ export async function PUT(request:Request){
   if(p?.role==='admin'){
     for(const[k,v]of Object.entries(body)){
       if(k==='apiKeys'||typeof v==='undefined')continue;
-      await setCollection(k,v,p.userId,'admin-replace');
+      await setCollection(k,v);
     }
     return NextResponse.json({success:true});
   }
@@ -47,7 +47,7 @@ export async function PUT(request:Request){
     const index=current.findIndex(i=>String(i?.id)===String(p.profileId));
     if(index<0)return NextResponse.json({error:'Profil introuvable.'},{status:404});
     current[index]={...current[index],...submitted,id:p.profileId,authUserId:p.userId,firebaseUid:p.userId,email:p.email,username:p.identifier,isActive:true,status:'active'};
-    await setCollection('models',current,p.userId,'student-profile-update');
+    await setCollection('models',current);
     return NextResponse.json({success:true});
   }
   let accepted=0;
@@ -57,7 +57,7 @@ export async function PUT(request:Request){
     const incoming=collectionToArray(body[key]);
     const seen=new Set(before.map(i=>String(i?.id??JSON.stringify(i))));
     for(const item of incoming){const id=String(item?.id??JSON.stringify(item));if(!seen.has(id)){before.push(item);seen.add(id)}}
-    await setCollection(key,before,null,'public-intake');
+    await setCollection(key,before);
     accepted++;
   }
   if(!accepted)return NextResponse.json({error:'Non autorisé.'},{status:401});
