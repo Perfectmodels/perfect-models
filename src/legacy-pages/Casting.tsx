@@ -18,10 +18,10 @@ const CASTING_DATE = '2026-08-22T15:00:00+01:00';
 const CASTING_LOCATION = 'Complexe Eli (ancien Sobraga), Libreville';
 
 const INFO = [
-  { icon: CalendarDaysIcon, label: 'Date', value: 'Samedi 22 août 2026' },
-  { icon: CalendarDaysIcon, label: 'Heure', value: '15h00' },
-  { icon: MapPinIcon, label: 'Lieu', value: CASTING_LOCATION },
-  { icon: IdentificationIcon, label: 'Document', value: "Pièce d'identité" },
+  { icon: CalendarDaysIcon, label: 'Session précédente', value: '22 août 2026' },
+  { icon: CalendarDaysIcon, label: 'Candidatures', value: 'Ouvertes en continu' },
+  { icon: MapPinIcon, label: 'Agence', value: 'Perfect Models Management Gabon' },
+  { icon: IdentificationIcon, label: 'Profil', value: 'Nouveaux talents' },
 ];
 
 const DRESS_CODE = [
@@ -40,9 +40,9 @@ const EVALUATION = [
 
 const PROCESS = [
   ['01', 'Candidature', 'Remplissez le formulaire en ligne avec vos informations, mensurations et photos.'],
-  ['02', 'Pré-sélection', "L'équipe PMM examine les profils reçus et prépare la liste des candidats à rencontrer."],
-  ['03', 'Casting physique', 'Présentation devant le jury, marche, posture et prise de vue rapide.'],
-  ['04', 'Résultats', 'Les candidats retenus sont contactés avec les prochaines étapes d’intégration.'],
+  ['02', 'Étude du profil', "L'équipe PMM examine les candidatures reçues tout au long de l'année."],
+  ['03', 'Prise de contact', 'Les profils correspondant aux besoins de l’agence sont contactés pour une rencontre, un casting ou une étape complémentaire.'],
+  ['04', 'Intégration', 'Les candidats retenus reçoivent les prochaines étapes pour rejoindre Perfect Models Management.'],
 ];
 
 const Casting: React.FC = () => {
@@ -78,8 +78,8 @@ const Casting: React.FC = () => {
   return (
     <div className="bg-pm-dark text-pm-off-white overflow-x-hidden">
       <SEO
-        title="Casting PMM — 22 août 2026"
-        description="Casting Perfect Models Management à Libreville le 22 août 2026 à 15h00. Consultez les informations pratiques et déposez votre candidature en ligne."
+        title="Candidature mannequin | Perfect Models Management"
+        description="Les candidatures mannequins Perfect Models Management restent ouvertes toute l’année. Déposez votre profil, vos mensurations et vos photos en ligne."
         image={data.siteImages.castingBg}
         type="event"
         schema={eventSchema}
@@ -96,25 +96,22 @@ const Casting: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-black/75 via-pm-dark/55 to-pm-dark" />
 
         <div className="relative z-10 max-w-5xl mx-auto px-5 text-center">
-          <span className="section-label">Casting officiel 2026</span>
+          <span className="section-label">Candidatures mannequins ouvertes</span>
           <h1 className="mt-4 text-5xl sm:text-7xl lg:text-8xl font-playfair font-black italic leading-[0.95] text-white">
             Votre présence peut<br /><span className="gold-gradient-text">ouvrir une carrière.</span>
           </h1>
           <p className="mt-6 max-w-2xl mx-auto text-white/55 leading-relaxed">
-            Perfect Models Management rencontre de nouveaux profils pour renforcer son roster et préparer ses prochaines productions mode, campagnes et défilés.
+            Le casting du 22 août est terminé, mais Perfect Models Management continue de recevoir les candidatures de nouveaux profils pour ses prochaines productions, campagnes, shootings et défilés.
           </p>
 
-          {upcoming ? (
-            <>
-              <div className="mt-8 flex justify-center"><CountdownTimer targetDate={CASTING_DATE} /></div>
-              <div className="mt-9 flex flex-col sm:flex-row gap-4 justify-center">
-                <Link to="/casting-formulaire" className="btn-premium">Déposer ma candidature</Link>
-                <a href="#informations" className="btn-premium bg-transparent text-white border-white/25">Voir les informations</a>
-              </div>
-            </>
-          ) : (
-            <div className="mt-8 inline-flex px-5 py-3 border border-pm-gold/30 text-pm-gold text-xs uppercase tracking-widest font-black">
-              Session terminée — les candidatures spontanées restent ouvertes
+          {upcoming && <div className="mt-8 flex justify-center"><CountdownTimer targetDate={CASTING_DATE} /></div>}
+          <div className="mt-9 flex flex-col sm:flex-row gap-4 justify-center">
+            <Link to="/casting-formulaire" className="btn-premium">Déposer ma candidature</Link>
+            <a href="#informations" className="btn-premium bg-transparent text-white border-white/25">En savoir plus</a>
+          </div>
+          {!upcoming && (
+            <div className="mt-6 inline-flex px-5 py-3 border border-pm-gold/30 text-pm-gold text-xs uppercase tracking-widest font-black">
+              Candidatures spontanées ouvertes toute l’année
             </div>
           )}
         </div>
@@ -136,9 +133,9 @@ const Casting: React.FC = () => {
         <div className="page-container grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
           <div>
             <span className="section-label">Préparation</span>
-            <h2 className="mt-3 text-4xl sm:text-5xl font-playfair font-black italic text-white">Comment venir au casting</h2>
+            <h2 className="mt-3 text-4xl sm:text-5xl font-playfair font-black italic text-white">Préparez votre candidature</h2>
             <p className="mt-5 text-white/45 leading-relaxed">
-              L'objectif est de voir votre silhouette, votre démarche et votre présence de la manière la plus naturelle possible. Évitez les tenues et accessoires qui masquent votre profil.
+              Présentez-vous de la manière la plus naturelle possible. Les photos doivent permettre à l’agence d’apprécier clairement votre silhouette, votre visage et votre potentiel.
             </p>
             <div className="mt-7 space-y-4">
               {DRESS_CODE.map(item => (
@@ -167,7 +164,7 @@ const Casting: React.FC = () => {
 
       <section className="page-container">
         <span className="section-label">Parcours candidat</span>
-        <h2 className="mt-3 text-4xl sm:text-5xl font-playfair font-black italic text-white">Le processus en quatre étapes</h2>
+        <h2 className="mt-3 text-4xl sm:text-5xl font-playfair font-black italic text-white">Votre candidature en quatre étapes</h2>
         <div className="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-white/5">
           {PROCESS.map(([number, title, description]) => (
             <div key={number} className="bg-pm-dark p-7 sm:p-8 min-h-64">
@@ -181,9 +178,9 @@ const Casting: React.FC = () => {
 
       <section className="bg-pm-gold text-pm-dark">
         <div className="page-container text-center">
-          <span className="text-[10px] uppercase tracking-[0.35em] font-black opacity-55">Candidature en ligne</span>
-          <h2 className="mt-3 text-4xl sm:text-6xl font-playfair font-black italic">Prêt à présenter votre profil ?</h2>
-          <p className="mt-4 max-w-2xl mx-auto opacity-70">Préparez vos informations personnelles, vos mensurations et au moins une photo récente avant de commencer.</p>
+          <span className="text-[10px] uppercase tracking-[0.35em] font-black opacity-55">Candidature en ligne permanente</span>
+          <h2 className="mt-3 text-4xl sm:text-6xl font-playfair font-black italic">Envie de rejoindre Perfect Models Management ?</h2>
+          <p className="mt-4 max-w-2xl mx-auto opacity-70">Le formulaire reste ouvert après le casting. Préparez vos informations personnelles, vos mensurations et au moins une photo récente.</p>
           <Link to="/casting-formulaire" className="mt-8 inline-flex items-center gap-3 bg-pm-dark text-pm-gold px-8 py-4 text-xs uppercase tracking-widest font-black">
             Commencer ma candidature <ArrowRightIcon className="w-5 h-5" />
           </Link>
