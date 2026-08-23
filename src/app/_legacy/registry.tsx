@@ -17,8 +17,8 @@ export const ServiceDetail = dynamic(() => import('@/legacy-pages/ServiceDetail'
 export const Casting = dynamic(() => import('@/legacy-pages/Casting'));
 export const CastingForm = dynamic(() => import('@/legacy-pages/CastingForm'));
 export const FashionDayApplicationForm = dynamic(() => import('@/legacy-pages/FashionDayApplicationForm'));
-export const Login = dynamic(() => import('@/legacy-pages/Login'));
-export const PhoneLogin = dynamic(() => import('@/legacy-pages/PhoneLogin'));
+export const Login = dynamic(() => import('@/legacy-pages/Login'), { ssr: false });
+export const PhoneLogin = dynamic(() => import('@/legacy-pages/PhoneLogin'), { ssr: false });
 export const PrivacyPolicy = dynamic(() => import('@/legacy-pages/PrivacyPolicy'));
 export const TermsOfUse = dynamic(() => import('@/legacy-pages/TermsOfUse'));
 export const Gallery = dynamic(() => import('@/legacy-pages/Gallery'));
