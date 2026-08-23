@@ -10,22 +10,10 @@ export const dynamic = 'force-dynamic';
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.perfectmodels.online';
 const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
 const DEFAULT_FROM_EMAIL = process.env.DEFAULT_FROM_EMAIL || 'contact@perfectmodels.online';
+const CREDENTIALS_SUBJECT = 'Votre profil PMM est validé — vos accès mannequin';
 
-const slug = (value: unknown) =>
-  String(value || '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-
-const escapeHtml = (value: unknown) =>
-  String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+const slug = (value: unknown) => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+const escapeHtml = (value: unknown) => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 
 function generateTemporaryPassword(length = 14) {
   const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
@@ -46,11 +34,7 @@ function generateTemporaryPassword(length = 14) {
 function nextUsername(models: any[], firstName: string) {
   const initial = (firstName.trim().charAt(0) || 'M').toUpperCase().replace(/[^A-Z]/g, '') || 'M';
   const prefix = `Man-PMM${initial}`;
-  const numbers = models
-    .map((model) => String(model?.username || ''))
-    .filter((username) => username.startsWith(prefix))
-    .map((username) => Number.parseInt(username.slice(prefix.length), 10))
-    .filter(Number.isFinite);
+  const numbers = models.map((model) => String(model?.username || '')).filter((username) => username.startsWith(prefix)).map((username) => Number.parseInt(username.slice(prefix.length), 10)).filter(Number.isFinite);
   const next = numbers.length ? Math.max(...numbers) + 1 : 1;
   return `${prefix}${String(next).padStart(2, '0')}`;
 }
@@ -65,16 +49,9 @@ function experienceText(value: unknown) {
   }
 }
 
-async function sendCredentialsEmail(input: {
-  to: string;
-  name: string;
-  username: string;
-  password: string;
-}) {
-  const apiKey = process.env.BREVO_API_KEY;
-  if (!apiKey) throw new Error('BREVO_API_KEY non configurée.');
+function credentialsEmailHtml(input: { to: string; name: string; username: string; password: string }) {
   const loginUrl = `${SITE_URL.replace(/\/$/, '')}/login`;
-  const htmlContent = `
+  return `
     <html><body style="margin:0;background:#080808;font-family:Arial,sans-serif;color:#f5f5f5">
       <div style="max-width:620px;margin:0 auto;padding:36px 24px">
         <div style="border:1px solid #b9965b;background:#101010;padding:32px;border-radius:14px">
@@ -92,36 +69,56 @@ async function sendCredentialsEmail(input: {
         </div>
       </div>
     </body></html>`;
+}
 
+async function sendCredentialsEmail(input: { to: string; name: string; username: string; password: string }) {
+  const apiKey = process.env.BREVO_API_KEY;
+  if (!apiKey) throw new Error('BREVO_API_KEY non configurée.');
+  const htmlContent = credentialsEmailHtml(input);
   let lastError = '';
   for (let attempt = 1; attempt <= 2; attempt++) {
     const response = await fetch(BREVO_API_URL, {
       method: 'POST',
-      headers: {
-        accept: 'application/json',
-        'content-type': 'application/json',
-        'api-key': apiKey,
-      },
-      body: JSON.stringify({
-        sender: { name: 'Perfect Models Management', email: DEFAULT_FROM_EMAIL },
-        to: [{ email: input.to, name: input.name }],
-        subject: 'Votre profil PMM est validé — vos accès mannequin',
-        htmlContent,
-      }),
+      headers: { accept: 'application/json', 'content-type': 'application/json', 'api-key': apiKey },
+      body: JSON.stringify({ sender: { name: 'Perfect Models Management', email: DEFAULT_FROM_EMAIL }, to: [{ email: input.to, name: input.name }], subject: CREDENTIALS_SUBJECT, htmlContent }),
       cache: 'no-store',
     });
-    if (response.ok) return response.json().catch(() => ({}));
-    const body = await response.json().catch(() => ({}));
-    lastError = String(body?.message || `Brevo ${response.status}`);
+    const result = await response.json().catch(() => ({}));
+    if (response.ok) return result;
+    lastError = String(result?.message || `Brevo ${response.status}`);
   }
   throw new Error(lastError || 'Envoi de l’email impossible.');
 }
 
+async function archiveCredentialsEmail(input: { applicationId: string; modelId: string; to: string; name: string; username: string; providerMessageId?: string }) {
+  const sentAt = new Date().toISOString();
+  const messages = collectionToArray(await getCollection('contactMessages'));
+  const archiveId = `credentials-${slug(input.applicationId)}-${Date.now()}`;
+  messages.push({
+    id: archiveId,
+    submissionDate: sentAt,
+    status: 'Lu',
+    name: 'Perfect Models Management',
+    email: input.to,
+    subject: CREDENTIALS_SUBJECT,
+    message: `Compte mannequin créé et identifiants envoyés à ${input.name}.\n\nIdentifiant : ${input.username}\nAdresse de connexion : ${input.to}\nMot de passe temporaire : [non archivé pour des raisons de sécurité]\n\nLe mannequin peut modifier son mot de passe à la première connexion.`,
+    folder: 'sent',
+    label: 'Casting',
+    direction: 'outbound',
+    messageType: 'account_credentials',
+    deliveryStatus: 'accepted_by_brevo',
+    provider: 'brevo',
+    providerMessageId: input.providerMessageId || '',
+    castingApplicationId: input.applicationId,
+    modelId: input.modelId,
+    recipientName: input.name,
+  });
+  await setCollection('contactMessages', messages);
+}
+
 export async function POST(request: Request) {
   const admin = await getCurrentAppProfile();
-  if (!admin || admin.role !== 'admin') {
-    return NextResponse.json({ error: 'Accès administrateur requis.' }, { status: 403 });
-  }
+  if (!admin || admin.role !== 'admin') return NextResponse.json({ error: 'Accès administrateur requis.' }, { status: 403 });
 
   const body = await request.json().catch(() => ({}));
   const applicationId = String(body?.applicationId || '').trim();
@@ -131,144 +128,69 @@ export async function POST(request: Request) {
   const appIndex = applications.findIndex((item) => String(item?.id || '') === applicationId);
   if (appIndex < 0) return NextResponse.json({ error: 'Candidature introuvable.' }, { status: 404 });
   const application = applications[appIndex] as any;
-
-  if (application.status !== 'Accepté') {
-    return NextResponse.json({ error: 'La candidature doit être acceptée avant la création du compte.' }, { status: 409 });
-  }
-  if (!String(application.email || '').includes('@')) {
-    return NextResponse.json({ error: 'La candidature ne contient pas une adresse email valide.' }, { status: 400 });
-  }
+  if (application.status !== 'Accepté') return NextResponse.json({ error: 'La candidature doit être acceptée avant la création du compte.' }, { status: 409 });
+  if (!String(application.email || '').includes('@')) return NextResponse.json({ error: 'La candidature ne contient pas une adresse email valide.' }, { status: 400 });
 
   const models = collectionToArray(await getCollection('models'));
   const fullName = `${String(application.firstName || '').trim()} ${String(application.lastName || '').trim()}`.trim();
-  const existingIndex = models.findIndex((model) =>
-    String(model?.castingApplicationId || '') === applicationId ||
-    String(model?.id || '') === String(application.modelId || '') ||
-    String(model?.name || '').trim().toLowerCase() === fullName.toLowerCase()
-  );
+  const existingIndex = models.findIndex((model) => String(model?.castingApplicationId || '') === applicationId || String(model?.id || '') === String(application.modelId || '') || String(model?.name || '').trim().toLowerCase() === fullName.toLowerCase());
   const existingModel = existingIndex >= 0 ? models[existingIndex] : null;
 
   if (application.accountProvisionedAt && existingModel?.firebaseUid && existingModel.firebaseUid !== 'server-pending') {
-    return NextResponse.json({
-      success: true,
-      alreadyProvisioned: true,
-      modelId: existingModel.id,
-      username: existingModel.username,
-      email: existingModel.email,
-    });
+    return NextResponse.json({ success: true, alreadyProvisioned: true, modelId: existingModel.id, username: existingModel.username, email: existingModel.email, credentialsEmailStatus: application.credentialsEmailStatus || null });
   }
 
   const username = String(existingModel?.username || '').trim() || nextUsername(models, String(application.firstName || ''));
   const modelId = String(existingModel?.id || '').trim() || `${slug(application.lastName)}-${slug(application.firstName)}-${slug(application.id)}`;
   const email = String(application.email).trim().toLowerCase();
   const password = generateTemporaryPassword();
-  const age = application.birthDate
-    ? Math.max(0, new Date().getFullYear() - new Date(application.birthDate).getFullYear())
-    : undefined;
+  const age = application.birthDate ? Math.max(0, new Date().getFullYear() - new Date(application.birthDate).getFullYear()) : undefined;
 
   let authResult: any;
   try {
     authResult = await firebaseSignUp(email, password, fullName);
   } catch (error: any) {
-    const message = String(error?.message || '');
-    if (message.includes('EMAIL_EXISTS')) {
-      return NextResponse.json({
-        error: 'Un compte Firebase existe déjà avec l’adresse email de cette candidature. Utilisez la récupération de mot de passe ou liez ce compte manuellement avant de réessayer.',
-      }, { status: 409 });
-    }
+    if (String(error?.message || '').includes('EMAIL_EXISTS')) return NextResponse.json({ error: 'Un compte Firebase existe déjà avec l’adresse email de cette candidature. Utilisez la récupération de mot de passe ou liez ce compte manuellement avant de réessayer.' }, { status: 409 });
     throw error;
   }
 
   const userId = String(authResult?.localId || '');
   if (!userId) return NextResponse.json({ error: 'Firebase n’a pas retourné d’identifiant utilisateur.' }, { status: 502 });
-
   const now = new Date().toISOString();
   const newModel = {
-    ...(existingModel || {}),
-    id: modelId,
-    name: fullName,
-    username,
-    password: '',
-    email,
-    firebaseUid: userId,
-    authUserId: userId,
-    castingApplicationId: applicationId,
-    phone: application.phone || existingModel?.phone || '',
-    age,
+    ...(existingModel || {}), id: modelId, name: fullName, username, password: '', email, firebaseUid: userId, authUserId: userId, castingApplicationId: applicationId,
+    phone: application.phone || existingModel?.phone || '', age,
     height: String(application.height || '').endsWith('cm') ? String(application.height) : `${application.height || '0'}cm`,
-    gender: application.gender,
-    location: application.city || '',
-    imageUrl: application.photoPortraitUrl || application.photoFullBodyUrl || existingModel?.imageUrl || '/logo.svg',
+    gender: application.gender, location: application.city || '', imageUrl: application.photoPortraitUrl || application.photoFullBodyUrl || existingModel?.imageUrl || '/logo.svg',
     portfolioImages: [application.photoPortraitUrl, application.photoFullBodyUrl, application.photoProfileUrl, ...(existingModel?.portfolioImages || [])].filter(Boolean).filter((url: string, index: number, list: string[]) => list.indexOf(url) === index),
-    isPublic: existingModel?.isPublic ?? false,
-    level: existingModel?.level || 'Débutant',
-    distinctions: existingModel?.distinctions || [],
-    measurements: {
-      chest: `${application.chest || '0'}cm`,
-      waist: `${application.waist || '0'}cm`,
-      hips: `${application.hips || '0'}cm`,
-      shoeSize: String(application.shoeSize || '0'),
-    },
-    categories: existingModel?.categories?.length ? existingModel.categories : ['Défilé', 'Commercial'],
-    experience: existingModel?.experience || experienceText(application.experience),
-    journey: existingModel?.journey || 'Profil issu du casting Perfect Models Management.',
-    quizScores: existingModel?.quizScores || {},
-    permissions: existingModel?.permissions || {
-      canAccessFormation: true,
-      canAccessClassroom: true,
-      canAccessForum: true,
-      canViewPhotoshootBriefs: true,
-      canViewResults: true,
-      canEditProfile: true,
-      isActive: true,
-    },
-    createdAt: existingModel?.createdAt || now,
-    accountProvisionedAt: now,
+    isPublic: existingModel?.isPublic ?? false, level: existingModel?.level || 'Débutant', distinctions: existingModel?.distinctions || [],
+    measurements: { chest: `${application.chest || '0'}cm`, waist: `${application.waist || '0'}cm`, hips: `${application.hips || '0'}cm`, shoeSize: String(application.shoeSize || '0') },
+    categories: existingModel?.categories?.length ? existingModel.categories : ['Défilé', 'Commercial'], experience: existingModel?.experience || experienceText(application.experience), journey: existingModel?.journey || 'Profil issu du casting Perfect Models Management.', quizScores: existingModel?.quizScores || {},
+    permissions: existingModel?.permissions || { canAccessFormation: true, canAccessClassroom: true, canAccessForum: true, canViewPhotoshootBriefs: true, canViewResults: true, canEditProfile: true, isActive: true },
+    createdAt: existingModel?.createdAt || now, accountProvisionedAt: now,
   };
 
-  await firebaseDatabasePut(`users/${userId}`, {
-    id: userId,
-    email,
-    name: fullName,
-    identifier: username,
-    matricule: username,
-    role: 'student',
-    app_role: 'student',
-    profileId: modelId,
-    status: 'active',
-    mustChangePassword: true,
-    permissions: newModel.permissions,
-    createdAt: now,
-  }, authResult.idToken || undefined);
-
-  if (existingIndex >= 0) models[existingIndex] = newModel;
-  else models.push(newModel);
+  await firebaseDatabasePut(`users/${userId}`, { id: userId, email, name: fullName, identifier: username, matricule: username, role: 'student', app_role: 'student', profileId: modelId, status: 'active', mustChangePassword: true, permissions: newModel.permissions, createdAt: now }, authResult.idToken || undefined);
+  if (existingIndex >= 0) models[existingIndex] = newModel; else models.push(newModel);
   await setCollection('models', models);
 
-  applications[appIndex] = {
-    ...application,
-    status: 'Accepté',
-    modelId,
-    authUserId: userId,
-    accountProvisionedAt: now,
-    credentialsEmailStatus: 'pending',
-  };
+  applications[appIndex] = { ...application, status: 'Accepté', modelId, authUserId: userId, accountProvisionedAt: now, credentialsEmailStatus: 'pending' };
   await setCollection('castingApplications', applications);
 
   try {
-    await sendCredentialsEmail({ to: email, name: fullName, username, password });
-    applications[appIndex] = { ...applications[appIndex], credentialsEmailStatus: 'sent', credentialsSentAt: new Date().toISOString() };
+    const brevoResult = await sendCredentialsEmail({ to: email, name: fullName, username, password });
+    const sentAt = new Date().toISOString();
+    applications[appIndex] = { ...applications[appIndex], credentialsEmailStatus: 'sent', credentialsSentAt: sentAt, credentialsEmailProviderId: String(brevoResult?.messageId || '') };
     await setCollection('castingApplications', applications);
+    try {
+      await archiveCredentialsEmail({ applicationId, modelId, to: email, name: fullName, username, providerMessageId: String(brevoResult?.messageId || '') });
+    } catch (archiveError: any) {
+      console.error('Credential email sent but archive failed', String(archiveError?.message || archiveError));
+    }
   } catch (emailError: any) {
     applications[appIndex] = { ...applications[appIndex], credentialsEmailStatus: 'failed', credentialsEmailError: String(emailError?.message || 'Erreur Brevo') };
     await setCollection('castingApplications', applications);
-    return NextResponse.json({
-      success: true,
-      warning: 'Le compte a été créé mais l’email des identifiants n’a pas pu être envoyé.',
-      modelId,
-      username,
-      email,
-    }, { status: 207 });
+    return NextResponse.json({ success: true, warning: 'Le compte a été créé mais l’email des identifiants n’a pas pu être envoyé.', modelId, username, email }, { status: 207 });
   }
 
   return NextResponse.json({ success: true, modelId, username, email, credentialsSent: true });
