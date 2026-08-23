@@ -2,24 +2,29 @@
 
 import dynamic from 'next/dynamic';
 
-export const Home = dynamic(() => import('@/legacy-pages/Home'), { ssr: false });
-export const Agency = dynamic(() => import('@/legacy-pages/Agency'), { ssr: false });
-export const Models = dynamic(() => import('@/legacy-pages/Models'), { ssr: false });
-export const ModelDetail = dynamic(() => import('@/legacy-pages/ModelDetail'), { ssr: false });
-export const FashionDay = dynamic(() => import('@/legacy-pages/FashionDay'), { ssr: false });
-export const Magazine = dynamic(() => import('@/legacy-pages/Magazine'), { ssr: false });
-export const ArticleDetail = dynamic(() => import('@/legacy-pages/ArticleDetail'), { ssr: false });
-export const Contact = dynamic(() => import('@/legacy-pages/Contact'), { ssr: false });
-export const Services = dynamic(() => import('@/legacy-pages/Services'), { ssr: false });
-export const ServiceDetail = dynamic(() => import('@/legacy-pages/ServiceDetail'), { ssr: false });
-export const Casting = dynamic(() => import('@/legacy-pages/Casting'), { ssr: false });
-export const CastingForm = dynamic(() => import('@/legacy-pages/CastingForm'), { ssr: false });
-export const FashionDayApplicationForm = dynamic(() => import('@/legacy-pages/FashionDayApplicationForm'), { ssr: false });
+// Public routes are server-rendered by default. They remain hydrated client components
+// only where interactions require it, but their HTML is present in the initial response.
+export const Home = dynamic(() => import('@/legacy-pages/Home'));
+export const Agency = dynamic(() => import('@/legacy-pages/Agency'));
+export const Models = dynamic(() => import('@/legacy-pages/Models'));
+export const ModelDetail = dynamic(() => import('@/legacy-pages/ModelDetail'));
+export const FashionDay = dynamic(() => import('@/legacy-pages/FashionDay'));
+export const Magazine = dynamic(() => import('@/legacy-pages/Magazine'));
+export const ArticleDetail = dynamic(() => import('@/legacy-pages/ArticleDetail'));
+export const Contact = dynamic(() => import('@/legacy-pages/Contact'));
+export const Services = dynamic(() => import('@/legacy-pages/Services'));
+export const ServiceDetail = dynamic(() => import('@/legacy-pages/ServiceDetail'));
+export const Casting = dynamic(() => import('@/legacy-pages/Casting'));
+export const CastingForm = dynamic(() => import('@/legacy-pages/CastingForm'));
+export const FashionDayApplicationForm = dynamic(() => import('@/legacy-pages/FashionDayApplicationForm'));
 export const Login = dynamic(() => import('@/legacy-pages/Login'), { ssr: false });
 export const PhoneLogin = dynamic(() => import('@/legacy-pages/PhoneLogin'), { ssr: false });
-export const PrivacyPolicy = dynamic(() => import('@/legacy-pages/PrivacyPolicy'), { ssr: false });
-export const TermsOfUse = dynamic(() => import('@/legacy-pages/TermsOfUse'), { ssr: false });
-export const Gallery = dynamic(() => import('@/legacy-pages/Gallery'), { ssr: false });
+export const PrivacyPolicy = dynamic(() => import('@/legacy-pages/PrivacyPolicy'));
+export const TermsOfUse = dynamic(() => import('@/legacy-pages/TermsOfUse'));
+export const Gallery = dynamic(() => import('@/legacy-pages/Gallery'));
+
+// Authenticated application surfaces keep browser-only rendering for now because
+// they depend on session state and interactive dashboards rather than public SEO.
 export const AdvancedTraining = dynamic(() => import('@/legacy-pages/AdvancedTraining'), { ssr: false });
 export const TrainingModuleView = dynamic(() => import('@/legacy-pages/TrainingModuleView'), { ssr: false });
 export const Activity = dynamic(() => import('@/legacy-pages/Activity'), { ssr: false });
@@ -57,7 +62,7 @@ export const AdminGallery = dynamic(() => import('@/legacy-pages/AdminGallery'),
 export const AdminMailing = dynamic(() => import('@/legacy-pages/AdminMailing'), { ssr: false });
 export const AdminBeautyContest = dynamic(() => import('@/legacy-pages/AdminBeautyContest'), { ssr: false });
 export const AdminUserPermissions = dynamic(() => import('@/legacy-pages/AdminUserPermissions'), { ssr: false });
-export const NotFound = dynamic(() => import('@/legacy-pages/NotFound'), { ssr: false });
+export const NotFound = dynamic(() => import('@/legacy-pages/NotFound'));
 
 export const legacyPages = {
   Home, Agency, Models, ModelDetail, FashionDay, Magazine, ArticleDetail, Contact,

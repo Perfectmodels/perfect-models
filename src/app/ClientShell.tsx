@@ -1,17 +1,21 @@
 'use client';
 
-import dynamic from 'next/dynamic';
-import type { PropsWithChildren } from 'react';
+import { Suspense, type PropsWithChildren } from 'react';
+import Providers from './Providers';
+import type { AppData } from '@/hooks/useRealtimeDB';
 
-const Providers = dynamic(() => import('./Providers'), {
-  ssr: false,
-  loading: () => (
+function ShellFallback() {
+  return (
     <div className="flex min-h-screen items-center justify-center bg-pm-dark">
       <img src="/logo.svg" alt="PMM" className="h-24 w-24 animate-pulse" />
     </div>
-  ),
-});
+  );
+}
 
-export default function ClientShell({ children }: PropsWithChildren) {
-  return <Providers>{children}</Providers>;
+export default function ClientShell({ children, initialData }: PropsWithChildren<{ initialData?: Partial<AppData> | null }>) {
+  return (
+    <Suspense fallback={<ShellFallback />}>
+      <Providers initialData={initialData}>{children}</Providers>
+    </Suspense>
+  );
 }

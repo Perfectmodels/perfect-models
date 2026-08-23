@@ -4,6 +4,7 @@ import ClientShell from './ClientShell';
 import { Analytics } from '@vercel/analytics/react';
 import JsonLd from '@/components/JsonLd';
 import { absoluteRuntimeUrl, buildOrganizationJsonLd, buildWebsiteJsonLd, getSiteRuntimeConfig } from '@/lib/site-runtime';
+import { getPublicAppState } from '@/lib/public-app-state';
 
 const googleVerification = process.env.GOOGLE_SITE_VERIFICATION || process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || undefined;
 
@@ -52,7 +53,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export const viewport: Viewport = { width: 'device-width', initialScale: 1, themeColor: '#0A0A0A', colorScheme: 'dark' };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const config = await getSiteRuntimeConfig();
+  const [config, initialData] = await Promise.all([getSiteRuntimeConfig(), getPublicAppState()]);
   return (
     <html lang={config.language}>
       <head>
@@ -62,8 +63,8 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       </head>
       <body>
         <JsonLd data={[buildOrganizationJsonLd(config), buildWebsiteJsonLd(config)]} />
-        <noscript>JavaScript est nécessaire pour utiliser ce site.</noscript>
-        <ClientShell>{children}</ClientShell>
+        <noscript>JavaScript est nécessaire pour les fonctions interactives de ce site.</noscript>
+        <ClientShell initialData={initialData}>{children}</ClientShell>
         <Analytics />
       </body>
     </html>

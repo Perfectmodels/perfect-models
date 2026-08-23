@@ -122,7 +122,7 @@ const emptyData = (): AppData => ({
   mailingContacts: [],
 });
 
-const normalize = (raw: any): AppData => {
+export const normalizeAppData = (raw: any): AppData => {
   const merged: any = { ...emptyData(), ...(raw && typeof raw === 'object' ? raw : {}) };
   for (const key of ARRAY_KEYS) merged[key] = dedupe(arr(merged[key]));
   // Secrets remain server-only and must never be hydrated into browser state.
@@ -130,18 +130,18 @@ const normalize = (raw: any): AppData => {
   return merged as AppData;
 };
 
-export const useRealtimeDB = () => {
-  const [data, setData] = useState<AppData | null>(null);
-  const [isInitialized, setInitialized] = useState(false);
+export const useRealtimeDB = (initialData?: Partial<AppData> | null) => {
+  const hasInitialData = Boolean(initialData && typeof initialData === 'object');
+  const [data, setData] = useState<AppData | null>(() => hasInitialData ? normalizeAppData(initialData) : null);
+  const [isInitialized, setInitialized] = useState(hasInitialData);
 
   const load = useCallback(async () => {
     try {
       const response = await fetch('/api/data', { credentials: 'include', cache: 'no-store' });
       if (!response.ok) throw new Error(`API data ${response.status}`);
       const payload = await response.json();
-      setData(normalize(payload.data));
+      setData(normalizeAppData(payload.data));
     } catch (error) {
-      // Never inject demo/business seed data after a server failure: an empty state is safer than false data.
       logger.error('Server data load failed', error);
       setData((current) => current ?? emptyData());
     } finally {
@@ -150,6 +150,8 @@ export const useRealtimeDB = () => {
   }, []);
 
   useEffect(() => {
+    // Server-provided public state paints the first response. This refresh upgrades it
+    // with authenticated/private collections after hydration when the session permits.
     void load();
     const onAuthChanged = () => void load();
     const onVisible = () => { if (document.visibilityState === 'visible') void load(); };
@@ -174,7 +176,7 @@ export const useRealtimeDB = () => {
       const payload = await response.json().catch(() => ({}));
       throw new Error(payload.error || 'Sauvegarde serveur impossible');
     }
-    setData(normalize(newData));
+    setData(normalizeAppData(newData));
     LAZY_COLLECTIONS.forEach(invalidateCache);
   }, []);
 
