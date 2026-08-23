@@ -8,9 +8,11 @@ export const DEFAULT_DESCRIPTION =
   'Agence de mannequins, référence de la mode, du stylisme, du mannequinat et de la culture à Libreville, Gabon : booking, casting, formation, créateurs, défilés et événements avec Perfect Models Management.';
 
 export const SOCIAL_LINKS = [
-  'https://www.facebook.com/PerfectModels241',
-  'https://www.instagram.com/perfectmodelsmanagement_/',
-  'https://www.youtube.com/@perfectmodelsmanagement6013',
+  'https://www.facebook.com/perfectmodels.ga/',
+  'https://www.instagram.com/perfectmodels.ga/',
+  'https://www.tiktok.com/@perfectmodels.ga',
+  'https://www.youtube.com/@perfectmodelsga',
+  'https://whatsapp.com/channel/0029VbATGBK0wajp1ACtN82S',
 ];
 
 export const DEFAULT_KEYWORDS = [
