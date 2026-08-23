@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useData } from '../../contexts/DataContext';
-import { FacebookIcon, InstagramIcon, YoutubeIcon } from '../icons/SocialIcons';
+import { FacebookIcon, InstagramIcon, YoutubeIcon, TikTokIcon, WhatsAppIcon } from '../icons/SocialIcons';
 import { ArrowUpRightIcon } from '@heroicons/react/24/outline';
 
 const Footer: React.FC = () => {
@@ -127,23 +127,35 @@ const Footer: React.FC = () => {
                         )}
 
                         {/* Socials */}
-                        <div className="flex gap-4 sm:gap-6 mt-8 sm:mt-10">
+                        <div className="flex flex-wrap gap-4 sm:gap-6 mt-8 sm:mt-10">
                             {socialLinks?.facebook && (
-                                <a href={socialLinks.facebook} target="_blank" rel="noopener noreferrer"
+                                <a href={socialLinks.facebook} target="_blank" rel="noopener noreferrer" aria-label="Facebook Perfect Models Management"
                                     className="w-10 h-10 sm:w-9 sm:h-9 border border-white/10 flex items-center justify-center text-white/30 hover:border-pm-gold hover:text-pm-gold transition-all duration-300">
                                     <FacebookIcon className="w-4 h-4" />
                                 </a>
                             )}
                             {socialLinks?.instagram && (
-                                <a href={socialLinks.instagram} target="_blank" rel="noopener noreferrer"
+                                <a href={socialLinks.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram Perfect Models Management"
                                     className="w-10 h-10 sm:w-9 sm:h-9 border border-white/10 flex items-center justify-center text-white/30 hover:border-pm-gold hover:text-pm-gold transition-all duration-300">
                                     <InstagramIcon className="w-4 h-4" />
                                 </a>
                             )}
+                            {socialLinks?.tiktok && (
+                                <a href={socialLinks.tiktok} target="_blank" rel="noopener noreferrer" aria-label="TikTok Perfect Models Management"
+                                    className="w-10 h-10 sm:w-9 sm:h-9 border border-white/10 flex items-center justify-center text-white/30 hover:border-pm-gold hover:text-pm-gold transition-all duration-300">
+                                    <TikTokIcon className="w-4 h-4" />
+                                </a>
+                            )}
                             {socialLinks?.youtube && (
-                                <a href={socialLinks.youtube} target="_blank" rel="noopener noreferrer"
+                                <a href={socialLinks.youtube} target="_blank" rel="noopener noreferrer" aria-label="YouTube Perfect Models Management"
                                     className="w-10 h-10 sm:w-9 sm:h-9 border border-white/10 flex items-center justify-center text-white/30 hover:border-pm-gold hover:text-pm-gold transition-all duration-300">
                                     <YoutubeIcon className="w-4 h-4" />
+                                </a>
+                            )}
+                            {socialLinks?.whatsapp && (
+                                <a href={socialLinks.whatsapp} target="_blank" rel="noopener noreferrer" aria-label="Canal WhatsApp Perfect Models Management"
+                                    className="w-10 h-10 sm:w-9 sm:h-9 border border-white/10 flex items-center justify-center text-white/30 hover:border-pm-gold hover:text-pm-gold transition-all duration-300">
+                                    <WhatsAppIcon className="w-4 h-4" />
                                 </a>
                             )}
                         </div>
