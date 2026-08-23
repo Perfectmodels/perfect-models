@@ -2,6 +2,7 @@
 
 import { Suspense, type PropsWithChildren } from 'react';
 import Providers from './Providers';
+import type { AppData } from '@/hooks/useRealtimeDB';
 
 function ShellFallback() {
   return (
@@ -11,10 +12,10 @@ function ShellFallback() {
   );
 }
 
-export default function ClientShell({ children }: PropsWithChildren) {
+export default function ClientShell({ children, initialData }: PropsWithChildren<{ initialData?: Partial<AppData> | null }>) {
   return (
     <Suspense fallback={<ShellFallback />}>
-      <Providers>{children}</Providers>
+      <Providers initialData={initialData}>{children}</Providers>
     </Suspense>
   );
 }
