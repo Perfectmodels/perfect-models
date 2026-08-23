@@ -1,5 +1,5 @@
 import type { AppSessionProfile } from './auth/profile';
-export const PUBLIC_COLLECTIONS = new Set(['siteConfig','navLinks','socialLinks','agencyTimeline','agencyInfo','modelDistinctions','agencyServices','agencyAchievements','agencyPartners','models','fashionDayEvents','testimonials','articles','courseData','contactInfo','siteImages','newsItems','faqData','gallery','galleryAlbums']);
+export const PUBLIC_COLLECTIONS = new Set(['siteConfig','seoConfig','navLinks','socialLinks','agencyTimeline','agencyInfo','modelDistinctions','agencyServices','agencyAchievements','agencyPartners','models','fashionDayEvents','testimonials','articles','courseData','contactInfo','siteImages','newsItems','faqData','gallery','galleryAlbums']);
 export const INTAKE_COLLECTIONS = new Set(['castingApplications','fashionDayApplications','contactMessages','bookingRequests','recoveryRequests','articleComments','forumReplies','adminNotifications']);
 export const STUDENT_PRIVATE_COLLECTIONS = new Set(['absences','monthlyPayments','photoshootBriefs','forumThreads','forumReplies','articleComments']);
 export const JURY_COLLECTIONS = new Set(['castingApplications','beautyContests']);
