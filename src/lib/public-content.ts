@@ -1,6 +1,5 @@
 import type { Article, Model, Service, FashionDayEvent } from '@/types';
 import { collectionToArray, getCollection } from '@/lib/app-data';
-import { agencyServices as seedServices, models as seedModels } from '@/constants/data';
 
 async function safeCollection(key: string) {
   try {
@@ -28,15 +27,13 @@ export async function getPublicArticles(): Promise<Article[]> {
 
 export async function getPublicModels(): Promise<Model[]> {
   const remote = await safeCollection('models');
-  const source = (remote.length ? remote : seedModels) as Model[];
-  const published = source.filter((model) => model && model.isPublic !== false && Boolean(model.id));
+  const published = (remote as Model[]).filter((model) => model && model.isPublic !== false && Boolean(model.id));
   return uniqueBy(published, (model) => String(model.id));
 }
 
 export async function getPublicServices(): Promise<Service[]> {
   const remote = await safeCollection('agencyServices');
-  const source = (remote.length ? remote : seedServices) as Service[];
-  const published = source.filter((service) => service && !service.isComingSoon && Boolean(service.slug));
+  const published = (remote as Service[]).filter((service) => service && !service.isComingSoon && Boolean(service.slug));
   return uniqueBy(published, (service) => String(service.slug));
 }
 
@@ -49,16 +46,13 @@ export async function getFashionDayEvents(): Promise<Array<FashionDayEvent & { c
 }
 
 export async function getArticleBySlug(slug: string) {
-  const articles = await getPublicArticles();
-  return articles.find((article) => String(article.slug) === slug) || null;
+  return (await getPublicArticles()).find((article) => String(article.slug) === slug) || null;
 }
 
 export async function getModelById(id: string) {
-  const models = await getPublicModels();
-  return models.find((model) => String(model.id) === id) || null;
+  return (await getPublicModels()).find((model) => String(model.id) === id) || null;
 }
 
 export async function getServiceBySlug(slug: string) {
-  const services = await getPublicServices();
-  return services.find((service) => String(service.slug) === slug) || null;
+  return (await getPublicServices()).find((service) => String(service.slug) === slug) || null;
 }
