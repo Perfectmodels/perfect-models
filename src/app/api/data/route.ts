@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getCollections,setCollection,collectionToArray,getCollection } from '@/lib/app-data';
+import { getCollections,setCollection,collectionToArray,getCollection,KNOWN_COLLECTIONS } from '@/lib/app-data';
 import { getCurrentAppProfile } from '@/lib/auth/profile';
 import { canReadCollection,canWriteCollection,INTAKE_COLLECTIONS } from '@/lib/data-policy';
 export const dynamic='force-dynamic';
@@ -21,8 +21,9 @@ const normalizeModels=(value:any)=>collectionToArray(value).map(model=>({...mode
 
 export async function GET(){
   const p=await getCurrentAppProfile();
-  const rows=await getCollections();
-  const data:any=Object.fromEntries(rows.filter(r=>canReadCollection(r.key,p)).map(r=>[r.key,r.data]));
+  const allowedKeys=KNOWN_COLLECTIONS.filter(key=>canReadCollection(key,p));
+  const rows=await getCollections(allowedKeys);
+  const data:any=Object.fromEntries(rows.map(r=>[r.key,r.data]));
   if(Array.isArray(data.models))data.models=normalizeModels(data.models);
   return NextResponse.json({data:normalizeDates(data),authenticated:Boolean(p),role:p?.role||null},{headers:{'Cache-Control':'no-store'}});
 }
