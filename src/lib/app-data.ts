@@ -1,15 +1,40 @@
 import { firebaseDatabaseGet, firebaseDatabasePut, getValidFirebaseIdToken } from './firebase-backend';
+import { PUBLIC_COLLECTIONS, INTAKE_COLLECTIONS, STUDENT_PRIVATE_COLLECTIONS, MANAGER_COLLECTIONS, JURY_COLLECTIONS, REGISTRATION_COLLECTIONS } from './data-policy';
 
 export interface CollectionRow { key:string; data:unknown; is_public:boolean; updated_at:string; }
+
+const KNOWN_COLLECTIONS = Array.from(new Set([
+  ...PUBLIC_COLLECTIONS,
+  ...INTAKE_COLLECTIONS,
+  ...STUDENT_PRIVATE_COLLECTIONS,
+  ...MANAGER_COLLECTIONS,
+  ...JURY_COLLECTIONS,
+  ...REGISTRATION_COLLECTIONS,
+  'beautyContests','adminPermissions','classroomProgress','classroomRequests','classroomMessages','users','juryMembers','registrationStaff','userProfiles','authProfiles'
+]));
 
 export async function getCollection(key:string){
   const token=await getValidFirebaseIdToken();
   return firebaseDatabaseGet(key,token);
 }
 
+export async function getPublicCollection(key:string){
+  if(!PUBLIC_COLLECTIONS.has(key)) throw new Error(`Collection publique non autorisée: ${key}`);
+  return firebaseDatabaseGet(key,null);
+}
+
 export async function getCollections():Promise<CollectionRow[]>{
-  const root=(await getCollection(''))||{};
-  return Object.entries(root).map(([key,data])=>({key,data,is_public:true,updated_at:new Date().toISOString()}));
+  const token=await getValidFirebaseIdToken();
+  const rows = await Promise.all(KNOWN_COLLECTIONS.map(async key=>{
+    try{
+      const data=await firebaseDatabaseGet(key,token);
+      return {key,data,is_public:PUBLIC_COLLECTIONS.has(key),updated_at:new Date().toISOString()} as CollectionRow;
+    }catch(error:any){
+      if(error?.status===401||error?.status===403)return null;
+      throw error;
+    }
+  }));
+  return rows.filter(Boolean) as CollectionRow[];
 }
 
 export async function setCollection(key:string,data:unknown){
