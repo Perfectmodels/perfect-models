@@ -7,6 +7,7 @@ export interface QuizQuestion {
   options: string[];
   correct: number;
   explanation: string;
+  source?: 'authored' | 'derived';
 }
 
 export interface TrainingChapter {
@@ -24,21 +25,40 @@ export interface TrainingModule {
   chapters: TrainingChapter[];
 }
 
+export interface QuizAttempt {
+  score: number;
+  total: number;
+  attempts: number;
+  lastAttempt: string;
+  passed: boolean;
+  durationSeconds?: number;
+  integrityIncidents?: number;
+}
+
+export interface ChapterActivity {
+  openedAt?: string;
+  lastReadAt?: string;
+  readingSeconds: number;
+  readProgress: number;
+  readingValidated?: boolean;
+  completedAt?: string;
+}
+
 export interface UserProgress {
   moduleId: number;
   chapterIndex: number;
   completedChapters: number[];
-  quizScores: {
-    [chapterIndex: number]: {
-      score: number;
-      total: number;
-      attempts: number;
-      lastAttempt: string;
-      passed: boolean;
-    };
-  };
+  quizScores: Record<number, QuizAttempt>;
+  chapterActivity?: Record<number, ChapterActivity>;
   startedAt: string;
   lastAccessedAt: string;
+  totalTimeSpentSeconds?: number;
+  integrityIncidents?: Array<{
+    at: string;
+    moduleId: number;
+    chapterIndex: number;
+    type: 'visibility-hidden' | 'window-blur' | 'reload-attempt' | 'page-leave';
+  }>;
   certificateEarned?: boolean;
 }
 
@@ -48,6 +68,6 @@ export interface TrainingStats {
   totalChapters: number;
   completedChapters: number;
   averageQuizScore: number;
-  totalTimeSpent: number; // en minutes
+  totalTimeSpent: number;
   certificatesEarned: number;
 }
