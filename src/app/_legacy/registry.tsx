@@ -2,8 +2,6 @@
 
 import dynamic from 'next/dynamic';
 
-// Public routes are server-rendered by default. They remain hydrated client components
-// only where interactions require it, but their HTML is present in the initial response.
 export const Home = dynamic(() => import('@/legacy-pages/Home'));
 export const Agency = dynamic(() => import('@/legacy-pages/Agency'));
 export const Models = dynamic(() => import('@/legacy-pages/Models'));
@@ -23,10 +21,9 @@ export const PrivacyPolicy = dynamic(() => import('@/legacy-pages/PrivacyPolicy'
 export const TermsOfUse = dynamic(() => import('@/legacy-pages/TermsOfUse'));
 export const Gallery = dynamic(() => import('@/legacy-pages/Gallery'));
 
-// Authenticated application surfaces keep browser-only rendering for now because
-// they depend on session state and interactive dashboards rather than public SEO.
 export const AdvancedTraining = dynamic(() => import('@/legacy-pages/AdvancedTraining'), { ssr: false });
 export const TrainingModuleView = dynamic(() => import('@/legacy-pages/TrainingModuleView'), { ssr: false });
+export const ClassroomServices = dynamic(() => import('@/legacy-pages/ClassroomServices'), { ssr: false });
 export const Activity = dynamic(() => import('@/legacy-pages/Activity'), { ssr: false });
 export const ClassroomForum = dynamic(() => import('@/legacy-pages/ClassroomForum'), { ssr: false });
 export const ForumThread = dynamic(() => import('@/legacy-pages/ForumThread'), { ssr: false });
@@ -35,6 +32,7 @@ export const ModelDashboard = dynamic(() => import('@/legacy-pages/ModelDashboar
 export const JuryCasting = dynamic(() => import('@/legacy-pages/JuryCasting'), { ssr: false });
 export const RegistrationCasting = dynamic(() => import('@/legacy-pages/RegistrationCasting'), { ssr: false });
 export const Admin = dynamic(() => import('@/legacy-pages/Admin'), { ssr: false });
+export const ManagerDashboard = dynamic(() => import('@/legacy-pages/ManagerDashboard'), { ssr: false });
 export const AdminModels = dynamic(() => import('@/legacy-pages/AdminModels'), { ssr: false });
 export const AdminMediaLibrary = dynamic(() => import('@/legacy-pages/AdminMediaLibrary'), { ssr: false });
 export const AdminMagazine = dynamic(() => import('@/legacy-pages/AdminMagazine'), { ssr: false });
@@ -68,13 +66,13 @@ export const legacyPages = {
   Home, Agency, Models, ModelDetail, FashionDay, Magazine, ArticleDetail, Contact,
   Services, ServiceDetail, Casting, CastingForm, FashionDayApplicationForm, Login,
   PhoneLogin, PrivacyPolicy, TermsOfUse, Gallery, AdvancedTraining, TrainingModuleView,
-  Activity, ClassroomForum, ForumThread, ChapterDetail, ModelDashboard, JuryCasting,
-  RegistrationCasting, Admin, AdminModels, AdminMediaLibrary, AdminMagazine,
-  AdminClassroom, AdminSettings, AdminAgency, AdminCasting, AdminCastingResults,
-  AdminFashionDay, AdminFashionDayEvents, AdminNews, AdminClassroomProgress,
-  AdminModelAccess, AdminRecovery, AdminComments, AdminMessages, AdminBookings,
-  AdminPayments, AdminAbsences, AdminArtisticDirection, ImageGeneration, ImageAnalysis,
-  LiveChat, AdminGallery, AdminMailing, AdminBeautyContest, AdminUserPermissions, NotFound,
+  ClassroomServices, Activity, ClassroomForum, ForumThread, ChapterDetail, ModelDashboard,
+  JuryCasting, RegistrationCasting, Admin, ManagerDashboard, AdminModels, AdminMediaLibrary,
+  AdminMagazine, AdminClassroom, AdminSettings, AdminAgency, AdminCasting, AdminCastingResults,
+  AdminFashionDay, AdminFashionDayEvents, AdminNews, AdminClassroomProgress, AdminModelAccess,
+  AdminRecovery, AdminComments, AdminMessages, AdminBookings, AdminPayments, AdminAbsences,
+  AdminArtisticDirection, ImageGeneration, ImageAnalysis, LiveChat, AdminGallery, AdminMailing,
+  AdminBeautyContest, AdminUserPermissions, NotFound,
 } as const;
 
 export type LegacyPageName = keyof typeof legacyPages;
