@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getCollections,setCollection,collectionToArray,getCollection } from '@/lib/app-data';
 import { getCurrentAppProfile } from '@/lib/auth/profile';
-import { canReadCollection,INTAKE_COLLECTIONS } from '@/lib/data-policy';
+import { canReadCollection,canWriteCollection,INTAKE_COLLECTIONS } from '@/lib/data-policy';
 export const dynamic='force-dynamic';
 
 const normalizeDateValue=(value:unknown)=>{
@@ -39,6 +39,15 @@ export async function PUT(request:Request){
       await setCollection(k,v);
     }
     return NextResponse.json({success:true});
+  }
+  if(p?.role==='manager'){
+    let written=0;
+    for(const[k,v]of Object.entries(body)){
+      if(k==='apiKeys'||typeof v==='undefined'||!canWriteCollection(k,p,'update'))continue;
+      await setCollection(k,v);
+      written++;
+    }
+    return written?NextResponse.json({success:true,written}):NextResponse.json({error:'Aucune collection autorisée dans cette opération.'},{status:403});
   }
   if(p?.role==='student'){
     const submitted=collectionToArray(body.models).find(i=>String(i?.id)===String(p.profileId));
