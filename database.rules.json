@@ -9,33 +9,14 @@
     "models": {
       ".read": true,
       "$modelId": {
-        ".write": "auth != null && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || (data.child('authUserId').val() === auth.uid && !root.child('users').child(auth.uid).child('permissions').child('isAdmin').exists()))"
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'manager' || (data.child('authUserId').val() === auth.uid && !root.child('users').child(auth.uid).child('permissions').child('isAdmin').exists()))"
       }
     },
-    "juryMembers": {
-      ".read": true,
-      "$id": {
-        ".write": "auth != null && root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true"
-      }
-    },
-    "registrationStaff": {
-      ".read": true,
-      "$id": {
-        ".write": "auth != null && root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true"
-      }
-    },
-    "userProfiles": {
-      "$uid": {
-        ".read": "auth != null && auth.uid === $uid",
-        ".write": "auth != null && auth.uid === $uid"
-      }
-    },
-    "authProfiles": {
-      "$uid": {
-        ".read": "auth != null && auth.uid === $uid",
-        ".write": "auth != null && auth.uid === $uid"
-      }
-    },
+    "juryMembers": { ".read": true, "$id": { ".write": "auth != null && root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true" } },
+    "registrationStaff": { ".read": true, "$id": { ".write": "auth != null && root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true" } },
+    "userProfiles": { "$uid": { ".read": "auth != null && auth.uid === $uid", ".write": "auth != null && auth.uid === $uid" } },
+    "authProfiles": { "$uid": { ".read": "auth != null && auth.uid === $uid", ".write": "auth != null && auth.uid === $uid" } },
+
     "siteConfig": { ".read": true, ".write": "auth != null && root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true" },
     "navLinks": { ".read": true, ".write": "auth != null && root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true" },
     "socialLinks": { ".read": true, ".write": "auth != null && root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true" },
@@ -55,69 +36,61 @@
     "faqData": { ".read": true, ".write": "auth != null && root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true" },
     "gallery": { ".read": true, ".write": "auth != null && root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true" },
     "galleryAlbums": { ".read": true, ".write": "auth != null && root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true" },
+
     "adminPermissions": {
       "$uid": {
-        ".read": "auth != null && root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true",
+        ".read": "auth != null && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || (auth.uid === $uid && root.child('users').child(auth.uid).child('role').val() === 'manager'))",
         ".write": "auth != null && root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true"
       }
     },
-    "castingApplications": {
-      ".read": "auth != null",
-      ".write": "auth != null && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || !data.exists())"
+
+    "classroomProgress": {
+      "$profileId": {
+        ".read": "auth != null && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('profileId').val() === $profileId)",
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('profileId').val() === $profileId)"
+      }
     },
-    "fashionDayApplications": {
-      ".read": "auth != null",
-      ".write": "auth != null && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || !data.exists())"
+    "classroomRequests": {
+      "$requestId": {
+        ".read": "auth != null && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'manager' || data.child('profileId').val() === root.child('users').child(auth.uid).child('profileId').val())",
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'manager' || (!data.exists() && newData.child('profileId').val() === root.child('users').child(auth.uid).child('profileId').val()))"
+      }
     },
-    "contactMessages": {
-      ".read": "auth != null && root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true",
-      ".write": "auth != null && !data.exists()"
+    "classroomMessages": {
+      "$messageId": {
+        ".read": "auth != null && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'manager' || data.child('profileId').val() === root.child('users').child(auth.uid).child('profileId').val())",
+        ".write": "auth != null && !data.exists() && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'manager' || newData.child('profileId').val() === root.child('users').child(auth.uid).child('profileId').val())"
+      }
     },
-    "bookingRequests": {
-      ".read": "auth != null && root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true",
-      ".write": "auth != null && !data.exists()"
-    },
-    "recoveryRequests": {
-      ".read": "auth != null && root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true",
-      ".write": "auth != null && !data.exists()"
-    },
-    "articleComments": {
-      ".read": true,
-      ".write": "auth != null && !data.exists()"
-    },
-    "forumReplies": {
-      ".read": true,
-      ".write": "auth != null && !data.exists()"
-    },
-    "forumThreads": {
-      ".read": true,
-      ".write": "auth != null && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || !data.exists())"
-    },
+
+    "castingApplications": { ".read": "auth != null", ".write": "auth != null && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || !data.exists())" },
+    "fashionDayApplications": { ".read": "auth != null", ".write": "auth != null && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || !data.exists())" },
+    "contactMessages": { ".read": "auth != null && root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true", ".write": "auth != null && !data.exists()" },
+    "bookingRequests": { ".read": "auth != null && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'manager')", ".write": "auth != null && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'manager' || !data.exists())" },
+    "recoveryRequests": { ".read": "auth != null && root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true", ".write": "auth != null && !data.exists()" },
+    "articleComments": { ".read": true, ".write": "auth != null && !data.exists()" },
+    "forumReplies": { ".read": true, ".write": "auth != null && !data.exists()" },
+    "forumThreads": { ".read": true, ".write": "auth != null && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || !data.exists())" },
+
     "absences": {
       "$aid": {
-        ".read": "auth != null && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || data.child('studentId').val() === auth.uid)",
-        ".write": "auth != null && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || (!data.exists() && root.child('users').child(auth.uid).child('role').val() === 'student'))"
+        ".read": "auth != null && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'manager' || data.child('studentId').val() === auth.uid || data.child('profileId').val() === root.child('users').child(auth.uid).child('profileId').val())",
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'manager' || (!data.exists() && root.child('users').child(auth.uid).child('role').val() === 'student'))"
       }
     },
     "monthlyPayments": {
       "$pid": {
-        ".read": "auth != null && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || data.child('studentId').val() === auth.uid)",
-        ".write": "auth != null && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || (!data.exists() && root.child('users').child(auth.uid).child('role').val() === 'student'))"
+        ".read": "auth != null && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'manager' || data.child('studentId').val() === auth.uid || data.child('profileId').val() === root.child('users').child(auth.uid).child('profileId').val())",
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'manager' || (!data.exists() && root.child('users').child(auth.uid).child('role').val() === 'student'))"
       }
     },
     "photoshootBriefs": {
       "$bid": {
-        ".read": "auth != null && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || data.child('studentId').val() === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'jury')",
-        ".write": "auth != null && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || (!data.exists() && root.child('users').child(auth.uid).child('role').val() === 'student'))"
+        ".read": "auth != null && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'manager' || data.child('studentId').val() === auth.uid || data.child('profileId').val() === root.child('users').child(auth.uid).child('profileId').val() || root.child('users').child(auth.uid).child('role').val() === 'jury')",
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'manager' || (!data.exists() && root.child('users').child(auth.uid).child('role').val() === 'student'))"
       }
     },
-    "adminNotifications": {
-      ".read": "auth != null && root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true",
-      ".write": "auth != null && !data.exists()"
-    },
-    "beautyContests": {
-      ".read": "auth != null",
-      ".write": "auth != null && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'jury-contest' || !data.exists())"
-    }
+    "adminNotifications": { ".read": "auth != null && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'manager')", ".write": "auth != null && !data.exists()" },
+    "beautyContests": { ".read": "auth != null", ".write": "auth != null && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'jury-contest' || !data.exists())" }
   }
 }
