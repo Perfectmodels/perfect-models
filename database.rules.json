@@ -45,21 +45,28 @@
     },
 
     "classroomProgress": {
+      ".read": "auth != null && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'manager')",
       "$profileId": {
         ".read": "auth != null && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('profileId').val() === $profileId)",
         ".write": "auth != null && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('profileId').val() === $profileId)"
       }
     },
     "classroomRequests": {
-      "$requestId": {
-        ".read": "auth != null && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'manager' || data.child('profileId').val() === root.child('users').child(auth.uid).child('profileId').val())",
-        ".write": "auth != null && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'manager' || (!data.exists() && newData.child('profileId').val() === root.child('users').child(auth.uid).child('profileId').val()))"
+      ".read": "auth != null && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'manager')",
+      "$profileId": {
+        ".read": "auth != null && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('profileId').val() === $profileId)",
+        "$requestId": {
+          ".write": "auth != null && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'manager' || (!data.exists() && root.child('users').child(auth.uid).child('profileId').val() === $profileId && newData.child('profileId').val() === $profileId))"
+        }
       }
     },
     "classroomMessages": {
-      "$messageId": {
-        ".read": "auth != null && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'manager' || data.child('profileId').val() === root.child('users').child(auth.uid).child('profileId').val())",
-        ".write": "auth != null && !data.exists() && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'manager' || newData.child('profileId').val() === root.child('users').child(auth.uid).child('profileId').val())"
+      ".read": "auth != null && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'manager')",
+      "$profileId": {
+        ".read": "auth != null && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'manager' || root.child('users').child(auth.uid).child('profileId').val() === $profileId)",
+        "$messageId": {
+          ".write": "auth != null && !data.exists() && (root.child('users').child(auth.uid).child('permissions').child('isAdmin').val() === true || root.child('users').child(auth.uid).child('role').val() === 'manager' || (root.child('users').child(auth.uid).child('profileId').val() === $profileId && newData.child('profileId').val() === $profileId))"
+        }
       }
     },
 
