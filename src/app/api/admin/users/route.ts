@@ -6,19 +6,34 @@ import type { AppRole } from '@/lib/auth/profile';
 
 const allowed = new Set<AppRole>(['manager','student','jury','registration','jury-contest']);
 const MANAGER_DEFAULT_PERMISSIONS = {
-  canManageModels: true,
-  canManageClassroom: true,
-  canManageClassroomProgress: true,
-  canManageAbsences: true,
-  canManagePayments: true,
-  canManageMessages: true,
-  canManageArtisticDirection: true,
-  canManageBookings: true,
-  canManageSettings: false,
-  canManageUsers: false,
-  canManagePermissions: false,
-  canManageApiKeys: false,
-  canManageMailing: false,
+  dashboard: false,
+  models: true,
+  absences: true,
+  agency: false,
+  artisticDirection: true,
+  beautyContests: false,
+  bookings: true,
+  castingApplications: false,
+  castingResults: false,
+  classroom: true,
+  classroomProgress: true,
+  comments: false,
+  fashionDayApplications: false,
+  fashionDayEvents: false,
+  gallery: false,
+  imageAnalysis: false,
+  imageGeneration: false,
+  liveChat: false,
+  magazine: false,
+  mailing: false,
+  mediaLibrary: false,
+  messages: true,
+  modelAccess: false,
+  news: false,
+  payments: true,
+  recovery: false,
+  settings: false,
+  userPermissions: false,
 };
 
 export async function POST(request:Request){
@@ -34,9 +49,7 @@ export async function POST(request:Request){
     if(!userId)return NextResponse.json({error:'Identifiant Firebase absent.'},{status:502});
     const permissions=role==='manager'?{...(pd.permissions||{}),isManager:true}:{...(pd.permissions||{})};
     await firebaseDatabasePut(`users/${userId}`,{id:userId,email,name,identifier,matricule:pd.matricule||identifier,role,app_role:role,profileId,status:'active',mustChangePassword:false,permissions,createdAt:new Date().toISOString()});
-    if(role==='manager'){
-      await firebaseDatabasePut(`adminPermissions/${userId}`,{...MANAGER_DEFAULT_PERMISSIONS,...(pd.adminPermissions||{})});
-    }
+    if(role==='manager')await firebaseDatabasePut(`adminPermissions/${userId}`,{...MANAGER_DEFAULT_PERMISSIONS,...(pd.adminPermissions||{})});
     const key=role==='student'?'models':role==='jury'?'juryMembers':role==='registration'?'registrationStaff':null;
     if(key){const arr=collectionToArray(await getCollection(key));const item={...pd,id:profileId,name,username:identifier,email,authUserId:userId,firebaseUid:userId};const i=arr.findIndex(x=>String(x?.id)===profileId);if(i>=0)arr[i]={...arr[i],...item};else arr.push(item);await setCollection(key,arr);}
     return NextResponse.json({success:true,userId});
