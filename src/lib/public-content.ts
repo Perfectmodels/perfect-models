@@ -1,9 +1,9 @@
 import type { Article, Model, Service, FashionDayEvent } from '@/types';
-import { collectionToArray, getCollection } from '@/lib/app-data';
+import { collectionToArray, getPublicCollection } from '@/lib/app-data';
 
 async function safeCollection(key: string) {
   try {
-    return collectionToArray(await getCollection(key));
+    return collectionToArray(await getPublicCollection(key));
   } catch {
     return [];
   }
