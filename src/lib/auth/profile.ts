@@ -43,6 +43,29 @@ async function getDelegatedPermissions(uid: string, token?: string | null) {
   return permissions && typeof permissions === 'object' ? permissions as Record<string, boolean> : undefined;
 }
 
+async function ensureAdminDatabaseIdentity(uid: string, email: string, name: string, idToken?: string | null) {
+  if (!idToken) return;
+  const current = await firebaseDatabaseGet(`users/${uid}`, idToken).catch(() => null) as Record<string, any> | null;
+  const currentPermissions = current?.permissions && typeof current.permissions === 'object' ? current.permissions : {};
+  if (current?.role === 'admin' && currentPermissions.isAdmin === true) return;
+  const now = new Date().toISOString();
+  await firebaseDatabasePut(`users/${uid}`, {
+    ...(current || {}),
+    id: uid,
+    uid,
+    email,
+    name: name || 'Administration PMM',
+    identifier: 'admin',
+    role: 'admin',
+    profileId: 'admin',
+    status: 'active',
+    mustChangePassword: false,
+    permissions: { ...currentPermissions, all: true, isAdmin: true },
+    createdAt: current?.createdAt || now,
+    updatedAt: now,
+  }, idToken).catch(() => undefined);
+}
+
 export async function findProfile(user: unknown, idToken?: string | null): Promise<AppSessionProfile | null> {
   const u = user as Record<string, unknown> | null;
   const email = String(u?.email || '').toLowerCase();
@@ -52,6 +75,7 @@ export async function findProfile(user: unknown, idToken?: string | null): Promi
   if (!uid) return null;
 
   if (ADMIN_ALIASES.has(email)) {
+    await ensureAdminDatabaseIdentity(uid, email, name, idToken);
     return { userId: uid, email, name: u?.displayName ? String(u.displayName) : 'Administration PMM', identifier: 'admin', role: 'admin', profileId: 'admin', status: 'active', mustChangePassword: false, permissions: { all: true, isAdmin: true }, adminPermissions: undefined };
   }
 
@@ -72,7 +96,7 @@ export async function findProfile(user: unknown, idToken?: string | null): Promi
     };
   }
 
-  const models = asArray(await firebaseDatabaseGet('models', idToken || undefined).catch(() => null)) as Record<string, unknown>[];
+  const models = asArray(await firebaseDatabaseGet('models', undefined).catch(() => null)) as Record<string, unknown>[];
   const model = models.find((m) => {
     const values = [m?.email, m?.loginEmail, m?.login_email, m?.identifier, m?.matricule, m?.name].filter(Boolean).map((v) => String(v).toLowerCase());
     return values.includes(email) || values.includes(identifier);
@@ -119,6 +143,6 @@ export async function ensureUserProfile(user: { localId?: string; email?: string
   const identifier = email === 'admin@perfectmodels.online' ? 'admin' : email.split('@')[0];
   const role: AppRole = ADMIN_ALIASES.has(email) ? 'admin' : 'student';
   const profile: AppSessionProfile = { userId: uid, email, name, identifier, role, profileId: uid, status: 'active', mustChangePassword: false, permissions: role === 'admin' ? { all: true, isAdmin: true } : { isActive: true }, adminPermissions: undefined, contestId: null };
-  await firebaseDatabasePut(`users/${uid}`, { id: uid, uid, email, name, identifier, role, profileId: uid, status: 'active', mustChangePassword: false, permissions: profile.permissions, createdAt: new Date().toISOString() }).catch(() => undefined);
+  await firebaseDatabasePut(`users/${uid}`, { id: uid, uid, email, name, identifier, role, profileId: uid, status: 'active', mustChangePassword: false, permissions: profile.permissions, createdAt: new Date().toISOString() }, idToken || undefined).catch(() => undefined);
   return profile;
 }

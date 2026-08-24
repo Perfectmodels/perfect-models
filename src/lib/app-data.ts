@@ -3,7 +3,7 @@ import { PUBLIC_COLLECTIONS, INTAKE_COLLECTIONS, STUDENT_PRIVATE_COLLECTIONS, MA
 
 export interface CollectionRow { key:string; data:unknown; is_public:boolean; updated_at:string; }
 
-const KNOWN_COLLECTIONS = Array.from(new Set([
+export const KNOWN_COLLECTIONS = Array.from(new Set([
   ...PUBLIC_COLLECTIONS,
   ...INTAKE_COLLECTIONS,
   ...STUDENT_PRIVATE_COLLECTIONS,
@@ -14,6 +14,7 @@ const KNOWN_COLLECTIONS = Array.from(new Set([
 ]));
 
 export async function getCollection(key:string){
+  if(PUBLIC_COLLECTIONS.has(key)) return firebaseDatabaseGet(key,null);
   const token=await getValidFirebaseIdToken();
   return firebaseDatabaseGet(key,token);
 }
@@ -23,11 +24,12 @@ export async function getPublicCollection(key:string){
   return firebaseDatabaseGet(key,null);
 }
 
-export async function getCollections():Promise<CollectionRow[]>{
+export async function getCollections(keys:Iterable<string>=KNOWN_COLLECTIONS):Promise<CollectionRow[]>{
   const token=await getValidFirebaseIdToken();
-  const rows = await Promise.all(KNOWN_COLLECTIONS.map(async key=>{
+  const selected=Array.from(new Set(keys));
+  const rows=await Promise.all(selected.map(async key=>{
     try{
-      const data=await firebaseDatabaseGet(key,token);
+      const data=await firebaseDatabaseGet(key,PUBLIC_COLLECTIONS.has(key)?null:token);
       return {key,data,is_public:PUBLIC_COLLECTIONS.has(key),updated_at:new Date().toISOString()} as CollectionRow;
     }catch(error:any){
       if(error?.status===401||error?.status===403)return null;
