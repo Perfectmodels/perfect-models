@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════════════════
-// CONFIGURATION DU MODULE DE FORMATION
+// CONFIGURATION DU MODULE DE FORMATION — source unique des règles LMS
 // ═══════════════════════════════════════════════════════════════════════════
 
 export const TRAINING_CONFIG = {
