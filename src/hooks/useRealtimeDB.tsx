@@ -84,48 +84,19 @@ const dedupe = (items: any[]) => {
 
 const emptyData = (): AppData => ({
   siteConfig: { logo: '' },
-  navLinks: [],
-  socialLinks: { facebook: '', instagram: '', youtube: '', tiktok: '', whatsapp: '' },
-  agencyTimeline: [],
-  agencyInfo: { about: { p1: '', p2: '' }, values: [] },
-  modelDistinctions: [],
-  agencyServices: [],
-  agencyAchievements: [],
-  agencyPartners: [],
-  models: [],
-  fashionDayEvents: [],
-  testimonials: [],
-  articles: [],
-  courseData: [],
+  navLinks: [], socialLinks: { facebook: '', instagram: '', youtube: '', tiktok: '', whatsapp: '' },
+  agencyTimeline: [], agencyInfo: { about: { p1: '', p2: '' }, values: [] }, modelDistinctions: [], agencyServices: [], agencyAchievements: [], agencyPartners: [],
+  models: [], fashionDayEvents: [], testimonials: [], articles: [], courseData: [],
   contactInfo: { email: '', phone: '', address: '' } as ContactInfo,
   siteImages: { hero: '', about: '', fashionDayBg: '', agencyHistory: '', classroomBg: '', castingBg: '' } as SiteImages,
-  apiKeys: {} as ApiKeys,
-  castingApplications: [],
-  fashionDayApplications: [],
-  newsItems: [],
-  forumThreads: [],
-  forumReplies: [],
-  articleComments: [],
-  recoveryRequests: [],
-  bookingRequests: [],
-  contactMessages: [],
-  juryMembers: [],
-  registrationStaff: [],
-  faqData: [],
-  absences: [],
-  monthlyPayments: [],
-  transactions: [],
-  photoshootBriefs: [],
+  apiKeys: {} as ApiKeys, castingApplications: [], fashionDayApplications: [], newsItems: [], forumThreads: [], forumReplies: [], articleComments: [], recoveryRequests: [], bookingRequests: [], contactMessages: [], juryMembers: [], registrationStaff: [], faqData: [], absences: [], monthlyPayments: [], transactions: [], photoshootBriefs: [],
   adminProfile: { id: 'admin', name: 'Administration PMM', username: 'admin', password: '', email: 'admin@perfectmodels.online' } as AdminProfile,
-  gallery: [],
-  galleryAlbums: [],
-  mailingContacts: [],
+  gallery: [], galleryAlbums: [], mailingContacts: [],
 });
 
 export const normalizeAppData = (raw: any): AppData => {
   const merged: any = { ...emptyData(), ...(raw && typeof raw === 'object' ? raw : {}) };
   for (const key of ARRAY_KEYS) merged[key] = dedupe(arr(merged[key]));
-  // Secrets remain server-only and must never be hydrated into browser state.
   merged.apiKeys = {};
   return merged as AppData;
 };
@@ -144,34 +115,21 @@ export const useRealtimeDB = (initialData?: Partial<AppData> | null) => {
     } catch (error) {
       logger.error('Server data load failed', error);
       setData((current) => current ?? emptyData());
-    } finally {
-      setInitialized(true);
-    }
+    } finally { setInitialized(true); }
   }, []);
 
   useEffect(() => {
-    // Server-provided public state paints the first response. This refresh upgrades it
-    // with authenticated/private collections after hydration when the session permits.
+    // One authenticated upgrade after hydration is enough. Public pages already receive
+    // their initial state from the server. Further refreshes are explicit after mutations
+    // or authentication changes; we intentionally do not poll the entire database.
     void load();
     const onAuthChanged = () => void load();
-    const onVisible = () => { if (document.visibilityState === 'visible') void load(); };
     window.addEventListener('pmm-auth-changed', onAuthChanged);
-    document.addEventListener('visibilitychange', onVisible);
-    const interval = window.setInterval(() => void load(), 30_000);
-    return () => {
-      window.removeEventListener('pmm-auth-changed', onAuthChanged);
-      document.removeEventListener('visibilitychange', onVisible);
-      window.clearInterval(interval);
-    };
+    return () => window.removeEventListener('pmm-auth-changed', onAuthChanged);
   }, [load]);
 
   const saveData = useCallback(async (newData: AppData) => {
-    const response = await fetch('/api/data', {
-      method: 'PUT',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newData),
-    });
+    const response = await fetch('/api/data', { method: 'PUT', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newData) });
     if (!response.ok) {
       const payload = await response.json().catch(() => ({}));
       throw new Error(payload.error || 'Sauvegarde serveur impossible');
@@ -181,30 +139,22 @@ export const useRealtimeDB = (initialData?: Partial<AppData> | null) => {
   }, []);
 
   const addDocument = useCallback(async (path: string, item: any) => {
-    const response = await fetch(`/api/data/${encodeURIComponent(path)}`, {
-      method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(item),
-    });
+    const response = await fetch(`/api/data/${encodeURIComponent(path)}`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(item) });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(payload.error || 'Création impossible');
-    invalidateCache(path);
-    await load();
-    return payload.id as string;
+    invalidateCache(path); await load(); return payload.id as string;
   }, [load]);
 
   const updateDocument = useCallback(async (path: string, id: string, updates: any) => {
-    const response = await fetch(`/api/data/${encodeURIComponent(path)}/${encodeURIComponent(id)}`, {
-      method: 'PATCH', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updates),
-    });
+    const response = await fetch(`/api/data/${encodeURIComponent(path)}/${encodeURIComponent(id)}`, { method: 'PATCH', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updates) });
     if (!response.ok) throw new Error('Mise à jour impossible');
-    invalidateCache(path);
-    await load();
+    invalidateCache(path); await load();
   }, [load]);
 
   const deleteDocument = useCallback(async (path: string, id: string) => {
     const response = await fetch(`/api/data/${encodeURIComponent(path)}/${encodeURIComponent(id)}`, { method: 'DELETE', credentials: 'include' });
     if (!response.ok) throw new Error('Suppression impossible');
-    invalidateCache(path);
-    await load();
+    invalidateCache(path); await load();
   }, [load]);
 
   return { data, saveData, isInitialized, addDocument, updateDocument, deleteDocument };
