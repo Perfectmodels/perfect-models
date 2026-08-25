@@ -1,4 +1,5 @@
-import { firebaseDatabaseGet, firebaseDatabasePut, getValidFirebaseIdToken } from '../firebase-backend';
+import { getValidFirebaseIdToken } from '../firebase-backend';
+import { firebaseAdminDatabaseGet, firebaseAdminDatabasePut } from '../firebase-admin-backend';
 import { auth } from './server';
 
 export type AppRole = 'admin' | 'manager' | 'student' | 'jury' | 'registration' | 'jury-contest';
@@ -38,35 +39,24 @@ function normalizeAppRole(value: unknown, fallback: AppRole = 'student'): AppRol
   return map[String(value || '').trim().toLowerCase()] || fallback;
 }
 
-async function getDelegatedPermissions(uid: string, token?: string | null) {
-  const permissions = await firebaseDatabaseGet(`adminPermissions/${uid}`, token || undefined).catch(() => null);
+async function getDelegatedPermissions(uid: string) {
+  const permissions = await firebaseAdminDatabaseGet(`adminPermissions/${uid}`).catch(() => null);
   return permissions && typeof permissions === 'object' ? permissions as Record<string, boolean> : undefined;
 }
 
-async function ensureAdminDatabaseIdentity(uid: string, email: string, name: string, idToken?: string | null) {
-  if (!idToken) return;
-  const current = await firebaseDatabaseGet(`users/${uid}`, idToken).catch(() => null) as Record<string, any> | null;
+async function ensureAdminDatabaseIdentity(uid: string, email: string, name: string) {
+  const current = await firebaseAdminDatabaseGet(`users/${uid}`).catch(() => null) as Record<string, any> | null;
   const currentPermissions = current?.permissions && typeof current.permissions === 'object' ? current.permissions : {};
   if (current?.role === 'admin' && currentPermissions.isAdmin === true) return;
   const now = new Date().toISOString();
-  await firebaseDatabasePut(`users/${uid}`, {
-    ...(current || {}),
-    id: uid,
-    uid,
-    email,
-    name: name || 'Administration PMM',
-    identifier: 'admin',
-    role: 'admin',
-    profileId: 'admin',
-    status: 'active',
-    mustChangePassword: false,
-    permissions: { ...currentPermissions, all: true, isAdmin: true },
-    createdAt: current?.createdAt || now,
-    updatedAt: now,
-  }, idToken).catch(() => undefined);
+  await firebaseAdminDatabasePut(`users/${uid}`, {
+    ...(current || {}), id: uid, uid, email, name: name || 'Administration PMM', identifier: 'admin', role: 'admin', profileId: 'admin',
+    status: 'active', mustChangePassword: false, permissions: { ...currentPermissions, all: true, isAdmin: true },
+    createdAt: current?.createdAt || now, updatedAt: now,
+  });
 }
 
-export async function findProfile(user: unknown, idToken?: string | null): Promise<AppSessionProfile | null> {
+export async function findProfile(user: unknown, _idToken?: string | null): Promise<AppSessionProfile | null> {
   const u = user as Record<string, unknown> | null;
   const email = String(u?.email || '').toLowerCase();
   const name = String(u?.displayName || email.split('@')[0] || '');
@@ -75,28 +65,26 @@ export async function findProfile(user: unknown, idToken?: string | null): Promi
   if (!uid) return null;
 
   if (ADMIN_ALIASES.has(email)) {
-    await ensureAdminDatabaseIdentity(uid, email, name, idToken);
+    await ensureAdminDatabaseIdentity(uid, email, name);
     return { userId: uid, email, name: u?.displayName ? String(u.displayName) : 'Administration PMM', identifier: 'admin', role: 'admin', profileId: 'admin', status: 'active', mustChangePassword: false, permissions: { all: true, isAdmin: true }, adminPermissions: undefined };
   }
 
-  const central = await firebaseDatabaseGet(`users/${uid}`, idToken || undefined).catch(() => null);
+  const central = await firebaseAdminDatabaseGet(`users/${uid}`).catch(() => null);
   if (central && typeof central === 'object') {
     const c = central as Record<string, unknown>;
     const baseRole = normalizeAppRole(c.role || c.app_role || c.appRole);
     const permissions = c.permissions && typeof c.permissions === 'object' ? c.permissions as Record<string, boolean> : {};
     const inferredAdmin = permissions.isAdmin === true || c.adminPermissions !== undefined;
     const role: AppRole = baseRole === 'manager' ? 'manager' : (baseRole === 'admin' || inferredAdmin ? 'admin' : baseRole);
-    const adminPermissions = role === 'admin' || role === 'manager' ? await getDelegatedPermissions(uid, idToken) : undefined;
+    const adminPermissions = role === 'admin' || role === 'manager' ? await getDelegatedPermissions(uid) : undefined;
     return {
-      userId: uid, email: String(c.email || email), name: String(c.name || c.displayName || name),
-      identifier: String(c.identifier || c.matricule || identifier), role,
-      profileId: String(c.profileId || c.id || uid), status: String(c.status || 'active'),
-      mustChangePassword: Boolean(c.mustChangePassword || c.must_change_password), permissions,
-      adminPermissions, contestId: c.contestId ? String(c.contestId) : null,
+      userId: uid, email: String(c.email || email), name: String(c.name || c.displayName || name), identifier: String(c.identifier || c.matricule || identifier), role,
+      profileId: String(c.profileId || c.id || uid), status: String(c.status || 'active'), mustChangePassword: Boolean(c.mustChangePassword || c.must_change_password),
+      permissions, adminPermissions, contestId: c.contestId ? String(c.contestId) : null,
     };
   }
 
-  const models = asArray(await firebaseDatabaseGet('models', undefined).catch(() => null)) as Record<string, unknown>[];
+  const models = asArray(await firebaseAdminDatabaseGet('models').catch(() => null)) as Record<string, unknown>[];
   const model = models.find((m) => {
     const values = [m?.email, m?.loginEmail, m?.login_email, m?.identifier, m?.matricule, m?.name].filter(Boolean).map((v) => String(v).toLowerCase());
     return values.includes(email) || values.includes(identifier);
@@ -108,7 +96,7 @@ export async function findProfile(user: unknown, idToken?: string | null): Promi
     return {
       userId: uid, email: String(model.email || email), name: String(model.name || name), identifier: String(model.matricule || model.identifier || identifier),
       role, profileId: String(model.id || uid), status: 'active', mustChangePassword: Boolean(model.mustChangePassword), permissions,
-      adminPermissions: role === 'admin' || role === 'manager' ? await getDelegatedPermissions(uid, idToken) : undefined,
+      adminPermissions: role === 'admin' || role === 'manager' ? await getDelegatedPermissions(uid) : undefined,
       contestId: model.contestId ? String(model.contestId) : null,
     };
   }
@@ -122,8 +110,9 @@ export async function findProfile(user: unknown, idToken?: string | null): Promi
 export async function getCurrentAppProfile(): Promise<AppSessionProfile | null> {
   try {
     const { data } = await auth.getSession();
+    if (!data?.user) return null;
     const idToken = await getValidFirebaseIdToken();
-    return findProfile(data?.user, idToken);
+    return findProfile(data.user, idToken);
   } catch { return null; }
 }
 
@@ -135,14 +124,13 @@ export async function getFirebaseSessionUser() {
 export async function ensureUserProfile(user: { localId?: string; email?: string | null; displayName?: string | null }): Promise<AppSessionProfile | null> {
   const uid = String(user?.localId || '');
   if (!uid) return null;
-  const idToken = await getValidFirebaseIdToken();
-  const existing = await findProfile(user, idToken);
+  const existing = await findProfile(user);
   if (existing) return existing;
   const email = String(user?.email || '').toLowerCase();
   const name = String(user?.displayName || email.split('@')[0] || '');
   const identifier = email === 'admin@perfectmodels.online' ? 'admin' : email.split('@')[0];
   const role: AppRole = ADMIN_ALIASES.has(email) ? 'admin' : 'student';
   const profile: AppSessionProfile = { userId: uid, email, name, identifier, role, profileId: uid, status: 'active', mustChangePassword: false, permissions: role === 'admin' ? { all: true, isAdmin: true } : { isActive: true }, adminPermissions: undefined, contestId: null };
-  await firebaseDatabasePut(`users/${uid}`, { id: uid, uid, email, name, identifier, role, profileId: uid, status: 'active', mustChangePassword: false, permissions: profile.permissions, createdAt: new Date().toISOString() }, idToken || undefined).catch(() => undefined);
+  await firebaseAdminDatabasePut(`users/${uid}`, { id: uid, uid, email, name, identifier, role, profileId: uid, status: 'active', mustChangePassword: false, permissions: profile.permissions, createdAt: new Date().toISOString() });
   return profile;
 }
