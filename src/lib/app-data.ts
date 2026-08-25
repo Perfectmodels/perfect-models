@@ -1,5 +1,6 @@
 import { firebaseDatabaseGet } from './firebase-backend';
 import { firebaseAdminDatabaseGet, firebaseAdminDatabasePut, firebaseAdminConfigured } from './firebase-admin-backend';
+import { firestoreGetCollection, firestoreSetCollection } from './firestore-backend';
 import { PUBLIC_COLLECTIONS, INTAKE_COLLECTIONS, STUDENT_PRIVATE_COLLECTIONS, MANAGER_COLLECTIONS, JURY_COLLECTIONS, REGISTRATION_COLLECTIONS } from './data-policy';
 
 export interface CollectionRow { key:string; data:unknown; is_public:boolean; updated_at:string; }
@@ -11,17 +12,29 @@ export const KNOWN_COLLECTIONS = Array.from(new Set([
   ...MANAGER_COLLECTIONS,
   ...JURY_COLLECTIONS,
   ...REGISTRATION_COLLECTIONS,
-  'beautyContests','adminPermissions','classroomProgress','classroomRequests','classroomMessages','users','juryMembers','registrationStaff','userProfiles','authProfiles'
+  'beautyContests','adminPermissions','classroomProgress','classroomRequests','classroomMessages','users','juryMembers','registrationStaff','userProfiles','authProfiles',
+  'adminNotifications','adminProfile','applications','fashionDayReservations','heroSlides','missOneLight','pagesContent'
 ]));
 
-export async function getCollection(key:string){
+async function legacyRead(key:string){
   if(PUBLIC_COLLECTIONS.has(key) && !firebaseAdminConfigured()) return firebaseDatabaseGet(key,null);
   return firebaseAdminDatabaseGet(key);
 }
 
+export async function getCollection(key:string){
+  if(firebaseAdminConfigured()){
+    const firestoreValue=await firestoreGetCollection(key);
+    if(firestoreValue!==null)return firestoreValue;
+  }
+  return legacyRead(key);
+}
+
 export async function getPublicCollection(key:string){
   if(!PUBLIC_COLLECTIONS.has(key)) throw new Error(`Collection publique non autorisée: ${key}`);
-  if(firebaseAdminConfigured()) return firebaseAdminDatabaseGet(key);
+  if(firebaseAdminConfigured()){
+    const firestoreValue=await firestoreGetCollection(key);
+    if(firestoreValue!==null)return firestoreValue;
+  }
   return firebaseDatabaseGet(key,null);
 }
 
@@ -29,12 +42,10 @@ export async function getCollections(keys:Iterable<string>=KNOWN_COLLECTIONS):Pr
   const selected=Array.from(new Set(keys));
   const rows=await Promise.all(selected.map(async key=>{
     try{
-      const data=PUBLIC_COLLECTIONS.has(key) && !firebaseAdminConfigured()
-        ? await firebaseDatabaseGet(key,null)
-        : await firebaseAdminDatabaseGet(key);
+      const data=await getCollection(key);
       return {key,data,is_public:PUBLIC_COLLECTIONS.has(key),updated_at:new Date().toISOString()} as CollectionRow;
     }catch(error:any){
-      if(error?.status===401||error?.status===403)return null;
+      if(error?.status===401||error?.status===403||error?.status===404)return null;
       throw error;
     }
   }));
@@ -42,7 +53,12 @@ export async function getCollections(keys:Iterable<string>=KNOWN_COLLECTIONS):Pr
 }
 
 export async function setCollection(key:string,data:unknown){
-  await firebaseAdminDatabasePut(key,data??null);
+  if(!firebaseAdminConfigured()) throw new Error('Firebase Admin est requis pour écrire dans Firestore.');
+  await firestoreSetCollection(key,data??null);
+  // Transition courte : une panne RTDB ne doit jamais faire échouer une écriture Firestore.
+  if(process.env.DUAL_WRITE_RTDB==='true'){
+    await firebaseAdminDatabasePut(key,data??null).catch(()=>undefined);
+  }
 }
 
 export function collectionToArray(value:unknown):any[]{if(Array.isArray(value))return value.filter(Boolean);if(value&&typeof value==='object')return Object.values(value as Record<string,unknown>).filter(Boolean);return[]}
