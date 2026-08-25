@@ -3,16 +3,16 @@ import { createSign } from 'node:crypto';
 
 const DATABASE_URL = process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL || 'https://perfect-156b5-default-rtdb.firebaseio.com';
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
-const SCOPE = 'https://www.googleapis.com/auth/firebase.database https://www.googleapis.com/auth/userinfo.email';
+const SCOPE = 'https://www.googleapis.com/auth/firebase.database https://www.googleapis.com/auth/datastore https://www.googleapis.com/auth/cloud-platform https://www.googleapis.com/auth/userinfo.email';
 
-type ServiceAccount = { project_id?: string; client_email?: string; private_key?: string };
+export type ServiceAccount = { project_id?: string; client_email?: string; private_key?: string };
 let cachedToken: { value: string; expiresAt: number } | null = null;
 
 function base64url(value: string | Buffer) {
   return Buffer.from(value).toString('base64url');
 }
 
-function credentials(): ServiceAccount | null {
+export function firebaseAdminCredentials(): ServiceAccount | null {
   const raw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON?.trim();
   if (raw) {
     try {
@@ -30,12 +30,12 @@ function credentials(): ServiceAccount | null {
 }
 
 export function firebaseAdminConfigured() {
-  return Boolean(credentials());
+  return Boolean(firebaseAdminCredentials());
 }
 
-async function accessToken() {
+export async function firebaseAdminAccessToken() {
   if (cachedToken && cachedToken.expiresAt > Date.now() + 60_000) return cachedToken.value;
-  const account = credentials();
+  const account = firebaseAdminCredentials();
   if (!account?.client_email || !account.private_key) {
     throw new Error('Firebase Admin non configuré côté serveur. Ajoutez FIREBASE_SERVICE_ACCOUNT_JSON dans Vercel.');
   }
@@ -76,7 +76,7 @@ function urlFor(path: string) {
 }
 
 async function request(method: 'GET'|'PUT'|'PATCH'|'DELETE', path: string, value?: unknown) {
-  const token = await accessToken();
+  const token = await firebaseAdminAccessToken();
   const response = await fetch(urlFor(path), {
     method,
     headers: {
