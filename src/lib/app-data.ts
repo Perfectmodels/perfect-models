@@ -1,4 +1,5 @@
-import { firebaseDatabaseGet, firebaseDatabasePut, getValidFirebaseIdToken } from './firebase-backend';
+import { firebaseDatabaseGet } from './firebase-backend';
+import { firebaseAdminDatabaseGet, firebaseAdminDatabasePut, firebaseAdminConfigured } from './firebase-admin-backend';
 import { PUBLIC_COLLECTIONS, INTAKE_COLLECTIONS, STUDENT_PRIVATE_COLLECTIONS, MANAGER_COLLECTIONS, JURY_COLLECTIONS, REGISTRATION_COLLECTIONS } from './data-policy';
 
 export interface CollectionRow { key:string; data:unknown; is_public:boolean; updated_at:string; }
@@ -14,22 +15,23 @@ export const KNOWN_COLLECTIONS = Array.from(new Set([
 ]));
 
 export async function getCollection(key:string){
-  if(PUBLIC_COLLECTIONS.has(key)) return firebaseDatabaseGet(key,null);
-  const token=await getValidFirebaseIdToken();
-  return firebaseDatabaseGet(key,token);
+  if(PUBLIC_COLLECTIONS.has(key) && !firebaseAdminConfigured()) return firebaseDatabaseGet(key,null);
+  return firebaseAdminDatabaseGet(key);
 }
 
 export async function getPublicCollection(key:string){
   if(!PUBLIC_COLLECTIONS.has(key)) throw new Error(`Collection publique non autorisée: ${key}`);
+  if(firebaseAdminConfigured()) return firebaseAdminDatabaseGet(key);
   return firebaseDatabaseGet(key,null);
 }
 
 export async function getCollections(keys:Iterable<string>=KNOWN_COLLECTIONS):Promise<CollectionRow[]>{
-  const token=await getValidFirebaseIdToken();
   const selected=Array.from(new Set(keys));
   const rows=await Promise.all(selected.map(async key=>{
     try{
-      const data=await firebaseDatabaseGet(key,PUBLIC_COLLECTIONS.has(key)?null:token);
+      const data=PUBLIC_COLLECTIONS.has(key) && !firebaseAdminConfigured()
+        ? await firebaseDatabaseGet(key,null)
+        : await firebaseAdminDatabaseGet(key);
       return {key,data,is_public:PUBLIC_COLLECTIONS.has(key),updated_at:new Date().toISOString()} as CollectionRow;
     }catch(error:any){
       if(error?.status===401||error?.status===403)return null;
@@ -40,8 +42,7 @@ export async function getCollections(keys:Iterable<string>=KNOWN_COLLECTIONS):Pr
 }
 
 export async function setCollection(key:string,data:unknown){
-  const token=await getValidFirebaseIdToken();
-  await firebaseDatabasePut(key,data??null,token);
+  await firebaseAdminDatabasePut(key,data??null);
 }
 
 export function collectionToArray(value:unknown):any[]{if(Array.isArray(value))return value.filter(Boolean);if(value&&typeof value==='object')return Object.values(value as Record<string,unknown>).filter(Boolean);return[]}
