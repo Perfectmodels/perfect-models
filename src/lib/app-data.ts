@@ -16,8 +16,17 @@ export const KNOWN_COLLECTIONS = Array.from(new Set([
   'adminNotifications','adminProfile','applications','fashionDayReservations','heroSlides','missOneLight','pagesContent'
 ]));
 
+export class DataBackendUnavailableError extends Error {
+  status = 503;
+  constructor(message = 'Backend Firestore privé non configuré côté serveur.') {
+    super(message);
+    this.name = 'DataBackendUnavailableError';
+  }
+}
+
 async function legacyRead(key:string){
   if(PUBLIC_COLLECTIONS.has(key) && !firebaseAdminConfigured()) return firebaseDatabaseGet(key,null);
+  if(!firebaseAdminConfigured()) throw new DataBackendUnavailableError();
   return firebaseAdminDatabaseGet(key);
 }
 
@@ -40,12 +49,16 @@ export async function getPublicCollection(key:string){
 
 export async function getCollections(keys:Iterable<string>=KNOWN_COLLECTIONS):Promise<CollectionRow[]>{
   const selected=Array.from(new Set(keys));
+  const adminReady=firebaseAdminConfigured();
   const rows=await Promise.all(selected.map(async key=>{
+    // En local ou sur un environnement sans secret Admin, on continue de servir
+    // toutes les données publiques RTDB au lieu de faire échouer /api/data.
+    if(!adminReady && !PUBLIC_COLLECTIONS.has(key)) return null;
     try{
       const data=await getCollection(key);
       return {key,data,is_public:PUBLIC_COLLECTIONS.has(key),updated_at:new Date().toISOString()} as CollectionRow;
     }catch(error:any){
-      if(error?.status===401||error?.status===403||error?.status===404)return null;
+      if(error?.status===401||error?.status===403||error?.status===404||error?.status===503)return null;
       throw error;
     }
   }));
@@ -53,7 +66,7 @@ export async function getCollections(keys:Iterable<string>=KNOWN_COLLECTIONS):Pr
 }
 
 export async function setCollection(key:string,data:unknown){
-  if(!firebaseAdminConfigured()) throw new Error('Firebase Admin est requis pour écrire dans Firestore.');
+  if(!firebaseAdminConfigured()) throw new DataBackendUnavailableError('Firebase Admin est requis pour écrire dans Firestore.');
   await firestoreSetCollection(key,data??null);
   // Transition courte : une panne RTDB ne doit jamais faire échouer une écriture Firestore.
   if(process.env.DUAL_WRITE_RTDB==='true'){
