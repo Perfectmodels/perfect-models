@@ -19,12 +19,36 @@ const normalizeDates=(value:any):any=>{
 };
 const normalizeModels=(value:any)=>collectionToArray(value).map(model=>({...model,isActive:true,status:'active'}));
 
+const PUBLIC_MODEL_FIELDS = [
+  'id','name','slug','imageUrl','portfolioImages','gender','height','age','location','level','categories',
+  'measurements','experience','journey','distinctions','fashionDayEditions','isPublic','isActive','status'
+] as const;
+
+function publicModel(model:any){
+  const safe:any={};
+  for(const key of PUBLIC_MODEL_FIELDS){
+    if(typeof model?.[key] !== 'undefined') safe[key]=model[key];
+  }
+  return safe;
+}
+
+function filterModelsForProfile(value:any,profile:Awaited<ReturnType<typeof getCurrentAppProfile>>){
+  const models=normalizeModels(value);
+  if(profile?.role==='admin'||profile?.role==='manager')return models;
+  if(profile?.role==='student'){
+    return models
+      .filter(model=>model?.isPublic===true||String(model?.id)===String(profile.profileId))
+      .map(model=>String(model?.id)===String(profile.profileId)?model:publicModel(model));
+  }
+  return models.filter(model=>model?.isPublic===true).map(publicModel);
+}
+
 export async function GET(){
   const p=await getCurrentAppProfile();
   const allowedKeys=KNOWN_COLLECTIONS.filter(key=>canReadCollection(key,p));
   const rows=await getCollections(allowedKeys);
   const data:any=Object.fromEntries(rows.map(r=>[r.key,r.data]));
-  if(Array.isArray(data.models))data.models=normalizeModels(data.models);
+  if(data.models!=null)data.models=filterModelsForProfile(data.models,p);
   return NextResponse.json({data:normalizeDates(data),authenticated:Boolean(p),role:p?.role||null},{headers:{'Cache-Control':'no-store'}});
 }
 
