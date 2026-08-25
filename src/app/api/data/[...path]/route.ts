@@ -2,6 +2,7 @@ import { randomInt, randomUUID } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import {
   collectionToArray,
+  DataBackendUnavailableError,
   deleteNestedValue,
   getCollection,
   getNestedValue,
@@ -53,11 +54,15 @@ function optionalNumber(value: unknown, min: number, max: number, label: string)
   return normalized;
 }
 
-function isTrustedImgBBUrl(value: string) {
+function isTrustedMediaUrl(value: string) {
   if (!value) return true;
   try {
     const url = new URL(value);
-    return url.protocol === 'https:' && url.hostname === 'i.ibb.co';
+    return url.protocol === 'https:' && (
+      url.hostname === 'i.ibb.co' ||
+      url.hostname.endsWith('.blob.vercel-storage.com') ||
+      url.hostname.endsWith('.public.blob.vercel-storage.com')
+    );
   } catch {
     return false;
   }
@@ -95,7 +100,7 @@ function normalizeCastingApplication(raw: Record<string, unknown>) {
   const photoProfileUrl = text(raw.photoProfileUrl, 600);
   const photos = [photoPortraitUrl, photoFullBodyUrl, photoProfileUrl];
   if (!photos.some(Boolean)) throw new Error('Au moins une photo est requise.');
-  if (!photos.every(isTrustedImgBBUrl)) throw new Error('URL de photo non autorisée.');
+  if (!photos.every(isTrustedMediaUrl)) throw new Error('URL de photo non autorisée.');
   if (raw.consentAccepted !== true) throw new Error('Consentement requis.');
 
   const portfolioLink = text(raw.portfolioLink, 600);
@@ -141,16 +146,30 @@ function normalizeCastingApplication(raw: Record<string, unknown>) {
   };
 }
 
+function backendError(error: unknown) {
+  if (error instanceof DataBackendUnavailableError || (error as any)?.status === 503) {
+    return NextResponse.json({
+      error: 'Backend de données privé non configuré.',
+      code: 'DATA_BACKEND_UNAVAILABLE',
+    }, { status: 503 });
+  }
+  throw error;
+}
+
 export async function GET(_request: Request, ctx: Ctx) {
   const { key, nested } = await resolvePath(ctx);
   const profile = await getCurrentAppProfile();
   if (!key || !canReadCollection(key, profile)) {
     return NextResponse.json({ error: 'Non autorisé.' }, { status: 401 });
   }
-  const root = await getCollection(key);
-  return NextResponse.json(nested.length ? getNestedValue(root, nested) : root, {
-    headers: { 'Cache-Control': 'no-store' },
-  });
+  try {
+    const root = await getCollection(key);
+    return NextResponse.json(nested.length ? getNestedValue(root, nested) : root, {
+      headers: { 'Cache-Control': 'no-store' },
+    });
+  } catch (error) {
+    return backendError(error);
+  }
 }
 
 export async function POST(request: Request, ctx: Ctx) {
@@ -187,10 +206,9 @@ export async function POST(request: Request, ctx: Ctx) {
 
   const id = randomUUID();
   const item = { ...sanitized, id };
-  const items = collectionToArray(await getCollection(key));
-  items.push(item);
-
   try {
+    const items = collectionToArray(await getCollection(key));
+    items.push(item);
     await setCollection(key, items);
     return NextResponse.json({ id, item }, { status: 201 });
   } catch (error) {
@@ -198,7 +216,7 @@ export async function POST(request: Request, ctx: Ctx) {
       console.warn('[adminNotifications] persistence unavailable; notification skipped', error);
       return NextResponse.json({ id, accepted: true, persisted: false }, { status: 202 });
     }
-    throw error;
+    return backendError(error);
   }
 }
 
@@ -210,9 +228,13 @@ export async function PUT(request: Request, ctx: Ctx) {
     return NextResponse.json({ error: 'Non autorisé.' }, { status: 401 });
   }
   const value = await request.json().catch(() => null);
-  const root = await getCollection(key);
-  await setCollection(key, nested.length ? setNestedValue(root ?? {}, nested, value) : value);
-  return NextResponse.json({ success: true });
+  try {
+    const root = await getCollection(key);
+    await setCollection(key, nested.length ? setNestedValue(root ?? {}, nested, value) : value);
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return backendError(error);
+  }
 }
 
 export async function PATCH(request: Request, ctx: Ctx) {
@@ -225,14 +247,18 @@ export async function PATCH(request: Request, ctx: Ctx) {
   if (!updates || typeof updates !== 'object') {
     return NextResponse.json({ error: 'Payload invalide.' }, { status: 400 });
   }
-  const root = await getCollection(key);
-  await setCollection(
-    key,
-    nested.length
-      ? patchNestedValue(root ?? {}, nested, updates)
-      : { ...((root as Record<string, unknown>) || {}), ...updates },
-  );
-  return NextResponse.json({ success: true });
+  try {
+    const root = await getCollection(key);
+    await setCollection(
+      key,
+      nested.length
+        ? patchNestedValue(root ?? {}, nested, updates)
+        : { ...((root as Record<string, unknown>) || {}), ...updates },
+    );
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return backendError(error);
+  }
 }
 
 export async function DELETE(_request: Request, ctx: Ctx) {
@@ -241,6 +267,10 @@ export async function DELETE(_request: Request, ctx: Ctx) {
   if (!key || !nested.length || !canWriteCollection(key, profile, 'delete') || !owns(profile, key, nested)) {
     return NextResponse.json({ error: 'Non autorisé.' }, { status: 401 });
   }
-  await setCollection(key, deleteNestedValue(await getCollection(key), nested));
-  return NextResponse.json({ success: true });
+  try {
+    await setCollection(key, deleteNestedValue(await getCollection(key), nested));
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return backendError(error);
+  }
 }
