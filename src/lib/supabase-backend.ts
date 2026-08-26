@@ -6,131 +6,35 @@ const PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.NEXT
 const SECRET_KEY = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
 const ROOT_TABLES: Record<string, string> = {
-  adminNotifications: 'admin_notifications', adminProfile: 'admin_profile', agencyAchievements: 'agency_achievements',
-  agencyInfo: 'agency_info', agencyPartners: 'agency_partners', agencyServices: 'agency_services', agencyTimeline: 'agency_timeline',
-  apiKeys: 'api_keys', applications: 'applications', castingApplications: 'casting_applications', classroomProgress: 'classroom_progress',
-  contactInfo: 'contact_info', faqData: 'faq_data', fashionDayEvents: 'fashion_day_events', fashionDayReservations: 'fashion_day_reservations',
-  heroSlides: 'hero_slides', juryMembers: 'jury_members', mailingContacts: 'mailing_contacts', missOneLight: 'miss_one_light',
-  modelDistinctions: 'model_distinctions', models: 'models', navLinks: 'nav_links', newsItems: 'news_items', pagesContent: 'pages_content',
-  registrationStaff: 'registration_staff', siteConfig: 'site_config', siteImages: 'site_images', socialLinks: 'social_links',
-  testimonials: 'testimonials', users: 'users',
+  adminNotifications:'admin_notifications',adminProfile:'admin_profile',agencyAchievements:'agency_achievements',agencyInfo:'agency_info',agencyPartners:'agency_partners',agencyServices:'agency_services',agencyTimeline:'agency_timeline',apiKeys:'api_keys',applications:'applications',castingApplications:'casting_applications',classroomProgress:'classroom_progress',contactInfo:'contact_info',faqData:'faq_data',fashionDayEvents:'fashion_day_events',fashionDayReservations:'fashion_day_reservations',heroSlides:'hero_slides',juryMembers:'jury_members',mailingContacts:'mailing_contacts',missOneLight:'miss_one_light',modelDistinctions:'model_distinctions',models:'models',navLinks:'nav_links',newsItems:'news_items',pagesContent:'pages_content',registrationStaff:'registration_staff',siteConfig:'site_config',siteImages:'site_images',socialLinks:'social_links',testimonials:'testimonials',users:'users'
 };
+const ARRAY_ROOTS=new Set(['adminNotifications','agencyAchievements','agencyPartners','agencyServices','agencyTimeline','applications','castingApplications','faqData','fashionDayEvents','fashionDayReservations','heroSlides','juryMembers','mailingContacts','modelDistinctions','models','navLinks','newsItems','registrationStaff','testimonials']);
+const MAP_ROOTS=new Set(['apiKeys','classroomProgress','pagesContent','users']);
+export function supabaseConfigured(){return Boolean(SUPABASE_URL&&PUBLISHABLE_KEY&&SECRET_KEY)}
+export function supabasePublicConfigured(){return Boolean(SUPABASE_URL&&PUBLISHABLE_KEY)}
+function tableFor(key:string){const table=ROOT_TABLES[key];if(!table)throw new Error(`Table Supabase inconnue pour ${key}`);return table}
+async function rest(path:string,init:RequestInit={},privileged=true){const apiKey=privileged?SECRET_KEY:PUBLISHABLE_KEY;if(!SUPABASE_URL||!apiKey){const e=new Error('Supabase non configuré côté serveur.');(e as any).status=503;throw e}const response=await fetch(`${SUPABASE_URL}${path}`,{...init,headers:{apikey:apiKey,Authorization:`Bearer ${apiKey}`,...(init.body?{'Content-Type':'application/json'}:{}),...(init.headers||{})},cache:'no-store'});const text=await response.text();let data:any=null;try{data=text?JSON.parse(text):null}catch{data=text}if(!response.ok){const e=new Error(`Supabase ${response.status}: ${String(data?.message||data?.error_description||data?.error||text||response.statusText)}`);(e as any).status=response.status;throw e}return data}
+function rowId(item:any,index:number){const c=item&&typeof item==='object'?(item.id??item.uid??item.key):null;return c!=null&&String(c).trim()?String(c):String(index)}
+function rowsFromRoot(key:string,value:any){if(ARRAY_ROOTS.has(key))return(Array.isArray(value)?value:value&&typeof value==='object'?Object.values(value):[]).filter(Boolean).map((data:any,position:number)=>({id:rowId(data,position),data,position}));if(MAP_ROOTS.has(key))return value&&typeof value==='object'&&!Array.isArray(value)?Object.entries(value).map(([id,data],position)=>({id,data,position})):[];return[{id:'singleton',data:value??null,position:0}]}
+function rootFromRows(key:string,rows:any[]){const ordered=[...(rows||[])].sort((a,b)=>Number(a.position||0)-Number(b.position||0));if(ARRAY_ROOTS.has(key))return ordered.map(r=>r.data).filter(v=>v!=null);if(MAP_ROOTS.has(key))return Object.fromEntries(ordered.map(r=>[String(r.id),r.data]));return ordered[0]?.data??null}
+export async function supabaseGetRoot(key:string){const rows=await rest(`/rest/v1/${tableFor(key)}?select=id,data,position&order=position.asc`,{},true);return rootFromRows(key,Array.isArray(rows)?rows:[])}
+export async function supabaseSetRoot(key:string,value:unknown){const table=tableFor(key);const rows=rowsFromRoot(key,value);await rest(`/rest/v1/${table}?id=not.is.null`,{method:'DELETE',headers:{Prefer:'return=minimal'}},true);if(rows.length)await rest(`/rest/v1/${table}`,{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify(rows)},true)}
 
-const ARRAY_ROOTS = new Set(['adminNotifications','agencyAchievements','agencyPartners','agencyServices','agencyTimeline','applications','castingApplications','faqData','fashionDayEvents','fashionDayReservations','heroSlides','juryMembers','mailingContacts','modelDistinctions','models','navLinks','newsItems','registrationStaff','testimonials']);
-const MAP_ROOTS = new Set(['apiKeys','classroomProgress','pagesContent','users']);
-
-export function supabaseConfigured() { return Boolean(SUPABASE_URL && PUBLISHABLE_KEY && SECRET_KEY); }
-export function supabasePublicConfigured() { return Boolean(SUPABASE_URL && PUBLISHABLE_KEY); }
-
-function tableFor(key: string) {
-  const table = ROOT_TABLES[key];
-  if (!table) throw new Error(`Table Supabase inconnue pour ${key}`);
-  return table;
-}
-
-async function rest(path: string, init: RequestInit = {}, privileged = true) {
-  const apiKey = privileged ? SECRET_KEY : PUBLISHABLE_KEY;
-  if (!SUPABASE_URL || !apiKey) {
-    const error = new Error('Supabase non configuré côté serveur.');
-    (error as any).status = 503;
-    throw error;
-  }
-  const response = await fetch(`${SUPABASE_URL}${path}`, {
-    ...init,
-    headers: {
-      apikey: apiKey,
-      Authorization: `Bearer ${apiKey}`,
-      ...(init.body ? { 'Content-Type': 'application/json' } : {}),
-      ...(init.headers || {}),
-    },
-    cache: 'no-store',
-  });
-  const text = await response.text();
-  let data: any = null;
-  try { data = text ? JSON.parse(text) : null; } catch { data = text; }
-  if (!response.ok) {
-    const error = new Error(`Supabase ${response.status}: ${String(data?.message || data?.error_description || data?.error || text || response.statusText)}`);
-    (error as any).status = response.status;
-    throw error;
-  }
-  return data;
-}
-
-function rowId(item: any, index: number) {
-  const candidate = item && typeof item === 'object' ? (item.id ?? item.uid ?? item.key) : null;
-  return candidate != null && String(candidate).trim() ? String(candidate) : String(index);
-}
-
-function rowsFromRoot(key: string, value: any) {
-  if (ARRAY_ROOTS.has(key)) return (Array.isArray(value) ? value : value && typeof value === 'object' ? Object.values(value) : []).filter(Boolean).map((data: any, position: number) => ({ id: rowId(data, position), data, position }));
-  if (MAP_ROOTS.has(key)) return value && typeof value === 'object' && !Array.isArray(value) ? Object.entries(value).map(([id, data], position) => ({ id, data, position })) : [];
-  return [{ id: 'singleton', data: value ?? null, position: 0 }];
-}
-
-function rootFromRows(key: string, rows: any[]) {
-  const ordered = [...(rows || [])].sort((a, b) => Number(a.position || 0) - Number(b.position || 0));
-  if (ARRAY_ROOTS.has(key)) return ordered.map((row) => row.data).filter((v) => v != null);
-  if (MAP_ROOTS.has(key)) return Object.fromEntries(ordered.map((row) => [String(row.id), row.data]));
-  return ordered[0]?.data ?? null;
-}
-
-export async function supabaseGetRoot(key: string) {
-  const table = tableFor(key);
-  const rows = await rest(`/rest/v1/${table}?select=id,data,position&order=position.asc`, {}, true);
-  return rootFromRows(key, Array.isArray(rows) ? rows : []);
-}
-
-export async function supabaseSetRoot(key: string, value: unknown) {
-  const table = tableFor(key);
-  const rows = rowsFromRoot(key, value);
-  await rest(`/rest/v1/${table}?id=not.is.null`, { method: 'DELETE', headers: { Prefer: 'return=minimal' } }, true);
-  if (!rows.length) return;
-  await rest(`/rest/v1/${table}`, { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(rows) }, true);
-}
-
-export interface SupabaseAuthUser {
-  id: string; email?: string | null; user_metadata?: Record<string, any>; app_metadata?: Record<string, any>;
-}
-export interface SupabaseSession { access_token: string; refresh_token: string; expires_in?: number; user: SupabaseAuthUser; }
-
-async function authRequest(path: string, body?: any, opts: { method?: string; accessToken?: string; admin?: boolean } = {}) {
-  const key = opts.admin ? SECRET_KEY : PUBLISHABLE_KEY;
-  if (!SUPABASE_URL || !key) throw new Error('Supabase Auth non configuré.');
-  const response = await fetch(`${SUPABASE_URL}/auth/v1${path}`, {
-    method: opts.method || (body === undefined ? 'GET' : 'POST'),
-    headers: { apikey: key, Authorization: `Bearer ${opts.accessToken || key}`, ...(body === undefined ? {} : { 'Content-Type': 'application/json' }) },
-    body: body === undefined ? undefined : JSON.stringify(body), cache: 'no-store',
-  });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) { const error = new Error(String(data?.msg || data?.message || data?.error_description || data?.error || 'Supabase Auth error')); (error as any).status = response.status; throw error; }
-  return data;
-}
-
-export async function supabaseSignIn(email: string, password: string) { return authRequest('/token?grant_type=password', { email, password }) as Promise<SupabaseSession>; }
-export async function supabaseSignUp(email: string, password: string, name?: string) { return authRequest('/signup', { email, password, data: { name } }) as Promise<SupabaseSession>; }
-export async function supabaseRefresh(refreshToken: string) { return authRequest('/token?grant_type=refresh_token', { refresh_token: refreshToken }) as Promise<SupabaseSession>; }
-export async function supabaseLookup(accessToken: string) { return authRequest('/user', undefined, { accessToken }) as Promise<SupabaseAuthUser>; }
-export async function supabaseResetPassword(email: string) { return authRequest('/recover', { email }); }
-export async function supabaseChangePassword(accessToken: string, password: string) { return authRequest('/user', { password }, { method: 'PUT', accessToken }) as Promise<SupabaseAuthUser>; }
-export async function supabaseAdminCreateUser(attributes: Record<string, any>) { return authRequest('/admin/users', attributes, { method: 'POST', admin: true }); }
-
-export async function getSupabaseAccessToken() { return (await cookies()).get('sb_access_token')?.value || null; }
-export async function getSupabaseRefreshToken() { return (await cookies()).get('sb_refresh_token')?.value || null; }
-
-export async function getValidSupabaseAccessToken() {
-  const access = await getSupabaseAccessToken();
-  if (access) { try { await supabaseLookup(access); return access; } catch {} }
-  const refresh = await getSupabaseRefreshToken();
-  if (!refresh) return null;
-  const session = await supabaseRefresh(refresh);
-  await setSupabaseSession(session);
-  return session.access_token;
-}
-
-export async function setSupabaseSession(session: SupabaseSession) {
-  const store = await cookies();
-  const secure = process.env.NODE_ENV === 'production';
-  store.set('sb_access_token', session.access_token, { httpOnly: true, sameSite: 'lax', secure, path: '/', maxAge: Number(session.expires_in || 3600) });
-  store.set('sb_refresh_token', session.refresh_token, { httpOnly: true, sameSite: 'lax', secure, path: '/', maxAge: 60 * 60 * 24 * 30 });
-}
-export async function clearSupabaseSession() { const store = await cookies(); store.delete('sb_access_token'); store.delete('sb_refresh_token'); }
+export interface SupabaseAuthUser{id:string;email?:string|null;user_metadata?:Record<string,any>;app_metadata?:Record<string,any>}
+export interface SupabaseSession{access_token:string;refresh_token:string;expires_in?:number;user:SupabaseAuthUser}
+async function authRequest(path:string,body?:any,opts:{method?:string;accessToken?:string;admin?:boolean}={}){const key=opts.admin?SECRET_KEY:PUBLISHABLE_KEY;if(!SUPABASE_URL||!key)throw new Error('Supabase Auth non configuré.');const response=await fetch(`${SUPABASE_URL}/auth/v1${path}`,{method:opts.method||(body===undefined?'GET':'POST'),headers:{apikey:key,Authorization:`Bearer ${opts.accessToken||key}`,...(body===undefined?{}:{'Content-Type':'application/json'})},body:body===undefined?undefined:JSON.stringify(body),cache:'no-store'});const data=await response.json().catch(()=>({}));if(!response.ok){const e=new Error(String(data?.msg||data?.message||data?.error_description||data?.error||'Supabase Auth error'));(e as any).status=response.status;throw e}return data}
+export async function supabaseSignIn(email:string,password:string){return authRequest('/token?grant_type=password',{email,password}) as Promise<SupabaseSession>}
+export async function supabaseSignUp(email:string,password:string,name?:string){return authRequest('/signup',{email,password,data:{name}}) as Promise<SupabaseSession>}
+export async function supabaseRefresh(refreshToken:string){return authRequest('/token?grant_type=refresh_token',{refresh_token:refreshToken}) as Promise<SupabaseSession>}
+export async function supabaseLookup(accessToken:string){return authRequest('/user',undefined,{accessToken}) as Promise<SupabaseAuthUser>}
+export async function supabaseResetPassword(email:string){return authRequest('/recover',{email})}
+export async function supabaseChangePassword(accessToken:string,password:string){return authRequest('/user',{password},{method:'PUT',accessToken}) as Promise<SupabaseAuthUser>}
+export async function supabaseAdminCreateUser(attributes:Record<string,any>){return authRequest('/admin/users',attributes,{method:'POST',admin:true})}
+export async function supabaseAdminUpdateUser(userId:string,attributes:Record<string,any>){return authRequest(`/admin/users/${encodeURIComponent(userId)}`,attributes,{method:'PUT',admin:true})}
+export async function getAuthMigrationByEmail(email:string){const rows=await rest(`/rest/v1/auth_migration_map?select=*&email=eq.${encodeURIComponent(email.toLowerCase())}&limit=1`,{},true);return Array.isArray(rows)?rows[0]||null:null}
+export async function markAuthMigration(firebaseUid:string,patch:Record<string,any>){await rest(`/rest/v1/auth_migration_map?firebase_uid=eq.${encodeURIComponent(firebaseUid)}`,{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify(patch)},true)}
+export async function getSupabaseAccessToken(){return(await cookies()).get('sb_access_token')?.value||null}
+export async function getSupabaseRefreshToken(){return(await cookies()).get('sb_refresh_token')?.value||null}
+export async function getValidSupabaseAccessToken(){const access=await getSupabaseAccessToken();if(access){try{await supabaseLookup(access);return access}catch{}}const refresh=await getSupabaseRefreshToken();if(!refresh)return null;const session=await supabaseRefresh(refresh);await setSupabaseSession(session);return session.access_token}
+export async function setSupabaseSession(session:SupabaseSession){const store=await cookies();const secure=process.env.NODE_ENV==='production';store.set('sb_access_token',session.access_token,{httpOnly:true,sameSite:'lax',secure,path:'/',maxAge:Number(session.expires_in||3600)});store.set('sb_refresh_token',session.refresh_token,{httpOnly:true,sameSite:'lax',secure,path:'/',maxAge:60*60*24*30})}
+export async function clearSupabaseSession(){const store=await cookies();store.delete('sb_access_token');store.delete('sb_refresh_token')}
