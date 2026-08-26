@@ -1,48 +1,26 @@
-import { firebaseDatabaseGet, firebaseDatabasePut, getValidFirebaseIdToken } from './firebase-backend';
+import { supabaseGetRoot, supabaseSetRoot } from './supabase-backend';
 import { PUBLIC_COLLECTIONS, INTAKE_COLLECTIONS, STUDENT_PRIVATE_COLLECTIONS, MANAGER_COLLECTIONS, JURY_COLLECTIONS, REGISTRATION_COLLECTIONS } from './data-policy';
 
 export interface CollectionRow { key:string; data:unknown; is_public:boolean; updated_at:string; }
 
 export const KNOWN_COLLECTIONS = Array.from(new Set([
-  ...PUBLIC_COLLECTIONS,
-  ...INTAKE_COLLECTIONS,
-  ...STUDENT_PRIVATE_COLLECTIONS,
-  ...MANAGER_COLLECTIONS,
-  ...JURY_COLLECTIONS,
-  ...REGISTRATION_COLLECTIONS,
-  'beautyContests','adminPermissions','classroomProgress','classroomRequests','classroomMessages','users','juryMembers','registrationStaff','userProfiles','authProfiles'
+  ...PUBLIC_COLLECTIONS,...INTAKE_COLLECTIONS,...STUDENT_PRIVATE_COLLECTIONS,...MANAGER_COLLECTIONS,...JURY_COLLECTIONS,...REGISTRATION_COLLECTIONS,
+  'beautyContests','adminPermissions','classroomProgress','classroomRequests','classroomMessages','users','juryMembers','registrationStaff','userProfiles','authProfiles',
+  'adminNotifications','adminProfile','applications','fashionDayReservations','heroSlides','missOneLight','pagesContent','mailingContacts','apiKeys'
 ]));
 
-export async function getCollection(key:string){
-  if(PUBLIC_COLLECTIONS.has(key)) return firebaseDatabaseGet(key,null);
-  const token=await getValidFirebaseIdToken();
-  return firebaseDatabaseGet(key,token);
-}
+const SUPABASE_ROOTS = new Set([
+  'adminNotifications','adminProfile','agencyAchievements','agencyInfo','agencyPartners','agencyServices','agencyTimeline','apiKeys','applications','castingApplications',
+  'classroomProgress','contactInfo','faqData','fashionDayEvents','fashionDayReservations','heroSlides','juryMembers','mailingContacts','missOneLight','modelDistinctions',
+  'models','navLinks','newsItems','pagesContent','registrationStaff','siteConfig','siteImages','socialLinks','testimonials','users','seoConfig','articles','courseData','gallery',
+  'galleryAlbums','fashionDayApplications','contactMessages','bookingRequests','recoveryRequests','articleComments','forumReplies','absences','monthlyPayments','photoshootBriefs',
+  'forumThreads','beautyContests','adminPermissions','classroomRequests','classroomMessages','userProfiles','authProfiles'
+]);
 
-export async function getPublicCollection(key:string){
-  if(!PUBLIC_COLLECTIONS.has(key)) throw new Error(`Collection publique non autorisée: ${key}`);
-  return firebaseDatabaseGet(key,null);
-}
-
-export async function getCollections(keys:Iterable<string>=KNOWN_COLLECTIONS):Promise<CollectionRow[]>{
-  const token=await getValidFirebaseIdToken();
-  const selected=Array.from(new Set(keys));
-  const rows=await Promise.all(selected.map(async key=>{
-    try{
-      const data=await firebaseDatabaseGet(key,PUBLIC_COLLECTIONS.has(key)?null:token);
-      return {key,data,is_public:PUBLIC_COLLECTIONS.has(key),updated_at:new Date().toISOString()} as CollectionRow;
-    }catch(error:any){
-      if(error?.status===401||error?.status===403)return null;
-      throw error;
-    }
-  }));
-  return rows.filter(Boolean) as CollectionRow[];
-}
-
-export async function setCollection(key:string,data:unknown){
-  const token=await getValidFirebaseIdToken();
-  await firebaseDatabasePut(key,data??null,token);
-}
+export async function getCollection(key:string){if(!SUPABASE_ROOTS.has(key))return null;return supabaseGetRoot(key)}
+export async function getPublicCollection(key:string){if(!PUBLIC_COLLECTIONS.has(key))throw new Error(`Collection publique non autorisée: ${key}`);if(!SUPABASE_ROOTS.has(key))return null;return supabaseGetRoot(key)}
+export async function getCollections(keys:Iterable<string>=KNOWN_COLLECTIONS):Promise<CollectionRow[]>{const selected=Array.from(new Set(keys)).filter(key=>SUPABASE_ROOTS.has(key));const rows=await Promise.all(selected.map(async key=>{try{const data=await supabaseGetRoot(key);return{key,data,is_public:PUBLIC_COLLECTIONS.has(key),updated_at:new Date().toISOString()} as CollectionRow}catch(error:any){if(error?.status===401||error?.status===403||error?.status===404)return null;throw error}}));return rows.filter(Boolean) as CollectionRow[]}
+export async function setCollection(key:string,data:unknown){if(!SUPABASE_ROOTS.has(key))throw new Error(`Collection non migrée vers Supabase: ${key}`);await supabaseSetRoot(key,data??null)}
 
 export function collectionToArray(value:unknown):any[]{if(Array.isArray(value))return value.filter(Boolean);if(value&&typeof value==='object')return Object.values(value as Record<string,unknown>).filter(Boolean);return[]}
 const idx=(arr:any[],s:string)=>/^\d+$/.test(s)?Number(s):arr.findIndex((i)=>i&&String(i.id)===s);

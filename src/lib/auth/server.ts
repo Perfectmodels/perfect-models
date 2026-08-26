@@ -1,22 +1,21 @@
-import { clearFirebaseSession, firebaseChangePassword, firebaseLookup, getFirebaseIdToken, getValidFirebaseIdToken, setFirebaseSession } from '../firebase-backend';
+import { clearSupabaseSession, getSupabaseAccessToken, getValidSupabaseAccessToken, setSupabaseSession, supabaseChangePassword, supabaseLookup } from '../supabase-backend';
 
 export const auth = {
   async getSession() {
-    const idToken = await getValidFirebaseIdToken();
-    if (!idToken) return { data: null };
-    const user = await firebaseLookup(idToken).catch(() => null);
+    const accessToken = await getValidSupabaseAccessToken();
+    if (!accessToken) return { data: null };
+    const user = await supabaseLookup(accessToken).catch(() => null);
     return { data: user ? { user } : null };
   },
   async signOut() {
-    await clearFirebaseSession();
+    await clearSupabaseSession();
   },
   async changePassword(newPassword: string) {
-    const idToken = await getFirebaseIdToken();
-    if (!idToken) return { error: new Error('Session Firebase expirée.') };
+    const accessToken = await getSupabaseAccessToken();
+    if (!accessToken) return { error: new Error('Session Supabase expirée.') };
     try {
-      const result = await firebaseChangePassword(idToken, newPassword);
-      await setFirebaseSession(result);
-      return { data: result };
+      const user = await supabaseChangePassword(accessToken, newPassword);
+      return { data: user };
     } catch (error) {
       return { error };
     }
