@@ -1,39 +1,286 @@
-import { randomInt } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { getCurrentAppProfile } from '@/lib/auth/profile';
-import { supabaseAdminCreateUser } from '@/lib/supabase-backend';
+import {
+  privilegedSupabaseUpsert,
+  supabaseAdminUpdateUser,
+  supabaseInviteUserByEmail,
+} from '@/lib/supabase-backend';
 import { collectionToArray, getCollection, setCollection } from '@/lib/app-data';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.perfectmodels.online';
-const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
-const DEFAULT_FROM_EMAIL = process.env.DEFAULT_FROM_EMAIL || 'contact@perfectmodels.online';
-const CREDENTIALS_SUBJECT = 'Votre profil PMM est validé — vos accès mannequin';
-const slug=(v:unknown)=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
-const escapeHtml=(v:unknown)=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
-function generateTemporaryPassword(length=14){const upper='ABCDEFGHJKLMNPQRSTUVWXYZ',lower='abcdefghijkmnopqrstuvwxyz',digits='23456789',symbols='!@#$%*-_',all=upper+lower+digits+symbols,pick=(s:string)=>s[randomInt(0,s.length)];const chars=[pick(upper),pick(lower),pick(digits),pick(symbols)];while(chars.length<length)chars.push(pick(all));for(let i=chars.length-1;i>0;i--){const j=randomInt(0,i+1);[chars[i],chars[j]]=[chars[j],chars[i]]}return chars.join('')}
-function nextUsername(models:any[],firstName:string){const initial=(firstName.trim().charAt(0)||'M').toUpperCase().replace(/[^A-Z]/g,'')||'M',prefix=`Man-PMM${initial}`,numbers=models.map(m=>String(m?.username||'')).filter(u=>u.startsWith(prefix)).map(u=>Number.parseInt(u.slice(prefix.length),10)).filter(Number.isFinite),next=numbers.length?Math.max(...numbers)+1:1;return `${prefix}${String(next).padStart(2,'0')}`}
-function experienceText(value:unknown){switch(String(value||'')){case'none':return'Débutant(e) sans expérience préalable, prêt(e) à apprendre les bases du métier.';case'beginner':return'A déjà participé à quelques shootings photo en amateur ou pour de petites marques.';case'intermediate':return'A une expérience préalable en agence et a participé à des défilés ou des campagnes locales.';case'professional':return'Carrière de mannequin professionnel(le) établie avec un portfolio solide.';default:return'Expérience à renseigner par l’administrateur.'}}
-function credentialsEmailHtml(input:{to:string;name:string;username:string;password:string}){const loginUrl=`${SITE_URL.replace(/\/$/,'')}/login`;return `<html><body style="margin:0;background:#080808;font-family:Arial,sans-serif;color:#f5f5f5"><div style="max-width:620px;margin:0 auto;padding:36px 24px"><div style="border:1px solid #b9965b;background:#101010;padding:32px;border-radius:14px"><p style="margin:0 0 8px;color:#c8a96b;font-size:12px;letter-spacing:2px;text-transform:uppercase">Perfect Models Management</p><h1 style="margin:0 0 20px;font-size:28px;color:#fff">Bienvenue dans l’agence, ${escapeHtml(input.name)}</h1><p style="line-height:1.7;color:#d7d7d7">Votre profil de casting a été validé. Votre espace mannequin PMM vient d’être créé automatiquement.</p><div style="margin:24px 0;padding:20px;background:#050505;border:1px solid #2a2a2a;border-radius:10px"><p><strong style="color:#c8a96b">Identifiant :</strong> ${escapeHtml(input.username)}</p><p><strong style="color:#c8a96b">Adresse de connexion :</strong> ${escapeHtml(input.to)}</p><p><strong style="color:#c8a96b">Mot de passe temporaire :</strong> ${escapeHtml(input.password)}</p></div><p>Lors de votre première connexion, vous pourrez remplacer ce mot de passe par un mot de passe personnel.</p><p><a href="${escapeHtml(loginUrl)}" style="display:inline-block;background:#c8a96b;color:#080808;text-decoration:none;font-weight:bold;padding:13px 22px;border-radius:8px">Accéder à mon espace PMM</a></p></div></div></body></html>`}
-async function sendCredentialsEmail(input:{to:string;name:string;username:string;password:string}){const apiKey=process.env.BREVO_API_KEY;if(!apiKey)throw new Error('BREVO_API_KEY non configurée.');const htmlContent=credentialsEmailHtml(input);let lastError='';for(let attempt=1;attempt<=2;attempt++){const response=await fetch(BREVO_API_URL,{method:'POST',headers:{accept:'application/json','content-type':'application/json','api-key':apiKey},body:JSON.stringify({sender:{name:'Perfect Models Management',email:DEFAULT_FROM_EMAIL},to:[{email:input.to,name:input.name}],subject:CREDENTIALS_SUBJECT,htmlContent}),cache:'no-store'});const result=await response.json().catch(()=>({}));if(response.ok)return result;lastError=String(result?.message||`Brevo ${response.status}`)}throw new Error(lastError||'Envoi de l’email impossible.')}
-async function archiveCredentialsEmail(input:{applicationId:string;modelId:string;to:string;name:string;username:string;providerMessageId?:string}){const sentAt=new Date().toISOString(),messages=collectionToArray(await getCollection('contactMessages')),archiveId=`credentials-${slug(input.applicationId)}-${Date.now()}`;messages.push({id:archiveId,submissionDate:sentAt,status:'Lu',name:'Perfect Models Management',email:input.to,subject:CREDENTIALS_SUBJECT,message:`Compte mannequin créé et identifiants envoyés à ${input.name}.\n\nIdentifiant : ${input.username}\nAdresse de connexion : ${input.to}\nMot de passe temporaire : [non archivé pour des raisons de sécurité]`,folder:'sent',label:'Casting',direction:'outbound',messageType:'account_credentials',deliveryStatus:'accepted_by_brevo',provider:'brevo',providerMessageId:input.providerMessageId||'',castingApplicationId:input.applicationId,modelId:input.modelId,recipientName:input.name});await setCollection('contactMessages',messages)}
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'https://www.perfectmodels.online').replace(/\/$/, '');
+const slug = (value: unknown) => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 
-export async function POST(request:Request){
-  const admin=await getCurrentAppProfile();if(!admin||admin.role!=='admin')return NextResponse.json({error:'Accès administrateur requis.'},{status:403});
-  const body=await request.json().catch(()=>({})),applicationId=String(body?.applicationId||'').trim();if(!applicationId)return NextResponse.json({error:'Candidature requise.'},{status:400});
-  const applications=collectionToArray(await getCollection('castingApplications')),appIndex=applications.findIndex(i=>String(i?.id||'')===applicationId);if(appIndex<0)return NextResponse.json({error:'Candidature introuvable.'},{status:404});const application=applications[appIndex] as any;if(application.status!=='Accepté')return NextResponse.json({error:'La candidature doit être acceptée avant la création du compte.'},{status:409});
-  const models=collectionToArray(await getCollection('models')),fullName=`${String(application.firstName||'').trim()} ${String(application.lastName||'').trim()}`.trim(),existingIndex=models.findIndex(m=>String(m?.castingApplicationId||'')===applicationId||String(m?.id||'')===String(application.modelId||'')||String(m?.name||'').trim().toLowerCase()===fullName.toLowerCase()),existingModel=existingIndex>=0?models[existingIndex]:null;
-  if(application.accountProvisionedAt&&(existingModel?.supabaseUserId||existingModel?.authUserId))return NextResponse.json({success:true,alreadyProvisioned:true,modelId:existingModel.id,username:existingModel.username,email:existingModel.email,credentialsEmailStatus:application.credentialsEmailStatus||null});
-  const username=String(existingModel?.username||'').trim()||nextUsername(models,String(application.firstName||'')),modelId=String(existingModel?.id||'').trim()||`${slug(application.lastName)}-${slug(application.firstName)}-${slug(application.id)}`,email=String(application.email||'').trim().toLowerCase(),password=generateTemporaryPassword(),age=application.birthDate?Math.max(0,new Date().getFullYear()-new Date(application.birthDate).getFullYear()):undefined;
-  if(!email.includes('@'))return NextResponse.json({error:'Adresse email invalide.'},{status:400});
-  let created:any;try{created=await supabaseAdminCreateUser({email,password,email_confirm:true,user_metadata:{name:fullName},app_metadata:{role:'student',profile_id:modelId,identifier:username,must_change_password:true}})}catch(error:any){const msg=String(error?.message||'');if(/already|exists|registered/i.test(msg))return NextResponse.json({error:'Un compte Supabase existe déjà avec cette adresse email.'},{status:409});throw error}
-  const authUser=created?.user||created,userId=String(authUser?.id||'');if(!userId)return NextResponse.json({error:'Supabase n’a pas retourné d’identifiant utilisateur.'},{status:502});
-  const now=new Date().toISOString(),permissions=existingModel?.permissions||{canAccessFormation:true,canAccessClassroom:true,canAccessForum:true,canViewPhotoshootBriefs:true,canViewResults:true,canEditProfile:true,isActive:true};
-  const newModel={...(existingModel||{}),id:modelId,name:fullName,username,password:'',email,supabaseUserId:userId,authUserId:userId,castingApplicationId:applicationId,phone:application.phone||existingModel?.phone||'',age,height:String(application.height||'').endsWith('cm')?String(application.height):`${application.height||'0'}cm`,gender:application.gender,location:application.city||'',imageUrl:application.photoPortraitUrl||application.photoFullBodyUrl||existingModel?.imageUrl||'/logo.svg',portfolioImages:[application.photoPortraitUrl,application.photoFullBodyUrl,application.photoProfileUrl,...(existingModel?.portfolioImages||[])].filter(Boolean).filter((u:string,i:number,l:string[])=>l.indexOf(u)===i),isPublic:existingModel?.isPublic??false,level:existingModel?.level||'Débutant',distinctions:existingModel?.distinctions||[],measurements:{chest:`${application.chest||'0'}cm`,waist:`${application.waist||'0'}cm`,hips:`${application.hips||'0'}cm`,shoeSize:String(application.shoeSize||'0')},categories:existingModel?.categories?.length?existingModel.categories:['Défilé','Commercial'],experience:existingModel?.experience||experienceText(application.experience),journey:existingModel?.journey||'Profil issu du casting Perfect Models Management.',quizScores:existingModel?.quizScores||{},permissions,createdAt:existingModel?.createdAt||now,accountProvisionedAt:now};
-  const users=((await getCollection('users').catch(()=>null))||{}) as Record<string,any>;users[userId]={id:userId,uid:userId,supabaseUserId:userId,email,name:fullName,identifier:username,matricule:username,role:'student',app_role:'student',profileId:modelId,status:'active',mustChangePassword:true,permissions,createdAt:now};await setCollection('users',users);
-  if(existingIndex>=0)models[existingIndex]=newModel;else models.push(newModel);await setCollection('models',models);applications[appIndex]={...application,status:'Accepté',modelId,authUserId:userId,supabaseUserId:userId,accountProvisionedAt:now,credentialsEmailStatus:'pending'};await setCollection('castingApplications',applications);
-  try{const brevoResult=await sendCredentialsEmail({to:email,name:fullName,username,password}),sentAt=new Date().toISOString();applications[appIndex]={...applications[appIndex],credentialsEmailStatus:'sent',credentialsSentAt:sentAt,credentialsEmailProviderId:String(brevoResult?.messageId||'')};await setCollection('castingApplications',applications);await archiveCredentialsEmail({applicationId,modelId,to:email,name:fullName,username,providerMessageId:String(brevoResult?.messageId||'')}).catch(()=>undefined)}catch(emailError:any){applications[appIndex]={...applications[appIndex],credentialsEmailStatus:'failed',credentialsEmailError:String(emailError?.message||'Erreur Brevo')};await setCollection('castingApplications',applications);return NextResponse.json({success:true,warning:'Le compte a été créé mais l’email des identifiants n’a pas pu être envoyé.',modelId,username,email},{status:207})}
-  return NextResponse.json({success:true,modelId,username,email,credentialsSent:true});
+function nextUsername(models: any[], firstName: string) {
+  const initial = (firstName.trim().charAt(0) || 'M').toUpperCase().replace(/[^A-Z]/g, '') || 'M';
+  const prefix = `Man-PMM${initial}`;
+  const numbers = models
+    .map((model) => String(model?.username || ''))
+    .filter((username) => username.startsWith(prefix))
+    .map((username) => Number.parseInt(username.slice(prefix.length), 10))
+    .filter(Number.isFinite);
+  const next = numbers.length ? Math.max(...numbers) + 1 : 1;
+  return `${prefix}${String(next).padStart(2, '0')}`;
+}
+
+function experienceText(value: unknown) {
+  switch (String(value || '')) {
+    case 'none': return 'Débutant(e) sans expérience préalable, prêt(e) à apprendre les bases du métier.';
+    case 'beginner': return 'A déjà participé à quelques shootings photo en amateur ou pour de petites marques.';
+    case 'intermediate': return 'A une expérience préalable en agence et a participé à des défilés ou des campagnes locales.';
+    case 'professional': return 'Carrière de mannequin professionnel(le) établie avec un portfolio solide.';
+    default: return 'Expérience à renseigner par l’administrateur.';
+  }
+}
+
+function isUuid(value: unknown) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || ''));
+}
+
+async function archiveActivationMessage(input: { applicationId: string; modelId: string; to: string; name: string; username: string }) {
+  const sentAt = new Date().toISOString();
+  const messages = collectionToArray(await getCollection('contactMessages'));
+  messages.push({
+    id: `activation-${slug(input.applicationId)}-${Date.now()}`,
+    submissionDate: sentAt,
+    status: 'Lu',
+    name: 'Perfect Models Management',
+    email: input.to,
+    subject: 'Invitation à votre espace mannequin PMM',
+    message: `Invitation Supabase envoyée à ${input.name}.\n\nIdentifiant agence : ${input.username}\nAdresse de connexion : ${input.to}\nLe mannequin choisit lui-même son mot de passe via le lien sécurisé.`,
+    folder: 'sent',
+    label: 'Casting',
+    direction: 'outbound',
+    messageType: 'account_activation',
+    deliveryStatus: 'sent_by_supabase_auth',
+    provider: 'supabase-auth',
+    castingApplicationId: input.applicationId,
+    modelId: input.modelId,
+    recipientName: input.name,
+  });
+  await setCollection('contactMessages', messages);
+}
+
+export async function POST(request: Request) {
+  const admin = await getCurrentAppProfile();
+  if (!admin || admin.role !== 'admin') {
+    return NextResponse.json({ error: 'Accès administrateur requis.' }, { status: 403 });
+  }
+
+  const body = await request.json().catch(() => ({}));
+  const applicationId = String(body?.applicationId || '').trim();
+  if (!applicationId) return NextResponse.json({ error: 'Candidature requise.' }, { status: 400 });
+
+  const applications = collectionToArray(await getCollection('castingApplications'));
+  const appIndex = applications.findIndex((item) => String(item?.id || '') === applicationId);
+  if (appIndex < 0) return NextResponse.json({ error: 'Candidature introuvable.' }, { status: 404 });
+
+  const application = applications[appIndex] as any;
+  if (application.status !== 'Accepté') {
+    return NextResponse.json({ error: 'La candidature doit être acceptée avant la création du compte.' }, { status: 409 });
+  }
+
+  const models = collectionToArray(await getCollection('models'));
+  const fullName = `${String(application.firstName || '').trim()} ${String(application.lastName || '').trim()}`.trim();
+  const existingIndex = models.findIndex((model) =>
+    String(model?.castingApplicationId || '') === applicationId ||
+    String(model?.id || '') === String(application.modelId || '') ||
+    String(model?.name || '').trim().toLowerCase() === fullName.toLowerCase()
+  );
+  const existingModel = existingIndex >= 0 ? models[existingIndex] : null;
+
+  if (application.accountProvisionedAt && (existingModel?.supabaseUserId || existingModel?.authUserId)) {
+    return NextResponse.json({
+      success: true,
+      alreadyProvisioned: true,
+      modelId: existingModel.id,
+      username: existingModel.username,
+      email: existingModel.email,
+      activationEmailStatus: application.activationEmailStatus || application.credentialsEmailStatus || null,
+    });
+  }
+
+  const username = String(existingModel?.username || '').trim() || nextUsername(models, String(application.firstName || ''));
+  const modelId = String(existingModel?.id || '').trim() || `${slug(application.lastName)}-${slug(application.firstName)}-${slug(application.id)}`;
+  const email = String(application.email || '').trim().toLowerCase();
+  const age = application.birthDate ? Math.max(0, new Date().getFullYear() - new Date(application.birthDate).getFullYear()) : undefined;
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return NextResponse.json({ error: 'Adresse email invalide.' }, { status: 400 });
+  }
+
+  let invited: any;
+  try {
+    invited = await supabaseInviteUserByEmail(email, `${SITE_URL}/auth/set-password`, {
+      name: fullName,
+      identifier: username,
+      model_id: modelId,
+      source: 'casting',
+    });
+  } catch (error: any) {
+    const message = String(error?.message || '');
+    if (/already|exists|registered/i.test(message)) {
+      return NextResponse.json({ error: 'Un compte Supabase existe déjà avec cette adresse email.' }, { status: 409 });
+    }
+    throw error;
+  }
+
+  const authUser = invited?.user || invited;
+  const userId = String(authUser?.id || '');
+  if (!userId) return NextResponse.json({ error: 'Supabase n’a pas retourné d’identifiant utilisateur.' }, { status: 502 });
+
+  const now = new Date().toISOString();
+  const permissions = existingModel?.permissions || {
+    canAccessFormation: true,
+    canAccessClassroom: true,
+    canAccessForum: true,
+    canViewPhotoshootBriefs: true,
+    canViewResults: true,
+    canEditProfile: true,
+    isActive: true,
+  };
+
+  await supabaseAdminUpdateUser(userId, {
+    app_metadata: {
+      ...(authUser?.app_metadata || {}),
+      role: 'student',
+      profile_id: modelId,
+      model_id: modelId,
+      identifier: username,
+      must_change_password: true,
+      account_source: 'casting',
+    },
+  });
+
+  const newModel = {
+    ...(existingModel || {}),
+    id: modelId,
+    name: fullName,
+    username,
+    password: '',
+    email,
+    supabaseUserId: userId,
+    authUserId: userId,
+    castingApplicationId: applicationId,
+    phone: application.phone || existingModel?.phone || '',
+    age,
+    birthDate: application.birthDate || existingModel?.birthDate || '',
+    nationality: application.nationality || existingModel?.nationality || '',
+    instagram: application.instagram || existingModel?.instagram || '',
+    height: String(application.height || '').endsWith('cm') ? String(application.height) : `${application.height || '0'}cm`,
+    gender: application.gender,
+    location: application.city || '',
+    imageUrl: application.photoPortraitUrl || application.photoFullBodyUrl || existingModel?.imageUrl || '/logo.svg',
+    portfolioImages: [
+      application.photoPortraitUrl,
+      application.photoFullBodyUrl,
+      application.photoProfileUrl,
+      ...(existingModel?.portfolioImages || []),
+    ].filter(Boolean).filter((url: string, index: number, list: string[]) => list.indexOf(url) === index),
+    isPublic: existingModel?.isPublic ?? false,
+    isActive: true,
+    status: 'active',
+    level: existingModel?.level || 'Débutant',
+    distinctions: existingModel?.distinctions || [],
+    measurements: {
+      chest: `${application.chest || '0'}cm`,
+      waist: `${application.waist || '0'}cm`,
+      hips: `${application.hips || '0'}cm`,
+      shoeSize: String(application.shoeSize || '0'),
+    },
+    categories: existingModel?.categories?.length ? existingModel.categories : ['Défilé', 'Commercial'],
+    experience: existingModel?.experience || experienceText(application.experience),
+    journey: existingModel?.journey || 'Profil issu du casting Perfect Models Management.',
+    quizScores: existingModel?.quizScores || {},
+    permissions,
+    createdAt: existingModel?.createdAt || now,
+    accountProvisionedAt: now,
+  };
+
+  await Promise.all([
+    privilegedSupabaseUpsert('profiles', {
+      user_id: userId,
+      role: 'student',
+      identifier: username,
+      display_name: fullName,
+      email,
+      model_id: modelId,
+      must_change_password: true,
+      is_active: true,
+      metadata: { permissions, source: 'casting', casting_application_id: applicationId },
+      updated_at: now,
+    }, 'user_id'),
+    privilegedSupabaseUpsert('models', {
+      id: modelId,
+      auth_user_id: userId,
+      casting_application_id: isUuid(applicationId) ? applicationId : null,
+      username,
+      name: fullName,
+      email,
+      phone: application.phone || null,
+      gender: application.gender || null,
+      age: Number.isFinite(age) ? age : null,
+      birth_date: application.birthDate || null,
+      nationality: application.nationality || null,
+      instagram_url: application.instagram || null,
+      height: newModel.height,
+      location: application.city || null,
+      level: newModel.level,
+      image_url: newModel.imageUrl,
+      categories: newModel.categories,
+      measurements: newModel.measurements,
+      distinctions: newModel.distinctions,
+      experience: newModel.experience,
+      journey: newModel.journey,
+      permissions,
+      quiz_scores: newModel.quizScores,
+      is_public: false,
+      is_active: true,
+      status: 'active',
+      raw_data: application,
+      updated_at: now,
+    }, 'id'),
+    privilegedSupabaseUpsert('model_account_claims', {
+      model_id: modelId,
+      auth_user_id: userId,
+      agency_identifier: username,
+      full_name: fullName,
+      email,
+      phone: application.phone || null,
+      status: 'invited',
+      verification_method: 'casting_approval',
+      activation_email_status: 'sent_by_supabase_auth',
+      metadata: { casting_application_id: applicationId },
+      updated_at: now,
+    }, 'model_id'),
+  ]);
+
+  if (existingIndex >= 0) models[existingIndex] = newModel;
+  else models.push(newModel);
+  await setCollection('models', models);
+
+  applications[appIndex] = {
+    ...application,
+    status: 'Accepté',
+    modelId,
+    authUserId: userId,
+    supabaseUserId: userId,
+    accountProvisionedAt: now,
+    activationEmailStatus: 'sent_by_supabase_auth',
+    activationEmailSentAt: now,
+    credentialsEmailStatus: 'replaced_by_secure_invite',
+  };
+  await setCollection('castingApplications', applications);
+
+  await archiveActivationMessage({ applicationId, modelId, to: email, name: fullName, username }).catch(() => undefined);
+
+  return NextResponse.json({
+    success: true,
+    modelId,
+    username,
+    email,
+    invitationSent: true,
+    passwordDelivery: 'self_service_activation_link',
+  });
 }
