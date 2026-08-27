@@ -47,7 +47,39 @@ export async function setSupabaseLegacyCollection(key: string, payload: unknown)
 }
 
 export async function getSupabasePublicModels() {
-  return rest('public_models?select=*&order=name.asc');
+  const [models, images] = await Promise.all([
+    rest('public_models?select=*&order=name.asc'),
+    rest('model_portfolio_images?select=model_id,url,position&order=position.asc'),
+  ]);
+  const imageMap = new Map<string,string[]>();
+  for (const image of Array.isArray(images) ? images : []) {
+    const id = String(image?.model_id || '');
+    if (!id) continue;
+    const arr = imageMap.get(id) || [];
+    if (image?.url) arr.push(String(image.url));
+    imageMap.set(id, arr);
+  }
+  return (Array.isArray(models) ? models : []).map((model:any) => ({
+    id: model.id,
+    username: model.username,
+    name: model.name,
+    gender: model.gender,
+    age: model.age,
+    height: model.height,
+    location: model.location,
+    level: model.level,
+    imageUrl: model.image_url,
+    categories: model.categories || [],
+    measurements: model.measurements || {},
+    distinctions: model.distinctions || [],
+    experience: model.experience,
+    journey: model.journey,
+    fashionDayEditions: model.fashion_day_editions || [],
+    portfolioImages: imageMap.get(String(model.id)) || [],
+    isPublic: true,
+    isActive: true,
+    status: model.status || 'active',
+  }));
 }
 
 export async function submitSupabaseRow(table: string, row: Record<string, unknown>) {
