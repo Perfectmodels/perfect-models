@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import '../index.css';
 import ClientShell from './ClientShell';
-import { Analytics } from '@vercel/analytics/react';
 import JsonLd from '@/components/JsonLd';
 import { absoluteRuntimeUrl, buildOrganizationJsonLd, buildWebsiteJsonLd, getSiteRuntimeConfig } from '@/lib/site-runtime';
 import { getPublicAppState } from '@/lib/public-app-state';
@@ -65,7 +64,6 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <JsonLd data={[buildOrganizationJsonLd(config), buildWebsiteJsonLd(config)]} />
         <noscript>JavaScript est nécessaire pour les fonctions interactives de ce site.</noscript>
         <ClientShell initialData={initialData}>{children}</ClientShell>
-        <Analytics />
       </body>
     </html>
   );
