@@ -1,92 +1,101 @@
 import { NextResponse } from 'next/server';
+import { getCurrentAppProfile } from '@/lib/auth/profile';
+import { sendTransactionalTemplate } from '@/lib/email/server';
 
 const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.perfectmodels.online';
 const DEFAULT_FROM_EMAIL = process.env.DEFAULT_FROM_EMAIL || 'contact@perfectmodels.online';
-const SUPABASE_URL = (process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://qzkodgqxrcxsnfwpmwfb.supabase.co').replace(/\/$/, '');
-const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
-const escapeHtml = (value: unknown) => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;').replace(/'/g, '&#039;');
+function isSameOrigin(request: Request) {
+  const origin = request.headers.get('origin');
+  const host = request.headers.get('x-forwarded-host') || request.headers.get('host');
+  if (!origin || !host) return false;
+  try { return new URL(origin).host === host; } catch { return false; }
+}
 
-const sendRaw = async (payload: Record<string, unknown>) => {
+function validEmail(value: unknown) {
+  const email = String(value || '').trim().toLowerCase();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : '';
+}
+
+async function sendRaw(payload: Record<string, unknown>) {
   const apiKey = process.env.BREVO_API_KEY;
-  if (!apiKey) throw new Error('BREVO_API_KEY is not configured');
+  if (!apiKey) throw Object.assign(new Error('BREVO_API_KEY non configurée.'), { status: 503 });
   const response = await fetch(BREVO_API_URL, {
     method: 'POST',
     headers: { accept: 'application/json', 'content-type': 'application/json', 'api-key': apiKey },
     body: JSON.stringify(payload),
-  });
-  if (!response.ok) {
-    const body = await response.json().catch(() => ({}));
-    throw new Error(body?.message || `Brevo error ${response.status}`);
-  }
-  return response.json();
-};
-
-const sendTemplate = async (payload: Record<string, unknown>) => {
-  if (!SUPABASE_SECRET_KEY) throw new Error('SUPABASE_SECRET_KEY is not configured');
-  const response = await fetch(`${SUPABASE_URL}/functions/v1/send-transactional-email`, {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      apikey: SUPABASE_SECRET_KEY,
-    },
-    body: JSON.stringify(payload),
     cache: 'no-store',
   });
   const body = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(body?.error || `Supabase email function error ${response.status}`);
+  if (!response.ok) throw Object.assign(new Error(body?.message || `Brevo error ${response.status}`), { status: response.status });
   return body;
-};
+}
 
 export async function POST(request: Request) {
   try {
-    const origin = request.headers.get('origin');
-    if (origin && origin !== SITE_URL && origin !== SITE_URL.replace('www.', '')) {
-      return NextResponse.json({ error: 'Origin not allowed.' }, { status: 403 });
+    if (!isSameOrigin(request)) {
+      return NextResponse.json({ error: 'Origine non autorisée.' }, { status: 403 });
     }
 
-    const body = await request.json();
+    const profile = await getCurrentAppProfile();
+    if (!profile || !['admin', 'manager'].includes(profile.role)) {
+      return NextResponse.json({ error: 'Authentification administrateur requise.' }, { status: 403 });
+    }
+
+    const body = await request.json().catch(() => ({}));
     const { type, to, subject, htmlContent, replyTo, templateKey, variables, metadata } = body || {};
 
-    if (type === 'template') {
-      if (typeof templateKey !== 'string' || !templateKey || !Array.isArray(to) || to.length === 0 || to.length > 25) {
-        return NextResponse.json({ error: 'Payload template invalide.' }, { status: 400 });
-      }
-      const recipients = to
-        .filter((r: any) => r && typeof r.email === 'string' && r.email.includes('@'))
-        .map((r: any) => ({ email: r.email, ...(r.name ? { name: r.name } : {}) }));
-      if (!recipients.length) return NextResponse.json({ error: 'Destinataire invalide.' }, { status: 400 });
+    if (!Array.isArray(to) || to.length === 0 || to.length > 25) {
+      return NextResponse.json({ error: 'Destinataires invalides.' }, { status: 400 });
+    }
+    const recipients = to
+      .map((recipient: any) => ({
+        email: validEmail(recipient?.email),
+        name: String(recipient?.name || '').trim().slice(0, 120) || undefined,
+      }))
+      .filter((recipient: any) => recipient.email);
+    if (!recipients.length) return NextResponse.json({ error: 'Destinataire invalide.' }, { status: 400 });
 
-      const result = await sendTemplate({
+    if (type === 'template') {
+      if (typeof templateKey !== 'string' || !templateKey || templateKey.length > 120) {
+        return NextResponse.json({ error: 'Template invalide.' }, { status: 400 });
+      }
+      const result = await sendTransactionalTemplate({
         templateKey,
         to: recipients,
         variables: variables && typeof variables === 'object' ? variables : {},
-        metadata: metadata && typeof metadata === 'object' ? metadata : {},
-        ...(replyTo ? { replyTo } : {}),
+        metadata: {
+          ...(metadata && typeof metadata === 'object' ? metadata : {}),
+          requested_by_user_id: profile.userId,
+          requested_by_role: profile.role,
+        },
+        replyTo: replyTo && validEmail(replyTo.email)
+          ? { email: validEmail(replyTo.email), name: String(replyTo.name || '').slice(0, 120) || undefined }
+          : undefined,
       });
       return NextResponse.json(result);
     }
 
     if (type !== 'raw') return NextResponse.json({ error: 'Type d’email non autorisé.' }, { status: 400 });
-    if (!Array.isArray(to) || to.length === 0 || to.length > 25 || typeof htmlContent !== 'string' || htmlContent.length > 200000) {
-      return NextResponse.json({ error: 'Payload email invalide.' }, { status: 400 });
+    if (typeof htmlContent !== 'string' || !htmlContent.trim() || htmlContent.length > 200_000) {
+      return NextResponse.json({ error: 'Contenu email invalide.' }, { status: 400 });
     }
-    const recipients = to
-      .filter((r: any) => r && typeof r.email === 'string' && r.email.includes('@'))
-      .map((r: any) => ({ email: r.email, ...(r.name ? { name: r.name } : {}) }));
-    if (!recipients.length) return NextResponse.json({ error: 'Destinataire invalide.' }, { status: 400 });
 
     const result = await sendRaw({
       sender: { name: 'Perfect Models Management', email: DEFAULT_FROM_EMAIL },
       to: recipients,
-      subject: String(subject || 'Perfect Models Management'),
-      htmlContent: `<html><body style=\"font-family:Arial;line-height:1.7;color:#222\">${escapeHtml(htmlContent).replace(/\n/g, '<br>')}</body></html>`,
-      ...(replyTo ? { replyTo } : {}),
+      subject: String(subject || 'Perfect Models Management').trim().slice(0, 180),
+      htmlContent,
+      ...(replyTo && validEmail(replyTo.email)
+        ? { replyTo: { email: validEmail(replyTo.email), name: String(replyTo.name || '').slice(0, 120) || undefined } }
+        : {}),
     });
     return NextResponse.json({ ok: true, messageId: result?.messageId });
-  } catch (error) {
+  } catch (error: any) {
     console.error('[email]', error);
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Erreur email' }, { status: 500 });
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Erreur email' },
+      { status: Number(error?.status || 500) },
+    );
   }
 }
