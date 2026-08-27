@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getCurrentAppProfile } from '@/lib/auth/profile';
-import { firebaseDatabaseGet, firebaseDatabasePatch, firebaseDatabasePut, getValidFirebaseIdToken } from '@/lib/firebase-backend';
+import { getCollection, getNestedValue, patchNestedValue, setCollection, setNestedValue } from '@/lib/app-data';
 
 export const dynamic = 'force-dynamic';
 const VALID_KINDS = new Set(['absence', 'contribution', 'shooting-theme']);
@@ -10,12 +10,11 @@ const flattenProfileBuckets = (value: unknown) => Object.values((value && typeof
 export async function GET() {
   const profile = await getCurrentAppProfile();
   if (!profile) return NextResponse.json({ error: 'Non authentifié.' }, { status: 401 });
-  const token = await getValidFirebaseIdToken();
+  const root = await getCollection('classroomRequests').catch(() => ({}));
   if (canSupervise(profile.role)) {
-    const all = await firebaseDatabaseGet('classroomRequests', token).catch(() => ({}));
-    return NextResponse.json({ requests: flattenProfileBuckets(all) }, { headers: { 'Cache-Control': 'no-store' } });
+    return NextResponse.json({ requests: flattenProfileBuckets(root) }, { headers: { 'Cache-Control': 'no-store' } });
   }
-  const own = await firebaseDatabaseGet(`classroomRequests/${profile.profileId}`, token).catch(() => ({}));
+  const own = getNestedValue(root, [profile.profileId]) || {};
   return NextResponse.json({ requests: Object.values(own || {}) }, { headers: { 'Cache-Control': 'no-store' } });
 }
 
@@ -24,7 +23,6 @@ export async function POST(request: Request) {
   if (!profile || profile.role !== 'student') return NextResponse.json({ error: 'Réservé aux mannequins.' }, { status: 403 });
   const body = await request.json().catch(() => null) as any;
   if (!body || !VALID_KINDS.has(String(body.kind))) return NextResponse.json({ error: 'Type de demande invalide.' }, { status: 400 });
-  const token = await getValidFirebaseIdToken();
   const id = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
   const item = {
     id,
@@ -42,7 +40,8 @@ export async function POST(request: Request) {
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
-  await firebaseDatabasePut(`classroomRequests/${profile.profileId}/${id}`, item, token);
+  const root = await getCollection('classroomRequests').catch(() => ({}));
+  await setCollection('classroomRequests', setNestedValue(root || {}, [profile.profileId, id], item));
   return NextResponse.json({ success: true, request: item }, { status: 201 });
 }
 
@@ -53,13 +52,14 @@ export async function PATCH(request: Request) {
   if (!body?.id || !body?.profileId) return NextResponse.json({ error: 'Identifiants requis.' }, { status: 400 });
   const allowed = new Set(['pending', 'approved', 'rejected', 'processed']);
   const status = allowed.has(String(body.status)) ? String(body.status) : 'pending';
-  const token = await getValidFirebaseIdToken();
-  await firebaseDatabasePatch(`classroomRequests/${String(body.profileId)}/${String(body.id)}`, {
+  const root = await getCollection('classroomRequests').catch(() => ({}));
+  const next = patchNestedValue(root || {}, [String(body.profileId), String(body.id)], {
     status,
     adminNote: String(body.adminNote || '').slice(0, 3000),
     reviewedBy: profile.name,
     reviewedAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-  }, token);
+  });
+  await setCollection('classroomRequests', next);
   return NextResponse.json({ success: true });
 }
