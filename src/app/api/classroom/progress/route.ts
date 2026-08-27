@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getCurrentAppProfile } from '@/lib/auth/profile';
-import { firebaseDatabaseGet, firebaseDatabasePut, getValidFirebaseIdToken } from '@/lib/firebase-backend';
+import { getCollection, getNestedValue, setCollection, setNestedValue } from '@/lib/app-data';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,21 +11,20 @@ function canSupervise(role?: string | null) {
 export async function GET(request: Request) {
   const profile = await getCurrentAppProfile();
   if (!profile) return NextResponse.json({ error: 'Non authentifié.' }, { status: 401 });
-  const token = await getValidFirebaseIdToken();
   const url = new URL(request.url);
   const requestedProfileId = url.searchParams.get('profileId');
+  const root = await getCollection('classroomProgress').catch(() => ({}));
 
   if (canSupervise(profile.role)) {
     if (requestedProfileId) {
-      const progress = await firebaseDatabaseGet(`classroomProgress/${requestedProfileId}`, token).catch(() => null);
-      return NextResponse.json({ progress: progress || {} }, { headers: { 'Cache-Control': 'no-store' } });
+      const progress = getNestedValue(root, [requestedProfileId]) || {};
+      return NextResponse.json({ progress }, { headers: { 'Cache-Control': 'no-store' } });
     }
-    const progress = await firebaseDatabaseGet('classroomProgress', token).catch(() => ({}));
-    return NextResponse.json({ progress: progress || {} }, { headers: { 'Cache-Control': 'no-store' } });
+    return NextResponse.json({ progress: root || {} }, { headers: { 'Cache-Control': 'no-store' } });
   }
 
-  const progress = await firebaseDatabaseGet(`classroomProgress/${profile.profileId}`, token).catch(() => null);
-  return NextResponse.json({ progress: progress || {} }, { headers: { 'Cache-Control': 'no-store' } });
+  const progress = getNestedValue(root, [profile.profileId]) || {};
+  return NextResponse.json({ progress }, { headers: { 'Cache-Control': 'no-store' } });
 }
 
 export async function PUT(request: Request) {
@@ -41,7 +40,6 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: 'Non autorisé.' }, { status: 403 });
   }
 
-  const token = await getValidFirebaseIdToken();
   const moduleId = String(Number(body.moduleId));
   const payload = {
     ...body,
@@ -52,6 +50,7 @@ export async function PUT(request: Request) {
   };
   delete payload.profileIdOverride;
 
-  await firebaseDatabasePut(`classroomProgress/${targetProfileId}/${moduleId}`, payload, token);
+  const root = await getCollection('classroomProgress').catch(() => ({}));
+  await setCollection('classroomProgress', setNestedValue(root || {}, [targetProfileId, moduleId], payload));
   return NextResponse.json({ success: true, progress: payload });
 }
