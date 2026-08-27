@@ -1,6 +1,6 @@
 import { firebaseDatabaseGet, firebaseDatabasePut, getValidFirebaseIdToken } from './firebase-backend';
 import { PUBLIC_COLLECTIONS, INTAKE_COLLECTIONS, STUDENT_PRIVATE_COLLECTIONS, MANAGER_COLLECTIONS, JURY_COLLECTIONS, REGISTRATION_COLLECTIONS } from './data-policy';
-import { getSupabaseLegacyCollection, setSupabaseLegacyCollection } from './supabase-backend';
+import { getSupabaseLegacyCollection, getSupabasePublicModels, setSupabaseLegacyCollection } from './supabase-backend';
 
 export interface CollectionRow { key:string; data:unknown; is_public:boolean; updated_at:string; }
 
@@ -16,6 +16,7 @@ export const KNOWN_COLLECTIONS = Array.from(new Set([
 
 async function readPublicCollection(key:string){
   try {
+    if (key === 'models') return await getSupabasePublicModels();
     const value = await getSupabaseLegacyCollection(key);
     if (value !== null && typeof value !== 'undefined') return value;
   } catch (error) {
