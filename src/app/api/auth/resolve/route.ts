@@ -1,13 +1,9 @@
 import { NextResponse } from 'next/server';
-import { firebaseDatabaseGet } from '@/lib/firebase-backend';
+import { collectionToArray, getCollection } from '@/lib/app-data';
 import { ADMIN_ALIASES } from '@/lib/auth/profile';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
-
-function asArray(value: unknown): unknown[] {
-  return Array.isArray(value) ? value : value && typeof value === 'object' ? Object.values(value) : [];
-}
 
 function normalizeRole(record: Record<string, unknown>): string {
   const role = String(record.role || record.app_role || record.appRole || 'student');
@@ -27,14 +23,14 @@ async function resolve(identifier: string) {
 
   try {
     const [models, users, profiles] = await Promise.all([
-      firebaseDatabaseGet('models').catch(() => null),
-      firebaseDatabaseGet('users').catch(() => null),
-      firebaseDatabaseGet('userProfiles').catch(() => null),
+      getCollection('models').catch(() => null),
+      getCollection('users').catch(() => null),
+      getCollection('userProfiles').catch(() => null),
     ]);
     const all = [
-      ...asArray(models),
-      ...asArray(users),
-      ...asArray(profiles),
+      ...collectionToArray(models),
+      ...collectionToArray(users),
+      ...collectionToArray(profiles),
     ];
     const row = all.find((item: unknown) => {
       if (!item || typeof item !== 'object') return false;
@@ -50,17 +46,14 @@ async function resolve(identifier: string) {
       r.email || r.loginEmail || r.login_email ||
       (String(r.matricule || r.identifier || '').toLowerCase() + '@perfectmodels.online')
     );
-    return NextResponse.json(
-      {
-        email,
-        identifier: String(r.identifier || r.matricule || candidate),
-        role: normalizeRole(r),
-        name: String(r.name || r.displayName || candidate),
-      },
-      { headers: { 'Cache-Control': 'no-store' } }
-    );
+    return NextResponse.json({
+      email,
+      identifier: String(r.identifier || r.matricule || candidate),
+      role: normalizeRole(r),
+      name: String(r.name || r.displayName || candidate),
+    }, { headers: { 'Cache-Control': 'no-store' } });
   } catch (error) {
-    console.error('[auth/resolve] Firebase lookup failed', error);
+    console.error('[auth/resolve] Supabase lookup failed', error);
     return NextResponse.json({ error: "Le service d'authentification est temporairement indisponible." }, { status: 503 });
   }
 }
