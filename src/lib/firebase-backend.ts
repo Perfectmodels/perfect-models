@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers';
+import crypto from 'node:crypto';
 
 const config = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'AIzaSyBawZl4SJz7drhzIrG0dnazSglyF6vmKCg',
@@ -88,6 +89,63 @@ export async function firebaseDatabaseGet(path: string, idToken?: string | null)
     (error as any).status = response.status;
     throw error;
   }
+  return data;
+}
+
+function serviceAccount() {
+  const raw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON || '';
+  if (raw) {
+    try { return JSON.parse(raw); } catch { return null; }
+  }
+  const client_email = process.env.FIREBASE_CLIENT_EMAIL || '';
+  const private_key = (process.env.FIREBASE_PRIVATE_KEY || '').replace(/\\n/g, '\n');
+  const project_id = process.env.FIREBASE_PROJECT_ID || config.projectId;
+  return client_email && private_key ? { client_email, private_key, project_id } : null;
+}
+
+export function hasFirebaseAdminCredentials() {
+  const service = serviceAccount();
+  return Boolean(service?.client_email && service?.private_key && service?.project_id);
+}
+
+function b64url(value: string | Buffer) { return Buffer.from(value).toString('base64url'); }
+
+async function firebaseAdminAccessToken() {
+  const service = serviceAccount();
+  if (!service) throw new Error('Compte de service Firebase non configuré côté serveur.');
+  const now = Math.floor(Date.now() / 1000);
+  const header = b64url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
+  const payload = b64url(JSON.stringify({
+    iss: service.client_email,
+    sub: service.client_email,
+    aud: 'https://oauth2.googleapis.com/token',
+    iat: now,
+    exp: now + 3600,
+    scope: 'https://www.googleapis.com/auth/firebase.database https://www.googleapis.com/auth/userinfo.email',
+  }));
+  const unsigned = `${header}.${payload}`;
+  const signer = crypto.createSign('RSA-SHA256');
+  signer.update(unsigned);
+  signer.end();
+  const assertion = `${unsigned}.${b64url(signer.sign(service.private_key))}`;
+  const response = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion }),
+    cache: 'no-store',
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || !data?.access_token) throw new Error(`Google OAuth ${response.status}`);
+  return String(data.access_token);
+}
+
+export async function firebaseAdminDatabaseGet(path: string) {
+  const cleanPath = path.replace(/^\/+|\/+$/g, '');
+  const url = new URL(`${config.databaseURL}/${cleanPath}.json`);
+  url.searchParams.set('access_token', await firebaseAdminAccessToken());
+  const response = await fetch(url, { cache: 'no-store' });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) throw new Error(`Firebase Admin Realtime Database GET ${response.status}`);
   return data;
 }
 
