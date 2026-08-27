@@ -66,8 +66,11 @@ export async function getSupabasePublicModels() {
   }));
 }
 
+// Intake writes are server-only and must use the privileged Supabase key. Public
+// browsers submit through PMM's validated API routes and never write directly to
+// the normalized intake tables.
 export async function submitSupabaseRow(table: string, row: Record<string, unknown>) {
-  await rest(table, { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify(row) }, false);
+  await rest(table, { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify(row) }, true);
 }
 export async function privilegedSupabaseUpsert(table: string, rows: Record<string, unknown> | Record<string, unknown>[], onConflict?: string) {
   const conflict = onConflict ? `?on_conflict=${encodeURIComponent(onConflict)}` : '';
