@@ -1,5 +1,6 @@
 import { firebaseDatabaseGet, firebaseDatabasePut, getValidFirebaseIdToken } from './firebase-backend';
 import { PUBLIC_COLLECTIONS, INTAKE_COLLECTIONS, STUDENT_PRIVATE_COLLECTIONS, MANAGER_COLLECTIONS, JURY_COLLECTIONS, REGISTRATION_COLLECTIONS } from './data-policy';
+import { getSupabaseLegacyCollection, getSupabasePublicModels, hasSupabasePrivilegedKey, setSupabaseLegacyCollection } from './supabase-backend';
 
 export interface CollectionRow { key:string; data:unknown; is_public:boolean; updated_at:string; }
 
@@ -13,15 +14,62 @@ export const KNOWN_COLLECTIONS = Array.from(new Set([
   'beautyContests','adminPermissions','classroomProgress','classroomRequests','classroomMessages','users','juryMembers','registrationStaff','userProfiles','authProfiles'
 ]));
 
+export function collectionToArray(value:unknown):any[]{if(Array.isArray(value))return value.filter(Boolean);if(value&&typeof value==='object')return Object.values(value as Record<string,unknown>).filter(Boolean);return[]}
+
+function sanitizePublicModels(value:unknown){
+  return collectionToArray(value)
+    .filter((model:any)=>model?.isPublic===true && model?.isActive!==false && model?.status!=='inactive')
+    .map((model:any)=>({
+      id:model.id,
+      username:model.username,
+      name:model.name,
+      gender:model.gender,
+      age:model.age,
+      height:model.height,
+      location:model.location,
+      level:model.level,
+      imageUrl:model.imageUrl,
+      categories:Array.isArray(model.categories)?model.categories:[],
+      measurements:model.measurements||{},
+      distinctions:Array.isArray(model.distinctions)?model.distinctions:[],
+      experience:model.experience,
+      journey:model.journey,
+      fashionDayEditions:Array.isArray(model.fashionDayEditions)?model.fashionDayEditions:[],
+      portfolioImages:Array.isArray(model.portfolioImages)?model.portfolioImages:[],
+      isPublic:true,
+      isActive:true,
+      status:'active',
+    }));
+}
+
+async function readPublicCollection(key:string){
+  const supabasePrimary=hasSupabasePrivilegedKey();
+  if(supabasePrimary){
+    try {
+      if (key === 'models') return await getSupabasePublicModels();
+      const value = await getSupabaseLegacyCollection(key);
+      if (value !== null && typeof value !== 'undefined') return value;
+    } catch (error) {
+      console.warn(`[data] Supabase read fallback for ${key}`, error);
+    }
+  }
+  const firebaseValue=await firebaseDatabaseGet(key,null);
+  return key==='models'?sanitizePublicModels(firebaseValue):firebaseValue;
+}
+
 export async function getCollection(key:string){
-  if(PUBLIC_COLLECTIONS.has(key)) return firebaseDatabaseGet(key,null);
+  if(PUBLIC_COLLECTIONS.has(key)){
+    const token=await getValidFirebaseIdToken();
+    if(token && key==='models') return firebaseDatabaseGet(key,token);
+    return readPublicCollection(key);
+  }
   const token=await getValidFirebaseIdToken();
   return firebaseDatabaseGet(key,token);
 }
 
 export async function getPublicCollection(key:string){
   if(!PUBLIC_COLLECTIONS.has(key)) throw new Error(`Collection publique non autorisée: ${key}`);
-  return firebaseDatabaseGet(key,null);
+  return readPublicCollection(key);
 }
 
 export async function getCollections(keys:Iterable<string>=KNOWN_COLLECTIONS):Promise<CollectionRow[]>{
@@ -29,8 +77,11 @@ export async function getCollections(keys:Iterable<string>=KNOWN_COLLECTIONS):Pr
   const selected=Array.from(new Set(keys));
   const rows=await Promise.all(selected.map(async key=>{
     try{
-      const data=await firebaseDatabaseGet(key,PUBLIC_COLLECTIONS.has(key)?null:token);
-      return {key,data,is_public:PUBLIC_COLLECTIONS.has(key),updated_at:new Date().toISOString()} as CollectionRow;
+      const isPublic=PUBLIC_COLLECTIONS.has(key);
+      const data=isPublic
+        ?(token&&key==='models'?await firebaseDatabaseGet(key,token):await readPublicCollection(key))
+        :await firebaseDatabaseGet(key,token);
+      return {key,data,is_public:isPublic,updated_at:new Date().toISOString()} as CollectionRow;
     }catch(error:any){
       if(error?.status===401||error?.status===403)return null;
       throw error;
@@ -42,9 +93,15 @@ export async function getCollections(keys:Iterable<string>=KNOWN_COLLECTIONS):Pr
 export async function setCollection(key:string,data:unknown){
   const token=await getValidFirebaseIdToken();
   await firebaseDatabasePut(key,data??null,token);
+  if(PUBLIC_COLLECTIONS.has(key)) {
+    try {
+      await setSupabaseLegacyCollection(key,data??null);
+    } catch (error) {
+      console.error(`[data] Supabase dual-write failed for ${key}`, error);
+    }
+  }
 }
 
-export function collectionToArray(value:unknown):any[]{if(Array.isArray(value))return value.filter(Boolean);if(value&&typeof value==='object')return Object.values(value as Record<string,unknown>).filter(Boolean);return[]}
 const idx=(arr:any[],s:string)=>/^\d+$/.test(s)?Number(s):arr.findIndex((i)=>i&&String(i.id)===s);
 export function getNestedValue(root:any,segs:string[]){let c=root;for(const s of segs){if(c==null)return null;if(Array.isArray(c)){const i=idx(c,s);if(i<0)return null;c=c[i]}else c=c[s]}return c??null}
 export function setNestedValue(root:any,segs:string[],value:any):any{if(!segs.length)return value;const copy=Array.isArray(root)?[...root]:{...(root&&typeof root==='object'?root:{})};const[h,...t]=segs;if(Array.isArray(copy)){let i=idx(copy,h);if(i<0){copy.push({id:h});i=copy.length-1}copy[i]=t.length?setNestedValue(copy[i],t,value):value;return copy}copy[h]=t.length?setNestedValue(copy[h],t,value):value;return copy}

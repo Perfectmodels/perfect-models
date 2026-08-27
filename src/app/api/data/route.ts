@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getCollections,setCollection,collectionToArray,getCollection,KNOWN_COLLECTIONS } from '@/lib/app-data';
 import { getCurrentAppProfile } from '@/lib/auth/profile';
 import { canReadCollection,canWriteCollection,INTAKE_COLLECTIONS } from '@/lib/data-policy';
+import { submitSupabaseRow } from '@/lib/supabase-backend';
 export const dynamic='force-dynamic';
 
 const normalizeDateValue=(value:unknown)=>{
@@ -18,6 +19,78 @@ const normalizeDates=(value:any):any=>{
   return value;
 };
 const normalizeModels=(value:any)=>collectionToArray(value).map(model=>({...model,isActive:true,status:'active'}));
+const pick=(o:any,...keys:string[])=>keys.map(k=>o?.[k]).find(v=>v!==undefined&&v!==null&&v!=='');
+const asNumber=(v:any)=>{const n=Number(String(v??'').replace(/[^0-9.,-]/g,'').replace(',','.'));return Number.isFinite(n)?n:null};
+
+async function mirrorIntakeToSupabase(key:string,item:any){
+  const legacyId=String(item?.id||item?.legacyId||crypto.randomUUID());
+  try{
+    if(key==='castingApplications'){
+      await submitSupabaseRow('casting_applications',{
+        legacy_id:legacyId,
+        full_name:pick(item,'fullName','name','nomComplet','nom'),
+        first_name:pick(item,'firstName','prenom'),
+        last_name:pick(item,'lastName','nom'),
+        email:pick(item,'email','mail'),
+        phone:pick(item,'phone','telephone','whatsapp'),
+        gender:pick(item,'gender','sexe'),
+        birth_date:pick(item,'birthDate','dateNaissance')||null,
+        age:asNumber(pick(item,'age')),
+        city:pick(item,'city','ville','location'),
+        height_cm:asNumber(pick(item,'heightCm','height','taille')),
+        status:String(pick(item,'status','statut')||'new'),
+        photos:pick(item,'photos','images','portfolioImages')||[],
+        measurements:pick(item,'measurements','mensurations')||{},
+        experience:pick(item,'experience','experienceLevel'),
+        notes:pick(item,'notes','motivation'),
+        raw_data:item,
+        created_at:pick(item,'createdAt','submittedAt','date')||new Date().toISOString(),
+      });
+      return;
+    }
+    if(key==='fashionDayApplications'){
+      await submitSupabaseRow('fashion_day_applications',{
+        legacy_id:legacyId,
+        applicant_name:pick(item,'name','fullName','brandName','designerName'),
+        email:pick(item,'email','mail'),
+        phone:pick(item,'phone','telephone','whatsapp'),
+        application_type:pick(item,'type','applicationType','role','category'),
+        status:String(pick(item,'status','statut')||'new'),
+        raw_data:item,
+        created_at:pick(item,'createdAt','submittedAt','date')||new Date().toISOString(),
+      });
+      return;
+    }
+    if(key==='contactMessages'){
+      await submitSupabaseRow('contact_messages',{
+        legacy_id:legacyId,
+        name:pick(item,'name','fullName'),
+        email:pick(item,'email','mail'),
+        phone:pick(item,'phone','telephone'),
+        subject:pick(item,'subject','objet'),
+        message:pick(item,'message','body','content'),
+        status:String(pick(item,'status','statut')||'new'),
+        raw_data:item,
+        created_at:pick(item,'createdAt','submittedAt','date')||new Date().toISOString(),
+      });
+      return;
+    }
+    if(key==='bookingRequests'){
+      await submitSupabaseRow('booking_requests',{
+        legacy_id:legacyId,
+        name:pick(item,'name','fullName','clientName'),
+        email:pick(item,'email','mail'),
+        phone:pick(item,'phone','telephone'),
+        model_id:pick(item,'modelId')||null,
+        status:String(pick(item,'status','statut')||'new'),
+        raw_data:item,
+        created_at:pick(item,'createdAt','submittedAt','date')||new Date().toISOString(),
+      });
+    }
+  }catch(error){
+    console.error(`[data] Supabase intake mirror failed for ${key}/${legacyId}`,error);
+  }
+}
 
 export async function GET(){
   const p=await getCurrentAppProfile();
@@ -66,7 +139,14 @@ export async function PUT(request:Request){
     const before=collectionToArray(await getCollection(key));
     const incoming=collectionToArray(body[key]);
     const seen=new Set(before.map(i=>String(i?.id??JSON.stringify(i))));
-    for(const item of incoming){const id=String(item?.id??JSON.stringify(item));if(!seen.has(id)){before.push(item);seen.add(id)}}
+    for(const item of incoming){
+      const id=String(item?.id??JSON.stringify(item));
+      if(!seen.has(id)){
+        before.push(item);
+        seen.add(id);
+        await mirrorIntakeToSupabase(key,item);
+      }
+    }
     await setCollection(key,before);
     accepted++;
   }
