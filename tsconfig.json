@@ -18,7 +18,8 @@
     "baseUrl": "./src",
     "paths": {
       "@/*": ["*"],
-      "react-router-dom": ["compat/react-router-dom"]
+      "react-router-dom": ["compat/react-router-dom"],
+      "firebase/database": ["lib/legacyDataAdapter"]
     }
   },
   "include": [
