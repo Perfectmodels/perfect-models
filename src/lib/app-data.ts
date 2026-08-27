@@ -1,5 +1,5 @@
 import { PUBLIC_COLLECTIONS, INTAKE_COLLECTIONS, STUDENT_PRIVATE_COLLECTIONS, MANAGER_COLLECTIONS, JURY_COLLECTIONS, REGISTRATION_COLLECTIONS } from './data-policy';
-import { getAppCollection, getSupabasePublicModels, setAppCollection } from './supabase-backend';
+import { getAppCollection, setAppCollection } from './supabase-backend';
 
 export interface CollectionRow { key:string; data:unknown; is_public:boolean; updated_at:string; }
 
@@ -19,22 +19,52 @@ export function collectionToArray(value:unknown):any[]{
   return [];
 }
 
+function sanitizePublicModels(value:unknown){
+  return collectionToArray(value)
+    .filter((model:any)=>model?.isPublic===true && model?.isActive!==false && model?.status!=='inactive')
+    .map((model:any)=>({
+      id:model.id,
+      username:model.username,
+      name:model.name,
+      gender:model.gender,
+      age:model.age,
+      height:model.height,
+      location:model.location,
+      level:model.level,
+      imageUrl:model.imageUrl,
+      categories:Array.isArray(model.categories)?model.categories:[],
+      measurements:model.measurements||{},
+      distinctions:Array.isArray(model.distinctions)?model.distinctions:[],
+      experience:model.experience,
+      journey:model.journey,
+      fashionDayEditions:Array.isArray(model.fashionDayEditions)?model.fashionDayEditions:[],
+      portfolioImages:Array.isArray(model.portfolioImages)?model.portfolioImages:[],
+      isPublic:true,
+      isActive:true,
+      status:'active',
+    }));
+}
+
+// Lecture interne serveur : conserve l'intégralité des données nécessaires aux dashboards.
 export async function getCollection(key:string){
-  if(key==='models' && PUBLIC_COLLECTIONS.has(key)) return getSupabasePublicModels();
   return getAppCollection(key);
 }
 
+// Lecture publique : applique la liste blanche de champs avant sérialisation vers le navigateur.
 export async function getPublicCollection(key:string){
   if(!PUBLIC_COLLECTIONS.has(key)) throw new Error(`Collection publique non autorisée: ${key}`);
-  return getCollection(key);
+  const data=await getAppCollection(key);
+  return key==='models'?sanitizePublicModels(data):data;
 }
 
 export async function getCollections(keys:Iterable<string>=KNOWN_COLLECTIONS):Promise<CollectionRow[]>{
   const selected=Array.from(new Set(keys));
-  const rows=await Promise.all(selected.map(async key=>{
-    const data=await getCollection(key).catch(()=>null);
-    return {key,data,is_public:PUBLIC_COLLECTIONS.has(key),updated_at:new Date().toISOString()} as CollectionRow;
-  }));
+  const rows=await Promise.all(selected.map(async key=>({
+    key,
+    data:await getCollection(key).catch(()=>null),
+    is_public:PUBLIC_COLLECTIONS.has(key),
+    updated_at:new Date().toISOString(),
+  })));
   return rows;
 }
 
