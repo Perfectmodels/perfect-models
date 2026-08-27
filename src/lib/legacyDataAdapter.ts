@@ -7,6 +7,13 @@ export const legacyDb = { provider: 'supabase' } as const;
 
 const clean = (value: string) => String(value || '').replace(/^\/+|\/+$/g, '');
 const encodePath = (value: string) => clean(value).split('/').filter(Boolean).map(encodeURIComponent).join('/');
+const SERVER_CREATED_COLLECTIONS = new Set([
+  'castingApplications',
+  'contactMessages',
+  'bookingRequests',
+  'fashionDayApplications',
+  'recoveryRequests',
+]);
 
 export function ref(_db: unknown, path: string): LegacyRef {
   const normalized = clean(path);
@@ -42,6 +49,17 @@ export async function get(target: LegacyRef): Promise<LegacySnapshot> {
 }
 
 export async function set(target: LegacyRef, value: unknown) {
+  const parts = clean(target.path).split('/').filter(Boolean);
+  const [collection] = parts;
+
+  // Les anciens formulaires Firebase faisaient push()+set(). Pour les collections
+  // publiques, on laisse désormais le serveur créer l'identifiant afin que la
+  // validation, la persistance et les emails transactionnels soient atomiques.
+  if (parts.length === 2 && SERVER_CREATED_COLLECTIONS.has(collection)) {
+    await request(ref(legacyDb, collection), { method: 'POST', body: JSON.stringify(value) });
+    return;
+  }
+
   await request(target, { method: 'PUT', body: JSON.stringify(value) });
 }
 
