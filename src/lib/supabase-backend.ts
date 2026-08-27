@@ -89,3 +89,23 @@ export async function submitSupabaseRow(table: string, row: Record<string, unkno
     body: JSON.stringify(row),
   });
 }
+
+export async function privilegedSupabaseUpsert(table:string, rows:Record<string,unknown> | Record<string,unknown>[], onConflict?:string){
+  if(!SUPABASE_SECRET_KEY) throw new Error('SUPABASE_SECRET_KEY manquante côté serveur.');
+  const conflict=onConflict?`?on_conflict=${encodeURIComponent(onConflict)}`:'';
+  return rest(`${table}${conflict}`,{
+    method:'POST',
+    headers:{Prefer:'resolution=merge-duplicates,return=representation'},
+    body:JSON.stringify(rows),
+  },true);
+}
+
+export async function privilegedSupabaseDelete(table:string, filter:string){
+  if(!SUPABASE_SECRET_KEY) throw new Error('SUPABASE_SECRET_KEY manquante côté serveur.');
+  return rest(`${table}?${filter}`,{method:'DELETE',headers:{Prefer:'return=minimal'}},true);
+}
+
+export async function privilegedSupabaseSelect(path:string){
+  if(!SUPABASE_SECRET_KEY) throw new Error('SUPABASE_SECRET_KEY manquante côté serveur.');
+  return rest(path,{},true);
+}
