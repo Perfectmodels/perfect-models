@@ -1,143 +1,100 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useData } from '../contexts/DataContext';
-import { BookingRequest } from '../types';
 import { notifyAdmin } from '../utils/adminNotify';
-import { sendBookingConfirmationToUser, sendBookingNotificationToAdmin } from '../utils/brevoService';
 
 interface BookingFormProps {
-    prefilledModelName?: string;
-    onSuccess?: () => void;
+  prefilledModelName?: string;
+  onSuccess?: () => void;
 }
 
 const BookingForm: React.FC<BookingFormProps> = ({ prefilledModelName, onSuccess }) => {
-    const { data, saveData } = useData();
-    const [formData, setFormData] = useState({
-        clientName: '',
-        clientEmail: '',
-        clientCompany: '',
-        requestedModels: prefilledModelName || '',
-        startDate: '',
-        endDate: '',
-        message: ''
-    });
-    const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-    const [statusMessage, setStatusMessage] = useState('');
+  const { addDocument } = useData();
+  const [formData, setFormData] = useState({
+    clientName: '',
+    clientEmail: '',
+    clientCompany: '',
+    requestedModels: prefilledModelName || '',
+    startDate: '',
+    endDate: '',
+    message: '',
+  });
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [statusMessage, setStatusMessage] = useState('');
 
-    useEffect(() => {
-        if (prefilledModelName) {
-            setFormData(prev => ({ ...prev, requestedModels: prefilledModelName }));
-        }
-    }, [prefilledModelName]);
+  useEffect(() => {
+    if (prefilledModelName) setFormData((current) => ({ ...current, requestedModels: prefilledModelName }));
+  }, [prefilledModelName]);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-    };
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData((current) => ({ ...current, [event.target.name]: event.target.value }));
+  };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setStatus('loading');
-        setStatusMessage('');
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setStatus('loading');
+    setStatusMessage('');
 
-        if (!data) {
-            setStatus('error');
-            setStatusMessage('Erreur: Impossible de charger les données.');
-            return;
-        }
+    try {
+      const id = await addDocument('bookingRequests', {
+        submissionDate: new Date().toISOString(),
+        status: 'Nouveau',
+        ...formData,
+      });
+      if (!id) throw new Error('La demande n’a pas pu être enregistrée.');
 
-        const newRequest: BookingRequest = {
-            id: `booking-${Date.now()}`,
-            submissionDate: new Date().toISOString(),
-            status: 'Nouveau',
-            ...formData
-        };
+      notifyAdmin('booking', `${formData.clientName} — ${formData.requestedModels}`, '/admin/bookings').catch(() => undefined);
+      setStatus('success');
+      setStatusMessage('Demande de booking envoyée ! Un email de confirmation vous a été adressé.');
+      setFormData({
+        clientName: '', clientEmail: '', clientCompany: '', requestedModels: prefilledModelName || '', startDate: '', endDate: '', message: '',
+      });
+      onSuccess?.();
+    } catch (error) {
+      console.error(error);
+      setStatus('error');
+      setStatusMessage("Une erreur est survenue lors de l'envoi de votre demande.");
+    }
+  };
 
-        try {
-            const updatedRequests = [...(data.bookingRequests || []), newRequest];
-            await saveData({ ...data, bookingRequests: updatedRequests });
-            notifyAdmin('booking', `${formData.clientName} — ${formData.requestedModels}`, '/admin/bookings').catch(() => {});
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <FormInput label="Votre Nom Complet" name="clientName" value={formData.clientName} onChange={handleChange} required />
+        <FormInput label="Votre Email" name="clientEmail" type="email" value={formData.clientEmail} onChange={handleChange} required />
+      </div>
+      <FormInput label="Société (optionnel)" name="clientCompany" value={formData.clientCompany} onChange={handleChange} />
+      <FormInput label="Mannequin(s) souhaité(s)" name="requestedModels" value={formData.requestedModels} onChange={handleChange} required disabled={!!prefilledModelName} />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <FormInput label="Date de début (souhaitée)" name="startDate" type="date" value={formData.startDate} onChange={handleChange} />
+        <FormInput label="Date de fin (souhaitée)" name="endDate" type="date" value={formData.endDate} onChange={handleChange} />
+      </div>
+      <FormTextArea label="Message / Détails du projet" name="message" value={formData.message} onChange={handleChange} required />
 
-            // Emails Brevo (non-bloquant)
-            Promise.allSettled([
-              sendBookingConfirmationToUser({
-                clientName: formData.clientName,
-                clientEmail: formData.clientEmail,
-                requestedModels: formData.requestedModels,
-                startDate: formData.startDate || undefined,
-                endDate: formData.endDate || undefined,
-              }),
-              sendBookingNotificationToAdmin({
-                clientName: formData.clientName,
-                clientEmail: formData.clientEmail,
-                clientCompany: formData.clientCompany || undefined,
-                requestedModels: formData.requestedModels,
-                startDate: formData.startDate || undefined,
-                endDate: formData.endDate || undefined,
-                message: formData.message,
-                notificationEmail: data?.contactInfo?.notificationEmail || data?.contactInfo?.email || 'contact@perfectmodels.online',
-              }),
-            ]).catch(() => {});
+      <button type="submit" disabled={status === 'loading'} className="w-full px-8 py-3 bg-pm-gold text-pm-dark font-bold uppercase tracking-widest rounded-full transition-all hover:bg-white disabled:opacity-50">
+        {status === 'loading' ? 'Envoi...' : 'Envoyer la demande'}
+      </button>
 
-            setStatus('success');
-            setStatusMessage('Demande de booking envoyée ! Notre équipe vous contactera prochainement.');
-            setFormData({
-                clientName: '', clientEmail: '', clientCompany: '',
-                requestedModels: prefilledModelName || '', startDate: '', endDate: '', message: ''
-            });
-            if (onSuccess) onSuccess();
-        } catch (error) {
-            setStatus('error');
-            setStatusMessage("Une erreur est survenue lors de l'envoi de votre demande.");
-            console.error(error);
-        }
-    };
-
-    return (
-        <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormInput label="Votre Nom Complet" name="clientName" value={formData.clientName} onChange={handleChange} required />
-                <FormInput label="Votre Email" name="clientEmail" type="email" value={formData.clientEmail} onChange={handleChange} required />
-            </div>
-            <FormInput label="Société (optionnel)" name="clientCompany" value={formData.clientCompany} onChange={handleChange} />
-            <FormInput 
-                label="Mannequin(s) souhaité(s)" 
-                name="requestedModels" 
-                value={formData.requestedModels} 
-                onChange={handleChange} 
-                required 
-                disabled={!!prefilledModelName}
-            />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormInput label="Date de début (souhaitée)" name="startDate" type="date" value={formData.startDate} onChange={handleChange} />
-                <FormInput label="Date de fin (souhaitée)" name="endDate" type="date" value={formData.endDate} onChange={handleChange} />
-            </div>
-            <FormTextArea label="Message / Détails du projet" name="message" value={formData.message} onChange={handleChange} required />
-
-            <div>
-                <button type="submit" disabled={status === 'loading'} className="w-full px-8 py-3 bg-pm-gold text-pm-dark font-bold uppercase tracking-widest rounded-full transition-all hover:bg-white disabled:opacity-50">
-                    {status === 'loading' ? 'Envoi...' : 'Envoyer la demande'}
-                </button>
-            </div>
-            {statusMessage && (
-                <p className={`text-center text-sm p-3 rounded-md ${status === 'success' ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}`}>
-                    {statusMessage}
-                </p>
-            )}
-        </form>
-    );
+      {statusMessage && (
+        <p className={`text-center text-sm p-3 rounded-md ${status === 'success' ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}`}>
+          {statusMessage}
+        </p>
+      )}
+    </form>
+  );
 };
 
-const FormInput: React.FC<{label: string, name: string, value: string, onChange: (e: React.ChangeEvent<HTMLInputElement>) => void, type?: string, required?: boolean, disabled?: boolean}> = (props) => (
-    <div>
-        <label htmlFor={props.name} className="admin-label">{props.label}</label>
-        <input {...props} id={props.name} className="admin-input" />
-    </div>
+const FormInput: React.FC<{ label: string; name: string; value: string; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; type?: string; required?: boolean; disabled?: boolean }> = (props) => (
+  <div>
+    <label htmlFor={props.name} className="admin-label">{props.label}</label>
+    <input {...props} id={props.name} className="admin-input" />
+  </div>
 );
 
-const FormTextArea: React.FC<{label: string, name: string, value: string, onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void, required?: boolean}> = (props) => (
-    <div>
-        <label htmlFor={props.name} className="admin-label">{props.label}</label>
-        <textarea {...props} id={props.name} rows={5} className="admin-input admin-textarea" />
-    </div>
+const FormTextArea: React.FC<{ label: string; name: string; value: string; onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void; required?: boolean }> = (props) => (
+  <div>
+    <label htmlFor={props.name} className="admin-label">{props.label}</label>
+    <textarea {...props} id={props.name} rows={5} className="admin-input admin-textarea" />
+  </div>
 );
 
 export default BookingForm;
