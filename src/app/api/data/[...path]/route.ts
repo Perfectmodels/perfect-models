@@ -11,6 +11,7 @@ import {
 } from '@/lib/app-data';
 import { getCurrentAppProfile } from '@/lib/auth/profile';
 import { canReadCollection, canWriteCollection } from '@/lib/data-policy';
+import { notifyIntakeSubmission } from '@/lib/email/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -160,6 +161,10 @@ export async function POST(request: Request, ctx: Ctx) {
     return NextResponse.json({ error: 'Non autorisé.' }, { status: 401 });
   }
 
+  if (!profile && !isSameOrigin(request)) {
+    return NextResponse.json({ error: 'Origine de soumission non autorisée.' }, { status: 403 });
+  }
+
   const contentLength = Number(request.headers.get('content-length') || 0);
   if (contentLength > 64 * 1024) {
     return NextResponse.json({ error: 'Payload trop volumineux.' }, { status: 413 });
@@ -172,9 +177,6 @@ export async function POST(request: Request, ctx: Ctx) {
 
   let sanitized: Record<string, unknown> = body as Record<string, unknown>;
   if (key === 'castingApplications') {
-    if (!isSameOrigin(request)) {
-      return NextResponse.json({ error: 'Origine de soumission non autorisée.' }, { status: 403 });
-    }
     try {
       sanitized = normalizeCastingApplication(sanitized);
     } catch (error) {
@@ -192,6 +194,13 @@ export async function POST(request: Request, ctx: Ctx) {
 
   try {
     await setCollection(key, items);
+
+    try {
+      await notifyIntakeSubmission(key, item, id);
+    } catch (emailError) {
+      console.error(`[transactional-email] notification ${key} impossible`, emailError);
+    }
+
     return NextResponse.json({ id, item }, { status: 201 });
   } catch (error) {
     if (key === 'adminNotifications') {
