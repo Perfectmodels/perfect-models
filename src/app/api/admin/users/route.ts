@@ -1,39 +1,15 @@
 import { NextResponse } from 'next/server';
 import { getCurrentAppProfile } from '@/lib/auth/profile';
-import { firebaseDatabasePut, firebaseSignUp, getValidFirebaseIdToken } from '@/lib/firebase-backend';
+import { supabaseAdminCreateUser } from '@/lib/supabase-backend';
 import { collectionToArray, getCollection, setCollection } from '@/lib/app-data';
 import type { AppRole } from '@/lib/auth/profile';
 
 const allowed = new Set<AppRole>(['manager','student','jury','registration','jury-contest']);
 const MANAGER_DEFAULT_PERMISSIONS = {
-  dashboard: false,
-  models: true,
-  absences: true,
-  agency: false,
-  artisticDirection: true,
-  beautyContests: false,
-  bookings: true,
-  castingApplications: false,
-  castingResults: false,
-  classroom: true,
-  classroomProgress: true,
-  comments: false,
-  fashionDayApplications: false,
-  fashionDayEvents: false,
-  gallery: false,
-  imageAnalysis: false,
-  imageGeneration: false,
-  liveChat: false,
-  magazine: false,
-  mailing: false,
-  mediaLibrary: false,
-  messages: true,
-  modelAccess: false,
-  news: false,
-  payments: true,
-  recovery: false,
-  settings: false,
-  userPermissions: false,
+  dashboard:false,models:true,absences:true,agency:false,artisticDirection:true,beautyContests:false,bookings:true,castingApplications:false,
+  castingResults:false,classroom:true,classroomProgress:true,comments:false,fashionDayApplications:false,fashionDayEvents:false,gallery:false,
+  imageAnalysis:false,imageGeneration:false,liveChat:false,magazine:false,mailing:false,mediaLibrary:false,messages:true,modelAccess:false,news:false,
+  payments:true,recovery:false,settings:false,userPermissions:false,
 };
 
 export async function POST(request:Request){
@@ -44,16 +20,37 @@ export async function POST(request:Request){
   const identifier=String(pd.username||pd.matricule||profileId||email).trim();
   if(!email||password.length<8||!profileId||!allowed.has(role))return NextResponse.json({error:'Données invalides.'},{status:400});
   try{
-    const token=await getValidFirebaseIdToken();
-    if(!token)return NextResponse.json({error:'Session administrateur Firebase invalide.'},{status:401});
-    const result=await firebaseSignUp(email,password,name);
-    const userId=String(result.localId||'');
-    if(!userId)return NextResponse.json({error:'Identifiant Firebase absent.'},{status:502});
     const permissions=role==='manager'?{...(pd.permissions||{}),isManager:true}:{...(pd.permissions||{})};
-    await firebaseDatabasePut(`users/${userId}`,{id:userId,email,name,identifier,matricule:pd.matricule||identifier,role,app_role:role,profileId,status:'active',mustChangePassword:false,permissions,createdAt:new Date().toISOString()},token);
-    if(role==='manager')await firebaseDatabasePut(`adminPermissions/${userId}`,{...MANAGER_DEFAULT_PERMISSIONS,...(pd.adminPermissions||{})},token);
+    const created:any=await supabaseAdminCreateUser({
+      email,password,email_confirm:true,
+      user_metadata:{name},
+      app_metadata:{role,profile_id:profileId,identifier,must_change_password:false},
+    });
+    const user=created?.user||created;
+    const userId=String(user?.id||'');
+    if(!userId)return NextResponse.json({error:'Identifiant Supabase absent.'},{status:502});
+
+    const users=((await getCollection('users').catch(()=>null))||{}) as Record<string,any>;
+    users[userId]={id:userId,uid:userId,supabaseUserId:userId,email,name,identifier,matricule:pd.matricule||identifier,role,app_role:role,profileId,status:'active',mustChangePassword:false,permissions,createdAt:new Date().toISOString()};
+    await setCollection('users',users);
+
+    if(role==='manager'){
+      const adminPermissions=((await getCollection('adminPermissions').catch(()=>null))||{}) as Record<string,any>;
+      adminPermissions[userId]={...MANAGER_DEFAULT_PERMISSIONS,...(pd.adminPermissions||{})};
+      await setCollection('adminPermissions',adminPermissions);
+    }
     const key=role==='student'?'models':role==='jury'?'juryMembers':role==='registration'?'registrationStaff':null;
-    if(key){const arr=collectionToArray(await getCollection(key));const item={...pd,id:profileId,name,username:identifier,email,authUserId:userId,firebaseUid:userId};const i=arr.findIndex(x=>String(x?.id)===profileId);if(i>=0)arr[i]={...arr[i],...item};else arr.push(item);await setCollection(key,arr);}
+    if(key){
+      const arr=collectionToArray(await getCollection(key));
+      const item={...pd,id:profileId,name,username:identifier,email,authUserId:userId,supabaseUserId:userId};
+      const i=arr.findIndex(x=>String(x?.id)===profileId);
+      if(i>=0)arr[i]={...arr[i],...item};else arr.push(item);
+      await setCollection(key,arr);
+    }
     return NextResponse.json({success:true,userId});
-  }catch(error:any){return NextResponse.json({error:String(error?.message||'Création Firebase impossible.')},{status:Number(error?.status||400)})}
+  }catch(error:any){
+    const message=String(error?.message||'Création Supabase impossible.');
+    const status=/already|exists|registered/i.test(message)?409:Number(error?.status||400);
+    return NextResponse.json({error:message},{status});
+  }
 }

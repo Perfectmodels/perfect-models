@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "lib": [
-      "DOM",
-      "DOM.Iterable",
-      "ES2020"
-    ],
+    "lib": ["DOM", "DOM.Iterable", "ES2020"],
     "allowJs": false,
     "skipLibCheck": true,
     "strict": true,
@@ -18,34 +14,11 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
+    "plugins": [{ "name": "next" }],
     "baseUrl": "./src",
     "paths": {
-      "@/*": [
-        "*"
-      ],
-      "react-router-dom": [
-        "compat/react-router-dom"
-      ],
-      "firebase/app": [
-        "compat/firebase/app"
-      ],
-      "firebase/auth": [
-        "compat/firebase/auth"
-      ],
-      "firebase/database": [
-        "compat/firebase/database"
-      ],
-      "firebase/firestore": [
-        "compat/firebase/firestore"
-      ],
-      "firebase/messaging": [
-        "compat/firebase/messaging"
-      ]
+      "@/*": ["*"],
+      "react-router-dom": ["compat/react-router-dom"]
     }
   },
   "include": [
@@ -57,9 +30,5 @@
     "*.ts",
     "*.mjs"
   ],
-  "exclude": [
-    "node_modules",
-    "docs",
-    "resources"
-  ]
+  "exclude": ["node_modules", "docs", "resources"]
 }

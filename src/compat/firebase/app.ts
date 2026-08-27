@@ -1,1 +1,0 @@
-export type FirebaseApp={name:string};const apps:FirebaseApp[]=[];export function initializeApp(_config?:unknown,name='[DEFAULT]'){const app={name};if(!apps.some(a=>a.name===name))apps.push(app);return app}export const getApps=()=>apps;export const getApp=(name='[DEFAULT]')=>apps.find(a=>a.name===name)||initializeApp({},name);

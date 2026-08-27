@@ -1,6 +1,5 @@
-import { firebaseDatabaseGet, firebaseDatabasePut, getValidFirebaseIdToken } from './firebase-backend';
 import { PUBLIC_COLLECTIONS, INTAKE_COLLECTIONS, STUDENT_PRIVATE_COLLECTIONS, MANAGER_COLLECTIONS, JURY_COLLECTIONS, REGISTRATION_COLLECTIONS } from './data-policy';
-import { getSupabaseLegacyCollection, getSupabasePublicModels, hasSupabasePrivilegedKey, setSupabaseLegacyCollection } from './supabase-backend';
+import { getAppCollection, setAppCollection } from './supabase-backend';
 
 export interface CollectionRow { key:string; data:unknown; is_public:boolean; updated_at:string; }
 
@@ -14,7 +13,11 @@ export const KNOWN_COLLECTIONS = Array.from(new Set([
   'beautyContests','adminPermissions','classroomProgress','classroomRequests','classroomMessages','users','juryMembers','registrationStaff','userProfiles','authProfiles'
 ]));
 
-export function collectionToArray(value:unknown):any[]{if(Array.isArray(value))return value.filter(Boolean);if(value&&typeof value==='object')return Object.values(value as Record<string,unknown>).filter(Boolean);return[]}
+export function collectionToArray(value:unknown):any[]{
+  if(Array.isArray(value)) return value.filter(Boolean);
+  if(value&&typeof value==='object') return Object.values(value as Record<string,unknown>).filter(Boolean);
+  return [];
+}
 
 function sanitizePublicModels(value:unknown){
   return collectionToArray(value)
@@ -42,64 +45,31 @@ function sanitizePublicModels(value:unknown){
     }));
 }
 
-async function readPublicCollection(key:string){
-  const supabasePrimary=hasSupabasePrivilegedKey();
-  if(supabasePrimary){
-    try {
-      if (key === 'models') return await getSupabasePublicModels();
-      const value = await getSupabaseLegacyCollection(key);
-      if (value !== null && typeof value !== 'undefined') return value;
-    } catch (error) {
-      console.warn(`[data] Supabase read fallback for ${key}`, error);
-    }
-  }
-  const firebaseValue=await firebaseDatabaseGet(key,null);
-  return key==='models'?sanitizePublicModels(firebaseValue):firebaseValue;
-}
-
+// Lecture interne serveur : conserve l'intégralité des données nécessaires aux dashboards.
 export async function getCollection(key:string){
-  if(PUBLIC_COLLECTIONS.has(key)){
-    const token=await getValidFirebaseIdToken();
-    if(token && key==='models') return firebaseDatabaseGet(key,token);
-    return readPublicCollection(key);
-  }
-  const token=await getValidFirebaseIdToken();
-  return firebaseDatabaseGet(key,token);
+  return getAppCollection(key);
 }
 
+// Lecture publique : applique la liste blanche de champs avant sérialisation vers le navigateur.
 export async function getPublicCollection(key:string){
   if(!PUBLIC_COLLECTIONS.has(key)) throw new Error(`Collection publique non autorisée: ${key}`);
-  return readPublicCollection(key);
+  const data=await getAppCollection(key);
+  return key==='models'?sanitizePublicModels(data):data;
 }
 
 export async function getCollections(keys:Iterable<string>=KNOWN_COLLECTIONS):Promise<CollectionRow[]>{
-  const token=await getValidFirebaseIdToken();
   const selected=Array.from(new Set(keys));
-  const rows=await Promise.all(selected.map(async key=>{
-    try{
-      const isPublic=PUBLIC_COLLECTIONS.has(key);
-      const data=isPublic
-        ?(token&&key==='models'?await firebaseDatabaseGet(key,token):await readPublicCollection(key))
-        :await firebaseDatabaseGet(key,token);
-      return {key,data,is_public:isPublic,updated_at:new Date().toISOString()} as CollectionRow;
-    }catch(error:any){
-      if(error?.status===401||error?.status===403)return null;
-      throw error;
-    }
-  }));
-  return rows.filter(Boolean) as CollectionRow[];
+  const rows=await Promise.all(selected.map(async key=>({
+    key,
+    data:await getCollection(key).catch(()=>null),
+    is_public:PUBLIC_COLLECTIONS.has(key),
+    updated_at:new Date().toISOString(),
+  })));
+  return rows;
 }
 
 export async function setCollection(key:string,data:unknown){
-  const token=await getValidFirebaseIdToken();
-  await firebaseDatabasePut(key,data??null,token);
-  if(PUBLIC_COLLECTIONS.has(key)) {
-    try {
-      await setSupabaseLegacyCollection(key,data??null);
-    } catch (error) {
-      console.error(`[data] Supabase dual-write failed for ${key}`, error);
-    }
-  }
+  await setAppCollection(key,data??null);
 }
 
 const idx=(arr:any[],s:string)=>/^\d+$/.test(s)?Number(s):arr.findIndex((i)=>i&&String(i.id)===s);
