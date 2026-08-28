@@ -1,20 +1,15 @@
 import 'server-only';
 
-import { getFashionDayEvents, getPublicArticles, getPublicModels, getPublicServices } from './public-content';
-import { privilegedSupabaseSelect } from './supabase-backend';
-
-async function rows(path: string): Promise<any[]> {
-  try {
-    const result = await privilegedSupabaseSelect(path);
-    return Array.isArray(result) ? result : [];
-  } catch (error) {
-    console.error(`[public-app-state] lecture Supabase impossible: ${path}`, error);
-    return [];
-  }
-}
+import {
+  getFashionDayEvents,
+  getPublicArticles,
+  getPublicModels,
+  getPublicServices,
+  selectPublicRows,
+} from './public-content';
 
 async function settings() {
-  const result = await rows('site_settings?select=key,value');
+  const result = await selectPublicRows('site_settings?select=key,value');
   return Object.fromEntries(result.map((item) => [String(item.key), item.value]));
 }
 
@@ -24,9 +19,9 @@ export async function getPublicAppState(): Promise<Record<string, unknown>> {
     getPublicServices(),
     getFashionDayEvents(),
     getPublicArticles(),
-    rows('navigation_items?select=label,path,in_footer,position,is_active&is_active=eq.true&order=position.asc'),
-    rows('social_links?select=platform,url,position,is_active&is_active=eq.true&order=position.asc'),
-    rows('agency_timeline?select=year,event,position&order=position.asc'),
+    selectPublicRows('navigation_items?select=label,path,in_footer,position,is_active&is_active=eq.true&order=position.asc'),
+    selectPublicRows('social_links?select=platform,url,position,is_active&is_active=eq.true&order=position.asc'),
+    selectPublicRows('agency_timeline?select=year,event,position&order=position.asc'),
     settings(),
   ]);
 
@@ -60,9 +55,10 @@ export async function getPublicAppState(): Promise<Record<string, unknown>> {
     siteImages: siteSettings.siteImages || {},
     faqData: siteSettings.faqData || [],
 
-    // These collections were seeded from the old static demo dataset and have no
-    // verified normalized source yet. Public pages must stay empty instead of
-    // presenting sample names, awards, clients or testimonials as real PMM data.
+    // Ces collections provenaient du jeu de démonstration historique et ne
+    // disposent pas encore d'une source normalisée et vérifiée. Le site public
+    // reste volontairement vide pour ces rubriques plutôt que d'afficher des
+    // noms, récompenses, clients ou témoignages fictifs.
     modelDistinctions: [],
     agencyAchievements: [],
     agencyPartners: [],
