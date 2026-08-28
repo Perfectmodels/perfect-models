@@ -100,7 +100,7 @@ export async function findProfile(user: unknown): Promise<AppSessionProfile | nu
 
 export async function getCurrentAppProfile(): Promise<AppSessionProfile | null> {
   try {
-    const { data } = await auth.getSession();
+    const { data } = await auth.getVerifiedUser();
     return data?.user ? ensureUserProfile(data.user) : null;
   } catch {
     return null;
