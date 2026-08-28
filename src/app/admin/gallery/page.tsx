@@ -16,5 +16,5 @@ export default async function Page() {
   const supabase = createSupabaseAdminClient() as any;
   const { data, error } = await supabase.from('media_library').select('*').order('created_at', { ascending: false }).limit(1000);
   if (error) throw new Error(error.message);
-  return <SupabaseResourceManager resource="gallery" title="Médiathèque" primaryKey={definition.primaryKey} columns={definition.columns} initialRows={data || []}/>;
+  return <SupabaseResourceManager resource="gallery" title="Médiathèque" primaryKey={definition.primaryKey} columns={definition.columns} fields={definition.fields} initialRows={data || []}/>;
 }

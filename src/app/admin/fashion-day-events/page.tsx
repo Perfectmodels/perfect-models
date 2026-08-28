@@ -16,5 +16,5 @@ export default async function Page() {
   const supabase = createSupabaseAdminClient() as any;
   const { data, error } = await supabase.from(definition.table).select('*').order('edition', { ascending: false });
   if (error) throw new Error(error.message);
-  return <SupabaseResourceManager resource="fashion-day-events" title={definition.title} primaryKey={definition.primaryKey} columns={definition.columns} initialRows={data || []}/>;
+  return <SupabaseResourceManager resource="fashion-day-events" title={definition.title} primaryKey={definition.primaryKey} columns={definition.columns} fields={definition.fields} initialRows={data || []}/>;
 }

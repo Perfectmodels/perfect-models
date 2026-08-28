@@ -3,6 +3,7 @@ import { getCurrentAppProfile } from '@/lib/auth/profile';
 import { RESOURCE_DEFINITIONS, isResourceName } from '@/lib/resource-registry';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { hasResourcePermission } from '@/lib/auth/admin-access';
+import { CrudValidationError, sanitizeResourcePayload } from '@/lib/admin-crud';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,7 +20,7 @@ async function authorize(resource: string) {
   if (!hasResourcePermission(profile, resource)) {
     return { error: NextResponse.json({ error: 'Permission manager insuffisante.' }, { status: 403 }) } as const;
   }
-  return { profile, definition: RESOURCE_DEFINITIONS[resource] } as const;
+  return { profile, resource, definition: RESOURCE_DEFINITIONS[resource] } as const;
 }
 
 export async function GET(_request: Request, context: Context) {
@@ -40,14 +41,17 @@ export async function POST(request: Request, context: Context) {
   const access = await authorize(resource);
   if ('error' in access) return access.error;
 
-  const body = await request.json().catch(() => null);
-  if (!body || typeof body !== 'object' || Array.isArray(body)) {
-    return NextResponse.json({ error: 'Payload invalide.' }, { status: 400 });
+  if (access.definition.canCreate === false) {
+    return NextResponse.json({ error: 'Cette ressource est disponible en lecture seule.' }, { status: 405 });
   }
 
-  const row: Record<string, unknown> = { ...(body as Record<string, unknown>) };
-  if (access.definition.primaryKey === 'id' && !row.id && ['models', 'courses', 'mailing'].includes(resource)) {
-    row.id = crypto.randomUUID();
+  const body = await request.json().catch(() => null);
+  let row: Record<string, unknown>;
+  try {
+    row = sanitizeResourcePayload(access.resource, body, 'create');
+  } catch (error) {
+    const message = error instanceof CrudValidationError ? error.message : 'Formulaire invalide.';
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 
   const supabase = createSupabaseAdminClient() as any;

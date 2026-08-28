@@ -17,5 +17,5 @@ export default async function Page() {
   const supabase = createSupabaseAdminClient() as any;
   const { data, error } = await supabase.from(definition.table).select('*').order('created_at', { ascending: false });
   if (error) throw new Error(error.message);
-  return <><SupabaseResourceManager resource="casting-applications" title={definition.title} primaryKey={definition.primaryKey} columns={definition.columns} initialRows={data || []}/>{profile.role === 'admin' && <CastingAccountProvisioner />}</>;
+  return <><SupabaseResourceManager resource="casting-applications" title={definition.title} primaryKey={definition.primaryKey} columns={definition.columns} fields={definition.fields} initialRows={data || []}/>{profile.role === 'admin' && <CastingAccountProvisioner />}</>;
 }
