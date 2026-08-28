@@ -1,7 +1,11 @@
 import 'server-only';
 
 import type { Article, Model, Service, FashionDayEvent } from '@/types';
-import { privilegedSupabaseSelect } from '@/lib/supabase-backend';
+
+const SUPABASE_URL = String(
+  process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://qzkodgqxrcxsnfwpmwfb.supabase.co',
+).replace(/\/$/, '');
+const SUPABASE_SECRET_KEY = String(process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '');
 
 function uniqueBy<T>(items: T[], keyOf: (item: T) => string) {
   const seen = new Set<string>();
@@ -13,10 +17,25 @@ function uniqueBy<T>(items: T[], keyOf: (item: T) => string) {
   });
 }
 
-async function selectRows(path: string): Promise<any[]> {
+export async function selectPublicRows(path: string): Promise<any[]> {
+  if (!SUPABASE_URL || !SUPABASE_SECRET_KEY) {
+    console.error('[public-content] configuration Supabase serveur absente');
+    return [];
+  }
+
   try {
-    const rows = await privilegedSupabaseSelect(path);
-    return Array.isArray(rows) ? rows : [];
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/${path.replace(/^\//, '')}`, {
+      headers: {
+        apikey: SUPABASE_SECRET_KEY,
+        Authorization: `Bearer ${SUPABASE_SECRET_KEY}`,
+      },
+      next: { revalidate: 60 },
+    });
+    const payload = await response.json().catch(() => null);
+    if (!response.ok) {
+      throw new Error(`Supabase ${response.status}: ${String(payload?.message || payload?.error || response.statusText)}`);
+    }
+    return Array.isArray(payload) ? payload : [];
   } catch (error) {
     console.error(`[public-content] lecture Supabase impossible: ${path}`, error);
     return [];
@@ -65,8 +84,8 @@ function mapModel(row: any, portfolioImages: string[]): PublicModel {
 
 export async function getPublicModels(): Promise<PublicModel[]> {
   const [rows, images] = await Promise.all([
-    selectRows('models?select=id,name,age,height,gender,location,level,image_url,categories,measurements,distinctions,experience,journey,fashion_day_editions,is_public,is_active,status&is_public=eq.true&is_active=eq.true&status=neq.inactive&order=name.asc'),
-    selectRows('model_portfolio_images?select=model_id,url,position&order=position.asc'),
+    selectPublicRows('models?select=id,name,age,height,gender,location,level,image_url,categories,measurements,distinctions,experience,journey,fashion_day_editions,is_public,is_active,status&is_public=eq.true&is_active=eq.true&status=neq.inactive&order=name.asc'),
+    selectPublicRows('model_portfolio_images?select=model_id,url,position&order=position.asc'),
   ]);
 
   const imageMap = new Map<string, string[]>();
@@ -86,7 +105,7 @@ export async function getPublicModels(): Promise<PublicModel[]> {
 }
 
 export async function getPublicServices(): Promise<Service[]> {
-  const rows = await selectRows('services?select=slug,icon,title,category,description,details,button_text,button_link,is_active,position&is_active=eq.true&order=position.asc');
+  const rows = await selectPublicRows('services?select=slug,icon,title,category,description,details,button_text,button_link,is_active,position&is_active=eq.true&order=position.asc');
   const services = rows
     .filter((row) => row?.slug && row?.title)
     .map((row) => ({
@@ -104,7 +123,7 @@ export async function getPublicServices(): Promise<Service[]> {
 }
 
 export async function getFashionDayEvents(): Promise<Array<FashionDayEvent & { coverImageUrl?: string }>> {
-  const rows = await selectRows('fashion_day_events?select=edition,theme,event_date,location,description,promoter,mc,cover_image_url,gallery_images,raw_data&order=edition.desc');
+  const rows = await selectPublicRows('fashion_day_events?select=edition,theme,event_date,location,description,promoter,mc,cover_image_url,gallery_images,raw_data&order=edition.desc');
   const events = rows
     .filter((row) => Number.isFinite(Number(row?.edition)))
     .map((row) => {
@@ -133,7 +152,7 @@ function articleContent(row: any): Article['content'] {
 }
 
 export async function getPublicArticles(): Promise<Article[]> {
-  const rows = await selectRows('blog_posts?select=slug,title,excerpt,content,cover_image_url,author_name,category,tags,status,published_at,created_at,raw_data&status=eq.published&order=published_at.desc');
+  const rows = await selectPublicRows('blog_posts?select=slug,title,excerpt,content,cover_image_url,author_name,category,tags,status,published_at,created_at,raw_data&status=eq.published&order=published_at.desc');
   const articles = rows
     .filter((row) => row?.slug && row?.title)
     .map((row) => {
