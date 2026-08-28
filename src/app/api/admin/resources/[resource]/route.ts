@@ -51,7 +51,7 @@ export async function GET(request: Request, context: Context) {
   const sort = allowedSort.has(requestedSort) ? requestedSort : definition.orderBy;
   const hasStatus = definition.fields.some((field) => field.name === 'status');
   const searchable = definition.fields
-    .filter((field) => ['text', 'email', 'tel', 'url', 'textarea', 'select', 'tags'].includes(field.type))
+    .filter((field) => ['text', 'email', 'tel', 'url', 'textarea', 'select'].includes(field.type))
     .map((field) => field.name)
     .filter((name) => name !== 'id' && !name.endsWith('_id') && !name.endsWith('_at'))
     .slice(0, 10);
