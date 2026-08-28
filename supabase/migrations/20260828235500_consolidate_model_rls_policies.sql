@@ -1,0 +1,44 @@
+drop policy if exists "admin all models" on public.models;
+drop policy if exists "model read own model" on public.models;
+drop policy if exists "public read models" on public.models;
+create policy "anon read public models" on public.models for select to anon using (is_public = true and is_active = true);
+create policy "authenticated read models" on public.models for select to authenticated using ((select public.current_app_role()) = 'admin' or auth_user_id = (select auth.uid()) or (is_public = true and is_active = true));
+create policy "admin insert models" on public.models for insert to authenticated with check ((select public.current_app_role()) = 'admin');
+create policy "admin update models" on public.models for update to authenticated using ((select public.current_app_role()) = 'admin') with check ((select public.current_app_role()) = 'admin');
+create policy "admin delete models" on public.models for delete to authenticated using ((select public.current_app_role()) = 'admin');
+
+drop policy if exists "admin all portfolios" on public.model_portfolio_images;
+drop policy if exists "model read own portfolio" on public.model_portfolio_images;
+drop policy if exists "model insert own portfolio" on public.model_portfolio_images;
+drop policy if exists "model update own portfolio" on public.model_portfolio_images;
+drop policy if exists "model delete own portfolio" on public.model_portfolio_images;
+drop policy if exists "public read model portfolio" on public.model_portfolio_images;
+create policy "anon read public model portfolio" on public.model_portfolio_images for select to anon using (exists (select 1 from public.models m where m.id = model_portfolio_images.model_id and m.is_public = true and m.is_active = true));
+create policy "authenticated read model portfolio" on public.model_portfolio_images for select to authenticated using ((select public.current_app_role()) = 'admin' or exists (select 1 from public.models m where m.id = model_portfolio_images.model_id and (m.auth_user_id = (select auth.uid()) or (m.is_public = true and m.is_active = true))));
+create policy "authenticated insert own model portfolio" on public.model_portfolio_images for insert to authenticated with check ((select public.current_app_role()) = 'admin' or exists (select 1 from public.models m where m.id = model_portfolio_images.model_id and m.auth_user_id = (select auth.uid())));
+create policy "authenticated update own model portfolio" on public.model_portfolio_images for update to authenticated using ((select public.current_app_role()) = 'admin' or exists (select 1 from public.models m where m.id = model_portfolio_images.model_id and m.auth_user_id = (select auth.uid()))) with check ((select public.current_app_role()) = 'admin' or exists (select 1 from public.models m where m.id = model_portfolio_images.model_id and m.auth_user_id = (select auth.uid())));
+create policy "authenticated delete own model portfolio" on public.model_portfolio_images for delete to authenticated using ((select public.current_app_role()) = 'admin' or exists (select 1 from public.models m where m.id = model_portfolio_images.model_id and m.auth_user_id = (select auth.uid())));
+
+drop policy if exists "admin all model events" on public.model_events;
+drop policy if exists "model read own events" on public.model_events;
+drop policy if exists "model insert own events" on public.model_events;
+drop policy if exists "model update own events" on public.model_events;
+drop policy if exists "model delete own events" on public.model_events;
+drop policy if exists "public read public model events" on public.model_events;
+create policy "anon read public model events" on public.model_events for select to anon using (is_public = true and exists (select 1 from public.models m where m.id = model_events.model_id and m.is_public = true and m.is_active = true));
+create policy "authenticated read model events" on public.model_events for select to authenticated using ((select public.current_app_role()) = 'admin' or exists (select 1 from public.models m where m.id = model_events.model_id and m.auth_user_id = (select auth.uid())) or (is_public = true and exists (select 1 from public.models m where m.id = model_events.model_id and m.is_public = true and m.is_active = true)));
+create policy "authenticated insert own model events" on public.model_events for insert to authenticated with check ((select public.current_app_role()) = 'admin' or exists (select 1 from public.models m where m.id = model_events.model_id and m.auth_user_id = (select auth.uid())));
+create policy "authenticated update own model events" on public.model_events for update to authenticated using ((select public.current_app_role()) = 'admin' or exists (select 1 from public.models m where m.id = model_events.model_id and m.auth_user_id = (select auth.uid()))) with check ((select public.current_app_role()) = 'admin' or exists (select 1 from public.models m where m.id = model_events.model_id and m.auth_user_id = (select auth.uid())));
+create policy "authenticated delete own model events" on public.model_events for delete to authenticated using ((select public.current_app_role()) = 'admin' or exists (select 1 from public.models m where m.id = model_events.model_id and m.auth_user_id = (select auth.uid())));
+
+drop policy if exists "admin all model collaborations" on public.model_collaborations;
+drop policy if exists "model read own collaborations" on public.model_collaborations;
+drop policy if exists "model insert own collaborations" on public.model_collaborations;
+drop policy if exists "model update own collaborations" on public.model_collaborations;
+drop policy if exists "model delete own collaborations" on public.model_collaborations;
+drop policy if exists "public read public model collaborations" on public.model_collaborations;
+create policy "anon read public model collaborations" on public.model_collaborations for select to anon using (is_public = true and exists (select 1 from public.models m where m.id = model_collaborations.model_id and m.is_public = true and m.is_active = true));
+create policy "authenticated read model collaborations" on public.model_collaborations for select to authenticated using ((select public.current_app_role()) = 'admin' or exists (select 1 from public.models m where m.id = model_collaborations.model_id and m.auth_user_id = (select auth.uid())) or (is_public = true and exists (select 1 from public.models m where m.id = model_collaborations.model_id and m.is_public = true and m.is_active = true)));
+create policy "authenticated insert own model collaborations" on public.model_collaborations for insert to authenticated with check ((select public.current_app_role()) = 'admin' or exists (select 1 from public.models m where m.id = model_collaborations.model_id and m.auth_user_id = (select auth.uid())));
+create policy "authenticated update own model collaborations" on public.model_collaborations for update to authenticated using ((select public.current_app_role()) = 'admin' or exists (select 1 from public.models m where m.id = model_collaborations.model_id and m.auth_user_id = (select auth.uid()))) with check ((select public.current_app_role()) = 'admin' or exists (select 1 from public.models m where m.id = model_collaborations.model_id and m.auth_user_id = (select auth.uid())));
+create policy "authenticated delete own model collaborations" on public.model_collaborations for delete to authenticated using ((select public.current_app_role()) = 'admin' or exists (select 1 from public.models m where m.id = model_collaborations.model_id and m.auth_user_id = (select auth.uid())));
