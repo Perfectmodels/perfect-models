@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Plus, Trash2, Edit2, Save, X, Upload, Star, Users, Award, ChevronUp, Key, Copy, Eye, EyeOff, Layers, Shuffle, Flag, ChevronRight, CheckCircle } from 'lucide-react';
+import { Plus, Trash2, Edit2, Save, X, Upload, Star, Users, Award, ChevronUp, Key, Copy, Layers, Shuffle, Flag, ChevronRight, CheckCircle } from 'lucide-react';
 import { rtdb } from '../firebase';
 import { ref, set, remove, update, onValue, push, get } from 'firebase/database';
 import { uploadToImgbb, validateFile } from '../utils/imgbbService';
@@ -22,7 +22,7 @@ const NEXT_STAGE: Record<ContestStage, ContestStage | null> = { preselection: 's
 // ── Types ─────────────────────────────────────────────────────────────────
 interface Contest { id: string; name: string; description: string; date: string; location: string; status: 'draft'|'active'|'closed'; currentStage: ContestStage; createdAt: string; }
 interface Candidate { id: string; order: number; name: string; photo: string; bio: string; status: 'active'|'hidden'|'winner'; }
-interface Jury { id: string; name: string; role: string; photo: string; username?: string; password?: string; }
+interface Jury { id: string; name: string; role: string; photo: string; username?: string; }
 interface Passage { id: string; order: number; name: string; description: string; }
 interface ScoringCriteria { id: string; passageId?: string; label: string; weight: number; order: number; }
 interface Score { id: string; juryId: string; candidateId: string; passageId: string; scores: Record<string,number>; comment: string; submittedAt: string; }
@@ -172,8 +172,7 @@ export default function AdminBeautyContest() {
   const [juryForm, setJuryForm] = useState({ name:'', role:'', photo:'' });
   const [juryPhotoUploading, setJuryPhotoUploading] = useState(false);
   const juryFileRef = useRef<HTMLInputElement>(null);
-  const [newJuryCredentials, setNewJuryCredentials] = useState<{name:string;username:string;password:string}|null>(null);
-  const [showPasswords, setShowPasswords] = useState<Record<string,boolean>>({});
+  const [newJuryCredentials, setNewJuryCredentials] = useState<{name:string;username:string}|null>(null);
 
   const [showPassageForm, setShowPassageForm] = useState(false);
   const [editingPassageId, setEditingPassageId] = useState<string|null>(null);
@@ -485,7 +484,6 @@ export default function AdminBeautyContest() {
   };
   // ── Jury CRUD (contest-level) ─────────────────────────────────────────────
   const genUsername = (name:string) => name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/s+/g,'.').replace(/[^a-z0-9.]/g,'') + '.' + cid.slice(-4);
-  const genPassword = () => { const c='ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'; return Array.from({length:8},()=>c[Math.floor(Math.random()*c.length)]).join(''); };
   const handleSaveJury = async (e:React.FormEvent) => {
     e.preventDefault(); if (!cid || !juryForm.name) { showToast('Nom requis', false); return; }
     try {
@@ -493,11 +491,11 @@ export default function AdminBeautyContest() {
         await update(ref(rtdb, `${RTDB_BASE}/${cid}/juries/${editingJuryId}`), { name: juryForm.name, role: juryForm.role, photo: juryForm.photo });
         showToast('Jury mis à jour');
       } else {
-        const username = genUsername(juryForm.name); const password = genPassword();
+        const username = genUsername(juryForm.name);
         const r = push(ref(rtdb, `${RTDB_BASE}/${cid}/juries`));
-        await set(r, { name: juryForm.name, role: juryForm.role, photo: juryForm.photo, username, password, createdAt: new Date().toISOString() });
-        setNewJuryCredentials({ name: juryForm.name, username, password });
-        showToast('Jury ajouté · identifiants générés');
+        await set(r, { name: juryForm.name, role: juryForm.role, photo: juryForm.photo, username, createdAt: new Date().toISOString() });
+        setNewJuryCredentials({ name: juryForm.name, username });
+        showToast('Jury ajouté · invitation Supabase requise');
       }
       setJuryForm({ name:'', role:'', photo:'' }); setEditingJuryId(null); setShowJuryForm(false);
     } catch { showToast('Erreur', false); }
@@ -938,7 +936,7 @@ export default function AdminBeautyContest() {
                     <div className='bg-black/30 border border-white/10 rounded-xl p-3 space-y-2'>
                       <p className='text-white/40 text-[10px] uppercase tracking-widest flex items-center gap-1'><Key size={10}/>Identifiants · /concours/jury</p>
                       <div className='flex items-center justify-between'><span className='text-white/50 text-xs'>Login :</span><div className='flex items-center gap-1'><span className='font-mono text-blue-300 text-xs'>{j.username}</span><button onClick={()=>navigator.clipboard.writeText(j.username!)} className='text-white/30 hover:text-white p-1'><Copy size={10}/></button></div></div>
-                      <div className='flex items-center justify-between'><span className='text-white/50 text-xs'>Mot de passe :</span><div className='flex items-center gap-1'><span className='font-mono text-amber-300 text-xs'>{showPasswords[j.id]?j.password:'••••••••'}</span><button onClick={()=>setShowPasswords(p=>({...p,[j.id]:!p[j.id]}))} className='text-white/30 hover:text-white p-1'>{showPasswords[j.id]?<EyeOff size={10}/>:<Eye size={10}/>}</button><button onClick={()=>navigator.clipboard.writeText(j.password!)} className='text-white/30 hover:text-white p-1'><Copy size={10}/></button></div></div>
+                      <p className='text-white/35 text-[10px] leading-4'>Accès à inviter depuis la gestion centralisée des utilisateurs Supabase.</p>
                     </div>
                   )}
                 </div>
@@ -1209,14 +1207,13 @@ export default function AdminBeautyContest() {
       {newJuryCredentials && (
         <div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm'>
           <div className='bg-slate-900 border border-blue-500/40 rounded-2xl p-8 w-full max-w-md shadow-2xl space-y-6'>
-            <div className='flex items-center gap-3'><div className='w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center'><Key size={20} className='text-blue-400'/></div><div><h2 className='text-white font-bold text-lg'>Identifiants créés</h2><p className='text-white/40 text-sm'>Pour {newJuryCredentials.name}</p></div></div>
+            <div className='flex items-center gap-3'><div className='w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center'><Key size={20} className='text-blue-400'/></div><div><h2 className='text-white font-bold text-lg'>Profil jury créé</h2><p className='text-white/40 text-sm'>Pour {newJuryCredentials.name}</p></div></div>
             <div className='bg-black/40 border border-white/10 rounded-xl p-5 space-y-4'>
               <div><p className='text-white/40 text-xs uppercase tracking-widest mb-1'>Identifiant</p><div className='flex items-center justify-between bg-white/5 rounded-lg px-4 py-2.5'><span className='font-mono text-blue-300 font-bold'>{newJuryCredentials.username}</span><button onClick={()=>navigator.clipboard.writeText(newJuryCredentials!.username)} className='text-white/40 hover:text-white'><Copy size={14}/></button></div></div>
-              <div><p className='text-white/40 text-xs uppercase tracking-widest mb-1'>Mot de passe</p><div className='flex items-center justify-between bg-white/5 rounded-lg px-4 py-2.5'><span className='font-mono text-amber-300 font-bold'>{newJuryCredentials.password}</span><button onClick={()=>navigator.clipboard.writeText(newJuryCredentials!.password)} className='text-white/40 hover:text-white'><Copy size={14}/></button></div></div>
               <div><p className='text-white/40 text-xs uppercase tracking-widest mb-1'>URL</p><div className='flex items-center justify-between bg-white/5 rounded-lg px-4 py-2.5'><span className='text-white/60 text-sm'>/login → /concours/jury</span><button onClick={()=>navigator.clipboard.writeText(window.location.origin+'/login')} className='text-white/40 hover:text-white'><Copy size={14}/></button></div></div>
             </div>
-            <div className='bg-amber-500/10 border border-amber-500/30 rounded-xl p-3'><p className='text-amber-300 text-xs'>⚠️ Notez ces identifiants maintenant.</p></div>
-            <button onClick={()=>setNewJuryCredentials(null)} className='w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-xl'>J&apos;ai noté les identifiants</button>
+            <div className='bg-amber-500/10 border border-amber-500/30 rounded-xl p-3'><p className='text-amber-300 text-xs'>Invitez ensuite cette personne depuis la gestion des utilisateurs : elle choisira son mot de passe via un lien sécurisé.</p></div>
+            <button onClick={()=>setNewJuryCredentials(null)} className='w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-xl'>Compris</button>
           </div>
         </div>
       )}

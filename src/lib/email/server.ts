@@ -11,6 +11,7 @@ export type TransactionalEmailInput = {
   variables?: Record<string, unknown>;
   metadata?: Record<string, unknown>;
   replyTo?: EmailRecipient;
+  idempotencyKey?: string;
 };
 
 function normalizeEmail(value: unknown) {
@@ -36,6 +37,14 @@ export async function sendTransactionalTemplate(input: TransactionalEmailInput) 
 
   if (!recipients.length) throw new Error('Aucun destinataire email valide.');
 
+  const metadata = input.metadata && typeof input.metadata === 'object' ? input.metadata : {};
+  const eventId = metadata.application_id || metadata.message_id || metadata.booking_id || metadata.event_id;
+  const eventSource = cleanText(metadata.source, 80);
+  const idempotencyKey = cleanText(
+    input.idempotencyKey || (eventId && eventSource ? `${eventSource}:${String(eventId)}` : ''),
+    240,
+  );
+
   const response = await fetch(`${SUPABASE_URL}/functions/v1/send-transactional-email`, {
     method: 'POST',
     headers: {
@@ -47,7 +56,8 @@ export async function sendTransactionalTemplate(input: TransactionalEmailInput) 
       templateKey: cleanText(input.templateKey, 120),
       to: recipients,
       variables: input.variables || {},
-      metadata: input.metadata || {},
+      metadata,
+      idempotencyKey: idempotencyKey || undefined,
       replyTo: input.replyTo && normalizeEmail(input.replyTo.email)
         ? { email: normalizeEmail(input.replyTo.email), name: cleanText(input.replyTo.name, 120) || undefined }
         : undefined,

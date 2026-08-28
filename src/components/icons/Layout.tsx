@@ -19,7 +19,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   }
 
   // Authentication owns the full viewport and must not inherit the public site chrome.
-  if (pathname.startsWith('/login')) {
+  if (pathname.startsWith('/login') || pathname.startsWith('/auth/')) {
     return <>{children}</>;
   }
 
@@ -27,7 +27,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     <div className="min-h-screen bg-pm-dark font-montserrat flex flex-col">
       <AnnouncementMarquee />
       <Header />
-      <main className="flex-grow pt-24 lg:pt-28">
+      <main className="flex-grow">
         <Breadcrumb />
         {children}
       </main>

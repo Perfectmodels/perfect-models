@@ -73,13 +73,13 @@ export const AnnouncementMarquee: React.FC = () => {
     ? partners.map(p => p.name)
     : [
         'Perfect Models Management • Libreville, Gabon',
-        'Casting Ouvert — Saison 2025',
-        'Perfect Fashion Day Édition 2 • 31 Janvier 2026',
-        'Agence de Mannequins d\'Élite en Afrique Centrale',
+        'Casting & développement de talents',
+        'Perfect Fashion Day • Mode, création, rencontres',
+        'Management • Production • Direction artistique',
       ];
 
   return (
-    <div className="bg-pm-gold text-pm-dark py-2 text-[9px] font-black uppercase tracking-[0.3em]">
+    <div className="bg-pm-wine py-2 text-[8px] font-bold uppercase tracking-[0.32em] text-pm-ivory">
       <Marquee
         items={items}
         duration={40}

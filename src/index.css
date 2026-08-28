@@ -3,8 +3,10 @@
 @tailwind utilities;
 
 @layer base {
-  body { @apply bg-pm-dark text-pm-off-white font-montserrat antialiased selection:bg-pm-gold selection:text-pm-dark overflow-x-hidden; }
-  h1, h2, h3, h4 { @apply font-playfair leading-[1.1] tracking-tight; }
+  html { @apply bg-pm-dark; }
+  body { @apply bg-pm-dark text-pm-off-white font-montserrat antialiased selection:bg-pm-wine selection:text-pm-ivory overflow-x-hidden; }
+  h1, h2, h3, h4 { @apply font-playfair leading-[1.05] tracking-tight; }
+  a, button, input, textarea, select { -webkit-tap-highlight-color: transparent; }
   @media print { .print-hide { @apply hidden; } .printable-content { @apply block; } body { @apply bg-white text-black; } }
 }
 
@@ -22,6 +24,10 @@
   .contact-input { @apply w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-pm-off-white placeholder:text-white/20 transition-all duration-300 focus:outline-none focus:border-pm-gold focus:bg-white/10; }
   .contact-input option { @apply bg-pm-dark text-pm-off-white; }
   .login-modal-input { @apply w-full rounded-xl border border-white/10 bg-white/[0.045] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/20 hover:border-white/20 focus:border-pm-gold/70 focus:ring-4 focus:ring-pm-gold/10; }
+  .pmm-button { @apply inline-flex min-h-12 items-center justify-center gap-4 border px-6 py-3 text-[9px] font-black uppercase tracking-[.24em] transition duration-300 sm:px-8; }
+  .pmm-button--light { @apply border-pm-ivory bg-pm-ivory text-pm-ink hover:border-pm-gold hover:bg-pm-gold; }
+  .pmm-button--ghost { @apply border-white/25 bg-transparent text-white hover:border-pm-gold hover:text-pm-gold-light; }
+  .pmm-text-link { @apply inline-flex items-center gap-3 border-b border-current pb-2 text-[9px] font-black uppercase tracking-[.28em] text-pm-ivory transition hover:text-pm-gold; }
 }
 
 @layer utilities {
@@ -37,3 +43,7 @@ a[href="/admin/magazine"] > span.min-w-0::after { content: 'Blog'; font-size: 0.
 a[href="/admin/news"] { display: none !important; }
 
 @keyframes glow { 0%, 100% { opacity: 0.1; filter: blur(40px); } 50% { opacity: 0.3; filter: blur(60px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}

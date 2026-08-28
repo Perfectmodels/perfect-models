@@ -36,11 +36,11 @@ const AdminRecovery: React.FC = () => {
     if (selected?.id === id) setSelected(null);
   };
 
-  const findModelCredentials = (req: RecoveryRequest) => {
+  const findModelAccount = (req: RecoveryRequest) => {
     const model = models.find(m =>
       m.name.toLowerCase().includes(req.modelName.toLowerCase()) || m.phone === req.phone
     );
-    return model ? { username: model.username, password: model.password, found: true } : { username: '—', password: '—', found: false };
+    return model ? { username: model.username, email: model.email || '', found: true } : { username: '—', email: '', found: false };
   };
 
   return (
@@ -79,7 +79,7 @@ const AdminRecovery: React.FC = () => {
               </thead>
               <tbody>
                 {filtered.map(r => {
-                  const creds = findModelCredentials(r);
+                  const creds = findModelAccount(r);
                   return (
                     <tr key={r.id} className={`border-b border-pm-dark hover:bg-pm-dark/50 ${r.status === 'Nouveau' ? 'border-l-2 border-l-blue-500' : ''}`}>
                       <td className="p-4">
@@ -116,7 +116,7 @@ const AdminRecovery: React.FC = () => {
       </div>
 
       {selected && (() => {
-        const creds = findModelCredentials(selected);
+        const creds = findModelAccount(selected);
         return (
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-pm-dark border border-pm-gold/30 rounded-lg w-full max-w-md">
@@ -130,9 +130,10 @@ const AdminRecovery: React.FC = () => {
                 <Row label="Date" value={new Date(selected.timestamp).toLocaleString('fr-FR')} />
                 {creds.found ? (
                   <div className="bg-pm-gold/10 border border-pm-gold/30 rounded-lg p-4 space-y-2">
-                    <p className="text-xs uppercase tracking-widest text-pm-gold mb-2">Identifiants trouvés</p>
+                    <p className="text-xs uppercase tracking-widest text-pm-gold mb-2">Compte Supabase identifié</p>
                     <Row label="Identifiant" value={creds.username} />
-                    <Row label="Mot de passe" value={creds.password} />
+                    <Row label="Email" value={creds.email || 'À compléter dans la fiche mannequin'} />
+                    <p className="pt-2 text-xs leading-5 text-white/45">Les mots de passe ne sont jamais visibles. Utilisez le parcours « Mot de passe oublié » pour transmettre un lien sécurisé.</p>
                   </div>
                 ) : (
                   <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">

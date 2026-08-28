@@ -1,7 +1,10 @@
 'use client';
 
 type LegacyRef = { path: string; key: string | null };
-type LegacySnapshot = { val: () => any };
+type LegacySnapshot = {
+  val: () => any;
+  exists: () => boolean;
+};
 
 export const legacyDb = { provider: 'supabase' } as const;
 
@@ -45,7 +48,10 @@ async function request(target: LegacyRef, init?: RequestInit) {
 
 export async function get(target: LegacyRef): Promise<LegacySnapshot> {
   const data = await request(target);
-  return { val: () => data };
+  return {
+    val: () => data,
+    exists: () => data !== null && data !== undefined,
+  };
 }
 
 export async function set(target: LegacyRef, value: unknown) {

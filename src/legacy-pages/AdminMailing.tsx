@@ -63,7 +63,6 @@ const NEWSLETTER_SCHEDULE_KEY = 'pmm_newsletter_schedules';
 const AdminMailing: React.FC = () => {
   const { data, saveData } = useData();
   const models = data?.models ?? [];
-  const brevoKey = data?.apiKeys?.brevoApiKey;
   const mailingContacts = data?.mailingContacts ?? [];
 
   const [tab, setTab] = useState<Tab>('compose');
@@ -197,7 +196,6 @@ const AdminMailing: React.FC = () => {
         subject,
         bodyHtml: `<h2 style="color:#c9a84c;font-family:Georgia,serif;font-size:22px;margin:0 0 20px">${subject}</h2>
           <div style="color:#f5f0e8cc;line-height:1.8;white-space:pre-wrap">${body.replace(/\n/g, '<br/>')}</div>`,
-        apiKey: brevoKey,
         onProgress: (s, t) => setProgress({ sent: s, total: t }),
       });
       setSendSummary({ sent: result.sent, total: targetEmails.length, limitReached: result.limitReached, remainingToday: result.remainingToday });
@@ -226,7 +224,6 @@ const AdminMailing: React.FC = () => {
         to: campaign.recipients,
         subject: campaign.subject,
         bodyHtml: campaign.html,
-        apiKey: brevoKey,
         onProgress: () => undefined,
       });
       if (typeof window !== 'undefined') {
@@ -314,7 +311,6 @@ const AdminMailing: React.FC = () => {
             ctaUrl: s.ctaUrl || undefined,
           })),
         }),
-        apiKey: brevoKey,
         onProgress: (s, t) => setProgress({ sent: s, total: t }),
       });
       setSendSummary({ sent: result.sent, total: targetEmails.length, limitReached: result.limitReached, remainingToday: result.remainingToday });
@@ -364,11 +360,9 @@ const AdminMailing: React.FC = () => {
             <h1 className="text-4xl font-playfair font-black italic">Mailing</h1>
             <p className="text-pm-off-white/40 text-sm mt-1">Composez et envoyez des emails via Brevo.</p>
           </div>
-          {!brevoKey && (
-            <p className="text-xs text-yellow-400 bg-yellow-400/10 border border-yellow-400/20 rounded-lg px-3 py-2">
-              ⚠️ Clé Brevo non configurée dans Paramètres — utilisation de la clé .env
-            </p>
-          )}
+          <p className="text-xs text-emerald-300 bg-emerald-400/10 border border-emerald-400/20 rounded-lg px-3 py-2">
+            Envoi sécurisé par le service transactionnel PMM
+          </p>
         </div>
 
         <div className="flex flex-wrap gap-3 mb-8">

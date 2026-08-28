@@ -4,9 +4,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useData } from '@/contexts/DataContext';
 import { AppData } from '@/hooks/useRealtimeDB';
 import SEO from '@/components/SEO';
-import { CheckIcon, ChevronRightIcon, EyeIcon, EyeSlashIcon, MagnifyingGlassIcon, ShieldCheckIcon, SparklesIcon } from '@heroicons/react/24/outline';
+import { CheckIcon, ChevronRightIcon, MagnifyingGlassIcon, ShieldCheckIcon, SparklesIcon } from '@heroicons/react/24/outline';
 
-type EditableData = Pick<AppData, 'contactInfo' | 'siteConfig' | 'siteImages' | 'socialLinks' | 'agencyPartners' | 'testimonials' | 'faqData' | 'apiKeys'>;
+type EditableData = Pick<AppData, 'contactInfo' | 'siteConfig' | 'siteImages' | 'socialLinks' | 'agencyPartners' | 'testimonials' | 'faqData'>;
 type Section = 'general' | 'branding' | 'contact' | 'social' | 'content' | 'integrations' | 'security';
 
 const sections: Array<{ id: Section; label: string; description: string }> = [
@@ -15,7 +15,7 @@ const sections: Array<{ id: Section; label: string; description: string }> = [
   { id: 'contact', label: 'Contact', description: 'Coordonnées affichées publiquement' },
   { id: 'social', label: 'Réseaux sociaux', description: 'Liens officiels de Perfect Models' },
   { id: 'content', label: 'Contenus', description: 'Partenaires, témoignages et FAQ' },
-  { id: 'integrations', label: 'Intégrations', description: 'Services externes et clés techniques' },
+  { id: 'integrations', label: 'Intégrations', description: 'État des services gérés côté serveur' },
   { id: 'security', label: 'Sécurité', description: 'Bonnes pratiques et protection des accès' },
 ];
 
@@ -31,8 +31,8 @@ export default function SettingsCenter() {
 
   useEffect(() => {
     if (isInitialized && data) {
-      const { contactInfo, siteConfig, siteImages, socialLinks, agencyPartners, testimonials, faqData, apiKeys } = data;
-      setDraft(clone({ contactInfo, siteConfig, siteImages, socialLinks, agencyPartners, testimonials, faqData, apiKeys }));
+      const { contactInfo, siteConfig, siteImages, socialLinks, agencyPartners, testimonials, faqData } = data;
+      setDraft(clone({ contactInfo, siteConfig, siteImages, socialLinks, agencyPartners, testimonials, faqData }));
       setDirty(false);
     }
   }, [isInitialized, data]);
@@ -102,7 +102,7 @@ export default function SettingsCenter() {
             {active === 'contact' && <Contact draft={draft} update={update} />}
             {active === 'social' && <Social draft={draft} update={update} />}
             {active === 'content' && <Content draft={draft} setDraft={setDraft} markDirty={() => { setDirty(true); setSaved(false); }} />}
-            {active === 'integrations' && <Integrations draft={draft} update={update} />}
+            {active === 'integrations' && <Integrations />}
             {active === 'security' && <Security />}
           </main>
         </div>
@@ -121,11 +121,6 @@ function Field({ label, value, onChange, placeholder, type = 'text', help }: any
 
 function Area({ label, value, onChange, placeholder }: any) {
   return <label className="block"><span className="admin-label">{label}</span><textarea value={value ?? ''} placeholder={placeholder} onChange={e => onChange(e.target.value)} rows={4} className="admin-input resize-y" /></label>;
-}
-
-function Secret({ label, value, onChange }: any) {
-  const [show, setShow] = useState(false);
-  return <div className="relative"><Field label={label} value={value} onChange={onChange} type={show ? 'text' : 'password'} help="La valeur est masquée par défaut." /><button type="button" onClick={() => setShow(v => !v)} className="absolute right-3 bottom-3 text-white/30 hover:text-pm-gold">{show ? <EyeSlashIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}</button></div>;
 }
 
 function General({ draft, update }: any) {
@@ -158,12 +153,18 @@ function ArrayList({ items, onChange, labelKey, empty, nested, open, setOpen }: 
   return <div className="space-y-3">{items.map((item: any, i: number) => <div key={i} className="rounded-xl border border-white/5 bg-black/10 p-4"><div className="flex gap-2"><input className="admin-input flex-1" value={item[labelKey] || ''} onChange={e => update(i,{ [labelKey]: e.target.value })} /><button type="button" className="px-3 rounded-lg text-xs text-red-300/70 hover:bg-red-400/10" onClick={() => onChange(items.filter((_: any,n:number)=>n!==i))}>Supprimer</button></div>{nested && <div className="mt-4 space-y-3"><button type="button" className="text-[10px] uppercase tracking-widest text-pm-gold" onClick={() => setOpen(open === String(i) ? null : String(i))}>{open === String(i) ? 'Réduire' : 'Gérer les questions'}</button>{open === String(i) && <div className="space-y-3">{(item.items || []).map((q:any,j:number)=><div key={j} className="grid md:grid-cols-2 gap-3"><input className="admin-input" value={q.question || ''} onChange={e => update(i,{items:item.items.map((x:any,n:number)=>n===j?{...x,question:e.target.value}:x)})} /><input className="admin-input" value={q.answer || ''} onChange={e => update(i,{items:item.items.map((x:any,n:number)=>n===j?{...x,answer:e.target.value}:x)})} /></div>)}<button type="button" className="text-xs text-pm-gold" onClick={() => update(i,{items:[...(item.items||[]),{question:'Nouvelle question ?',answer:''}]})}>+ Ajouter une question</button></div>}</div>}</div>)}<button type="button" onClick={() => onChange([...items,empty])} className="text-xs font-bold text-pm-gold hover:text-white">+ Ajouter</button></div>;
 }
 
-function Integrations({ draft, update }: any) {
-  return <Panel title="Intégrations" description="La clé ImgBB est exclusivement gérée côté serveur avec IMGBB_API_KEY dans Vercel ; elle n’est jamais envoyée au navigateur."><div className="grid md:grid-cols-2 gap-6"><div className="rounded-xl border border-emerald-400/15 bg-emerald-400/[.04] p-4"><p className="text-xs font-bold text-emerald-300">ImgBB — configuration serveur</p><p className="mt-2 text-[11px] leading-5 text-white/40">Les téléversements d’images passent par /api/media/imgbb. Modifiez la clé uniquement dans les variables d’environnement Vercel.</p></div><Secret label="Brevo API Key" value={draft.apiKeys?.brevoApiKey || ''} onChange={(v:string)=>update('apiKeys','brevoApiKey',v)} /><Field label="Email expéditeur" value={draft.apiKeys?.defaultFromEmail} onChange={(v:string)=>update('apiKeys','defaultFromEmail',v)} type="email" /><Secret label="Dropbox Access Token" value={draft.apiKeys?.dropboxAccessToken || ''} onChange={(v:string)=>update('apiKeys','dropboxAccessToken',v)} /><Secret label="Gemini API Key" value={draft.apiKeys?.geminiApiKey || ''} onChange={(v:string)=>update('apiKeys','geminiApiKey',v)} /><Secret label="Firebase VAPID Key" value={draft.apiKeys?.vapidKey || ''} onChange={(v:string)=>update('apiKeys','vapidKey',v)} /><Field label="Chatbot ID" value={draft.apiKeys?.chatbotId} onChange={(v:string)=>update('apiKeys','chatbotId',v)} /></div></Panel>;
+function Integrations() {
+  const services = [
+    ['Supabase Auth', 'Sessions, profils et rôles synchronisés côté serveur.'],
+    ['Emails transactionnels', 'Brevo est appelé par une fonction Edge journalisée et protégée.'],
+    ['ImgBB', 'Les téléversements passent par une route serveur authentifiée.'],
+    ['Secrets applicatifs', 'Les clés sont administrées dans Vercel ou Supabase, jamais dans le navigateur.'],
+  ];
+  return <Panel title="Intégrations" description="Les secrets techniques ne sont plus éditables depuis le site. Cette page indique seulement l’architecture active."><div className="grid md:grid-cols-2 gap-4">{services.map(([title,text]) => <div key={title} className="rounded-xl border border-emerald-400/15 bg-emerald-400/[.04] p-5"><p className="text-xs font-bold text-emerald-300">{title}</p><p className="mt-2 text-[11px] leading-5 text-white/40">{text}</p></div>)}</div></Panel>;
 }
 
 function Security() {
-  return <div className="space-y-6"><Panel title="Sécurité" description="État et recommandations de sécurité pour l'administration."><div className="grid md:grid-cols-2 gap-4"><SecurityCard title="Session administrateur" text="Les paramètres sont accessibles depuis une route protégée par le rôle admin." ok /><SecurityCard title="Secrets côté client" text="Les clés sensibles stockées dans les données applicatives ne doivent pas être considérées comme des secrets serveur." /><SecurityCard title="Sauvegarde avant modification" text="Le nouvel éditeur travaille en brouillon local et ne persiste qu’après Enregistrer." ok /><SecurityCard title="Environnement recommandé" text="Déplacer progressivement Brevo, Gemini, Dropbox et autres secrets vers les variables d’environnement Vercel." /></div></Panel><Panel title="Architecture recommandée" description="Cette section prépare la prochaine étape sans modifier automatiquement la production."><div className="rounded-xl border border-pm-gold/10 bg-pm-gold/[.04] p-5 flex gap-4"><SparklesIcon className="w-5 h-5 text-pm-gold shrink-0" /><p className="text-xs leading-6 text-white/45">À terme, le centre de configuration peut séparer clairement les réglages éditoriaux, les secrets serveur, les préférences d'administration et les paramètres SEO. Cela évitera que le module Paramètres devienne un second CMS fourre-tout.</p></div></Panel></div>;
+  return <div className="space-y-6"><Panel title="Sécurité" description="État de la nouvelle architecture d’accès."><div className="grid md:grid-cols-2 gap-4"><SecurityCard title="Sessions Supabase SSR" text="Les sessions sont conservées dans des cookies sécurisés et renouvelées par le serveur." ok /><SecurityCard title="Rôles protégés" text="Les rôles viennent des métadonnées administrateur ; un membre ne peut plus promouvoir son propre compte." ok /><SecurityCard title="Secrets hors navigateur" text="Les clés Brevo, Supabase et ImgBB ne sont jamais intégrées au bundle client." ok /><SecurityCard title="Emails traçables" text="Chaque envoi transactionnel est journalisé et protégé contre les doublons." ok /></div></Panel><Panel title="Socle technique" description="Les parcours sensibles utilisent désormais une seule chaîne de confiance."><div className="rounded-xl border border-pm-gold/10 bg-pm-gold/[.04] p-5 flex gap-4"><SparklesIcon className="w-5 h-5 text-pm-gold shrink-0" /><p className="text-xs leading-6 text-white/45">Vercel reçoit les requêtes, Supabase Auth valide l’identité, Postgres applique les règles d’accès et la fonction Edge orchestre les emails transactionnels.</p></div></Panel></div>;
 }
 
 function SecurityCard({ title, text, ok }: { title:string; text:string; ok?:boolean }) { return <div className="rounded-xl border border-white/5 p-5"><div className="flex items-center gap-2">{ok ? <CheckIcon className="w-4 h-4 text-emerald-400" /> : <ShieldCheckIcon className="w-4 h-4 text-pm-gold" />}<span className="text-xs font-bold text-white">{title}</span></div><p className="mt-2 text-[11px] leading-5 text-white/30">{text}</p></div>; }

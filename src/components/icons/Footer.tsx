@@ -1,186 +1,80 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useData } from '../../contexts/DataContext';
-import { FacebookIcon, InstagramIcon, TikTokIcon, WhatsAppIcon, YoutubeIcon } from '../icons/SocialIcons';
-import { ArrowUpRightIcon } from '@heroicons/react/24/outline';
+import { FacebookIcon, InstagramIcon, TikTokIcon, WhatsAppIcon, YoutubeIcon } from './SocialIcons';
+
+const fallbackNav = [
+  { path: '/agence', label: 'Agence' },
+  { path: '/mannequins', label: 'Talents' },
+  { path: '/services', label: 'Expertises' },
+  { path: '/fashion-day', label: 'Fashion Day' },
+  { path: '/magazine', label: 'Journal' },
+];
 
 const Footer: React.FC = () => {
-    const { data } = useData();
-    const navLinks = data?.navLinks || [];
-    const socialLinks = data?.socialLinks;
-    const contactInfo = data?.contactInfo;
+  const { data } = useData();
+  const configured = (data?.navLinks || []).filter((link) => link.inFooter);
+  const navLinks = configured.length ? configured : fallbackNav;
+  const socialLinks = data?.socialLinks;
+  const contact = data?.contactInfo;
+  const socials = [
+    ['Instagram', socialLinks?.instagram, InstagramIcon],
+    ['Facebook', socialLinks?.facebook, FacebookIcon],
+    ['TikTok', socialLinks?.tiktok, TikTokIcon],
+    ['YouTube', socialLinks?.youtube, YoutubeIcon],
+    ['WhatsApp', socialLinks?.whatsapp, WhatsAppIcon],
+  ] as const;
 
-    const footerLinks = navLinks.filter(link => link.inFooter);
+  return (
+    <footer className="overflow-hidden border-t border-white/10 bg-pm-ink text-pm-ivory">
+      <div className="mx-auto max-w-[1600px] px-5 pb-10 pt-20 sm:px-8 sm:pt-28 lg:px-12">
+        <div className="grid gap-14 border-b border-white/10 pb-16 lg:grid-cols-[1.25fr_.75fr] lg:items-end">
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-[.45em] text-pm-gold">Construisons la prochaine image</p>
+            <h2 className="mt-7 max-w-5xl font-playfair text-6xl font-semibold leading-[.84] tracking-[-.055em] sm:text-8xl lg:text-[7.8rem]">Un talent.<br /><em className="font-normal text-white/38">Une vision.</em></h2>
+          </div>
+          <div className="flex flex-col gap-3 lg:pb-2">
+            <Link to="/contact?subject=booking" className="pmm-button pmm-button--light">Booker un talent <span>↗</span></Link>
+            <Link to="/casting-formulaire" className="pmm-button pmm-button--ghost">Rejoindre l’agence</Link>
+          </div>
+        </div>
 
-    return (
-        <footer className="relative bg-[#050505] overflow-hidden">
+        <div className="grid gap-12 py-14 sm:grid-cols-2 lg:grid-cols-[1.2fr_.8fr_1fr] lg:py-20">
+          <div>
+            <Link to="/" className="inline-flex items-center gap-4"><span className="grid h-14 w-14 place-items-center border border-pm-gold font-playfair text-2xl text-pm-gold">PM</span><span><span className="block font-playfair text-2xl">Perfect Models</span><span className="mt-1 block text-[8px] font-bold uppercase tracking-[.32em] text-white/35">Management · Libreville</span></span></Link>
+            <p className="mt-7 max-w-sm text-sm leading-7 text-white/40">Agence de management, de casting et de production dédiée à l’émergence des talents et des images de mode au Gabon.</p>
+          </div>
 
-            {/* ── Decorative background word ── */}
-            <div
-                aria-hidden="true"
-                className="pointer-events-none select-none absolute bottom-0 left-0 right-0 flex justify-center overflow-hidden"
-            >
-                <span className="font-playfair font-black text-[22vw] leading-none text-white/[0.025] whitespace-nowrap translate-y-[15%]">
-                    ÉLITE
-                </span>
+          <div>
+            <p className="mb-6 text-[8px] font-black uppercase tracking-[.38em] text-pm-gold">Explorer</p>
+            <nav className="grid grid-cols-2 gap-x-8 gap-y-3 sm:grid-cols-1">
+              {navLinks.slice(0, 7).map((link) => <Link key={link.path} to={link.path} className="font-playfair text-xl text-white/60 transition hover:translate-x-1 hover:text-pm-ivory">{String(('footerLabel' in link && link.footerLabel) || link.label)}</Link>)}
+            </nav>
+          </div>
+
+          <div>
+            <p className="mb-6 text-[8px] font-black uppercase tracking-[.38em] text-pm-gold">Nous trouver</p>
+            <div className="space-y-3 text-sm leading-6 text-white/45">
+              {contact?.address && <p>{contact.address}</p>}
+              {contact?.phone && <a href={`tel:${contact.phone}`} className="block transition hover:text-pm-gold">{contact.phone}</a>}
+              {contact?.email && <a href={`mailto:${contact.email}`} className="block break-all transition hover:text-pm-gold">{contact.email}</a>}
+              {!contact && <p>Libreville, Gabon</p>}
             </div>
-
-            {/* ── Top gold line ── */}
-            <div className="h-px bg-gradient-to-r from-transparent via-pm-gold/60 to-transparent" />
-
-            {/* ── Hero CTA block ── */}
-            <div className="relative max-w-[1800px] mx-auto px-4 sm:px-8 lg:px-20 pt-8 sm:pt-12 pb-8 sm:pb-10">
-                <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 sm:gap-8 lg:gap-12">
-
-                    {/* Left : brand statement */}
-                    <div className="max-w-xl">
-                        <span className="section-label">Perfect Models Management</span>
-                        <h2 className="font-playfair text-4xl sm:text-5xl lg:text-7xl font-black text-white leading-[1.05] tracking-tight">
-                            L'excellence,<br />
-                            <em className="text-pm-gold not-italic">au quotidien.</em>
-                        </h2>
-                    </div>
-
-                    {/* Right : CTA buttons */}
-                    <div className="flex flex-row sm:flex-row lg:flex-col gap-3 sm:gap-4 shrink-0 flex-wrap">
-                        <Link to="/casting-formulaire" className="btn-premium text-pm-off-white group flex items-center justify-between gap-4 sm:gap-8">
-                            <span>Devenir Mannequin</span>
-                            <ArrowUpRightIcon className="w-4 h-4 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
-                        </Link>
-                        <Link to="/contact" className="btn-premium text-pm-off-white group flex items-center justify-between gap-4 sm:gap-8">
-                            <span>Nous Contacter</span>
-                            <ArrowUpRightIcon className="w-4 h-4 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
-                        </Link>
-                    </div>
-                </div>
+            <div className="mt-8 flex flex-wrap gap-2">
+              {socials.map(([label, href, Icon]) => href ? <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label} className="grid h-10 w-10 place-items-center border border-white/12 text-white/35 transition hover:border-pm-gold hover:text-pm-gold"><Icon className="h-4 w-4" /></a> : null)}
             </div>
+          </div>
+        </div>
 
-            {/* ── Divider ── */}
-            <div className="max-w-[1800px] mx-auto px-4 sm:px-8 lg:px-20">
-                <div className="h-px bg-white/5" />
-            </div>
+        <div className="flex flex-col gap-4 border-t border-white/10 pt-7 text-[8px] font-bold uppercase tracking-[.25em] text-white/25 sm:flex-row sm:items-center sm:justify-between">
+          <p>© {new Date().getFullYear()} Perfect Models Management</p>
+          <div className="flex flex-wrap gap-6"><Link to="/privacy-policy" className="transition hover:text-pm-gold">Confidentialité</Link><Link to="/terms-of-use" className="transition hover:text-pm-gold">Conditions</Link><Link to="/login" className="text-pm-gold/70 transition hover:text-pm-gold">Espace privé</Link></div>
+        </div>
 
-            {/* ── Nav grid ── */}
-            <div className="relative max-w-[1800px] mx-auto px-4 sm:px-8 lg:px-20 py-12 sm:py-16 lg:py-20">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-8 sm:gap-12 lg:gap-20">
-
-                    {/* Navigation */}
-                    <div>
-                        <p className="text-[9px] font-black uppercase tracking-[0.5em] text-pm-gold/50 mb-8">Navigation</p>
-                        <ul className="space-y-3">
-                            {footerLinks.map(link => (
-                                <li key={link.path}>
-                                    <Link
-                                        to={link.path}
-                                        className="text-[11px] font-semibold uppercase tracking-[0.15em] text-white/40 hover:text-pm-gold transition-colors duration-300"
-                                    >
-                                        {link.footerLabel || link.label}
-                                    </Link>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-
-                    {/* Opportunités */}
-                    <div>
-                        <p className="text-[9px] font-black uppercase tracking-[0.5em] text-pm-gold/50 mb-8">Opportunités</p>
-                        <ul className="space-y-3">
-                            {[
-                                { to: '/casting-formulaire', label: 'Casting Mannequin' },
-                                { to: '/fashion-day-application', label: 'Exposer au PFD' },
-                                { to: '/contact', label: 'Presse & Partenariats' },
-                                { to: '/services', label: 'Nos Services' },
-                            ].map(item => (
-                                <li key={item.to}>
-                                    <Link
-                                        to={item.to}
-                                        className="text-[11px] font-semibold uppercase tracking-[0.15em] text-white/40 hover:text-pm-gold transition-colors duration-300"
-                                    >
-                                        {item.label}
-                                    </Link>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-
-                    {/* Contact */}
-                    <div className="col-span-2 md:col-span-2">
-                        <p className="text-[9px] font-black uppercase tracking-[0.5em] text-pm-gold/50 mb-6 sm:mb-8">Contact</p>
-                        {contactInfo && (
-                            <div className="space-y-3 sm:space-y-4">
-                                <p className="text-xs font-semibold uppercase tracking-[0.1em] text-white/40 leading-relaxed">
-                                    {contactInfo.address}
-                                </p>
-                                <a
-                                    href={`tel:${contactInfo.phone}`}
-                                    className="block text-xs font-semibold uppercase tracking-[0.1em] text-white/40 hover:text-pm-gold transition-colors duration-300"
-                                >
-                                    {contactInfo.phone}
-                                </a>
-                                <a
-                                    href={`mailto:${contactInfo.email}`}
-                                    className="block text-xs font-semibold uppercase tracking-[0.1em] text-white/40 hover:text-pm-gold transition-colors duration-300 break-all"
-                                >
-                                    {contactInfo.email}
-                                </a>
-                            </div>
-                        )}
-
-                        {/* Socials */}
-                        <div className="flex gap-4 sm:gap-6 mt-8 sm:mt-10 flex-wrap">
-                            {socialLinks?.facebook && (
-                                <a href={socialLinks.facebook} target="_blank" rel="noopener noreferrer" aria-label="Facebook"
-                                    className="w-10 h-10 sm:w-9 sm:h-9 border border-white/10 flex items-center justify-center text-white/30 hover:border-pm-gold hover:text-pm-gold transition-all duration-300">
-                                    <FacebookIcon className="w-4 h-4" />
-                                </a>
-                            )}
-                            {socialLinks?.instagram && (
-                                <a href={socialLinks.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram"
-                                    className="w-10 h-10 sm:w-9 sm:h-9 border border-white/10 flex items-center justify-center text-white/30 hover:border-pm-gold hover:text-pm-gold transition-all duration-300">
-                                    <InstagramIcon className="w-4 h-4" />
-                                </a>
-                            )}
-                            {socialLinks?.tiktok && (
-                                <a href={socialLinks.tiktok} target="_blank" rel="noopener noreferrer" aria-label="TikTok"
-                                    className="w-10 h-10 sm:w-9 sm:h-9 border border-white/10 flex items-center justify-center text-white/30 hover:border-pm-gold hover:text-pm-gold transition-all duration-300">
-                                    <TikTokIcon className="w-4 h-4" />
-                                </a>
-                            )}
-                            {socialLinks?.youtube && (
-                                <a href={socialLinks.youtube} target="_blank" rel="noopener noreferrer" aria-label="YouTube"
-                                    className="w-10 h-10 sm:w-9 sm:h-9 border border-white/10 flex items-center justify-center text-white/30 hover:border-pm-gold hover:text-pm-gold transition-all duration-300">
-                                    <YoutubeIcon className="w-4 h-4" />
-                                </a>
-                            )}
-                            {socialLinks?.whatsapp && (
-                                <a href={socialLinks.whatsapp} target="_blank" rel="noopener noreferrer" aria-label="Canal WhatsApp"
-                                    className="w-10 h-10 sm:w-9 sm:h-9 border border-white/10 flex items-center justify-center text-white/30 hover:border-pm-gold hover:text-pm-gold transition-all duration-300">
-                                    <WhatsAppIcon className="w-4 h-4" />
-                                </a>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* ── Bottom bar ── */}
-            <div className="border-t border-white/5">
-                <div className="max-w-[1800px] mx-auto px-4 sm:px-8 lg:px-20 py-6 sm:py-8 flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
-                    <p className="text-[9px] font-black uppercase tracking-[0.4em] text-white/20">
-                        &copy; {new Date().getFullYear()} Perfect Models Management
-                    </p>
-                    <div className="flex items-center gap-5 sm:gap-8 text-[9px] font-black uppercase tracking-[0.3em] sm:tracking-[0.4em]">
-                        <Link to="/terms-of-use" className="text-white/20 hover:text-pm-gold transition-colors">CGU</Link>
-                        <Link to="/privacy-policy" className="text-white/20 hover:text-pm-gold transition-colors">Confidentialité</Link>
-                        <Link to="/login" className="text-pm-gold/60 hover:text-pm-gold transition-colors">
-                            Portail Admin
-                        </Link>
-                    </div>
-                </div>
-            </div>
-
-        </footer>
-    );
+        <p aria-hidden="true" className="pointer-events-none -mb-[3.7vw] mt-12 whitespace-nowrap text-center font-playfair text-[17vw] font-semibold leading-[.7] tracking-[-.08em] text-white/[.025]">PERFECT</p>
+      </div>
+    </footer>
+  );
 };
 
 export default Footer;

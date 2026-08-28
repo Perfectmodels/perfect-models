@@ -45,7 +45,7 @@ export async function POST(request: Request) {
       ? { ...(profileData.permissions || {}), isManager: true }
       : { ...(profileData.permissions || {}), isActive: true };
 
-    const invited: any = await supabaseInviteUserByEmail(email, `${SITE_URL}/auth/set-password`, {
+    const invited: any = await supabaseInviteUserByEmail(email, `${SITE_URL}/auth/complete?next=/auth/set-password`, {
       name,
       identifier,
       profile_id: profileId,

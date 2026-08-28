@@ -7,11 +7,11 @@ import { ChevronDownIcon, TrashIcon, PlusIcon, KeyIcon, PhotoIcon, LinkIcon, Use
 import ImageInput from '../components/icons/ImageInput';
 import ImageUploader from '../components/ImageUploader';
 
-type EditableData = Pick<AppData, 'contactInfo' | 'siteConfig' | 'siteImages' | 'socialLinks' | 'agencyPartners' | 'testimonials' | 'faqData' | 'apiKeys'>;
+type EditableData = Pick<AppData, 'contactInfo' | 'siteConfig' | 'siteImages' | 'socialLinks' | 'agencyPartners' | 'testimonials' | 'faqData'>;
 
 const TABS = [
     { id: 'contact',     label: 'Contact',      icon: PhoneIcon },
-    { id: 'api',         label: 'Clés API',      icon: KeyIcon },
+    { id: 'api',         label: 'Intégrations',  icon: KeyIcon },
     { id: 'images',      label: 'Images',        icon: PhotoIcon },
     { id: 'social',      label: 'Réseaux',       icon: LinkIcon },
     { id: 'partners',    label: 'Partenaires',   icon: UserGroupIcon },
@@ -28,8 +28,8 @@ const AdminSettings: React.FC = () => {
 
     useEffect(() => {
         if (isInitialized && data) {
-            const { contactInfo, siteConfig, siteImages, socialLinks, agencyPartners, testimonials, faqData, apiKeys } = data;
-            setLocalData(JSON.parse(JSON.stringify({ contactInfo, siteConfig, siteImages, socialLinks, agencyPartners, testimonials, faqData, apiKeys })));
+            const { contactInfo, siteConfig, siteImages, socialLinks, agencyPartners, testimonials, faqData } = data;
+            setLocalData(JSON.parse(JSON.stringify({ contactInfo, siteConfig, siteImages, socialLinks, agencyPartners, testimonials, faqData })));
         }
     }, [isInitialized, data]);
 
@@ -113,37 +113,19 @@ const AdminSettings: React.FC = () => {
 
                 {activeTab === 'api' && (
                     <div className="glass-card p-10 space-y-8">
-                        <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-pm-gold mb-8">Clés API</h2>
-
-                        <div>
-                            <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/20 mb-5">Email & Communication</p>
-                            <div className="space-y-4">
-                                <SecretInput label="Clé API Brevo" value={localData.apiKeys.brevoApiKey || ''} onChange={v => handleSimpleChange('apiKeys', 'brevoApiKey', v)} />
-                                <FormInput label="Email expéditeur par défaut" value={localData.apiKeys.defaultFromEmail || ''} onChange={e => handleSimpleChange('apiKeys', 'defaultFromEmail', e.target.value)} />
-                            </div>
-                        </div>
-
-                        <div>
-                            <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/20 mb-5">Images & Stockage</p>
-                            <div className="space-y-4">
-                                <p className="rounded-lg border border-pm-gold/20 bg-pm-gold/5 px-4 py-3 text-xs text-white/50">ImgBB est configuré exclusivement côté serveur avec la variable Vercel <code>IMGBB_API_KEY</code>.</p>
-                                <SecretInput label="Dropbox Access Token" value={localData.apiKeys.dropboxAccessToken || ''} onChange={v => handleSimpleChange('apiKeys', 'dropboxAccessToken', v)} />
-                            </div>
-                        </div>
-
-                        <div>
-                            <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/20 mb-5">IA & Notifications</p>
-                            <div className="space-y-4">
-                                <SecretInput label="Gemini API Key" value={localData.apiKeys.geminiApiKey || ''} onChange={v => handleSimpleChange('apiKeys', 'geminiApiKey', v)} />
-                                <SecretInput label="Firebase VAPID Key (Push)" value={localData.apiKeys.vapidKey || ''} onChange={v => handleSimpleChange('apiKeys', 'vapidKey', v)} />
-                            </div>
-                        </div>
-
-                        <div>
-                            <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/20 mb-5">Chatbot</p>
-                            <div className="space-y-4">
-                                <SecretInput label="Chatbase Bot ID" value={localData.apiKeys.chatbotId || ''} onChange={v => handleSimpleChange('apiKeys', 'chatbotId', v)} />
-                            </div>
+                        <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-pm-gold mb-8">Intégrations sécurisées</h2>
+                        <div className="grid gap-4 md:grid-cols-2">
+                            {[
+                                ['Supabase', 'Authentification, rôles et données protégés côté serveur.'],
+                                ['Brevo', 'Emails envoyés par une fonction Edge avec journalisation anti-doublon.'],
+                                ['ImgBB', 'Téléversements délégués à une route serveur authentifiée.'],
+                                ['Secrets', 'Configuration centralisée dans Vercel et Supabase, jamais dans le navigateur.'],
+                            ].map(([title, description]) => (
+                                <div key={title} className="rounded-xl border border-emerald-400/15 bg-emerald-400/[.04] p-5">
+                                    <p className="text-xs font-bold text-emerald-300">{title}</p>
+                                    <p className="mt-2 text-[11px] leading-5 text-white/40">{description}</p>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 )}
@@ -250,31 +232,6 @@ const FormInput: React.FC<{ label: string; value: any; onChange: (e: React.Chang
         <input type="text" value={value} onChange={onChange} className="admin-input" />
     </div>
 );
-
-const SecretInput: React.FC<{ label: string; value: string; onChange: (v: string) => void }> = ({ label, value, onChange }) => {
-    const [visible, setVisible] = useState(false);
-    return (
-        <div>
-            <label className="admin-label">{label}</label>
-            <div className="relative">
-                <input
-                    type={visible ? 'text' : 'password'}
-                    value={value}
-                    onChange={e => onChange(e.target.value)}
-                    className="admin-input pr-20"
-                    autoComplete="new-password"
-                />
-                <button
-                    type="button"
-                    onClick={() => setVisible(v => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-black uppercase tracking-[0.2em] text-pm-gold/60 hover:text-pm-gold transition-colors"
-                >
-                    {visible ? 'Masquer' : 'Voir'}
-                </button>
-            </div>
-        </div>
-    );
-};
 
 const FormTextArea: React.FC<{ label: string; value: any; onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void }> = ({ label, value, onChange }) => (
     <div>

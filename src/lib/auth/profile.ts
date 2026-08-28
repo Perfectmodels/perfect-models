@@ -162,13 +162,20 @@ export async function ensureUserProfile(user: {
   const uid = String(user?.id || '');
   if (!uid) return null;
 
+  const existingProfile = await findProfile(user);
+  if (existingProfile) return existingProfile;
+
   const email = String(user?.email || '').trim().toLowerCase();
   const app = appMeta(user);
   const meta = userMeta(user);
   const role = normalizeAppRole(app.role, ADMIN_ALIASES.has(email) ? 'admin' : 'student');
   const name = String(meta.name || meta.display_name || email.split('@')[0] || '');
   const identifier = String(app.identifier || (ADMIN_ALIASES.has(email) ? 'admin' : email.split('@')[0] || uid));
-  const modelId = app.model_id || app.profile_id || null;
+  const requestedModelId = role === 'student' ? String(app.model_id || app.profile_id || '') : '';
+  const matchingModels = requestedModelId
+    ? await privilegedSupabaseSelect(`models?id=eq.${encodeURIComponent(requestedModelId)}&select=id&limit=1`).catch(() => [])
+    : [];
+  const modelId = Array.isArray(matchingModels) && matchingModels.length ? requestedModelId : null;
   const permissions = role === 'admin' ? { all: true, isAdmin: true } : { isActive: true };
   const now = new Date().toISOString();
 

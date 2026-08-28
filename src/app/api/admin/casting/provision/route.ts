@@ -112,7 +112,7 @@ export async function POST(request: Request) {
 
   let invited: any;
   try {
-    invited = await supabaseInviteUserByEmail(email, `${SITE_URL}/auth/set-password`, {
+    invited = await supabaseInviteUserByEmail(email, `${SITE_URL}/auth/complete?next=/auth/set-password`, {
       name: fullName,
       identifier: username,
       model_id: modelId,

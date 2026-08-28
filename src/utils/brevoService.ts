@@ -11,7 +11,6 @@ interface SendOptions {
   subject: string;
   htmlContent: string;
   replyTo?: Recipient;
-  apiKey?: string; // conservé uniquement pour compatibilité d'appel, jamais utilisé
 }
 
 interface DailyState { date: string; sent: number }
@@ -110,7 +109,6 @@ export const sendBulkEmail = async (p: {
   to: Recipient[];
   subject: string;
   bodyHtml: string;
-  apiKey?: string;
   batchSize?: number;
   delayMs?: number;
   onProgress?: (sent: number, total: number) => void;

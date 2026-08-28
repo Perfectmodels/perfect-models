@@ -39,35 +39,35 @@ export const siteImages: SiteImages = {
 };
 
 export const apiKeys: ApiKeys = {
-  // Configured via environment variables (VITE_RESEND_API_KEY, etc.)
+  // Les secrets d’intégration sont exclusivement configurés côté serveur.
   // See .env.example
-  resendApiKey: import.meta.env.VITE_RESEND_API_KEY || '',
+  resendApiKey: '',
   formspreeEndpoint: import.meta.env.VITE_FORMSPREE_ENDPOINT || '',
   firebaseDynamicLinks: {
     webApiKey: import.meta.env.VITE_FIREBASE_DYNAMIC_LINKS_API_KEY || '',
     domainUriPrefix: import.meta.env.VITE_FIREBASE_DYNAMIC_LINKS_DOMAIN || ''
   },
-  brevoApiKey: import.meta.env.VITE_BREVO_API_KEY || '',
-  dropboxAppKey: import.meta.env.VITE_DROPBOX_APP_KEY || '',
-  dropboxAccessToken: import.meta.env.VITE_DROPBOX_ACCESS_TOKEN || '',
-  geminiApiKey: import.meta.env.VITE_GEMINI_API_KEY || '',
+  brevoApiKey: '',
+  dropboxAppKey: '',
+  dropboxAccessToken: '',
+  geminiApiKey: '',
   vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY || '',
   chatbotId: import.meta.env.VITE_CHATBOT_ID || import.meta.env.NEXT_PUBLIC_CHATBOT_ID || '',
   defaultFromEmail: import.meta.env.DEFAULT_FROM_EMAIL || '',
 };
 
 export const juryMembers: JuryMember[] = [
-  { id: 'jury1', name: 'Martelly', username: 'jury1', password: 'password2025' },
-  { id: 'jury2', name: 'Darain', username: 'jury2', password: 'password2025' },
-  { id: 'jury3', name: 'David', username: 'jury3', password: 'password2025' },
-  { id: 'jury4', name: 'Sadia', username: 'jury4', password: 'password2025' },
+  { id: 'jury1', name: 'Martelly', username: 'jury1', password: '' },
+  { id: 'jury2', name: 'Darain', username: 'jury2', password: '' },
+  { id: 'jury3', name: 'David', username: 'jury3', password: '' },
+  { id: 'jury4', name: 'Sadia', username: 'jury4', password: '' },
 ];
 
 export const registrationStaff: RegistrationStaff[] = [
-  { id: 'reg1', name: 'Sephora', username: 'enregistrement1', password: 'password2025' },
-  { id: 'reg2', name: 'Aimée', username: 'enregistrement2', password: 'password2025' },
-  { id: 'reg3', name: 'Duchesse', username: 'enregistrement3', password: 'password2025' },
-  { id: 'reg4', name: 'Sephra', username: 'enregistrement4', password: 'password2025' },
+  { id: 'reg1', name: 'Sephora', username: 'enregistrement1', password: '' },
+  { id: 'reg2', name: 'Aimée', username: 'enregistrement2', password: '' },
+  { id: 'reg3', name: 'Duchesse', username: 'enregistrement3', password: '' },
+  { id: 'reg4', name: 'Sephra', username: 'enregistrement4', password: '' },
 ];
 
 export const models: Model[] = [
@@ -75,7 +75,7 @@ export const models: Model[] = [
     id: 'noemi-kim',
     name: 'Noemi Kim',
     username: 'Man-PMMN01',
-    password: 'noemi2024',
+    password: '',
     level: 'Pro',
     email: 'noemi.kim@example.com',
     phone: '+241077000001',
@@ -106,7 +106,7 @@ export const models: Model[] = [
     id: 'grace-elsa',
     name: 'Grace Elsa',
     username: 'Man-PMMGE01',
-    password: 'graceelsa2026',
+    password: '',
     level: 'Pro',
     height: '1m78',
     gender: 'Femme',
@@ -130,7 +130,7 @@ export const models: Model[] = [
     id: 'aj-caramela',
     name: 'AJ Caramela',
     username: 'Man-PMMA01',
-    password: 'caramela2024',
+    password: '',
     level: 'Pro',
     height: '1m75',
     gender: 'Femme',
@@ -157,7 +157,7 @@ export const models: Model[] = [
     id: 'yann-aubin',
     name: 'Yann Aubin',
     username: 'Man-PMMY01',
-    password: 'yann2024',
+    password: '',
     level: 'Pro',
     height: '1m88',
     gender: 'Homme',

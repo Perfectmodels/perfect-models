@@ -92,8 +92,8 @@ const Login: React.FC = () => {
   const handleMigration = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!migration) return;
-    if (newPassword.length < 8) {
-      setError('Le nouveau mot de passe doit contenir au moins 8 caractères.');
+    if (newPassword.length < 12 || !/[A-Z]/.test(newPassword) || !/[a-z]/.test(newPassword) || !/\d/.test(newPassword) || !/[^A-Za-z0-9]/.test(newPassword)) {
+      setError('Utilisez au moins 12 caractères, avec majuscule, minuscule, chiffre et caractère spécial.');
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -137,10 +137,10 @@ const Login: React.FC = () => {
   return (
     <>
       <SEO title="Connexion | Espace PMM" noIndex />
-      <main className="relative min-h-screen overflow-hidden bg-[#080808] text-white">
+      <main className="relative min-h-screen overflow-hidden bg-pm-dark text-white">
         <div className="absolute inset-0 lg:hidden">
           {backgroundImage && <img src={backgroundImage} alt="" className="h-full w-full object-cover opacity-20" aria-hidden="true" />}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-[#080808]/90 to-[#080808]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-pm-wine/40 via-pm-dark/90 to-pm-dark" />
         </div>
 
         <div className="relative grid min-h-screen lg:grid-cols-[1.08fr_0.92fr]">
@@ -157,7 +157,7 @@ const Login: React.FC = () => {
             <div className="relative z-10 max-w-2xl p-10 xl:p-14">
               <div className="mb-8 h-px w-16 bg-pm-gold" />
               <p className="mb-4 text-xs font-semibold uppercase tracking-[0.34em] text-pm-gold">Perfect Models Management</p>
-              <h1 className="max-w-xl font-playfair text-5xl leading-[1.02] text-white xl:text-6xl">Votre carrière, vos outils, votre espace.</h1>
+              <h1 className="max-w-xl font-playfair text-6xl font-semibold leading-[.9] tracking-[-.04em] text-white xl:text-7xl">Votre carrière.<br /><em className="font-normal text-pm-gold-light">Votre espace.</em></h1>
               <p className="mt-6 max-w-lg text-base leading-7 text-white/60">Un portail unique pour accéder à votre profil, vos formations, vos briefings et aux outils réservés à votre rôle au sein de l'agence.</p>
               <div className="mt-10 grid max-w-xl grid-cols-3 gap-3">
                 {[
@@ -179,7 +179,7 @@ const Login: React.FC = () => {
 
               <div className="mb-8">
                 <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-pm-gold/20 bg-pm-gold/[0.06] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-pm-gold"><ShieldCheckIcon className="h-4 w-4" />Connexion sécurisée</div>
-                <h2 className="font-playfair text-4xl text-white sm:text-[2.75rem]">Bienvenue</h2>
+                <h2 className="font-playfair text-5xl font-semibold tracking-[-.04em] text-white">Bienvenue.</h2>
                 <p className="mt-3 text-sm leading-6 text-white/55">Connectez-vous avec l'identifiant ou l'adresse email associé à votre espace PMM.</p>
               </div>
 
@@ -240,7 +240,7 @@ const Field: React.FC<{ label: string; hint?: string; children: React.ReactNode 
 const MigrationModal: React.FC<{ migration: ModelMigrationRequest; email: string; newPassword: string; confirmPassword: string; error: string; loading: boolean; onEmailChange: (value: string) => void; onNewPasswordChange: (value: string) => void; onConfirmPasswordChange: (value: string) => void; onSubmit: (event: React.FormEvent) => void; onClose: () => void }> = ({ migration, email, newPassword, confirmPassword, error, loading, onEmailChange, onNewPasswordChange, onConfirmPasswordChange, onSubmit, onClose }) => (
   <ModalShell title="Sécuriser votre compte" description="Une mise à jour unique est nécessaire pour continuer à utiliser votre espace." onClose={onClose}>
     <div className="mb-5 flex gap-3 rounded-xl border border-emerald-400/20 bg-emerald-500/10 p-4"><CheckCircleIcon className="mt-0.5 h-5 w-5 shrink-0 text-emerald-400" /><p className="text-sm leading-5 text-emerald-100/80">Identité confirmée pour <strong className="text-white">{migration.name}</strong>. Définissez vos nouveaux accès sécurisés.</p></div>
-    <form onSubmit={onSubmit} className="space-y-4"><Field label="Adresse email"><input type="email" value={email} onChange={event => onEmailChange(event.target.value)} className="login-modal-input" autoComplete="email" required /></Field><Field label="Nouveau mot de passe" hint="8 caractères minimum"><input type="password" value={newPassword} onChange={event => onNewPasswordChange(event.target.value)} className="login-modal-input" minLength={8} autoComplete="new-password" required /></Field><Field label="Confirmer le mot de passe"><input type="password" value={confirmPassword} onChange={event => onConfirmPasswordChange(event.target.value)} className="login-modal-input" minLength={8} autoComplete="new-password" required /></Field>{error && <p className="text-sm text-red-300">{error}</p>}<button type="submit" disabled={loading} className="w-full rounded-xl bg-pm-gold px-6 py-3.5 text-sm font-bold uppercase tracking-[0.14em] text-pm-dark transition hover:bg-white disabled:opacity-50">{loading ? 'Mise à jour…' : 'Sécuriser et continuer'}</button></form>
+    <form onSubmit={onSubmit} className="space-y-4"><Field label="Adresse email"><input type="email" value={email} onChange={event => onEmailChange(event.target.value)} className="login-modal-input" autoComplete="email" required /></Field><Field label="Nouveau mot de passe" hint="12 caractères minimum"><input type="password" value={newPassword} onChange={event => onNewPasswordChange(event.target.value)} className="login-modal-input" minLength={12} autoComplete="new-password" required /></Field><Field label="Confirmer le mot de passe"><input type="password" value={confirmPassword} onChange={event => onConfirmPasswordChange(event.target.value)} className="login-modal-input" minLength={12} autoComplete="new-password" required /></Field>{error && <p className="text-sm text-red-300">{error}</p>}<button type="submit" disabled={loading} className="w-full rounded-xl bg-pm-gold px-6 py-3.5 text-sm font-bold uppercase tracking-[0.14em] text-pm-dark transition hover:bg-white disabled:opacity-50">{loading ? 'Mise à jour…' : 'Sécuriser et continuer'}</button></form>
   </ModalShell>
 );
 

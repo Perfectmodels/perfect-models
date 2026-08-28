@@ -1,13 +1,13 @@
 import path from 'path';
 
-const legacyViteEnv = Object.fromEntries(
-  Object.entries(process.env)
-    .filter(([key]) =>
-      (key.startsWith('VITE_') || key.startsWith('NEXT_VITE_')) &&
-      !['VITE_IMGBB_API_KEY', 'NEXT_VITE_IMGBB_API_KEY'].includes(key),
-    )
-    .map(([key, value]) => [key.replace(/^NEXT_/, ''), value]),
-);
+// The legacy Vite compatibility layer is deliberately allow-listed. Never
+// serialize provider keys, Supabase secrets, upload tokens, or SMTP credentials
+// into the browser bundle merely because they still carry an old VITE_ prefix.
+const legacyViteEnv = {
+  VITE_FORMSPREE_ENDPOINT: process.env.VITE_FORMSPREE_ENDPOINT || '',
+  VITE_CHATBOT_ID: process.env.NEXT_PUBLIC_CHATBOT_ID || process.env.VITE_CHATBOT_ID || '',
+  NEXT_PUBLIC_CHATBOT_ID: process.env.NEXT_PUBLIC_CHATBOT_ID || '',
+};
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
