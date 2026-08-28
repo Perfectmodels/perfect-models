@@ -4,23 +4,25 @@ import React from 'react';
 import Link from 'next/link';
 import { FacebookIcon, InstagramIcon, TikTokIcon, WhatsAppIcon, YoutubeIcon } from './SocialIcons';
 
-const fallbackNav = [
+type NavLink = { path: string; label: string; inFooter?: boolean; footerLabel?: string };
+
+const fallbackNav: NavLink[] = [
   { path: '/agence', label: 'Agence' },
   { path: '/mannequins', label: 'Talents' },
   { path: '/services', label: 'Expertises' },
   { path: '/fashion-day', label: 'Fashion Day' },
-  { path: '/magazine', label: 'Journal' },
+  { path: '/blog', label: 'Journal' },
 ];
 
 type RuntimeData = {
-  navLinks?: Array<{ path: string; label: string; inFooter?: boolean; footerLabel?: string }>;
+  navLinks?: NavLink[];
   socialLinks?: Record<string, string>;
   contactInfo?: { email?: string; phone?: string; address?: string };
 };
 
 const Footer: React.FC<{ runtimeData?: RuntimeData | null }> = ({ runtimeData }) => {
   const configured = (runtimeData?.navLinks || []).filter((link) => link.inFooter);
-  const navLinks = configured.length ? configured : fallbackNav;
+  const navLinks: NavLink[] = configured.length ? configured : fallbackNav;
   const socialLinks = runtimeData?.socialLinks;
   const contact = runtimeData?.contactInfo;
   const socials = [
