@@ -1,23 +1,20 @@
-# Preview PMM — Next.js + Neon
+# Preview PMM — Next.js + Supabase
 
-Branche de validation : `vercel-preview-production-check`.
+Branche de validation actuelle : `fix/auth-transactional-email-hardening`.
 
-Cette Preview sert à vérifier l’état exact de `main` sur Vercel sans toucher à la production :
+La Preview doit vérifier :
 
 - build Next.js ;
-- authentification Neon ;
-- lecture/écriture Neon PostgreSQL ;
+- authentification Supabase ;
+- lecture/écriture Supabase PostgreSQL ;
+- routes publiques et administratives ;
 - images ImgBB et vidéos Vercel Blob ;
-- navigation publique et admin ;
-- module Perfect Fashion Day avec cover par édition ;
-- spot YouTube ou vidéo Blob.
+- emails transactionnels Brevo ;
+- Perfect Fashion Day ;
+- casting, Classroom et forum.
 
-## Règle
+Le dépôt déclare Next.js dans `vercel.json`. Le projet Vercel `perfectmodelsga` doit également utiliser le preset **Next.js** dans ses paramètres.
 
-Cette branche est réservée aux validations Vercel distantes. Elle ne doit pas devenir la branche de production.
+Aucune Preview ne doit nécessiter Vite, Firebase, React Router ou l’ancien endpoint `/api/data`.
 
-## Déclenchement
-
-Commit de validation ajouté le 9 août 2026 pour forcer une nouvelle Preview Vercel depuis l’état courant de `main`.
-
-Voir [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) pour la checkl
+Voir [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) pour la checklist complète.
