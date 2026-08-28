@@ -1,186 +1,92 @@
+'use client';
+
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { useData } from '../../contexts/DataContext';
-import { FacebookIcon, InstagramIcon, TikTokIcon, WhatsAppIcon, YoutubeIcon } from '../icons/SocialIcons';
-import { ArrowUpRightIcon } from '@heroicons/react/24/outline';
+import Link from 'next/link';
+import { FacebookIcon, InstagramIcon, TikTokIcon, WhatsAppIcon, YoutubeIcon } from './SocialIcons';
 
-const Footer: React.FC = () => {
-    const { data } = useData();
-    const navLinks = data?.navLinks || [];
-    const socialLinks = data?.socialLinks;
-    const contactInfo = data?.contactInfo;
+const fallbackNav = [
+  { path: '/agence', label: 'Agence' },
+  { path: '/mannequins', label: 'Talents' },
+  { path: '/services', label: 'Expertises' },
+  { path: '/fashion-day', label: 'Fashion Day' },
+  { path: '/magazine', label: 'Journal' },
+];
 
-    const footerLinks = navLinks.filter(link => link.inFooter);
+type RuntimeData = {
+  navLinks?: Array<{ path: string; label: string; inFooter?: boolean; footerLabel?: string }>;
+  socialLinks?: Record<string, string>;
+  contactInfo?: { email?: string; phone?: string; address?: string };
+};
 
-    return (
-        <footer className="relative bg-[#050505] overflow-hidden">
+const Footer: React.FC<{ runtimeData?: RuntimeData | null }> = ({ runtimeData }) => {
+  const configured = (runtimeData?.navLinks || []).filter((link) => link.inFooter);
+  const navLinks = configured.length ? configured : fallbackNav;
+  const socialLinks = runtimeData?.socialLinks;
+  const contact = runtimeData?.contactInfo;
+  const socials = [
+    ['Instagram', socialLinks?.instagram, InstagramIcon],
+    ['Facebook', socialLinks?.facebook, FacebookIcon],
+    ['TikTok', socialLinks?.tiktok, TikTokIcon],
+    ['YouTube', socialLinks?.youtube, YoutubeIcon],
+    ['WhatsApp', socialLinks?.whatsapp, WhatsAppIcon],
+  ] as const;
 
-            {/* ── Decorative background word ── */}
-            <div
-                aria-hidden="true"
-                className="pointer-events-none select-none absolute bottom-0 left-0 right-0 flex justify-center overflow-hidden"
-            >
-                <span className="font-playfair font-black text-[22vw] leading-none text-white/[0.025] whitespace-nowrap translate-y-[15%]">
-                    ÉLITE
-                </span>
+  return (
+    <footer className="overflow-hidden border-t border-white/10 bg-[#08080a] text-pm-ivory">
+      <div className="mx-auto max-w-[1700px] px-5 pb-9 pt-20 sm:px-8 sm:pt-28 lg:px-12 xl:px-16">
+        <div className="grid gap-12 border-b border-white/10 pb-16 lg:grid-cols-[1.3fr_.7fr] lg:items-end lg:pb-20">
+          <div>
+            <p className="text-[8px] font-black uppercase tracking-[.44em] text-pm-gold-light sm:text-[9px]">Perfect Models Management · Libreville</p>
+            <h2 className="mt-7 max-w-5xl font-playfair text-[clamp(4rem,8vw,8.2rem)] font-semibold leading-[.82] tracking-[-.06em]">Un talent.<br /><em className="font-normal text-white/36">Une vision.</em></h2>
+          </div>
+          <div className="grid gap-3 lg:pb-2">
+            <Link href="/contact?subject=booking" className="pmm-button pmm-button--light">Booker un talent <span>↗</span></Link>
+            <Link href="/casting-formulaire" className="pmm-button pmm-button--ghost">Rejoindre l’agence</Link>
+          </div>
+        </div>
+
+        <div className="grid gap-12 py-14 sm:grid-cols-2 lg:grid-cols-[1.15fr_.75fr_1.1fr] lg:py-20">
+          <div>
+            <Link href="/" className="inline-flex items-center gap-4">
+              <span className="h-14 w-14 overflow-hidden border border-white/15 bg-white"><img src="/logopmm.jpg" alt="" className="h-full w-full object-cover" /></span>
+              <span>
+                <span className="block font-playfair text-2xl font-semibold tracking-[-.02em]">Perfect Models</span>
+                <span className="mt-1.5 block text-[8px] font-black uppercase tracking-[.32em] text-white/32">Management · Gabon</span>
+              </span>
+            </Link>
+            <p className="mt-7 max-w-sm text-sm leading-7 text-white/38">Agence de management, casting, formation et production dédiée au développement des talents et de l’image de mode au Gabon.</p>
+          </div>
+
+          <div>
+            <p className="mb-6 text-[8px] font-black uppercase tracking-[.38em] text-pm-gold">Explorer</p>
+            <nav className="grid grid-cols-2 gap-x-8 gap-y-3 sm:grid-cols-1">
+              {navLinks.slice(0, 7).map((link) => <Link key={link.path} href={link.path} className="font-playfair text-xl text-white/58 transition duration-300 hover:translate-x-1 hover:text-pm-ivory">{link.footerLabel || link.label}</Link>)}
+            </nav>
+          </div>
+
+          <div>
+            <p className="mb-6 text-[8px] font-black uppercase tracking-[.38em] text-pm-gold">Contact</p>
+            <div className="space-y-3 text-sm leading-6 text-white/42">
+              {contact?.address && <p>{contact.address}</p>}
+              {contact?.phone && <a href={`tel:${contact.phone}`} className="block transition hover:text-pm-gold-light">{contact.phone}</a>}
+              {contact?.email && <a href={`mailto:${contact.email}`} className="block break-all transition hover:text-pm-gold-light">{contact.email}</a>}
+              {!contact?.address && <p>Libreville, Gabon</p>}
             </div>
-
-            {/* ── Top gold line ── */}
-            <div className="h-px bg-gradient-to-r from-transparent via-pm-gold/60 to-transparent" />
-
-            {/* ── Hero CTA block ── */}
-            <div className="relative max-w-[1800px] mx-auto px-4 sm:px-8 lg:px-20 pt-8 sm:pt-12 pb-8 sm:pb-10">
-                <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 sm:gap-8 lg:gap-12">
-
-                    {/* Left : brand statement */}
-                    <div className="max-w-xl">
-                        <span className="section-label">Perfect Models Management</span>
-                        <h2 className="font-playfair text-4xl sm:text-5xl lg:text-7xl font-black text-white leading-[1.05] tracking-tight">
-                            L'excellence,<br />
-                            <em className="text-pm-gold not-italic">au quotidien.</em>
-                        </h2>
-                    </div>
-
-                    {/* Right : CTA buttons */}
-                    <div className="flex flex-row sm:flex-row lg:flex-col gap-3 sm:gap-4 shrink-0 flex-wrap">
-                        <Link to="/casting-formulaire" className="btn-premium text-pm-off-white group flex items-center justify-between gap-4 sm:gap-8">
-                            <span>Devenir Mannequin</span>
-                            <ArrowUpRightIcon className="w-4 h-4 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
-                        </Link>
-                        <Link to="/contact" className="btn-premium text-pm-off-white group flex items-center justify-between gap-4 sm:gap-8">
-                            <span>Nous Contacter</span>
-                            <ArrowUpRightIcon className="w-4 h-4 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
-                        </Link>
-                    </div>
-                </div>
+            <div className="mt-8 flex flex-wrap gap-2">
+              {socials.map(([label, href, Icon]) => href ? <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label} className="grid h-10 w-10 place-items-center border border-white/12 text-white/34 transition duration-300 hover:border-pm-gold hover:bg-pm-gold hover:text-pm-dark"><Icon className="h-4 w-4" /></a> : null)}
             </div>
+          </div>
+        </div>
 
-            {/* ── Divider ── */}
-            <div className="max-w-[1800px] mx-auto px-4 sm:px-8 lg:px-20">
-                <div className="h-px bg-white/5" />
-            </div>
+        <div className="flex flex-col gap-4 border-t border-white/10 pt-7 text-[8px] font-black uppercase tracking-[.23em] text-white/22 sm:flex-row sm:items-center sm:justify-between">
+          <p>© {new Date().getFullYear()} Perfect Models Management</p>
+          <div className="flex flex-wrap gap-6"><Link href="/privacy-policy" className="transition hover:text-pm-gold">Confidentialité</Link><Link href="/terms-of-use" className="transition hover:text-pm-gold">Conditions</Link><Link href="/login" className="text-pm-gold/65 transition hover:text-pm-gold">Espace privé</Link></div>
+        </div>
 
-            {/* ── Nav grid ── */}
-            <div className="relative max-w-[1800px] mx-auto px-4 sm:px-8 lg:px-20 py-12 sm:py-16 lg:py-20">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-8 sm:gap-12 lg:gap-20">
-
-                    {/* Navigation */}
-                    <div>
-                        <p className="text-[9px] font-black uppercase tracking-[0.5em] text-pm-gold/50 mb-8">Navigation</p>
-                        <ul className="space-y-3">
-                            {footerLinks.map(link => (
-                                <li key={link.path}>
-                                    <Link
-                                        to={link.path}
-                                        className="text-[11px] font-semibold uppercase tracking-[0.15em] text-white/40 hover:text-pm-gold transition-colors duration-300"
-                                    >
-                                        {link.footerLabel || link.label}
-                                    </Link>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-
-                    {/* Opportunités */}
-                    <div>
-                        <p className="text-[9px] font-black uppercase tracking-[0.5em] text-pm-gold/50 mb-8">Opportunités</p>
-                        <ul className="space-y-3">
-                            {[
-                                { to: '/casting-formulaire', label: 'Casting Mannequin' },
-                                { to: '/fashion-day-application', label: 'Exposer au PFD' },
-                                { to: '/contact', label: 'Presse & Partenariats' },
-                                { to: '/services', label: 'Nos Services' },
-                            ].map(item => (
-                                <li key={item.to}>
-                                    <Link
-                                        to={item.to}
-                                        className="text-[11px] font-semibold uppercase tracking-[0.15em] text-white/40 hover:text-pm-gold transition-colors duration-300"
-                                    >
-                                        {item.label}
-                                    </Link>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-
-                    {/* Contact */}
-                    <div className="col-span-2 md:col-span-2">
-                        <p className="text-[9px] font-black uppercase tracking-[0.5em] text-pm-gold/50 mb-6 sm:mb-8">Contact</p>
-                        {contactInfo && (
-                            <div className="space-y-3 sm:space-y-4">
-                                <p className="text-xs font-semibold uppercase tracking-[0.1em] text-white/40 leading-relaxed">
-                                    {contactInfo.address}
-                                </p>
-                                <a
-                                    href={`tel:${contactInfo.phone}`}
-                                    className="block text-xs font-semibold uppercase tracking-[0.1em] text-white/40 hover:text-pm-gold transition-colors duration-300"
-                                >
-                                    {contactInfo.phone}
-                                </a>
-                                <a
-                                    href={`mailto:${contactInfo.email}`}
-                                    className="block text-xs font-semibold uppercase tracking-[0.1em] text-white/40 hover:text-pm-gold transition-colors duration-300 break-all"
-                                >
-                                    {contactInfo.email}
-                                </a>
-                            </div>
-                        )}
-
-                        {/* Socials */}
-                        <div className="flex gap-4 sm:gap-6 mt-8 sm:mt-10 flex-wrap">
-                            {socialLinks?.facebook && (
-                                <a href={socialLinks.facebook} target="_blank" rel="noopener noreferrer" aria-label="Facebook"
-                                    className="w-10 h-10 sm:w-9 sm:h-9 border border-white/10 flex items-center justify-center text-white/30 hover:border-pm-gold hover:text-pm-gold transition-all duration-300">
-                                    <FacebookIcon className="w-4 h-4" />
-                                </a>
-                            )}
-                            {socialLinks?.instagram && (
-                                <a href={socialLinks.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram"
-                                    className="w-10 h-10 sm:w-9 sm:h-9 border border-white/10 flex items-center justify-center text-white/30 hover:border-pm-gold hover:text-pm-gold transition-all duration-300">
-                                    <InstagramIcon className="w-4 h-4" />
-                                </a>
-                            )}
-                            {socialLinks?.tiktok && (
-                                <a href={socialLinks.tiktok} target="_blank" rel="noopener noreferrer" aria-label="TikTok"
-                                    className="w-10 h-10 sm:w-9 sm:h-9 border border-white/10 flex items-center justify-center text-white/30 hover:border-pm-gold hover:text-pm-gold transition-all duration-300">
-                                    <TikTokIcon className="w-4 h-4" />
-                                </a>
-                            )}
-                            {socialLinks?.youtube && (
-                                <a href={socialLinks.youtube} target="_blank" rel="noopener noreferrer" aria-label="YouTube"
-                                    className="w-10 h-10 sm:w-9 sm:h-9 border border-white/10 flex items-center justify-center text-white/30 hover:border-pm-gold hover:text-pm-gold transition-all duration-300">
-                                    <YoutubeIcon className="w-4 h-4" />
-                                </a>
-                            )}
-                            {socialLinks?.whatsapp && (
-                                <a href={socialLinks.whatsapp} target="_blank" rel="noopener noreferrer" aria-label="Canal WhatsApp"
-                                    className="w-10 h-10 sm:w-9 sm:h-9 border border-white/10 flex items-center justify-center text-white/30 hover:border-pm-gold hover:text-pm-gold transition-all duration-300">
-                                    <WhatsAppIcon className="w-4 h-4" />
-                                </a>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* ── Bottom bar ── */}
-            <div className="border-t border-white/5">
-                <div className="max-w-[1800px] mx-auto px-4 sm:px-8 lg:px-20 py-6 sm:py-8 flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
-                    <p className="text-[9px] font-black uppercase tracking-[0.4em] text-white/20">
-                        &copy; {new Date().getFullYear()} Perfect Models Management
-                    </p>
-                    <div className="flex items-center gap-5 sm:gap-8 text-[9px] font-black uppercase tracking-[0.3em] sm:tracking-[0.4em]">
-                        <Link to="/terms-of-use" className="text-white/20 hover:text-pm-gold transition-colors">CGU</Link>
-                        <Link to="/privacy-policy" className="text-white/20 hover:text-pm-gold transition-colors">Confidentialité</Link>
-                        <Link to="/login" className="text-pm-gold/60 hover:text-pm-gold transition-colors">
-                            Portail Admin
-                        </Link>
-                    </div>
-                </div>
-            </div>
-
-        </footer>
-    );
+        <p aria-hidden="true" className="pointer-events-none -mb-[3.5vw] mt-12 whitespace-nowrap text-center font-playfair text-[15vw] font-semibold leading-[.72] tracking-[-.075em] text-white/[.025]">PERFECT</p>
+      </div>
+    </footer>
+  );
 };
 
 export default Footer;

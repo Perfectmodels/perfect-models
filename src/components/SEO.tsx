@@ -1,5 +1,7 @@
+'use client';
+
 import React from 'react';
-import { useLocation } from 'react-router-dom';
+import { usePathname } from 'next/navigation';
 
 interface SEOProps {
   title?: string;
@@ -34,14 +36,14 @@ type RuntimeConfig = {
 };
 
 const SEO: React.FC<SEOProps> = ({ title, description, keywords, image, type = 'website', noIndex = false, canonicalUrl, schema }) => {
-  const { pathname } = useLocation();
+  const pathname = usePathname() || '/';
   const [runtime, setRuntime] = React.useState<RuntimeConfig | null>(null);
 
   React.useEffect(() => {
     let active = true;
     fetch('/api/site-runtime', { cache: 'no-store', credentials: 'same-origin' })
-      .then((response) => response.ok ? response.json() : null)
-      .then((value) => { if (active && value) setRuntime(value); })
+      .then(response => response.ok ? response.json() : null)
+      .then(value => { if (active && value) setRuntime(value); })
       .catch(() => undefined);
     return () => { active = false; };
   }, []);

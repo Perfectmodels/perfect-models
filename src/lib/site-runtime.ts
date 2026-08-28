@@ -1,5 +1,5 @@
 import 'server-only';
-import { getCollection } from '@/lib/app-data';
+import { selectPublicRows } from '@/lib/public-content';
 
 export type SiteRuntimeConfig = {
   siteUrl: string;
@@ -24,28 +24,26 @@ export type SiteRuntimeConfig = {
 
 const clean = (value: unknown) => String(value ?? '').trim();
 const url = (value: string) => value.replace(/\/$/, '');
-
-async function safe(key: string) {
-  try { return await getCollection(key); } catch { return null; }
-}
+const objectValue = (value: unknown) => value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, any> : {};
 
 export async function getSiteRuntimeConfig(): Promise<SiteRuntimeConfig> {
-  const [siteConfigRaw, contactRaw, socialRaw, agencyRaw, seoRaw, imagesRaw] = await Promise.all([
-    safe('siteConfig'), safe('contactInfo'), safe('socialLinks'), safe('agencyInfo'), safe('seoConfig'), safe('siteImages'),
+  const [settingRows, socialRows] = await Promise.all([
+    selectPublicRows('site_settings?select=key,value'),
+    selectPublicRows('social_links?select=platform,url,is_active,position&is_active=eq.true&order=position.asc'),
   ]);
-  const siteConfig = (siteConfigRaw && typeof siteConfigRaw === 'object' ? siteConfigRaw : {}) as Record<string, unknown>;
-  const contact = (contactRaw && typeof contactRaw === 'object' ? contactRaw : {}) as Record<string, unknown>;
-  const social = (socialRaw && typeof socialRaw === 'object' ? socialRaw : {}) as Record<string, unknown>;
-  const agency = (agencyRaw && typeof agencyRaw === 'object' ? agencyRaw : {}) as Record<string, any>;
-  const seo = (seoRaw && typeof seoRaw === 'object' ? seoRaw : {}) as Record<string, any>;
-  const images = (imagesRaw && typeof imagesRaw === 'object' ? imagesRaw : {}) as Record<string, unknown>;
+  const settings = new Map<string, unknown>((settingRows || []).map((row: any) => [String(row.key || ''), row.value]));
+  const siteConfig = objectValue(settings.get('siteConfig'));
+  const contact = objectValue(settings.get('contactInfo'));
+  const agency = objectValue(settings.get('agencyInfo'));
+  const seo = objectValue(settings.get('seoConfig'));
+  const images = objectValue(settings.get('siteImages'));
 
   const siteUrl = url(clean(seo.siteUrl) || clean(process.env.SITE_URL) || clean(process.env.NEXT_PUBLIC_SITE_URL) || 'https://www.perfectmodels.online');
   const siteName = clean(seo.siteName) || clean(siteConfig.name) || clean(agency.name) || 'Perfect Models Management';
   const shortName = clean(seo.shortName) || clean(siteConfig.shortName) || 'PMM';
-  const description = clean(seo.description) || clean(agency.description) || clean(agency.about?.p1) || '';
+  const description = clean(seo.description) || clean(agency.description) || clean(objectValue(agency.about).p1) || 'Agence de management, casting, formation et production de talents au Gabon.';
   const keywords = Array.isArray(seo.keywords) ? seo.keywords.map(clean).filter(Boolean) : [];
-  const logo = clean(siteConfig.logo) || '/logo.svg';
+  const logo = clean(siteConfig.logo) || '/logopmm.jpg';
   const defaultImage = clean(seo.defaultImage) || clean(images.hero) || '/opengraph-image';
   const email = clean(contact.email) || clean(process.env.BUSINESS_EMAIL);
   const phone = clean(contact.phone) || clean(process.env.BUSINESS_PHONE);
@@ -53,8 +51,8 @@ export async function getSiteRuntimeConfig(): Promise<SiteRuntimeConfig> {
   const city = clean(seo.city) || clean(contact.city) || 'Libreville';
   const region = clean(seo.region) || clean(contact.region) || 'Estuaire';
   const countryCode = clean(seo.countryCode) || 'GA';
-  const foundingDate = clean(seo.foundingDate) || clean(agency.foundingDate);
-  const socialLinks = Object.values(social).map(clean).filter((value) => /^https?:\/\//i.test(value));
+  const foundingDate = clean(seo.foundingDate) || clean(agency.foundingDate) || '2021';
+  const socialLinks = (socialRows || []).map((row: any) => clean(row.url)).filter((value) => /^https?:\/\//i.test(value));
   const latitude = Number(seo.latitude);
   const longitude = Number(seo.longitude);
   const geo = Number.isFinite(latitude) && Number.isFinite(longitude) ? { latitude, longitude } : undefined;
@@ -98,6 +96,6 @@ export function buildWebsiteJsonLd(config: SiteRuntimeConfig) {
     '@context': 'https://schema.org', '@type': 'WebSite', '@id': `${config.siteUrl}/#website`, url: config.siteUrl,
     name: config.siteName, alternateName: config.shortName, inLanguage: config.language,
     publisher: { '@id': `${config.siteUrl}/#organization` },
-    potentialAction: { '@type': 'SearchAction', target: { '@type': 'EntryPoint', urlTemplate: `${config.siteUrl}/magazine?search={search_term_string}` }, 'query-input': 'required name=search_term_string' },
+    potentialAction: { '@type': 'SearchAction', target: { '@type': 'EntryPoint', urlTemplate: `${config.siteUrl}/blog?search={search_term_string}` }, 'query-input': 'required name=search_term_string' },
   };
 }

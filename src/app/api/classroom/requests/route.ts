@@ -1,32 +1,48 @@
+import { randomUUID } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { getCurrentAppProfile } from '@/lib/auth/profile';
-import { getCollection, getNestedValue, patchNestedValue, setCollection, setNestedValue } from '@/lib/app-data';
+import { privilegedSupabaseSelect, privilegedSupabaseUpsert } from '@/lib/supabase-backend';
 
 export const dynamic = 'force-dynamic';
 const VALID_KINDS = new Set(['absence', 'contribution', 'shooting-theme']);
 const canSupervise = (role?: string | null) => role === 'admin' || role === 'manager';
-const flattenProfileBuckets = (value: unknown) => Object.values((value && typeof value === 'object' ? value : {}) as Record<string, unknown>).flatMap((bucket) => Object.values((bucket && typeof bucket === 'object' ? bucket : {}) as Record<string, unknown>));
+
+function mapRequest(row: any) {
+  const raw = row?.raw_data && typeof row.raw_data === 'object' && !Array.isArray(row.raw_data) ? row.raw_data : {};
+  return {
+    ...raw,
+    id: String(row.id || raw.id || ''),
+    kind: String(row.request_type || raw.kind || ''),
+    profileId: String(row.model_id || raw.profileId || ''),
+    message: String(row.message || raw.message || ''),
+    status: String(row.status || raw.status || 'pending'),
+    createdAt: String(row.created_at || raw.createdAt || ''),
+    updatedAt: String(row.updated_at || raw.updatedAt || ''),
+  };
+}
 
 export async function GET() {
   const profile = await getCurrentAppProfile();
   if (!profile) return NextResponse.json({ error: 'Non authentifié.' }, { status: 401 });
-  const root = await getCollection('classroomRequests').catch(() => ({}));
-  if (canSupervise(profile.role)) {
-    return NextResponse.json({ requests: flattenProfileBuckets(root) }, { headers: { 'Cache-Control': 'no-store' } });
-  }
-  const own = getNestedValue(root, [profile.profileId]) || {};
-  return NextResponse.json({ requests: Object.values(own || {}) }, { headers: { 'Cache-Control': 'no-store' } });
+
+  const filter = canSupervise(profile.role) ? '' : `&model_id=eq.${encodeURIComponent(profile.profileId)}`;
+  const rows = await privilegedSupabaseSelect(`classroom_requests?select=id,model_id,request_type,status,message,raw_data,created_at,updated_at${filter}&order=created_at.desc`);
+  return NextResponse.json({ requests: (Array.isArray(rows) ? rows : []).map(mapRequest) }, { headers: { 'Cache-Control': 'no-store' } });
 }
 
 export async function POST(request: Request) {
   const profile = await getCurrentAppProfile();
   if (!profile || profile.role !== 'student') return NextResponse.json({ error: 'Réservé aux mannequins.' }, { status: 403 });
+
   const body = await request.json().catch(() => null) as any;
-  if (!body || !VALID_KINDS.has(String(body.kind))) return NextResponse.json({ error: 'Type de demande invalide.' }, { status: 400 });
-  const id = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+  const kind = String(body?.kind || '').trim();
+  if (!body || !VALID_KINDS.has(kind)) return NextResponse.json({ error: 'Type de demande invalide.' }, { status: 400 });
+
+  const id = randomUUID();
+  const now = new Date().toISOString();
   const item = {
     id,
-    kind: String(body.kind),
+    kind,
     profileId: profile.profileId,
     modelName: profile.name,
     modelEmail: profile.email,
@@ -37,29 +53,59 @@ export async function POST(request: Request) {
     eventDate: body.eventDate ? String(body.eventDate).slice(0, 30) : null,
     attachmentUrl: body.attachmentUrl ? String(body.attachmentUrl).slice(0, 1500) : null,
     status: 'pending',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: now,
+    updatedAt: now,
   };
-  const root = await getCollection('classroomRequests').catch(() => ({}));
-  await setCollection('classroomRequests', setNestedValue(root || {}, [profile.profileId, id], item));
+
+  await privilegedSupabaseUpsert('classroom_requests', {
+    id,
+    model_id: profile.profileId,
+    request_type: kind,
+    status: 'pending',
+    message: item.message,
+    raw_data: item,
+    created_at: now,
+    updated_at: now,
+  }, 'id');
+
   return NextResponse.json({ success: true, request: item }, { status: 201 });
 }
 
 export async function PATCH(request: Request) {
   const profile = await getCurrentAppProfile();
   if (!profile || !canSupervise(profile.role)) return NextResponse.json({ error: 'Non autorisé.' }, { status: 403 });
+
   const body = await request.json().catch(() => null) as any;
-  if (!body?.id || !body?.profileId) return NextResponse.json({ error: 'Identifiants requis.' }, { status: 400 });
+  const id = String(body?.id || '').trim();
+  if (!id) return NextResponse.json({ error: 'Identifiant requis.' }, { status: 400 });
   const allowed = new Set(['pending', 'approved', 'rejected', 'processed']);
   const status = allowed.has(String(body.status)) ? String(body.status) : 'pending';
-  const root = await getCollection('classroomRequests').catch(() => ({}));
-  const next = patchNestedValue(root || {}, [String(body.profileId), String(body.id)], {
+
+  const existingRows = await privilegedSupabaseSelect(`classroom_requests?id=eq.${encodeURIComponent(id)}&select=id,model_id,request_type,status,message,raw_data,created_at,updated_at&limit=1`);
+  const existing = Array.isArray(existingRows) ? existingRows[0] : null;
+  if (!existing) return NextResponse.json({ error: 'Demande introuvable.' }, { status: 404 });
+
+  const updatedAt = new Date().toISOString();
+  const raw = existing.raw_data && typeof existing.raw_data === 'object' && !Array.isArray(existing.raw_data) ? existing.raw_data : {};
+  const nextRaw = {
+    ...raw,
     status,
     adminNote: String(body.adminNote || '').slice(0, 3000),
     reviewedBy: profile.name,
-    reviewedAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  });
-  await setCollection('classroomRequests', next);
-  return NextResponse.json({ success: true });
+    reviewedAt: updatedAt,
+    updatedAt,
+  };
+
+  await privilegedSupabaseUpsert('classroom_requests', {
+    id,
+    model_id: existing.model_id,
+    request_type: existing.request_type,
+    status,
+    message: existing.message,
+    raw_data: nextRaw,
+    created_at: existing.created_at,
+    updated_at: updatedAt,
+  }, 'id');
+
+  return NextResponse.json({ success: true, request: mapRequest({ ...existing, status, raw_data: nextRaw, updated_at: updatedAt }) });
 }

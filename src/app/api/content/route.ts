@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { collectionToArray, getCollection } from '@/lib/app-data';
-import { agencyServices as seedServices, models as seedModels } from '@/constants/data';
+import { getPublicArticles, getPublicModels, getPublicServices } from '@/lib/public-content';
 
 const BASE = 'https://perfectmodels.online';
 
@@ -20,37 +19,29 @@ export async function GET(request: NextRequest) {
   const q = (request.nextUrl.searchParams.get('q') || '').toLowerCase();
   const limit = Math.max(1, Math.min(100, Number(request.nextUrl.searchParams.get('limit') || 50) || 50));
 
-  const [articlesRaw, modelsRaw, servicesRaw] = await Promise.all([
-    getCollection('articles'),
-    getCollection('models'),
-    getCollection('agencyServices'),
+  const [articleRows, modelRows, serviceRows] = await Promise.all([
+    getPublicArticles(),
+    getPublicModels(),
+    getPublicServices(),
   ]);
 
-  const articleSource = collectionToArray(articlesRaw);
-  const serviceSource = collectionToArray(servicesRaw);
-  const modelSource = collectionToArray(modelsRaw);
-
-  const articles = articleSource.map((article: any) => ({
+  const articles = articleRows.map(article => ({
     ...article,
-    slug: article.slug || article.id,
-    url: `${BASE}/magazine/${article.slug || article.id}`,
+    url: `${BASE}/blog/${encodeURIComponent(article.slug)}`,
   }));
-
-  const models = (modelSource.length ? modelSource : seedModels)
-    .filter((model: any) => model?.isPublic !== false)
-    .map((model: any) => ({ ...model, url: `${BASE}/mannequins/${model.id}` }));
-
-  const services = (serviceSource.length ? serviceSource : seedServices).map((service: any) => ({
+  const models = modelRows.map(model => ({
+    ...model,
+    url: `${BASE}/mannequins/${encodeURIComponent(String(model.id))}`,
+  }));
+  const services = serviceRows.map(service => ({
     ...service,
-    slug: service.slug || service.id,
-    url: `${BASE}/services/${service.slug || service.id}`,
+    url: `${BASE}/services/${encodeURIComponent(service.slug)}`,
   }));
-
   const pages = [
     ['/', 'Accueil'],
-    ['/agence', "L'Agence"],
+    ['/agence', "L’Agence"],
     ['/mannequins', 'Mannequins'],
-    ['/magazine', 'Magazine'],
+    ['/blog', 'Blog'],
     ['/services', 'Services'],
     ['/fashion-day', 'Fashion Day'],
   ].map(([path, title]) => ({ path, title, url: `${BASE}${path}` }));

@@ -1,88 +1,147 @@
 import { auth } from './server';
-import { collectionToArray, getCollection, setCollection } from '../app-data';
+import { privilegedSupabaseSelect, privilegedSupabaseUpsert } from '../supabase-backend';
 
 export type AppRole = 'admin' | 'manager' | 'student' | 'jury' | 'registration' | 'jury-contest';
 export interface AppSessionProfile {
-  userId: string; email: string; name: string; identifier: string; role: AppRole; profileId: string; status: string;
-  mustChangePassword: boolean; permissions: Record<string, boolean>; adminPermissions?: Record<string, boolean>; contestId?: string | null;
+  userId: string;
+  email: string;
+  name: string;
+  identifier: string;
+  role: AppRole;
+  profileId: string;
+  status: string;
+  mustChangePassword: boolean;
+  permissions: Record<string, boolean>;
+  adminPermissions?: Record<string, boolean>;
+  contestId?: string | null;
 }
 
-export const ADMIN_ALIASES = new Set(['admin','admin@perfectmodels.online','contact@perfectmodels.online','contact@perfectmodels.ga','perfectmodels.ga@gmail.com']);
+export const ADMIN_ALIASES = new Set([
+  'admin',
+  'admin@perfectmodels.online',
+  'contact@perfectmodels.online',
+  'contact@perfectmodels.ga',
+  'perfectmodels.ga@gmail.com',
+]);
 
 function normalizeAppRole(value: unknown, fallback: AppRole = 'student'): AppRole {
-  const map: Record<string, AppRole> = { admin:'admin', manager:'manager', gestionnaire:'manager', student:'student', mannequin:'student', modele:'student', jury:'jury', registration:'registration', 'jury-contest':'jury-contest', accueil:'registration', staff:'registration' };
+  const map: Record<string, AppRole> = {
+    admin: 'admin', manager: 'manager', gestionnaire: 'manager', student: 'student', mannequin: 'student',
+    model: 'student', modele: 'student', jury: 'jury', registration: 'registration', accueil: 'registration',
+    staff: 'registration', 'jury-contest': 'jury-contest',
+  };
   return map[String(value || '').trim().toLowerCase()] || fallback;
 }
 
-function appMeta(user:any){ return user?.app_metadata && typeof user.app_metadata==='object' ? user.app_metadata : {}; }
-function userMeta(user:any){ return user?.user_metadata && typeof user.user_metadata==='object' ? user.user_metadata : {}; }
+function appMeta(user: any) {
+  return user?.app_metadata && typeof user.app_metadata === 'object' ? user.app_metadata : {};
+}
+function userMeta(user: any) {
+  return user?.user_metadata && typeof user.user_metadata === 'object' ? user.user_metadata : {};
+}
+function objectValue(value: unknown) {
+  return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, any> : {};
+}
+
+async function delegatedPermissions(role: AppRole, uid: string) {
+  if (role !== 'admin' && role !== 'manager') return undefined;
+  const rows = await privilegedSupabaseSelect(
+    `admin_permissions?permission_key=eq.${encodeURIComponent(uid)}&select=value&limit=1`,
+  ).catch(() => []);
+  const value = Array.isArray(rows) ? rows[0]?.value : null;
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? value as Record<string, boolean>
+    : undefined;
+}
 
 export async function findProfile(user: unknown): Promise<AppSessionProfile | null> {
   const u = user as Record<string, any> | null;
   const uid = String(u?.id || '');
   const email = String(u?.email || '').trim().toLowerCase();
   if (!uid) return null;
+
   const app = appMeta(u);
   const meta = userMeta(u);
-  const defaultName = String(meta.name || meta.display_name || email.split('@')[0] || '');
-  const defaultRole = normalizeAppRole(app.role, ADMIN_ALIASES.has(email) ? 'admin' : 'student');
-  const defaultProfileId = String(app.profile_id || uid);
-  const defaultIdentifier = String(app.identifier || (ADMIN_ALIASES.has(email) ? 'admin' : email.split('@')[0]));
+  const fallbackRole = normalizeAppRole(app.role, ADMIN_ALIASES.has(email) ? 'admin' : 'student');
+  const fallbackName = String(meta.name || meta.display_name || email.split('@')[0] || '');
+  const fallbackIdentifier = String(app.identifier || (ADMIN_ALIASES.has(email) ? 'admin' : email.split('@')[0] || uid));
 
-  const usersRoot = await getCollection('users').catch(() => null) as Record<string, any> | null;
-  const userRows = usersRoot && typeof usersRoot === 'object' && !Array.isArray(usersRoot) ? Object.values(usersRoot) : collectionToArray(usersRoot);
-  const central:any = userRows.find((row:any) => row && (
-    String(row.supabaseUserId || row.authUserId || '') === uid ||
-    String(row.email || '').trim().toLowerCase() === email ||
-    String(row.profileId || '') === defaultProfileId
-  ));
+  const rows = await privilegedSupabaseSelect(
+    `profiles?user_id=eq.${encodeURIComponent(uid)}&select=*&limit=1`,
+  ).catch(() => []);
+  const normalized = Array.isArray(rows) ? rows[0] : null;
+  if (!normalized) return null;
 
-  const roleFromRow = central ? normalizeAppRole(central.role || central.app_role || central.appRole, defaultRole) : defaultRole;
-  const permissions = central?.permissions && typeof central.permissions === 'object'
-    ? central.permissions
-    : (roleFromRow === 'admin' ? { all:true, isAdmin:true } : { isActive:true });
-  const role:AppRole = permissions.isAdmin === true ? 'admin' : roleFromRow;
-
-  let delegated:Record<string,boolean>|undefined;
-  if(role==='admin' || role==='manager') {
-    const root = await getCollection('adminPermissions').catch(()=>null) as Record<string,any>|null;
-    const candidate = root && typeof root==='object' ? (root[uid] || root[central?.uid] || root[central?.id]) : null;
-    if(candidate && typeof candidate==='object') delegated=candidate;
-  }
-
-  const models = collectionToArray(await getCollection('models').catch(()=>null));
-  const model:any = models.find((m:any)=>
-    String(m?.authUserId||'')===uid || String(m?.email||'').trim().toLowerCase()===email || String(m?.id||'')===String(central?.profileId||defaultProfileId)
-  );
+  const role = normalizeAppRole(normalized.role, fallbackRole);
+  const metadata = objectValue(normalized.metadata);
+  const permissions = objectValue(metadata.permissions);
+  const resolvedPermissions = Object.keys(permissions).length
+    ? permissions as Record<string, boolean>
+    : role === 'admin'
+      ? { all: true, isAdmin: true }
+      : { isActive: normalized.is_active !== false };
 
   return {
     userId: uid,
-    email: String(central?.email || model?.email || email),
-    name: String(central?.name || central?.displayName || model?.name || defaultName),
-    identifier: String(central?.identifier || central?.matricule || model?.matricule || model?.identifier || defaultIdentifier),
-    role,
-    profileId: String(central?.profileId || model?.id || defaultProfileId),
-    status: String(central?.status || model?.status || 'active'),
-    mustChangePassword: Boolean(central?.mustChangePassword || central?.must_change_password || app.must_change_password),
-    permissions,
-    adminPermissions: delegated,
-    contestId: central?.contestId ? String(central.contestId) : (model?.contestId ? String(model.contestId) : null),
+    email: String(normalized.email || email),
+    name: String(normalized.display_name || fallbackName),
+    identifier: String(normalized.identifier || fallbackIdentifier),
+    role: resolvedPermissions.isAdmin === true ? 'admin' : role,
+    profileId: String(normalized.model_id || app.profile_id || app.model_id || uid),
+    status: normalized.is_active === false ? 'inactive' : 'active',
+    mustChangePassword: Boolean(normalized.must_change_password || app.must_change_password),
+    permissions: resolvedPermissions,
+    adminPermissions: await delegatedPermissions(role, uid),
+    contestId: metadata.contestId ? String(metadata.contestId) : null,
   };
 }
 
 export async function getCurrentAppProfile(): Promise<AppSessionProfile | null> {
-  try { const { data } = await auth.getSession(); return data?.user ? findProfile(data.user) : null; } catch { return null; }
+  try {
+    const { data } = await auth.getSession();
+    return data?.user ? ensureUserProfile(data.user) : null;
+  } catch {
+    return null;
+  }
 }
 
-export async function ensureUserProfile(user: { id?: string; email?: string | null; user_metadata?: Record<string,any> }): Promise<AppSessionProfile | null> {
-  const uid = String(user?.id || ''); if (!uid) return null;
-  const existing = await findProfile(user); if (existing) return existing;
-  const email = String(user?.email || '').toLowerCase();
-  const name = String(user?.user_metadata?.name || email.split('@')[0] || '');
-  const identifier = ADMIN_ALIASES.has(email) ? 'admin' : email.split('@')[0];
-  const role:AppRole = ADMIN_ALIASES.has(email) ? 'admin' : 'student';
-  const root = (await getCollection('users').catch(()=>null) || {}) as Record<string,any>;
-  root[uid] = { id:uid, supabaseUserId:uid, email, name, identifier, role, profileId:uid, status:'active', mustChangePassword:false, permissions:role==='admin'?{all:true,isAdmin:true}:{isActive:true}, createdAt:new Date().toISOString() };
-  await setCollection('users',root);
-  return findProfile(user);
+export async function ensureUserProfile(user: {
+  id?: string;
+  email?: string | null;
+  user_metadata?: Record<string, any>;
+  app_metadata?: Record<string, any>;
+}): Promise<AppSessionProfile | null> {
+  const uid = String(user?.id || '');
+  if (!uid) return null;
+
+  const existing = await findProfile(user);
+  if (existing) return existing;
+
+  const email = String(user?.email || '').trim().toLowerCase();
+  const app = appMeta(user);
+  const meta = userMeta(user);
+  const role = normalizeAppRole(app.role, ADMIN_ALIASES.has(email) ? 'admin' : 'student');
+  const name = String(meta.name || meta.display_name || email.split('@')[0] || '');
+  const identifier = String(app.identifier || (ADMIN_ALIASES.has(email) ? 'admin' : email.split('@')[0] || uid));
+  const requestedModelId = role === 'student' ? String(app.model_id || app.profile_id || '') : '';
+  const matchingModels = requestedModelId
+    ? await privilegedSupabaseSelect(`models?id=eq.${encodeURIComponent(requestedModelId)}&select=id&limit=1`).catch(() => [])
+    : [];
+  const modelId = Array.isArray(matchingModels) && matchingModels.length ? requestedModelId : null;
+  const permissions = role === 'admin' ? { all: true, isAdmin: true } : { isActive: true };
+
+  await privilegedSupabaseUpsert('profiles', {
+    user_id: uid,
+    role,
+    identifier,
+    display_name: name,
+    email: email || null,
+    model_id: modelId,
+    must_change_password: Boolean(app.must_change_password),
+    is_active: true,
+    metadata: { permissions },
+    updated_at: new Date().toISOString(),
+  }, 'user_id');
+
+  return findProfile({ ...user, app_metadata: app, user_metadata: meta });
 }

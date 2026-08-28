@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
-import FashionDayPage from '@/features/fashion-day/FashionDayPage';
+import FashionDayClient from '@/features/fashion-day/FashionDayClient';
 import JsonLd from '@/components/JsonLd';
 import { getFashionDayEvents } from '@/lib/public-content';
 import { absoluteUrl, buildPageMetadata, MARKETING_PAGES, SITE_URL } from '@/lib/seo';
 
-export const revalidate = 3600;
+export const revalidate = 60;
 
 export async function generateMetadata(): Promise<Metadata> {
   const events = (await getFashionDayEvents()).slice().sort((a, b) => b.edition - a.edition);
@@ -37,10 +37,5 @@ export default async function Page() {
     inLanguage: 'fr-GA',
   }));
 
-  return (
-    <>
-      {eventSchemas.length > 0 && <JsonLd data={eventSchemas} />}
-      <FashionDayPage />
-    </>
-  );
+  return <>{eventSchemas.length > 0 && <JsonLd data={eventSchemas} />}<FashionDayClient events={events} /></>;
 }

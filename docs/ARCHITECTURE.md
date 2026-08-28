@@ -2,112 +2,119 @@
 
 ## Vue d’ensemble
 
-Perfect Models Management est une application web Next.js. Le navigateur consomme les pages React et les routes applicatives Next.js ; les données et l’authentification sont centralisées côté serveur.
+Perfect Models Management est une application **Next.js App Router**. Le navigateur utilise l’interface React fournie par Next.js ; les opérations sensibles passent par des Server Components ou des Route Handlers Next.js.
 
 ```text
 Navigateur
    │
    ├── Pages Next.js / React
    │
-   ├── /api/auth/* ──────────────> Neon Auth
-   │
-   ├── /api/data/* ──────────────> Neon PostgreSQL
-   │
-   ├── /api/media/imgbb ─────────> ImgBB (images)
-   └── /api/media/client-upload ─> Vercel Blob (vidéos)
+   └── Route Handlers Next.js
+          │
+          ├── Supabase Auth
+          ├── Supabase PostgreSQL
+          ├── ImgBB
+          ├── Vercel Blob
+          └── Brevo
 ```
+
+Il n’existe plus de couche React Router, Vite, Firebase SDK, `DataContext`, `useRealtimeDB`, `app_collections` ou `legacy-pages` dans l’architecture active.
 
 ## Frontend
 
-- Next.js App Router dans `src/app/`.
-- Composants partagés dans `src/components/`.
-- Nouveaux modules métier dans `src/features/`.
-- Certains anciens écrans sont encore dans `src/legacy-pages/` pendant leur modernisation progressive.
-- `src/compat/` permet de maintenir temporairement des signatures héritées sans charger le SDK Firebase.
+- `src/app/` : App Router, layouts, pages, Route Handlers.
+- `src/components/` : composants partagés.
+- `src/features/` : modules métier.
+- `src/hooks/` : hooks React propres à l’application Next.js.
+- `src/lib/` : Supabase, authentification, contenu public, permissions et ressources métier.
+
+Next.js reste basé sur React : la présence de `react` et `react-dom` est donc normale et nécessaire. Ce qui a été supprimé est l’ancienne architecture SPA React/Vite et son routage client autonome.
 
 ## Données
 
-### Neon PostgreSQL
+### Supabase PostgreSQL
 
-La couche serveur utilise `@neondatabase/serverless`. Les données de contenu historique sont notamment exposées sous forme de collections JSONB dans `app_collections`, tandis que les informations d’authentification sont séparées des données métier.
+Supabase PostgreSQL est la source de vérité. Les données sont stockées dans des tables métier normalisées, notamment :
 
-L’accès frontend ne doit pas utiliser directement une chaîne de connexion PostgreSQL. Les opérations passent par :
+- `models`, `model_portfolio_images` ;
+- `casting_applications`, `casting_scores` ;
+- `fashion_day_events`, `fashion_day_applications`, `fashion_day_reservations` ;
+- `services`, `blog_posts`, `media_library` ;
+- `courses`, `course_progress` ;
+- `forum_threads`, `forum_replies` ;
+- `messages`, `notifications`, `booking_requests`, `contact_messages` ;
+- `profiles`, `admin_permissions` ;
+- `site_settings`, `content_blocks`, `navigation_items`, `social_links`.
 
-- `GET /api/data`
-- `PUT /api/data`
-- routes ciblées sous `/api/data/[...path]`
+Les anciennes collections JSON globales et tables de migration ont été supprimées. Les identifiants `legacy_*`/Firebase de migration ont également été retirés du schéma après vérification de leurs dépendances.
 
-Les politiques d’accès sont définies côté serveur selon les collections et les rôles.
+### Accès serveur
+
+Les pages publiques utilisent les lecteurs dans `src/lib/public-content.ts` et `src/lib/public-app-state.ts`.
+
+Le back-office utilise les Route Handlers sous `/api/admin/resources/[resource]` et le registre `src/lib/resource-registry.ts`. Les formulaires publics utilisent des endpoints métier dédiés.
 
 ## Authentification
 
-Neon Auth fournit la session. La plateforme associe ensuite l’utilisateur à `auth_profiles` afin de déterminer :
+Supabase Auth gère les sessions. La table `profiles` apporte le rôle et le contexte métier.
 
-- rôle applicatif ;
-- identifiant PMM ;
-- profil métier ;
-- statut du compte ;
-- permissions spécifiques.
+Schéma de contrôle :
 
-Rôles : `admin`, `student`, `jury`, `registration`, `jury-contest`.
+```text
+session Supabase Auth
+      ↓
+profil PMM actif (`profiles`)
+      ↓
+vérification du rôle/permission côté serveur
+      ↓
+opération Supabase autorisée
+```
 
-Une page d’administration sensible ne doit pas se contenter de masquer les boutons côté navigateur : la route ou l’API doit vérifier le rôle côté serveur.
+Les rôles principaux sont `admin`, `manager`, `student`, `jury`, `registration` et `jury-contest` selon les modules.
 
 ## Médias
 
 ### Images
 
-Toutes les nouvelles images sont stockées dans ImgBB. Le navigateur envoie le fichier à `/api/media/imgbb`; la route contrôle type, taille, scope et rôle avant d’appeler ImgBB avec la clé serveur `IMGBB_API_KEY`.
+Les nouveaux uploads d’images passent par l’API serveur ImgBB. Les références sont enregistrées dans les tables métier ou `media_library`.
 
-Les anciens noms préfixés `VITE_` ne sont plus acceptés. Ils restent explicitement filtrés de la configuration client afin d’éviter toute réintroduction accidentelle d’un secret ImgBB dans le navigateur.
-
-La route historique `/api/media/upload` ne permet plus de téléverser des images. Son `GET` reste disponible uniquement pour lire les anciennes images Blob déjà enregistrées.
+Aucune variable `VITE_*`, clé Firebase ou clé secrète ImgBB ne doit être exposée au navigateur.
 
 ### Vidéos
 
-Les spots Perfect Fashion Day utilisent un **client upload Blob** : le serveur autorise l’opération et génère un token temporaire, puis le navigateur envoie directement le fichier vers Blob.
+Les vidéos volumineuses peuvent utiliser Vercel Blob avec autorisation serveur et upload client contrôlé.
 
-Avantages :
+## Notifications et messagerie
 
-- les vidéos ne traversent pas le corps d’une Vercel Function ;
-- progression d’upload disponible ;
-- multipart pour les fichiers volumineux ;
-- contrôle du type, de la taille, du scope et du rôle admin avant émission du token.
+Les notifications navigateur utilisent l’API Web Notification lorsque disponible. Les données de candidatures sont lues depuis les ressources Supabase normalisées ; aucun Firebase Cloud Messaging n’est requis pour le fonctionnement web actuel.
 
-## Perfect Fashion Day
+Les emails transactionnels utilisent Brevo et sont journalisés dans `email_delivery_log`.
 
-Le module modernisé est isolé dans :
+## Configuration Next.js
 
-```text
-src/features/fashion-day/
-├── AdminFashionDayEventsPage.tsx
-└── FashionDayPage.tsx
+`next.config.mjs` ne contient plus de webpack aliases vers Firebase/React Router, de `DefinePlugin(import.meta.env)` ni de désactivation de la validation TypeScript.
+
+`vercel.json` déclare :
+
+```json
+{
+  "framework": "nextjs"
+}
 ```
-
-La page admin `/admin/fashion-day-events` vérifie le rôle admin côté serveur. La page publique `/fashion-day` sélectionne une édition et utilise en priorité sa `coverImageUrl`.
 
 ## Secrets
 
 Variables sensibles typiques :
 
-- `DATABASE_URL`
-- `NEON_AUTH_COOKIE_SECRET`
-- `BLOB_READ_WRITE_TOKEN`
+- `SUPABASE_SECRET_KEY`
 - `IMGBB_API_KEY`
+- `BLOB_READ_WRITE_TOKEN`
+- `BREVO_API_KEY`
 
-Elles restent exclusivement dans l’environnement serveur. Aucun secret ne doit être ajouté au Git, au README, à un composant client ou à une variable publique.
-
-## Compatibilité historique
-
-Le dépôt peut encore contenir des fichiers dont le nom fait référence à Firebase. ImgBB est désormais le service actif et unique pour les nouveaux téléversements d’images.
-
-La suppression d’une ancienne source de données externe ne doit intervenir qu’après export, migration et vérification d’intégrité.
+Elles restent côté serveur.
 
 ## Déploiement
 
-- Développement sur branche.
-- Preview Vercel pour validation.
-- `main` réservé au lot validé.
-- Production uniquement après contrôle fonctionnel.
+Le projet Vercel attendu est `perfectmodelsga`, framework Next.js. Toute Preview doit valider : build, authentification, données Supabase, médias et routes sensibles avant promotion en production.
 
 Voir [DEPLOYMENT.md](DEPLOYMENT.md).

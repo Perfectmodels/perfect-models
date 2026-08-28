@@ -34,19 +34,6 @@ export function hasSupabasePrivilegedKey() { return Boolean(SUPABASE_URL && SECR
 export function supabaseConfigured() { return Boolean(SUPABASE_URL && PUBLISHABLE_KEY && SECRET_KEY); }
 export function supabasePublicConfigured() { return Boolean(SUPABASE_URL && PUBLISHABLE_KEY); }
 
-export async function getAppCollection(key: string) {
-  const rows = await rest(`app_collections?key=eq.${encodeURIComponent(key)}&select=payload&limit=1`, {}, true);
-  return Array.isArray(rows) && rows.length ? rows[0]?.payload ?? null : null;
-}
-
-export async function setAppCollection(key: string, payload: unknown) {
-  await rest('app_collections?on_conflict=key', {
-    method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
-    body: JSON.stringify({ key, payload: payload ?? null, updated_at: new Date().toISOString() }),
-  }, true);
-  return true;
-}
-
 export async function getSupabasePublicModels() {
   const [models, images] = await Promise.all([
     rest('public_models?select=*&order=name.asc', {}, false),
@@ -82,6 +69,8 @@ export async function privilegedSupabaseSelect(path: string) { return rest(path,
 export interface SupabaseAuthUser { id: string; email?: string | null; user_metadata?: Record<string, any>; app_metadata?: Record<string, any>; }
 export interface SupabaseSession { access_token: string; refresh_token: string; expires_in?: number; user: SupabaseAuthUser; }
 
+type OtpType = 'signup' | 'invite' | 'magiclink' | 'recovery' | 'email_change' | 'email';
+
 async function authRequest(path: string, body?: any, opts: { method?: string; accessToken?: string; admin?: boolean } = {}) {
   const key = keyFor(Boolean(opts.admin));
   const response = await fetch(`${SUPABASE_URL}/auth/v1${path}`, {
@@ -93,12 +82,21 @@ async function authRequest(path: string, body?: any, opts: { method?: string; ac
   if (!response.ok) throw Object.assign(new Error(String(data?.msg || data?.message || data?.error_description || data?.error || 'Supabase Auth error')), { status: response.status, code: data?.code });
   return data;
 }
+
+function withRedirect(path: string, redirectTo?: string) {
+  if (!redirectTo) return path;
+  return `${path}${path.includes('?') ? '&' : '?'}redirect_to=${encodeURIComponent(redirectTo)}`;
+}
+
 export async function supabaseSignIn(email: string, password: string) { return authRequest('/token?grant_type=password', { email, password }, { admin: false }) as Promise<SupabaseSession>; }
-export async function supabaseSignUp(email: string, password: string, name?: string) { return authRequest('/signup', { email, password, data: { name } }, { admin: false }) as Promise<SupabaseSession>; }
 export async function supabaseRefresh(refreshToken: string) { return authRequest('/token?grant_type=refresh_token', { refresh_token: refreshToken }, { admin: false }) as Promise<SupabaseSession>; }
 export async function supabaseLookup(accessToken: string) { return authRequest('/user', undefined, { accessToken, admin: false }) as Promise<SupabaseAuthUser>; }
-export async function supabaseResetPassword(email: string) { return authRequest('/recover', { email }, { admin: false }); }
+export async function supabaseResetPassword(email: string, redirectTo?: string) { return authRequest(withRedirect('/recover', redirectTo), { email }, { admin: false }); }
 export async function supabaseChangePassword(accessToken: string, password: string) { return authRequest('/user', { password }, { method: 'PUT', accessToken, admin: false }) as Promise<SupabaseAuthUser>; }
+export async function supabaseVerifyOtp(tokenHash: string, type: OtpType) { return authRequest('/verify', { token_hash: tokenHash, type }, { admin: false }) as Promise<SupabaseSession>; }
+export async function supabaseInviteUserByEmail(email: string, redirectTo: string, data: Record<string, unknown> = {}) {
+  return authRequest(withRedirect('/invite', redirectTo), { email, data }, { method: 'POST', admin: true });
+}
 export async function supabaseAdminCreateUser(attributes: Record<string, any>) { return authRequest('/admin/users', attributes, { method: 'POST', admin: true }); }
 export async function supabaseAdminUpdateUser(userId: string, attributes: Record<string, any>) { return authRequest(`/admin/users/${encodeURIComponent(userId)}`, attributes, { method: 'PUT', admin: true }); }
 
@@ -112,7 +110,7 @@ export async function getValidSupabaseAccessToken() {
 }
 export async function setSupabaseSession(session: SupabaseSession) {
   const store = await cookies(); const secure = process.env.NODE_ENV === 'production';
-  store.set('sb_access_token', session.access_token, { httpOnly: true, sameSite: 'lax', secure, path: '/', maxAge: Number(session.expires_in || 3600) });
-  store.set('sb_refresh_token', session.refresh_token, { httpOnly: true, sameSite: 'lax', secure, path: '/', maxAge: 60 * 60 * 24 * 30 });
+  store.set('sb_access_token', session.access_token, { httpOnly: true, sameSite: 'lax', secure, path: '/', maxAge: Number(session.expires_in || 3600), priority: 'high' });
+  store.set('sb_refresh_token', session.refresh_token, { httpOnly: true, sameSite: 'lax', secure, path: '/', maxAge: 60 * 60 * 24 * 30, priority: 'high' });
 }
 export async function clearSupabaseSession() { const store = await cookies(); store.delete('sb_access_token'); store.delete('sb_refresh_token'); }

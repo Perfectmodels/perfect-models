@@ -33,7 +33,7 @@ export default async function Page({ params }: PageProps) {
   const { id } = await params;
   const model = await getModelById(id);
   if (!model) {
-    return <main className="min-h-screen bg-pm-dark px-5 pb-24 pt-36 text-center text-white"><h1 className="font-playfair text-5xl font-bold">Profil introuvable</h1><Link href="/mannequins" className="mt-6 inline-block text-[10px] font-black uppercase tracking-widest text-pm-gold">← Voir nos mannequins</Link></main>;
+    return <main className="min-h-screen bg-pm-dark px-5 pb-24 pt-36 text-center text-white"><h1 className="font-playfair text-5xl font-semibold">Profil introuvable</h1><Link href="/mannequins" className="mt-7 inline-block border-b border-pm-gold pb-2 text-[8px] font-black uppercase tracking-[.26em] text-pm-gold">← Voir les talents</Link></main>;
   }
 
   const models = await getPublicModels();
@@ -45,35 +45,76 @@ export default async function Page({ params }: PageProps) {
     breadcrumbJsonLd([{ name: 'Accueil', path: '/' }, { name: 'Mannequins', path: '/mannequins' }, { name: model.name, path }]),
   ];
 
+  const measurements = [
+    ['Hauteur', model.height],
+    ['Poitrine', model.measurements?.chest],
+    ['Tour de taille', model.measurements?.waist],
+    ['Hanches', model.measurements?.hips],
+    ['Pointure', model.measurements?.shoeSize],
+  ];
+
   return (
-    <main className="min-h-screen bg-pm-dark text-pm-off-white">
+    <main className="min-h-screen bg-pm-ivory text-pm-ink">
       <JsonLd data={schema} />
-      <section className="border-b border-white/10 bg-black px-5 pb-12 pt-28 sm:px-8 lg:px-10 lg:pb-16">
-        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
-          <div className="overflow-hidden bg-white/5"><img src={model.imageUrl} alt={model.name} className="aspect-[3/4] w-full object-cover" /></div>
-          <div className="pb-2">
-            <Link href="/mannequins" className="text-[10px] font-black uppercase tracking-[0.3em] text-white/35 hover:text-pm-gold">← Tous les mannequins</Link>
-            <p className="mt-10 text-[10px] font-black uppercase tracking-[0.45em] text-pm-gold">Perfect Models Management · {model.level || 'Talent'}</p>
-            <h1 className="mt-3 font-playfair text-6xl font-black italic leading-none sm:text-8xl">{model.name}</h1>
-            <p className="mt-5 text-sm uppercase tracking-[0.22em] text-white/40">{model.gender} · {model.location || 'Libreville, Gabon'}</p>
-            <div className="mt-8 flex flex-wrap gap-2">{(model.categories || []).map((cat) => <span key={cat} className="border border-pm-gold/20 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-pm-gold">{cat}</span>)}</div>
-            <a href={`/contact?subject=Booking%20mannequin%20${encodeURIComponent(model.name)}`} className="mt-9 inline-flex rounded-full bg-pm-gold px-7 py-3 text-[10px] font-black uppercase tracking-[0.25em] text-black">Demander un booking</a>
+
+      <section className="relative isolate overflow-hidden bg-pm-dark text-pm-ivory">
+        <div aria-hidden="true" className="absolute -right-[3vw] bottom-[-2vw] -z-10 font-playfair text-[24vw] font-semibold leading-none tracking-[-.08em] text-white/[.025]">MODEL</div>
+        <div className="mx-auto grid min-h-[calc(100svh-78px)] max-w-[1550px] gap-0 px-5 sm:px-8 lg:grid-cols-[.86fr_1.14fr] lg:px-12 xl:px-16">
+          <div className="relative min-h-[520px] overflow-hidden border-x border-white/10 lg:min-h-full">
+            {model.imageUrl ? <img src={model.imageUrl} alt={model.name} className="absolute inset-0 h-full w-full object-cover" /> : <div className="absolute inset-0 grid place-items-center bg-pm-ink"><span className="font-playfair text-8xl text-white/10">PMM</span></div>}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/5" />
+            <p className="absolute bottom-6 left-6 text-[8px] font-black uppercase tracking-[.3em] text-white/65">Perfect Models Management</p>
+          </div>
+          <div className="flex flex-col justify-between py-10 lg:py-16 lg:pl-14 xl:pl-20">
+            <Link href="/mannequins" className="text-[8px] font-black uppercase tracking-[.28em] text-white/35 transition hover:text-pm-gold-light">← Tous les talents</Link>
+            <div className="py-16 lg:py-10">
+              <p className="text-[8px] font-black uppercase tracking-[.4em] text-pm-gold-light">PMM · {model.level || 'Talent'}</p>
+              <h1 className="mt-5 max-w-3xl font-playfair text-[clamp(4.2rem,8vw,8.5rem)] font-semibold leading-[.78] tracking-[-.06em]">{model.name}</h1>
+              <p className="mt-7 text-[9px] font-black uppercase tracking-[.22em] text-white/42">{model.gender} · {model.location || 'Libreville, Gabon'}</p>
+              {(model.categories || []).length > 0 && <div className="mt-7 flex flex-wrap gap-x-5 gap-y-2">{(model.categories || []).map((cat) => <span key={cat} className="border-b border-pm-gold/50 pb-1 text-[8px] font-black uppercase tracking-[.22em] text-pm-gold-light">{cat}</span>)}</div>}
+              <div className="mt-10"><Link href={`/contact?subject=Booking%20mannequin%20${encodeURIComponent(model.name)}`} className="pmm-button pmm-button--light">Demander un booking ↗</Link></div>
+            </div>
+            <div className="grid grid-cols-2 border-t border-white/12 pt-5 text-[8px] font-black uppercase tracking-[.2em] text-white/30"><span>{model.height || 'Hauteur à confirmer'}</span><span className="text-right">Représenté par PMM</span></div>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:px-10 lg:py-24">
-        <div className="grid gap-14 lg:grid-cols-[1.2fr_0.8fr]">
-          <div><p className="text-[10px] font-black uppercase tracking-[0.4em] text-pm-gold">À propos</p><h2 className="mt-3 font-playfair text-4xl font-bold">Le parcours</h2><p className="mt-6 max-w-3xl whitespace-pre-line text-base leading-8 text-white/55">{model.journey || model.experience || 'Profil en cours de mise à jour.'}</p></div>
-          <div><p className="text-[10px] font-black uppercase tracking-[0.4em] text-pm-gold">Book</p><h2 className="mt-3 font-playfair text-4xl font-bold">Mensurations</h2><div className="mt-6 grid grid-cols-2 border-t border-white/10">{[['Taille', model.height], ['Poitrine', model.measurements?.chest], ['Taille', model.measurements?.waist], ['Hanches', model.measurements?.hips], ['Pointure', model.measurements?.shoeSize]].map(([label, value]) => <div key={label} className="border-b border-white/10 py-4"><p className="text-[9px] font-black uppercase tracking-widest text-white/30">{label}</p><p className="mt-1 text-sm text-white">{value || '—'}</p></div>)}</div></div>
+      <section className="bg-pm-ivory px-5 py-20 sm:px-8 sm:py-28 lg:px-12 xl:px-16">
+        <div className="mx-auto grid max-w-[1550px] gap-14 lg:grid-cols-[1.15fr_.85fr]">
+          <div>
+            <div className="flex items-center gap-4 text-[8px] font-black uppercase tracking-[.36em] text-pm-wine"><span>01</span><span className="h-px w-10 bg-pm-wine/35" /><span>Profil</span></div>
+            <h2 className="mt-8 font-playfair text-5xl font-semibold tracking-[-.04em] sm:text-6xl">Le parcours.</h2>
+            <p className="mt-7 max-w-3xl whitespace-pre-line text-base leading-8 text-pm-ink/58">{model.journey || model.experience || 'Profil en cours de mise à jour.'}</p>
+            {model.experience && model.journey && <div className="mt-9 border-l border-pm-wine/40 pl-6"><p className="text-[8px] font-black uppercase tracking-[.25em] text-pm-wine">Expérience</p><p className="mt-3 max-w-2xl text-sm leading-7 text-pm-ink/52">{model.experience}</p></div>}
+          </div>
+
+          <div>
+            <div className="flex items-center gap-4 text-[8px] font-black uppercase tracking-[.36em] text-pm-wine"><span>02</span><span className="h-px w-10 bg-pm-wine/35" /><span>Mensurations</span></div>
+            <div className="mt-8 border-t border-pm-ink/15">
+              {measurements.map(([label, value]) => <div key={label} className="flex items-end justify-between gap-6 border-b border-pm-ink/15 py-4"><p className="text-[8px] font-black uppercase tracking-[.2em] text-pm-ink/38">{label}</p><p className="font-playfair text-2xl">{value || '—'}</p></div>)}
+            </div>
+          </div>
         </div>
       </section>
 
-      <section className="border-y border-white/5 bg-black/30 px-5 py-16 sm:px-8 lg:px-10 lg:py-24"><div className="mx-auto max-w-7xl"><p className="text-[10px] font-black uppercase tracking-[0.4em] text-pm-gold">Portfolio</p><h2 className="mt-3 font-playfair text-5xl font-bold">En images</h2><div className="mt-10"><ModelPortfolio name={model.name} images={portfolio} /></div></div></section>
+      <section className="bg-pm-ink px-5 py-20 text-pm-ivory sm:px-8 sm:py-28 lg:px-12 xl:px-16">
+        <div className="mx-auto max-w-[1550px]">
+          <div className="grid gap-8 border-b border-white/12 pb-8 lg:grid-cols-[.55fr_1.45fr] lg:items-end"><div className="flex items-center gap-4 text-[8px] font-black uppercase tracking-[.36em] text-pm-gold"><span>03</span><span className="h-px w-10 bg-pm-gold/35" /><span>Portfolio</span></div><h2 className="font-playfair text-5xl font-semibold tracking-[-.04em] sm:text-7xl">En images.</h2></div>
+          <div className="mt-10"><ModelPortfolio name={model.name} images={portfolio} /></div>
+        </div>
+      </section>
 
-      {model.distinctions?.length ? <section className="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:px-10"><p className="text-[10px] font-black uppercase tracking-[0.4em] text-pm-gold">Carrière</p><h2 className="mt-3 font-playfair text-4xl font-bold">Distinctions & expériences</h2><div className="mt-8 grid gap-4 md:grid-cols-2">{model.distinctions.map((item) => <div key={item.name} className="border border-white/10 p-6"><h3 className="font-playfair text-xl font-bold">{item.name}</h3><p className="mt-2 text-sm text-white/45">{item.titles.join(' · ')}</p></div>)}</div></section> : null}
+      {model.distinctions?.length ? (
+        <section className="bg-pm-sand px-5 py-20 sm:px-8 sm:py-24 lg:px-12 xl:px-16">
+          <div className="mx-auto max-w-[1550px]"><div className="flex items-center gap-4 text-[8px] font-black uppercase tracking-[.36em] text-pm-wine"><span>04</span><span className="h-px w-10 bg-pm-wine/35" /><span>Carrière</span></div><h2 className="mt-7 font-playfair text-5xl font-semibold sm:text-6xl">Distinctions & expériences.</h2><div className="mt-10 divide-y divide-pm-ink/15 border-t border-pm-ink/15">{model.distinctions.map((item, index) => <div key={item.name} className="grid gap-3 py-6 sm:grid-cols-[4rem_.8fr_1.2fr] sm:items-start"><span className="font-playfair text-2xl italic text-pm-gold-deep">0{index + 1}</span><h3 className="font-playfair text-2xl font-semibold">{item.name}</h3><p className="text-sm leading-7 text-pm-ink/52">{item.titles.join(' · ')}</p></div>)}</div></div>
+        </section>
+      ) : null}
 
-      <section className="border-t border-white/10 px-5 py-16 sm:px-8 lg:px-10"><div className="mx-auto max-w-7xl"><div className="flex items-end justify-between gap-6"><div><p className="text-[10px] font-black uppercase tracking-[0.4em] text-pm-gold">Découvrir</p><h2 className="mt-3 font-playfair text-4xl font-bold">Autres talents</h2></div><Link href="/mannequins" className="hidden text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-pm-gold sm:block">Tous les profils →</Link></div><div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">{similar.map((item) => <Link key={item.id} href={`/mannequins/${item.id}`} className="group"><div className="aspect-[3/4] overflow-hidden bg-white/5"><img src={item.imageUrl} alt={item.name} loading="lazy" className="h-full w-full object-cover transition duration-700 group-hover:scale-105" /></div><p className="mt-3 font-playfair text-lg font-bold">{item.name}</p><p className="text-[9px] font-black uppercase tracking-widest text-pm-gold">{item.categories?.[0] || 'Model'}</p></Link>)}</div></div></section>
+      {similar.length > 0 && (
+        <section className="bg-pm-ivory px-5 py-20 sm:px-8 sm:py-24 lg:px-12 xl:px-16">
+          <div className="mx-auto max-w-[1550px]"><div className="flex items-end justify-between gap-6 border-b border-pm-ink/15 pb-7"><div><p className="text-[8px] font-black uppercase tracking-[.34em] text-pm-wine">Découvrir</p><h2 className="mt-3 font-playfair text-4xl font-semibold sm:text-5xl">Autres talents.</h2></div><Link href="/mannequins" className="hidden border-b border-pm-ink pb-2 text-[8px] font-black uppercase tracking-[.24em] sm:block">Tous les profils ↗</Link></div><div className="mt-10 grid grid-cols-2 gap-x-3 gap-y-9 sm:grid-cols-4 sm:gap-x-5">{similar.map((item, index) => <Link key={item.id} href={`/mannequins/${item.id}`} className={`group ${index % 2 ? 'sm:pt-8' : ''}`}><div className="aspect-[3/4.15] overflow-hidden bg-pm-sand"><img src={item.imageUrl} alt={item.name} loading="lazy" className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.025]" /></div><p className="mt-4 font-playfair text-xl font-semibold sm:text-2xl">{item.name}</p><p className="mt-1 text-[8px] font-black uppercase tracking-[.2em] text-pm-wine">{item.categories?.[0] || 'Model'}</p></Link>)}</div></div>
+        </section>
+      )}
     </main>
   );
 }

@@ -28,13 +28,8 @@ jobs:
       - name: Build Next.js
         run: npm run build
         env:
-          NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
-          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: perfect-156b5.firebaseapp.com
-          NEXT_PUBLIC_FIREBASE_DATABASE_URL: https://perfect-156b5-default-rtdb.firebaseio.com
-          NEXT_PUBLIC_FIREBASE_PROJECT_ID: perfect-156b5
-          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: perfect-156b5.firebasestorage.app
-          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: 435536634816
-          NEXT_PUBLIC_FIREBASE_APP_ID: 1:435536634816:web:2f480f6d627e032da1de25
-          NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: G-H9WJWPEY59
+          NEXT_PUBLIC_SUPABASE_URL: https://qzkodgqxrcxsnfwpmwfb.supabase.co
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
           BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
           API_KEY: ${{ secrets.API_KEY }}

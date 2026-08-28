@@ -1,73 +1,71 @@
 import 'server-only';
 
-import { getCollection } from './app-data';
+import {
+  getFashionDayEvents,
+  getPublicArticles,
+  getPublicModels,
+  getPublicServices,
+  selectPublicRows,
+} from './public-content';
 
-const SERVER_RENDER_COLLECTIONS = [
-  'siteConfig',
-  'navLinks',
-  'socialLinks',
-  'agencyTimeline',
-  'agencyInfo',
-  'modelDistinctions',
-  'agencyServices',
-  'agencyAchievements',
-  'agencyPartners',
-  'models',
-  'fashionDayEvents',
-  'testimonials',
-  'articles',
-  'contactInfo',
-  'siteImages',
-  'newsItems',
-  'faqData',
-  'gallery',
-  'galleryAlbums',
-] as const;
-
-const toArray = (value: unknown): any[] => {
-  if (Array.isArray(value)) return value.filter(Boolean);
-  if (value && typeof value === 'object') return Object.values(value as Record<string, unknown>).filter(Boolean);
-  return [];
-};
-
-function publicModels(value: unknown) {
-  return toArray(value)
-    .filter((model) => model?.isPublic === true)
-    .map((model) => ({
-      id: model.id,
-      name: model.name,
-      age: model.age,
-      height: model.height,
-      gender: model.gender,
-      location: model.location,
-      imageUrl: model.imageUrl,
-      portfolioImages: Array.isArray(model.portfolioImages) ? model.portfolioImages : [],
-      isPublic: true,
-      level: model.level,
-      distinctions: Array.isArray(model.distinctions) ? model.distinctions : [],
-      measurements: model.measurements,
-      categories: Array.isArray(model.categories) ? model.categories : [],
-      experience: model.experience,
-      journey: model.journey,
-      fashionDayEditions: Array.isArray(model.fashionDayEditions) ? model.fashionDayEditions : undefined,
-    }));
-}
-
-function sanitizeCollection(key: string, value: unknown) {
-  if (key === 'models') return publicModels(value);
-  return value;
+async function settings() {
+  const result = await selectPublicRows('site_settings?select=key,value');
+  return Object.fromEntries(result.map((item) => [String(item.key), item.value]));
 }
 
 export async function getPublicAppState(): Promise<Record<string, unknown>> {
-  const entries = await Promise.all(
-    SERVER_RENDER_COLLECTIONS.map(async (key) => {
-      try {
-        return [key, sanitizeCollection(key, await getCollection(key))] as const;
-      } catch {
-        return [key, null] as const;
-      }
-    }),
+  const [models, agencyServices, fashionDayEvents, articles, navRows, socialRows, timelineRows, siteSettings] = await Promise.all([
+    getPublicModels(),
+    getPublicServices(),
+    getFashionDayEvents(),
+    getPublicArticles(),
+    selectPublicRows('navigation_items?select=label,path,in_footer,position,is_active&is_active=eq.true&order=position.asc'),
+    selectPublicRows('social_links?select=platform,url,position,is_active&is_active=eq.true&order=position.asc'),
+    selectPublicRows('agency_timeline?select=year,event,position&order=position.asc'),
+    settings(),
+  ]);
+
+  const navLinks = navRows.map((item) => ({
+    label: String(item.label || ''),
+    path: String(item.path || ''),
+    inFooter: Boolean(item.in_footer),
+  })).filter((item) => item.label && item.path);
+
+  const socialLinks = Object.fromEntries(
+    socialRows
+      .map((item) => [String(item.platform || '').toLowerCase(), String(item.url || '')] as const)
+      .filter(([platform, url]) => platform && url),
   );
 
-  return Object.fromEntries(entries);
+  const agencyTimeline = timelineRows
+    .map((item) => ({ year: String(item.year || ''), event: String(item.event || '') }))
+    .filter((item) => item.year && item.event);
+
+  return {
+    siteConfig: siteSettings.siteConfig || { logo: '/logo.svg' },
+    navLinks,
+    socialLinks,
+    agencyTimeline,
+    agencyInfo: siteSettings.agencyInfo || { about: { p1: '', p2: '' }, values: [] },
+    agencyServices,
+    models,
+    fashionDayEvents,
+    articles,
+    contactInfo: siteSettings.contactInfo || { email: '', phone: '', address: '' },
+    siteImages: siteSettings.siteImages || {},
+    faqData: siteSettings.faqData || [],
+
+    // Ces collections provenaient du jeu de démonstration historique et ne
+    // disposent pas encore d'une source normalisée et vérifiée. Le site public
+    // reste volontairement vide pour ces rubriques plutôt que d'afficher des
+    // noms, récompenses, clients ou témoignages fictifs.
+    modelDistinctions: [],
+    agencyAchievements: [],
+    agencyPartners: [],
+    testimonials: [],
+    newsItems: [],
+
+    gallery: [],
+    galleryAlbums: [],
+  };
 }

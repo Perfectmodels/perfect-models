@@ -1,75 +1,225 @@
-'use client';
-
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
 
-type Model = { id: string; name: string; imageUrl?: string; height?: string; gender?: string };
-type Service = { slug: string; name: string; description?: string; imageUrl?: string };
+type Model = { id: string; name: string; imageUrl?: string; height?: string; gender?: string; location?: string };
+type Service = { slug: string; title: string; description?: string; category?: string };
 type Event = { edition: number; theme: string; date: string; location?: string; description?: string; coverImageUrl?: string };
-type Article = { slug: string; title: string; imageUrl?: string; category?: string; date: string };
-
+type Article = { slug: string; title: string; imageUrl?: string; category?: string; date: string; excerpt?: string };
 type Props = { models: Model[]; services: Service[]; events: Event[]; articles: Article[] };
 
-const fallback = 'https://ui-avatars.com/api/?name=Perfect+Models&size=1200&background=0A0A0A&color=D4AF37&bold=true&format=png';
+const fallback = '/logopmm.jpg';
+
+function formatDate(value?: string) {
+  if (!value) return 'Date à venir';
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+}
 
 export default function HomePage({ models, services, events, articles }: Props) {
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => { const timer = window.setInterval(() => setNow(Date.now()), 1000); return () => window.clearInterval(timer); }, []);
   const featuredModels = models.slice(0, 4);
   const latestEvent = [...events].sort((a, b) => Number(b.edition) - Number(a.edition))[0];
-  const upcoming = [...events].filter((event) => new Date(event.date).getTime() > now).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0];
   const featuredArticles = articles.slice(0, 3);
+  const heroImage = featuredModels[0]?.imageUrl || latestEvent?.coverImageUrl || featuredArticles[0]?.imageUrl || fallback;
+  const secondaryImage = featuredModels[1]?.imageUrl || latestEvent?.coverImageUrl || featuredArticles[0]?.imageUrl || heroImage;
 
   return (
-    <main className="min-h-screen overflow-hidden bg-pm-dark text-pm-off-white">
-      <section className="relative flex min-h-[92vh] items-end overflow-hidden">
-        <div className="absolute inset-0 bg-black">
-          <img src={latestEvent?.coverImageUrl || featuredModels[0]?.imageUrl || fallback} alt="Perfect Models Management" className="h-full w-full object-cover opacity-60" />
-          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/55 to-black/10" />
-          <div className="absolute inset-0 bg-gradient-to-t from-pm-dark via-transparent to-black/40" />
+    <main className="overflow-hidden bg-pm-ivory text-pm-ink">
+      <section className="relative isolate min-h-[calc(100svh-78px)] overflow-hidden bg-pm-dark text-pm-ivory">
+        <div aria-hidden="true" className="absolute inset-0 -z-30 bg-[#08080a]" />
+        <div aria-hidden="true" className="absolute inset-y-0 right-0 -z-20 w-full lg:w-[58%]">
+          <img src={heroImage} alt="" className="h-full w-full object-cover object-center opacity-88" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#08080a] via-[#08080a]/30 to-transparent lg:from-[#08080a]/92 lg:via-[#08080a]/15" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-black/15" />
         </div>
-        <div className="relative z-10 mx-auto w-full max-w-7xl px-5 pb-20 pt-32 sm:px-8 lg:px-10 lg:pb-28">
-          <p className="text-[10px] font-black uppercase tracking-[0.5em] text-pm-gold">Perfect Models Management · Libreville, Gabon</p>
-          <h1 className="mt-5 max-w-5xl font-playfair text-6xl font-black italic leading-[0.88] text-white sm:text-8xl lg:text-[8.5rem]">Révéler les talents.<br /><span className="text-pm-gold">Créer les images.</span></h1>
-          <p className="mt-8 max-w-2xl text-base leading-8 text-white/60 sm:text-lg">Management, casting, production et image : une structure dédiée aux talents et aux projets qui font avancer la mode gabonaise.</p>
-          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-            <Link href="/mannequins" className="rounded-full bg-pm-gold px-7 py-4 text-center text-xs font-black uppercase tracking-[0.22em] text-black transition hover:bg-white">Découvrir nos talents</Link>
-            <Link href="/galerie" className="rounded-full border border-white/25 px-7 py-4 text-center text-xs font-black uppercase tracking-[0.22em] text-white transition hover:border-pm-gold hover:text-pm-gold">Voir la galerie</Link>
+        <div aria-hidden="true" className="absolute -left-[4vw] bottom-[-2vw] -z-10 select-none whitespace-nowrap font-playfair text-[clamp(8rem,23vw,24rem)] font-semibold leading-[.7] tracking-[-.08em] text-white/[.028]">PERFECT</div>
+
+        <div className="mx-auto flex min-h-[calc(100svh-78px)] max-w-[1700px] flex-col justify-between px-5 py-10 sm:px-8 sm:py-14 lg:px-12 lg:py-16 xl:px-16">
+          <div className="flex max-w-2xl items-center gap-4 text-[8px] font-black uppercase tracking-[.42em] text-pm-gold-light sm:text-[9px]">
+            <span>Perfect Models Management</span>
+            <span className="h-px w-10 bg-current/40" />
+            <span>Libreville</span>
+          </div>
+
+          <div className="max-w-[940px] py-16 sm:py-20 lg:py-14">
+            <p className="mb-6 text-[9px] font-black uppercase tracking-[.38em] text-white/45 sm:text-[10px]">Management · Casting · Production</p>
+            <h1 className="max-w-5xl font-playfair text-[clamp(4.1rem,9vw,9.5rem)] font-semibold leading-[.78] tracking-[-.065em] text-pm-ivory">
+              Plus qu’un visage.<br />
+              <em className="font-normal text-pm-gold-light">Une présence.</em>
+            </h1>
+            <p className="mt-8 max-w-xl text-sm leading-7 text-white/62 sm:mt-10 sm:text-base sm:leading-8">
+              Nous révélons, préparons et représentons des talents capables d’incarner la mode, la publicité et les grandes scènes créatives du Gabon.
+            </p>
+            <div className="mt-9 flex flex-wrap gap-3 sm:mt-11">
+              <Link href="/mannequins" className="pmm-button pmm-button--light">Découvrir les talents <span aria-hidden="true">↗</span></Link>
+              <Link href="/contact?subject=booking" className="pmm-button pmm-button--ghost">Booker un talent</Link>
+            </div>
+          </div>
+
+          <div className="grid max-w-3xl grid-cols-3 border-t border-white/15 pt-5 text-[8px] font-black uppercase tracking-[.24em] text-white/38 sm:text-[9px]">
+            <span>Depuis 2021</span>
+            <span className="text-center">Mode · Image · Culture</span>
+            <span className="text-right">Gabon</span>
           </div>
         </div>
-        {(upcoming || latestEvent) && <div className="absolute bottom-0 left-0 right-0 z-20 border-t border-white/10 bg-black/50 backdrop-blur-xl"><div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-4 sm:px-8 lg:flex-row lg:items-center lg:justify-between lg:px-10"><div><p className="text-[9px] font-black uppercase tracking-[0.35em] text-pm-gold">{upcoming ? 'Prochain rendez-vous' : 'À la une'}</p><p className="mt-1 text-sm font-semibold text-white">Perfect Fashion Day — Édition {(upcoming || latestEvent)?.edition} · {(upcoming || latestEvent)?.theme}</p></div><Link href="/fashion-day" className="text-[10px] font-black uppercase tracking-[0.25em] text-pm-gold hover:text-white">Découvrir →</Link></div></div>}
       </section>
 
-      <section className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:px-10 lg:py-28">
-        <Header eyebrow="À la une" title="Les histoires qui font Perfect Models." />
-        <div className="grid gap-5 lg:grid-cols-[1.45fr_.55fr]">
-          <Link href="/fashion-day" className="group relative min-h-[520px] overflow-hidden rounded-2xl border border-white/10 bg-black">
-            <img src={latestEvent?.coverImageUrl || featuredModels[0]?.imageUrl || fallback} alt={latestEvent?.theme || 'Perfect Fashion Day'} className="absolute inset-0 h-full w-full object-cover transition duration-1000 group-hover:scale-105" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
-            <div className="absolute bottom-0 p-7 sm:p-10"><p className="text-[9px] font-black uppercase tracking-[0.35em] text-pm-gold">Perfect Fashion Day · Édition {latestEvent?.edition || 2}</p><h2 className="mt-3 max-w-3xl font-playfair text-4xl font-black italic sm:text-6xl">{latestEvent?.theme || 'L’Art de se Révéler'}</h2><p className="mt-4 max-w-xl text-sm leading-7 text-white/60">{latestEvent?.description || 'Mode, scénographie, création et talents réunis dans une expérience signature.'}</p></div>
-          </Link>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-1">
-            <Link href="/mannequins" className="group rounded-2xl border border-white/10 bg-white/[0.025] p-7 transition hover:border-pm-gold/40"><p className="text-[9px] font-black uppercase tracking-[0.35em] text-pm-gold">Talents</p><p className="mt-4 font-playfair text-3xl font-black">Des visages, des parcours, des possibilités.</p><span className="mt-8 inline-block text-[10px] font-black uppercase tracking-[0.25em] text-white/40 group-hover:text-pm-gold">Voir les mannequins →</span></Link>
-            <Link href="/contact?subject=booking" className="group rounded-2xl border border-pm-gold/20 bg-pm-gold/[0.06] p-7 transition hover:bg-pm-gold/10"><p className="text-[9px] font-black uppercase tracking-[0.35em] text-pm-gold">Professionnels</p><p className="mt-4 font-playfair text-3xl font-black">Un casting, une campagne ou un défilé ?</p><span className="mt-8 inline-block text-[10px] font-black uppercase tracking-[0.25em] text-pm-gold">Parler à l’agence →</span></Link>
+      <section className="bg-pm-ivory">
+        <div className="mx-auto grid max-w-[1550px] gap-12 px-5 py-20 sm:px-8 sm:py-28 lg:grid-cols-[.55fr_1.45fr] lg:px-12 lg:py-36">
+          <div className="lg:pt-2">
+            <SectionMark index="01" label="Notre vision" dark />
+            <p className="mt-10 max-w-xs text-sm leading-7 text-pm-ink/55">Une agence n’est pas seulement un portefeuille de visages. C’est une direction, une discipline et une exigence de représentation.</p>
+          </div>
+          <div>
+            <h2 className="max-w-6xl font-playfair text-[clamp(3.2rem,6.3vw,7rem)] font-semibold leading-[.9] tracking-[-.052em]">
+              Le talent attire le regard.<br />
+              <em className="font-normal text-pm-wine">La préparation crée la différence.</em>
+            </h2>
+            <div className="mt-14 grid gap-8 border-t border-pm-ink/15 pt-8 sm:grid-cols-3 lg:mt-16">
+              {[
+                ['Repérer', 'Identifier les personnalités, les silhouettes et les potentiels singuliers.'],
+                ['Développer', 'Former les talents à la posture, à l’image et aux standards professionnels.'],
+                ['Connecter', 'Créer le lien juste entre talents, marques, créatifs et événements.'],
+              ].map(([title, text], index) => (
+                <div key={title} className="border-t border-pm-ink/10 pt-5 sm:border-t-0 sm:pt-0">
+                  <span className="font-playfair text-3xl italic text-pm-gold-deep">0{index + 1}</span>
+                  <h3 className="mt-5 font-montserrat text-[10px] font-black uppercase tracking-[.24em]">{title}</h3>
+                  <p className="mt-3 text-sm leading-6 text-pm-ink/55">{text}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="border-y border-white/5 bg-black/30 py-20 sm:py-28">
-        <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10"><Header eyebrow="Visages de Perfect Models" title="Nos talents." description="Des profils pour le runway, l’éditorial, la publicité, le e-commerce et les productions événementielles." /><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{featuredModels.map((model) => <Link key={model.id} href={`/mannequins/${model.id}`} className="group relative aspect-[3/4] overflow-hidden bg-black"><img src={model.imageUrl || fallback} alt={model.name} className="h-full w-full object-cover grayscale transition duration-1000 group-hover:scale-105 group-hover:grayscale-0" /><div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" /><div className="absolute bottom-0 w-full p-5"><p className="font-playfair text-2xl font-black">{model.name}</p><p className="mt-2 text-[9px] font-black uppercase tracking-[0.25em] text-pm-gold">{model.height || 'Model'} {model.gender ? `· ${model.gender}` : ''}</p></div></Link>)}</div><div className="mt-10 text-center"><Link href="/mannequins" className="text-[10px] font-black uppercase tracking-[0.3em] text-pm-gold hover:text-white">Tous les talents →</Link></div></div>
+      <section className="border-y border-pm-ink/10 bg-[#ece5db] py-20 text-pm-ink sm:py-28 lg:py-36">
+        <div className="mx-auto max-w-[1550px] px-5 sm:px-8 lg:px-12">
+          <div className="flex flex-col gap-8 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <SectionMark index="02" label="Talents" dark />
+              <h2 className="mt-8 font-playfair text-5xl font-semibold tracking-[-.045em] sm:text-7xl lg:text-8xl">Le roster PMM.</h2>
+            </div>
+            <Link href="/mannequins" className="pmm-text-link !text-pm-ink">Tous les profils <span>↗</span></Link>
+          </div>
+
+          {featuredModels.length > 0 ? (
+            <div className="mt-14 grid grid-cols-2 gap-x-3 gap-y-10 sm:gap-x-5 lg:grid-cols-4 lg:gap-x-6">
+              {featuredModels.map((model, index) => (
+                <Link key={model.id} href={`/mannequins/${model.id}`} className={`group block ${index === 1 || index === 3 ? 'lg:translate-y-12' : ''}`}>
+                  <div className="relative aspect-[3/4.2] overflow-hidden bg-pm-ink/10">
+                    <img src={model.imageUrl || fallback} alt={model.name} className="h-full w-full object-cover transition duration-700 ease-out group-hover:scale-[1.03]" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent opacity-70" />
+                    <span className="absolute left-4 top-4 text-[8px] font-black uppercase tracking-[.24em] text-white/65">PMM · 0{index + 1}</span>
+                  </div>
+                  <div className="mt-4 flex items-start justify-between gap-4 border-t border-pm-ink/15 pt-4">
+                    <div>
+                      <h3 className="font-playfair text-xl font-semibold sm:text-2xl">{model.name}</h3>
+                      <p className="mt-1 text-[8px] font-black uppercase tracking-[.24em] text-pm-ink/42">{model.location || 'Libreville'} {model.height ? `· ${model.height}` : ''}</p>
+                    </div>
+                    <span className="text-pm-wine transition group-hover:translate-x-1">↗</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-14 grid gap-8 border-y border-pm-ink/15 py-12 lg:grid-cols-[1fr_auto] lg:items-center">
+              <div>
+                <p className="font-playfair text-4xl font-semibold">Notre roster public se prépare.</p>
+                <p className="mt-3 max-w-2xl text-sm leading-7 text-pm-ink/52">Les profils sont publiés uniquement après validation de l’agence. Aucun mannequin fictif n’est affiché.</p>
+              </div>
+              <Link href="/casting-formulaire" className="pmm-button border-pm-ink bg-pm-ink text-pm-ivory hover:border-pm-wine hover:bg-pm-wine">Rejoindre l’agence ↗</Link>
+            </div>
+          )}
+        </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:px-10 lg:py-28"><Header eyebrow="Notre savoir-faire" title="Une structure, quatre expertises." /><div className="grid gap-3 md:grid-cols-2">{services.slice(0, 4).map((service, index) => <Link href={`/services/${service.slug}`} key={service.slug} className="group min-h-[230px] rounded-2xl border border-white/10 bg-white/[0.025] p-7 transition hover:border-pm-gold/30 sm:p-9"><span className="text-xs font-black text-pm-gold/50">0{index + 1}</span><h3 className="mt-8 font-playfair text-3xl font-black">{service.name}</h3><p className="mt-3 max-w-xl text-sm leading-7 text-white/40">{service.description}</p><span className="mt-7 inline-block text-[9px] font-black uppercase tracking-[0.3em] text-white/30 group-hover:text-pm-gold">Découvrir →</span></Link>)}</div></section>
+      <section className="bg-pm-ink py-20 text-pm-ivory sm:py-28 lg:py-36">
+        <div className="mx-auto max-w-[1550px] px-5 sm:px-8 lg:px-12">
+          <div className="grid gap-12 lg:grid-cols-[.62fr_1.38fr]">
+            <div>
+              <SectionMark index="03" label="Expertises" />
+              <h2 className="mt-8 max-w-md font-playfair text-5xl font-semibold leading-[.93] tracking-[-.045em] sm:text-7xl">Construire l’image juste.</h2>
+              <p className="mt-8 max-w-sm text-sm leading-7 text-white/42">Casting, booking, formation, stylisme, production : chaque service répond à une exigence professionnelle précise.</p>
+            </div>
+            <div className="border-t border-white/15">
+              {services.slice(0, 6).map((service, index) => (
+                <Link href={`/services/${service.slug}`} key={service.slug} className="group grid gap-4 border-b border-white/15 py-7 transition hover:bg-white/[.035] sm:grid-cols-[4rem_1.05fr_1.35fr_auto] sm:items-center sm:px-4">
+                  <span className="font-playfair text-2xl italic text-pm-gold">0{index + 1}</span>
+                  <h3 className="font-playfair text-2xl text-white sm:text-3xl">{service.title}</h3>
+                  <p className="text-sm leading-6 text-white/42">{service.description}</p>
+                  <span className="text-pm-gold transition group-hover:translate-x-1">↗</span>
+                </Link>
+              ))}
+              {!services.length && <p className="border-b border-white/15 py-10 text-white/40">Nos expertises seront bientôt présentées ici.</p>}
+              <div className="mt-8 flex justify-end"><Link href="/services" className="pmm-text-link">Voir toutes les expertises <span>↗</span></Link></div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-      <section className="border-y border-white/5 bg-black/30 py-20 sm:py-28"><div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10"><div className="grid gap-8 lg:grid-cols-[.75fr_1.25fr] lg:items-end"><div><Header eyebrow="L’événement signature" title="Perfect Fashion Day." /><Link href="/fashion-day" className="text-[10px] font-black uppercase tracking-[0.3em] text-pm-gold">Explorer toutes les éditions →</Link></div><div className="rounded-2xl border border-pm-gold/20 bg-pm-gold/[0.05] p-8 sm:p-10"><p className="text-[10px] font-black uppercase tracking-[0.35em] text-pm-gold">Édition {latestEvent?.edition || 2}</p><p className="mt-3 font-playfair text-4xl font-black italic sm:text-6xl">{latestEvent?.theme || 'L’Art de se Révéler'}</p><div className="mt-7 flex flex-wrap gap-x-8 gap-y-3 text-sm text-white/50"><span>{latestEvent ? new Date(latestEvent.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : '31 janvier 2026'}</span><span>{latestEvent?.location || 'Libreville, Gabon'}</span></div></div></div></div></section>
+      <section className="relative isolate min-h-[680px] overflow-hidden bg-pm-wine text-pm-ivory">
+        <div aria-hidden="true" className="absolute inset-0 -z-20">
+          <img src={latestEvent?.coverImageUrl || secondaryImage} alt="" className="h-full w-full object-cover opacity-55" />
+        </div>
+        <div aria-hidden="true" className="absolute inset-0 -z-10 bg-gradient-to-r from-pm-wine via-pm-wine/92 to-pm-wine/28" />
+        <div className="mx-auto grid min-h-[680px] max-w-[1550px] gap-12 px-5 py-20 sm:px-8 sm:py-28 lg:grid-cols-[.58fr_1.42fr] lg:items-end lg:px-12 lg:py-28">
+          <div>
+            <SectionMark index="04" label="Événement signature" />
+            <p className="mt-9 max-w-xs text-sm leading-7 text-white/58">Perfect Fashion Day réunit talents, créateurs et partenaires autour d’une vision contemporaine de la mode au Gabon.</p>
+          </div>
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-[.38em] text-pm-gold-light">Perfect Fashion Day · Édition {latestEvent?.edition || '—'}</p>
+            <h2 className="mt-6 max-w-5xl font-playfair text-[clamp(3.5rem,7.2vw,8rem)] font-semibold leading-[.84] tracking-[-.055em]">{latestEvent?.theme || 'La scène où les visions se rencontrent.'}</h2>
+            <div className="mt-10 flex flex-wrap items-center gap-x-10 gap-y-4 border-t border-white/25 pt-6 text-[9px] font-black uppercase tracking-[.18em] text-white/65 sm:text-[10px]">
+              <span>{formatDate(latestEvent?.date)}</span>
+              <span>{latestEvent?.location || 'Libreville, Gabon'}</span>
+              <Link href="/fashion-day" className="text-pm-gold-light transition hover:text-white">Découvrir ↗</Link>
+            </div>
+          </div>
+        </div>
+      </section>
 
-      {featuredArticles.length > 0 && <section className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:px-10 lg:py-28"><Header eyebrow="Magazine" title="Dernières histoires." /><div className="grid gap-5 md:grid-cols-3">{featuredArticles.map((article) => <Link href={`/magazine/${article.slug}`} key={article.slug} className="group"><div className="aspect-[4/5] overflow-hidden bg-black"><img src={article.imageUrl || fallback} alt={article.title} className="h-full w-full object-cover transition duration-700 group-hover:scale-105" /></div><p className="mt-5 text-[9px] font-black uppercase tracking-[0.3em] text-pm-gold">{article.category || 'Magazine'}</p><h3 className="mt-2 font-playfair text-2xl font-bold transition group-hover:text-pm-gold">{article.title}</h3></Link>)}</div><div className="mt-10 text-center"><Link href="/magazine" className="text-[10px] font-black uppercase tracking-[0.3em] text-pm-gold">Voir le magazine →</Link></div></section>}
+      {featuredArticles.length > 0 && (
+        <section className="bg-pm-ivory py-20 text-pm-ink sm:py-28 lg:py-36">
+          <div className="mx-auto max-w-[1550px] px-5 sm:px-8 lg:px-12">
+            <div className="flex flex-col gap-8 sm:flex-row sm:items-end sm:justify-between">
+              <div><SectionMark index="05" label="Journal" dark /><h2 className="mt-8 font-playfair text-5xl font-semibold tracking-[-.045em] sm:text-7xl">La vie de l’agence.</h2></div>
+              <Link href="/magazine" className="pmm-text-link !text-pm-ink">Tout lire <span>↗</span></Link>
+            </div>
+            <div className="mt-14 grid gap-10 md:grid-cols-3">
+              {featuredArticles.map((article, index) => (
+                <Link href={`/magazine/${article.slug}`} key={article.slug} className="group">
+                  <div className={`overflow-hidden bg-pm-ink ${index === 1 ? 'aspect-[4/5] md:-mt-7' : 'aspect-[4/4.35]'}`}>
+                    <img src={article.imageUrl || fallback} alt={article.title} className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.03]" />
+                  </div>
+                  <p className="mt-5 text-[8px] font-black uppercase tracking-[.28em] text-pm-wine">{article.category || 'Journal'} · {formatDate(article.date)}</p>
+                  <h3 className="mt-3 font-playfair text-2xl font-semibold leading-tight sm:text-3xl">{article.title}</h3>
+                  {article.excerpt && <p className="mt-3 line-clamp-2 text-sm leading-6 text-pm-ink/48">{article.excerpt}</p>}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
-      <section className="border-t border-white/10 bg-black py-20 text-center sm:py-28"><div className="mx-auto max-w-4xl px-5"><p className="text-[9px] font-black uppercase tracking-[0.4em] text-pm-gold">Perfect Models Management</p><h2 className="mt-4 font-playfair text-5xl font-black italic sm:text-7xl">Votre prochain projet commence ici.</h2><p className="mx-auto mt-6 max-w-2xl text-sm leading-7 text-white/40">Booking, casting, campagne, shooting, défilé ou collaboration : construisons une présence mémorable.</p><Link href="/contact" className="mt-9 inline-flex rounded-full bg-pm-gold px-8 py-4 text-[10px] font-black uppercase tracking-[0.25em] text-black transition hover:bg-white">Parler à l’agence</Link></div></section>
+      <section className="bg-pm-sand text-pm-ink">
+        <div className="mx-auto grid max-w-[1550px] gap-12 px-5 py-20 sm:px-8 sm:py-28 lg:grid-cols-[.62fr_1.38fr] lg:items-end lg:px-12 lg:py-32">
+          <div><SectionMark index="06" label="Collaboration" dark /><p className="mt-9 max-w-xs text-sm leading-7 text-pm-ink/52">Campagne, défilé, casting, production ou représentation : parlons de votre projet.</p></div>
+          <div>
+            <h2 className="font-playfair text-[clamp(3.5rem,7vw,7.7rem)] font-semibold leading-[.86] tracking-[-.055em]">Trouvons le visage.<br /><em className="font-normal text-pm-wine">Créons l’image.</em></h2>
+            <div className="mt-9"><Link href="/contact" className="pmm-button border-pm-ink bg-pm-ink text-pm-ivory hover:border-pm-wine hover:bg-pm-wine">Parler à l’agence <span>↗</span></Link></div>
+          </div>
+        </div>
+      </section>
     </main>
   );
 }
 
-function Header({ eyebrow, title, description }: { eyebrow: string; title: string; description?: string }) {
-  return <div className="mb-10 sm:mb-14"><p className="text-[9px] font-black uppercase tracking-[0.4em] text-pm-gold">{eyebrow}</p><h2 className="mt-2 font-playfair text-4xl font-black italic text-white sm:text-6xl">{title}</h2>{description && <p className="mt-4 max-w-2xl text-sm leading-7 text-white/40">{description}</p>}</div>;
+function SectionMark({ index, label, dark = false }: { index: string; label: string; dark?: boolean }) {
+  return (
+    <div className={`flex items-center gap-4 text-[8px] font-black uppercase tracking-[.36em] sm:text-[9px] ${dark ? 'text-pm-wine' : 'text-pm-gold'}`}>
+      <span>{index}</span>
+      <span className={`h-px w-10 ${dark ? 'bg-pm-wine/40' : 'bg-pm-gold/45'}`} />
+      <span>{label}</span>
+    </div>
+  );
 }

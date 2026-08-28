@@ -12,5 +12,5 @@ export const authClient = {
     return r.ok?{data}:{error:{message:data?.message||data?.error||'Création impossible'}};
   }},
   signOut: async()=>{await fetch('/api/auth/sign-out',{method:'POST',credentials:'include'});},
-  changePassword: async ({ newPassword }: { newPassword:string })=>{const r=await fetch('/api/auth/change-password',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({newPassword})});const data=await r.json().catch(()=>({}));return r.ok?{data}:{error:{message:data?.message||data?.error||'Modification impossible'}};},
+  changePassword: async ({ newPassword, currentPassword }: { newPassword:string; currentPassword?:string })=>{const r=await fetch('/api/auth/change-password',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({newPassword,currentPassword})});const data=await r.json().catch(()=>({}));return r.ok?{data}:{error:{message:data?.message||data?.error||'Modification impossible'}};},
 };

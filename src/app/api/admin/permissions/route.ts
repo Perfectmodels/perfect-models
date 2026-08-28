@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getCurrentAppProfile } from '@/lib/auth/profile';
-import { getCollection, setCollection } from '@/lib/app-data';
+import { privilegedSupabaseSelect, privilegedSupabaseUpsert } from '@/lib/supabase-backend';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,21 +16,20 @@ export async function GET() {
   if (!admin) return NextResponse.json({ error: 'Accès refusé.' }, { status: 403 });
 
   try {
-    const usersNode = await getCollection('users').catch(() => null);
-    const users: Record<string, any> = usersNode && typeof usersNode === 'object' && !Array.isArray(usersNode) ? usersNode as Record<string, any> : {};
-    const permNode = await getCollection('adminPermissions').catch(() => null);
-    const perms: Record<string, any> = permNode && typeof permNode === 'object' && !Array.isArray(permNode) ? permNode as Record<string, any> : {};
-
-    const adminUsers = Object.entries(users)
-      .filter(([, u]) => u?.role === 'admin' || u?.app_role === 'admin')
-      .map(([uid, u]) => ({
-        uid,
-        email: u.email || '',
-        name: u.name || u.displayName || u.email || uid,
-        identifier: u.identifier || u.matricule || '',
-        permissions: perms[uid] || {},
-        isSuper: !!(u.permissions?.all || u.permissions?.isAdmin),
-      }));
+    const rows = await privilegedSupabaseSelect('profiles?select=user_id,email,display_name,identifier,metadata&role=eq.admin&order=display_name.asc');
+    const adminUsers = (Array.isArray(rows) ? rows : []).map((row: any) => {
+      const metadata = row?.metadata && typeof row.metadata === 'object' ? row.metadata : {};
+      const basePermissions = metadata?.permissions && typeof metadata.permissions === 'object' ? metadata.permissions : {};
+      const adminPermissions = metadata?.admin_permissions && typeof metadata.admin_permissions === 'object' ? metadata.admin_permissions : {};
+      return {
+        uid: String(row.user_id || ''),
+        email: String(row.email || ''),
+        name: String(row.display_name || row.email || row.user_id || ''),
+        identifier: String(row.identifier || ''),
+        permissions: adminPermissions,
+        isSuper: Boolean(basePermissions?.all || basePermissions?.isAdmin),
+      };
+    });
 
     return NextResponse.json({ users: adminUsers });
   } catch (err: any) {
@@ -50,9 +49,17 @@ export async function PUT(request: Request) {
   }
 
   try {
-    const current = ((await getCollection('adminPermissions').catch(() => null)) || {}) as Record<string, any>;
-    current[uid] = permissions;
-    await setCollection('adminPermissions', current);
+    const rows = await privilegedSupabaseSelect(`profiles?select=user_id,role,identifier,display_name,email,model_id,must_change_password,is_active,metadata&user_id=eq.${encodeURIComponent(uid)}&limit=1`);
+    const current = Array.isArray(rows) ? rows[0] : null;
+    if (!current) return NextResponse.json({ error: 'Profil administrateur introuvable.' }, { status: 404 });
+
+    const metadata = current.metadata && typeof current.metadata === 'object' ? current.metadata : {};
+    await privilegedSupabaseUpsert('profiles', {
+      ...current,
+      metadata: { ...metadata, admin_permissions: permissions },
+      updated_at: new Date().toISOString(),
+    }, 'user_id');
+
     return NextResponse.json({ success: true });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });

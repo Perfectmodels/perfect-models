@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { collectionToArray, getCollection } from '@/lib/app-data';
 import { getCurrentAppProfile } from '@/lib/auth/profile';
+import { getFashionDayEvents } from '@/lib/public-content';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,7 +23,7 @@ export async function GET() {
   const profile = await getCurrentAppProfile();
   if (profile?.role !== 'admin') return NextResponse.json({ error: 'Non autorisé.' }, { status: 401 });
 
-  const events = collectionToArray(await getCollection('fashionDayEvents')) as any[];
+  const events = await getFashionDayEvents();
   const map = new Map<string, EntityStat>();
   const add = (type: EntityType, nameValue: unknown, edition: number, role?: unknown, images?: unknown) => {
     const name = String(nameValue || '').trim();
@@ -42,7 +42,7 @@ export async function GET() {
     map.set(key, existing);
   };
 
-  for (const event of events) {
+  for (const event of events as any[]) {
     const edition = Number(event?.edition);
     for (const stylist of Array.isArray(event?.stylists) ? event.stylists : []) add('styliste', stylist?.name, edition, 'Styliste', stylist?.images);
     for (const artist of Array.isArray(event?.artists) ? event.artists : []) add('artiste', artist?.name, edition, 'Artiste', artist?.images);

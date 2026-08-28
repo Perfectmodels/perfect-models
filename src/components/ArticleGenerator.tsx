@@ -95,23 +95,15 @@ const ArticleGenerator: React.FC<ArticleGeneratorProps> = ({ isOpen, onClose, on
         };
 
         try {
-            if (!process.env.API_KEY) {
-                throw new Error("La clé API Gemini n'est pas configurée.");
-            }
-            
-            const { GoogleGenAI } = await import('@google/genai');
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-            
-            const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: prompt,
-                config: {
-                    responseMimeType: "application/json",
-                    responseSchema: responseSchema
-                }
+            const response = await fetch('/api/ai/generate', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt, responseSchema }),
             });
-
-            const jsonResult = response.text;
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(payload?.error || 'Génération impossible.');
+            const jsonResult = payload?.text;
             if (!jsonResult) {
                 throw new Error("La génération IA n'a retourné aucun contenu exploitable.");
             }
