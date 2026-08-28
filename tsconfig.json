@@ -17,10 +17,7 @@
     "plugins": [{ "name": "next" }],
     "baseUrl": "./src",
     "paths": {
-      "@/*": ["*"],
-      "react-router-dom": ["compat/react-router-dom"],
-      "firebase/database": ["lib/legacyDataAdapter"],
-      "firebase/auth": ["lib/legacyAuthAdapter"]
+      "@/*": ["*"]
     }
   },
   "include": [
