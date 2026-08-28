@@ -1,10 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getCurrentAppProfile } from '@/lib/auth/profile';
 import { hasAdminPermission } from '@/lib/auth/admin-access';
-import { sendTransactionalTemplate } from '@/lib/email/server';
-
-const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
-const DEFAULT_FROM_EMAIL = process.env.DEFAULT_FROM_EMAIL || 'contact@perfectmodels.online';
+import { sendRawBrevoEmail, sendTransactionalTemplate } from '@/lib/email/server';
 
 function isSameOrigin(request: Request) {
   const origin = request.headers.get('origin');
@@ -16,20 +13,6 @@ function isSameOrigin(request: Request) {
 function validEmail(value: unknown) {
   const email = String(value || '').trim().toLowerCase();
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : '';
-}
-
-async function sendRaw(payload: Record<string, unknown>) {
-  const apiKey = process.env.BREVO_API_KEY;
-  if (!apiKey) throw Object.assign(new Error('BREVO_API_KEY non configurée.'), { status: 503 });
-  const response = await fetch(BREVO_API_URL, {
-    method: 'POST',
-    headers: { accept: 'application/json', 'content-type': 'application/json', 'api-key': apiKey },
-    body: JSON.stringify(payload),
-    cache: 'no-store',
-  });
-  const body = await response.json().catch(() => ({}));
-  if (!response.ok) throw Object.assign(new Error(body?.message || `Brevo error ${response.status}`), { status: response.status });
-  return body;
 }
 
 export async function POST(request: Request) {
@@ -85,16 +68,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Contenu email invalide.' }, { status: 400 });
     }
 
-    const result = await sendRaw({
-      sender: { name: 'Perfect Models Management', email: DEFAULT_FROM_EMAIL },
+    const result = await sendRawBrevoEmail({
       to: recipients,
       subject: String(subject || 'Perfect Models Management').trim().slice(0, 180),
       htmlContent,
-      ...(replyTo && validEmail(replyTo.email)
-        ? { replyTo: { email: validEmail(replyTo.email), name: String(replyTo.name || '').slice(0, 120) || undefined } }
-        : {}),
+      replyTo: replyTo && validEmail(replyTo.email)
+        ? { email: validEmail(replyTo.email), name: String(replyTo.name || '').slice(0, 120) || undefined }
+        : undefined,
     });
-    return NextResponse.json({ ok: true, messageId: result?.messageId });
+    return NextResponse.json({ ok: true, messageId: result.messageId });
   } catch (error: any) {
     console.error('[email]', error);
     return NextResponse.json(
