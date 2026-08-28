@@ -6,7 +6,7 @@ interface ModelCardProps {
   model: Model;
 }
 
-const ModelCard: React.FC<ModelCardProps> = ({ model }) => {
+export default function ModelCard({ model }: ModelCardProps) {
   const image = model.imageUrl || '/images/grace-elsa.jpg';
 
   return (
@@ -36,6 +36,4 @@ const ModelCard: React.FC<ModelCardProps> = ({ model }) => {
       </Link>
     </article>
   );
-};
-
-export default ModelCard;
+}
