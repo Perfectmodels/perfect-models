@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import HomePage from '@/app/home/HomePage';
+import HomeExperience from '@/components/public/HomeExperience';
 import JsonLd from '@/components/JsonLd';
 import { getFashionDayEvents, getPublicArticles, getPublicModels, getPublicServices } from '@/lib/public-content';
 import { buildPageMetadata, MARKETING_PAGES, SITE_URL } from '@/lib/seo';
@@ -33,11 +33,11 @@ export default async function Page() {
   return (
     <>
       <JsonLd data={organizationSchema} />
-      <HomePage
-        models={models.slice(0, 12)}
-        services={services.slice(0, 8)}
+      <HomeExperience
+        models={models.slice(0, 18)}
+        services={services.slice(0, 10)}
         events={events}
-        articles={articles.slice(0, 6)}
+        articles={articles.slice(0, 8)}
       />
     </>
   );
