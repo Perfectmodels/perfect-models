@@ -4,11 +4,16 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import type { Model } from '@/types';
 
-type Props = { models: Model[] };
+type DirectoryModel = Pick<
+  Model,
+  'id' | 'name' | 'gender' | 'location' | 'experience' | 'journey' | 'categories' | 'level' | 'imageUrl' | 'height'
+>;
+
+type Props = { models: DirectoryModel[] };
 
 export default function ModelsDirectory({ models }: Props) {
   const [query, setQuery] = useState('');
-  const [gender, setGender] = useState<'Tous' | Model['gender']>('Tous');
+  const [gender, setGender] = useState<'Tous' | DirectoryModel['gender']>('Tous');
   const [level, setLevel] = useState<'Tous' | 'Pro' | 'Débutant'>('Tous');
   const [category, setCategory] = useState('Toutes');
   const categories = useMemo(() => Array.from(new Set(models.flatMap((m) => m.categories || []))).sort(), [models]);
