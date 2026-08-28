@@ -6,7 +6,6 @@ import Header, { Breadcrumb } from './Header';
 import Footer from './Footer';
 import { AnnouncementMarquee } from './Marquee';
 import AdminLayout from '../admin/AdminLayout';
-import PublicPageHero from '../public/PublicPageHero';
 
 type RuntimeData = {
   navLinks?: Array<{ path: string; label: string; inFooter?: boolean; footerLabel?: string }>;
@@ -25,7 +24,6 @@ const Layout: React.FC<{ children: React.ReactNode; runtimeData?: RuntimeData | 
       <AnnouncementMarquee />
       <Header />
       <main className="flex-grow">
-        <PublicPageHero pathname={pathname} />
         <Breadcrumb />
         {children}
       </main>
