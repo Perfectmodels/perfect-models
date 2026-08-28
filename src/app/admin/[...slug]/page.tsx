@@ -1,5 +1,5 @@
 import { notFound, redirect } from 'next/navigation';
-import SupabaseResourceManager from '@/components/admin/SupabaseResourceManager';
+import PaginatedResourceManager from '@/components/admin/PaginatedResourceManager';
 import { getCurrentAppProfile } from '@/lib/auth/profile';
 import { RESOURCE_DEFINITIONS, type ResourceName } from '@/lib/resource-registry';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
@@ -49,6 +49,8 @@ const ROUTES: Record<string, ResourceName> = {
   'settings/profiles': 'profiles',
 };
 
+const INITIAL_PAGE_SIZE = 25;
+
 export default async function AdminResourceRoute({ params }: { params: Promise<{ slug: string[] }> }) {
   const profile = await getCurrentAppProfile();
   if (!profile) redirect('/login?next=/admin');
@@ -62,19 +64,20 @@ export default async function AdminResourceRoute({ params }: { params: Promise<{
 
   const definition = RESOURCE_DEFINITIONS[resource];
   const supabase = createSupabaseAdminClient() as any;
-  let query = supabase.from(definition.table).select('*').limit(1000);
-  if (definition.orderBy) query = query.order(definition.orderBy, { ascending: false });
-  const { data, error } = await query;
+  let query = supabase.from(definition.table).select('*', { count: 'exact' });
+  if (definition.orderBy) query = query.order(definition.orderBy, { ascending: false, nullsFirst: false });
+  const { data, error, count } = await query.range(0, INITIAL_PAGE_SIZE - 1);
   if (error) throw new Error(`Lecture Supabase ${definition.table}: ${error.message}`);
 
   return (
-    <SupabaseResourceManager
+    <PaginatedResourceManager
       resource={resource}
       title={definition.title}
       primaryKey={definition.primaryKey}
       columns={definition.columns}
       fields={definition.fields}
       initialRows={Array.isArray(data) ? data : []}
+      initialTotal={Number(count || 0)}
       canCreate={definition.canCreate}
       canDelete={definition.canDelete}
     />
