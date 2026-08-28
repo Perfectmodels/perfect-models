@@ -49,7 +49,7 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export const viewport: Viewport = { width: 'device-width', initialScale: 1, themeColor: '#0B0B0D', colorScheme: 'dark' };
+export const viewport: Viewport = { width: 'device-width', initialScale: 1, themeColor: '#FFF9F2', colorScheme: 'light' };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const [config, initialData] = await Promise.all([getSiteRuntimeConfig(), getPublicAppState()]);

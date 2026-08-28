@@ -16,11 +16,11 @@ type RuntimeData = {
 const Layout: React.FC<{ children: React.ReactNode; runtimeData?: RuntimeData | null }> = ({ children, runtimeData }) => {
   const pathname = usePathname() || '/';
 
-  if (pathname.startsWith('/admin')) return <AdminLayout>{children}</AdminLayout>;
+  if (pathname.startsWith('/admin') || pathname.startsWith('/manager')) return <AdminLayout>{children}</AdminLayout>;
   if (pathname.startsWith('/login') || pathname.startsWith('/auth/')) return <>{children}</>;
 
   return (
-    <div className="min-h-screen bg-pm-dark font-montserrat flex flex-col">
+    <div className="min-h-screen bg-pm-ivory font-montserrat flex flex-col">
       <AnnouncementMarquee />
       <Header />
       <main className="flex-grow">

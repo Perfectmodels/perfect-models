@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getCurrentAppProfile } from '@/lib/auth/profile';
 import { RESOURCE_DEFINITIONS, isResourceName } from '@/lib/resource-registry';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
+import { hasResourcePermission } from '@/lib/auth/admin-access';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,6 +15,9 @@ async function authorize(resource: string) {
   }
   if (!isResourceName(resource)) {
     return { error: NextResponse.json({ error: 'Ressource inconnue.' }, { status: 404 }) } as const;
+  }
+  if (!hasResourcePermission(profile, resource)) {
+    return { error: NextResponse.json({ error: 'Permission manager insuffisante.' }, { status: 403 }) } as const;
   }
   return { profile, definition: RESOURCE_DEFINITIONS[resource] } as const;
 }

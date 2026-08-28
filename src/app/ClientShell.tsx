@@ -11,7 +11,7 @@ type RuntimeData = {
 
 function ShellFallback() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-pm-dark">
+    <div className="flex min-h-screen items-center justify-center bg-pm-ivory">
       <img src="/logo.svg" alt="PMM" className="h-24 w-24 animate-pulse" />
     </div>
   );

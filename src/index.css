@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 @layer base {
-  html { @apply bg-pm-dark scroll-smooth; }
-  body { @apply bg-pm-dark text-pm-off-white font-montserrat antialiased selection:bg-pm-wine selection:text-pm-ivory overflow-x-hidden; }
+  html { @apply bg-pm-ivory scroll-smooth; }
+  body { @apply bg-pm-ivory text-pm-ink font-montserrat antialiased selection:bg-pm-coral selection:text-white overflow-x-hidden; }
   h1, h2, h3, h4 { @apply font-playfair leading-[1.02] tracking-tight; }
   img { image-rendering: auto; }
   a, button, input, textarea, select { -webkit-tap-highlight-color: transparent; }
@@ -13,16 +13,16 @@
 
 @layer components {
   .page-container { @apply max-w-[1700px] mx-auto px-5 sm:px-8 lg:px-12 xl:px-16 py-16 sm:py-24 lg:py-32; }
-  .section-label { @apply text-pm-gold text-[9px] font-black tracking-[0.38em] sm:tracking-[0.45em] uppercase mb-4 sm:mb-7 block; }
+  .section-label { @apply text-pm-wine text-[9px] font-black tracking-[0.38em] sm:tracking-[0.45em] uppercase mb-4 sm:mb-7 block; }
 
   .btn-premium { @apply relative overflow-hidden px-6 sm:px-10 lg:px-12 py-4 sm:py-5 font-bold uppercase tracking-[0.2em] sm:tracking-[0.28em] text-[9px] sm:text-[10px] transition-all duration-500 border border-pm-gold/45 hover:border-pm-gold hover:text-pm-dark z-10 inline-block text-center cursor-pointer; }
   .btn-premium::before { content: ''; @apply absolute inset-0 bg-pm-gold translate-y-full transition-transform duration-500 ease-[cubic-bezier(0.19,1,0.22,1)] -z-10; }
   .btn-premium:hover::before { @apply translate-y-0; }
 
-  .glass-card { @apply bg-white/[0.035] backdrop-blur-2xl border border-white/10; }
+  .glass-card { @apply bg-white/75 backdrop-blur-2xl border border-pm-ink/10 shadow-[0_24px_70px_rgba(91,46,37,.08)]; }
   .gold-gradient-text { @apply text-pm-gold-light; }
-  .admin-label { @apply block text-[10px] font-black text-pm-gold/60 uppercase tracking-[0.2em] mb-2; }
-  .admin-input, .admin-textarea, .admin-select { @apply w-full bg-transparent border-b border-white/10 py-3 px-0 text-pm-off-white transition-all duration-500 placeholder:text-white/10 focus:outline-none focus:border-pm-gold; }
+  .admin-label { @apply block text-[10px] font-black text-pm-wine/70 uppercase tracking-[0.2em] mb-2; }
+  .admin-input, .admin-textarea, .admin-select { @apply w-full bg-transparent border-b border-pm-ink/15 py-3 px-0 text-pm-ink transition-all duration-500 placeholder:text-pm-ink/25 focus:outline-none focus:border-pm-coral; }
   .admin-textarea { @apply min-h-[100px] resize-none; }
   .contact-input { @apply w-full bg-white/5 border border-white/10 px-4 py-3 text-pm-off-white placeholder:text-white/20 transition-all duration-300 focus:outline-none focus:border-pm-gold focus:bg-white/[.08]; }
   .contact-input option { @apply bg-pm-dark text-pm-off-white; }
@@ -36,6 +36,12 @@
   .editorial-kicker { @apply text-[8px] font-black uppercase tracking-[.34em] sm:text-[9px]; }
   .editorial-rule { @apply border-t border-current/15; }
   .editorial-panel { @apply border border-current/10 bg-transparent; }
+
+  .control-card { @apply rounded-[1.6rem] border border-pm-ink/[.08] bg-white/80 p-5 shadow-[0_18px_55px_rgba(91,46,37,.07)] sm:p-6; }
+  .control-kicker { @apply text-[9px] font-extrabold uppercase tracking-[.24em] text-pm-wine/65; }
+  .control-button { @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-pm-ink px-5 py-3 text-[9px] font-black uppercase tracking-[.18em] text-white transition hover:-translate-y-0.5 hover:bg-pm-wine; }
+  .control-button--soft { @apply bg-pm-peach text-pm-wine hover:bg-pm-coral-soft hover:text-pm-ink; }
+  .warm-grid { background-image: linear-gradient(rgba(37,27,32,.055) 1px, transparent 1px), linear-gradient(90deg, rgba(37,27,32,.055) 1px, transparent 1px); background-size: 34px 34px; }
 }
 
 @layer utilities {
@@ -56,3 +62,10 @@ a[href="/admin/news"] { display: none !important; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
+
+.admin-messaging [class*="border-white"] { border-color: rgba(37, 27, 32, .1) !important; }
+.admin-messaging [class*="bg-white"] { background-color: rgba(255, 255, 255, .72) !important; }
+.admin-messaging [class*="text-white"] { color: rgba(37, 27, 32, .62) !important; }
+.admin-messaging input,
+.admin-messaging textarea { background: rgba(255, 249, 242, .9) !important; color: #251b20 !important; border: 1px solid rgba(37, 27, 32, .1); }
+.admin-messaging section { border-radius: 1.7rem !important; box-shadow: 0 18px 55px rgba(91, 46, 37, .06); }

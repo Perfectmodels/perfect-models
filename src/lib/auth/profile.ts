@@ -43,14 +43,16 @@ function objectValue(value: unknown) {
   return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, any> : {};
 }
 
-async function delegatedPermissions(role: AppRole, uid: string) {
+async function delegatedPermissions(role: AppRole, uid: string, metadata?: Record<string, any>) {
   if (role !== 'admin' && role !== 'manager') return undefined;
   const rows = await privilegedSupabaseSelect(
     `admin_permissions?permission_key=eq.${encodeURIComponent(uid)}&select=value&limit=1`,
   ).catch(() => []);
   const value = Array.isArray(rows) ? rows[0]?.value : null;
-  return value && typeof value === 'object' && !Array.isArray(value)
-    ? value as Record<string, boolean>
+  if (value && typeof value === 'object' && !Array.isArray(value)) return value as Record<string, boolean>;
+  const fallback = metadata?.admin_permissions;
+  return fallback && typeof fallback === 'object' && !Array.isArray(fallback)
+    ? fallback as Record<string, boolean>
     : undefined;
 }
 
@@ -91,7 +93,7 @@ export async function findProfile(user: unknown): Promise<AppSessionProfile | nu
     status: normalized.is_active === false ? 'inactive' : 'active',
     mustChangePassword: Boolean(normalized.must_change_password || app.must_change_password),
     permissions: resolvedPermissions,
-    adminPermissions: await delegatedPermissions(role, uid),
+    adminPermissions: await delegatedPermissions(role, uid, metadata),
     contestId: metadata.contestId ? String(metadata.contestId) : null,
   };
 }

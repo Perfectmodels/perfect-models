@@ -3,6 +3,7 @@ import SupabaseResourceManager from '@/components/admin/SupabaseResourceManager'
 import { getCurrentAppProfile } from '@/lib/auth/profile';
 import { RESOURCE_DEFINITIONS, type ResourceName } from '@/lib/resource-registry';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
+import { hasResourcePermission } from '@/lib/auth/admin-access';
 
 export const dynamic = 'force-dynamic';
 
@@ -57,6 +58,7 @@ export default async function AdminResourceRoute({ params }: { params: Promise<{
   const key = (slug || []).join('/');
   const resource = ROUTES[key];
   if (!resource) notFound();
+  if (!hasResourcePermission(profile, resource)) redirect(profile.role === 'manager' ? '/manager' : '/profil');
 
   const definition = RESOURCE_DEFINITIONS[resource];
   const supabase = createSupabaseAdminClient() as any;

@@ -16,7 +16,7 @@ export async function GET() {
   if (!admin) return NextResponse.json({ error: 'Accès refusé.' }, { status: 403 });
 
   try {
-    const rows = await privilegedSupabaseSelect('profiles?select=user_id,email,display_name,identifier,metadata&role=eq.admin&order=display_name.asc');
+    const rows = await privilegedSupabaseSelect('profiles?select=user_id,email,display_name,identifier,role,metadata&role=in.(admin,manager)&order=display_name.asc');
     const adminUsers = (Array.isArray(rows) ? rows : []).map((row: any) => {
       const metadata = row?.metadata && typeof row.metadata === 'object' ? row.metadata : {};
       const basePermissions = metadata?.permissions && typeof metadata.permissions === 'object' ? metadata.permissions : {};
@@ -59,6 +59,11 @@ export async function PUT(request: Request) {
       metadata: { ...metadata, admin_permissions: permissions },
       updated_at: new Date().toISOString(),
     }, 'user_id');
+    await privilegedSupabaseUpsert('admin_permissions', {
+      permission_key: uid,
+      value: permissions,
+      updated_at: new Date().toISOString(),
+    }, 'permission_key');
 
     return NextResponse.json({ success: true });
   } catch (err: any) {

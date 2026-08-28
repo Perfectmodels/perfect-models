@@ -167,7 +167,7 @@ export default function AdminMessagingPage() {
 
   const formatDate = (value?: string | null) => value ? new Date(value).toLocaleString('fr-FR') : '';
 
-  return <div className="min-h-screen bg-[#080808] p-4 text-white md:p-8">
+  return <div className="admin-messaging p-1 text-pm-ink md:p-3">
     <div className="mx-auto max-w-7xl">
       <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div><p className="text-[11px] uppercase tracking-[.3em] text-[#c9a84c]">Communication · Supabase</p><h1 className="mt-2 text-3xl font-semibold">Messagerie</h1><p className="mt-2 text-sm text-white/50">Messages, campagnes et contacts sont stockés dans les tables normalisées Supabase.</p></div>
