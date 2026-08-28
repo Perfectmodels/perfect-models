@@ -24,22 +24,11 @@
     "next-env.d.ts",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
-    "src/**/*.ts",
-    "src/**/*.tsx",
+    "src/app/**/*.ts",
+    "src/app/**/*.tsx",
+    "src/proxy.ts",
     "*.ts",
     "*.mjs"
   ],
-  "exclude": [
-    "node_modules",
-    "docs",
-    "resources",
-    "src/__tests__/**",
-    "src/components/AIAssistantIcon.tsx",
-    "src/components/ProtectedRoute.tsx",
-    "src/components/ModelCard.tsx",
-    "src/components/ServiceCard.tsx",
-    "src/components/ModelCrossLinks.tsx",
-    "src/components/BookingForm.tsx",
-    "src/components/GalleryPage.tsx"
-  ]
+  "exclude": ["node_modules", "docs", "resources", "src/__tests__/**"]
 }

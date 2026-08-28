@@ -204,6 +204,7 @@ export async function POST(request: Request) {
     is_public: existingModel?.is_public ?? false,
     is_active: true,
     status: 'active',
+    claim_status: 'invited',
     raw_data: {
       ...(existingModel?.raw_data || {}),
       ...raw,
@@ -227,20 +228,6 @@ export async function POST(request: Request) {
     metadata: { permissions, source: 'casting', casting_application_id: applicationId },
     updated_at: now,
   }, 'user_id');
-
-  await privilegedSupabaseUpsert('model_account_claims', {
-    model_id: modelId,
-    auth_user_id: userId,
-    agency_identifier: username,
-    full_name: fullName,
-    email,
-    phone: application.phone || raw.phone || null,
-    status: 'invited',
-    verification_method: 'casting_approval',
-    activation_email_status: 'sent_by_supabase_auth',
-    metadata: { casting_application_id: applicationId },
-    updated_at: now,
-  }, 'model_id');
 
   await privilegedSupabaseUpsert('casting_applications', {
     ...application,
