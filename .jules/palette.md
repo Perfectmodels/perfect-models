@@ -1,0 +1,3 @@
+## 2025-07-25 - Improve Loading Component Screen Reader Accessibility
+**Learning:** Dynamic loading components need to be announced to screen readers. Previously, the loading component only relied on visual cues (an animated image), leaving visually impaired users without feedback that an operation was in progress. Screen readers might have read the alt text "PMM" without context.
+**Action:** Always add `role="status"` and `aria-live="polite"` to the container of dynamic loading components, explicitly hide decorative visual spinners using `aria-hidden="true"`, and provide a visually hidden fallback text (e.g., using `sr-only`).
