@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { buildPageMetadata, MARKETING_PAGES } from '@/lib/seo';
 import { getPublicArticles } from '@/lib/public-content';
 
-export const metadata = buildPageMetadata(MARKETING_PAGES.blog);
+export const metadata = buildPageMetadata({ ...MARKETING_PAGES.magazine, path: '/blog' });
 export const revalidate = 60;
 
 function formatDate(value?: string) {
