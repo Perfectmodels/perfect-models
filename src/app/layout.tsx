@@ -1,9 +1,25 @@
 import type { Metadata, Viewport } from 'next';
+import { Cormorant_Garamond, Manrope } from 'next/font/google';
 import '../index.css';
 import ClientShell from './ClientShell';
 import JsonLd from '@/components/JsonLd';
 import { absoluteRuntimeUrl, buildOrganizationJsonLd, buildWebsiteJsonLd, getSiteRuntimeConfig } from '@/lib/site-runtime';
 import { getPublicAppState } from '@/lib/public-app-state';
+
+const displayFont = Cormorant_Garamond({
+  subsets: ['latin'],
+  weight: ['500', '600', '700'],
+  style: ['normal', 'italic'],
+  display: 'swap',
+  variable: '--font-pmm-display',
+});
+
+const sansFont = Manrope({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
+  display: 'swap',
+  variable: '--font-pmm-sans',
+});
 
 const googleVerification = process.env.GOOGLE_SITE_VERIFICATION || process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || undefined;
 
@@ -54,13 +70,8 @@ export const viewport: Viewport = { width: 'device-width', initialScale: 1, them
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const [config, initialData] = await Promise.all([getSiteRuntimeConfig(), getPublicAppState()]);
   return (
-    <html lang={config.language}>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-      </head>
-      <body>
+    <html lang={config.language} className={`${displayFont.variable} ${sansFont.variable}`}>
+      <body className="font-montserrat">
         <JsonLd data={[buildOrganizationJsonLd(config), buildWebsiteJsonLd(config)]} />
         <noscript>JavaScript est nécessaire pour les fonctions interactives de ce site.</noscript>
         <ClientShell initialData={initialData}>{children}</ClientShell>
