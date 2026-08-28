@@ -1,7 +1,12 @@
 import { createSupabaseServerClient } from '../supabase/server';
 
 export const auth = {
-  async getSession() {
+  /**
+   * Vérifie la session auprès de Supabase Auth et renvoie un utilisateur frais.
+   * Les décisions d'autorisation serveur ne doivent pas s'appuyer sur un objet
+   * de session client non revalidé.
+   */
+  async getVerifiedUser() {
     const supabase = await createSupabaseServerClient();
     const { data, error } = await supabase.auth.getUser();
     if (error || !data.user) return { data: null, error: error || null };
