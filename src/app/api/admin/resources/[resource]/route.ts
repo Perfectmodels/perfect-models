@@ -23,17 +23,64 @@ async function authorize(resource: string) {
   return { profile, resource, definition: RESOURCE_DEFINITIONS[resource] } as const;
 }
 
-export async function GET(_request: Request, context: Context) {
+function integerParam(value: string | null, fallback: number, min: number, max: number) {
+  const parsed = Number.parseInt(String(value || ''), 10);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.min(max, Math.max(min, parsed));
+}
+
+function safeSearch(value: string | null) {
+  return String(value || '').replace(/[,%()]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120);
+}
+
+export async function GET(request: Request, context: Context) {
   const { resource } = await context.params;
   const access = await authorize(resource);
   if ('error' in access) return access.error;
 
+  const url = new URL(request.url);
+  const page = integerParam(url.searchParams.get('page'), 1, 1, 100000);
+  const pageSize = integerParam(url.searchParams.get('pageSize'), 25, 15, 100);
+  const q = safeSearch(url.searchParams.get('q'));
+  const status = String(url.searchParams.get('status') || '').trim().slice(0, 80);
+  const requestedSort = String(url.searchParams.get('sort') || '');
+  const direction = url.searchParams.get('order') === 'asc' ? 'asc' : 'desc';
+
+  const definition = access.definition;
+  const allowedSort = new Set<string>([definition.orderBy, ...definition.columns]);
+  const sort = allowedSort.has(requestedSort) ? requestedSort : definition.orderBy;
+  const hasStatus = definition.fields.some((field) => field.name === 'status');
+  const searchable = definition.fields
+    .filter((field) => ['text', 'email', 'tel', 'url', 'textarea', 'select', 'tags'].includes(field.type))
+    .map((field) => field.name)
+    .filter((name) => name !== 'id' && !name.endsWith('_id') && !name.endsWith('_at'))
+    .slice(0, 10);
+
   const supabase = createSupabaseAdminClient() as any;
-  let query = supabase.from(access.definition.table).select('*').limit(1000);
-  if (access.definition.orderBy) query = query.order(access.definition.orderBy, { ascending: false });
-  const { data, error } = await query;
+  let query = supabase.from(definition.table).select('*', { count: 'exact' });
+
+  if (q && searchable.length) {
+    query = query.or(searchable.map((column) => `${column}.ilike.%${q}%`).join(','));
+  }
+  if (status && hasStatus) query = query.eq('status', status);
+  if (sort) query = query.order(sort, { ascending: direction === 'asc', nullsFirst: false });
+
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+  const { data, error, count } = await query.range(from, to);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ data: data || [], resource, definition: access.definition }, { headers: { 'Cache-Control': 'no-store' } });
+
+  const total = Number(count || 0);
+  return NextResponse.json({
+    data: data || [],
+    resource,
+    pagination: {
+      page,
+      pageSize,
+      total,
+      totalPages: Math.max(1, Math.ceil(total / pageSize)),
+    },
+  }, { headers: { 'Cache-Control': 'no-store' } });
 }
 
 export async function POST(request: Request, context: Context) {
