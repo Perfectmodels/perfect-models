@@ -1,7 +1,5 @@
 # Checklist de validation web PMM
 
-Ce document remplace l’ancien guide de test Android/Capacitor. Les projets natifs Android/iOS ne font plus partie de l’architecture active.
-
 ## 1. Installation et compilation
 
 ```bash
@@ -20,7 +18,7 @@ Vérifier au minimum :
 - `/agence`
 - `/mannequins`
 - `/fashion-day`
-- `/magazine`
+- `/blog`
 - `/services`
 - `/galerie`
 - `/casting`
@@ -29,72 +27,49 @@ Vérifier au minimum :
 
 Contrôler desktop, tablette et mobile.
 
-## 3. Authentification
+## 3. Authentification Supabase
 
-Tester avec des comptes prévus à cet effet :
+Tester les rôles disponibles : admin, manager, mannequin, jury et enregistrement. Vérifier connexion, renouvellement de session, déconnexion, redirections et protections serveur.
 
-- admin ;
-- mannequin ;
-- jury ;
-- staff enregistrement si nécessaire.
-
-Vérifier les redirections et l’interdiction d’accès aux pages d’administration pour les rôles non autorisés.
-
-## 4. Données Neon
+## 4. Données Supabase
 
 - chargement du contenu public ;
-- sauvegarde d’un changement admin ;
-- actualisation de la page après sauvegarde ;
+- CRUD admin sur les tables normalisées ;
+- actualisation après sauvegarde ;
+- casting et Fashion Day ;
+- Classroom et forum ;
 - absence de données sensibles dans les réponses publiques ;
-- absence de mot de passe en clair dans les collections applicatives.
+- absence d’appel à `app_collections`, `/api/data` ou à une table Legacy.
 
-## 5. Médias ImgBB et Vercel Blob
+## 5. Médias et emails
 
-- upload ImgBB d’une image ;
+- upload ImgBB ;
 - affichage après rechargement ;
-- upload ImgBB d’une cover Fashion Day ;
-- upload d’un spot vidéo ;
-- progression d’upload ;
-- lecture vidéo ;
-- test multipart si une vidéo de plus de 100 Mo doit être utilisée.
+- enregistrement médiathèque ;
+- cover/galerie Fashion Day ;
+- vidéo Blob lorsque nécessaire ;
+- email transactionnel Brevo et journalisation.
 
 ## 6. Perfect Fashion Day
 
-Créer une édition de test et vérifier :
-
-- impossibilité de sauvegarder sans cover ;
-- cover propre à l’édition ;
-- thème/date/lieu ;
-- spot YouTube ;
-- spot fichier Blob ;
-- galerie ;
-- stylistes ;
-- artistes ;
-- mannequins vedettes ;
-- partenaires ;
-- changement d’édition sur la page publique ;
-- changement simultané de cover et de contenu.
-
-Supprimer l’édition de test après validation.
+Tester au minimum : thème/date/lieu, cover, vidéo, galerie, stylistes, artistes, partenaires et changement d’édition côté public.
 
 ## 7. Preview Vercel
 
-Avant production :
-
-- vérifier le statut du déploiement ;
-- lire les logs de build en cas d’échec ;
-- tester la Preview réelle ;
-- contrôler les variables d’environnement Preview ;
-- ne pas pousser vers `main` tant que la validation n’est pas complète.
+- Framework Preset = Next.js ;
+- variables Supabase disponibles ;
+- build vert ;
+- logs sans erreur bloquante ;
+- test réel de la Preview ;
+- aucun déploiement basé sur Vite.
 
 ## 8. Critères de validation
 
-Le lot est prêt pour production uniquement si :
+Le lot est prêt uniquement si :
 
-- le build est vert ;
-- les principales pages répondent ;
-- l’authentification fonctionne ;
-- les écritures Neon fonctionnent ;
-- les images ImgBB et les vidéos Blob fonctionnent ;
-- le module Fashion Day fonctionne de bout en bout ;
-- aucune régression bloquante n’est constatée.
+- typecheck et build sont verts ;
+- les pages principales répondent ;
+- Supabase Auth fonctionne ;
+- les écritures Supabase fonctionnent ;
+- les médias et emails fonctionnent ;
+- aucune dépendance Firebase/Vite/React Router ni ancien endpoint `/api/data` n’est nécessaire au runtime.
