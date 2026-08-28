@@ -1,2 +1,5 @@
-import LegacyRoute from '@/app/_legacy/LegacyRoute';
-export default function Page() { return <LegacyRoute component="AdvancedTraining" role="student" />; }
+import { redirect } from 'next/navigation';
+
+export default function Page() {
+  redirect('/formations');
+}
