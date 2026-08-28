@@ -34,19 +34,6 @@ export function hasSupabasePrivilegedKey() { return Boolean(SUPABASE_URL && SECR
 export function supabaseConfigured() { return Boolean(SUPABASE_URL && PUBLISHABLE_KEY && SECRET_KEY); }
 export function supabasePublicConfigured() { return Boolean(SUPABASE_URL && PUBLISHABLE_KEY); }
 
-export async function getAppCollection(key: string) {
-  const rows = await rest(`app_collections?key=eq.${encodeURIComponent(key)}&select=payload&limit=1`, {}, true);
-  return Array.isArray(rows) && rows.length ? rows[0]?.payload ?? null : null;
-}
-
-export async function setAppCollection(key: string, payload: unknown) {
-  await rest('app_collections?on_conflict=key', {
-    method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
-    body: JSON.stringify({ key, payload: payload ?? null, updated_at: new Date().toISOString() }),
-  }, true);
-  return true;
-}
-
 export async function getSupabasePublicModels() {
   const [models, images] = await Promise.all([
     rest('public_models?select=*&order=name.asc', {}, false),
