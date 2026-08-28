@@ -29,6 +29,7 @@ export type ResourceDefinition = {
   fields: readonly CrudField[];
   canCreate?: boolean;
   canDelete?: boolean;
+  generatePrimaryKey?: boolean;
 };
 
 const STATUS_OPTIONS: CrudFieldOption[] = [
@@ -118,7 +119,7 @@ function resource(
   formNames: readonly string[],
   required: readonly string[] = [],
   overrides: Record<string, Partial<CrudField>> = {},
-  options: Pick<ResourceDefinition, 'canCreate' | 'canDelete'> = {},
+  options: Pick<ResourceDefinition, 'canCreate' | 'canDelete' | 'generatePrimaryKey'> = {},
 ): ResourceDefinition {
   return { table, primaryKey, title, orderBy, columns, fields: formFields(formNames, required, overrides), ...options };
 }
@@ -154,7 +155,7 @@ export const RESOURCE_DEFINITIONS = defineResources({
   services: resource('services', 'id', 'Services', 'position', ['title', 'slug', 'category', 'is_active', 'position'], ['title', 'slug', 'category', 'description', 'details', 'icon', 'button_text', 'button_link', 'is_active', 'position'], ['title', 'slug'], { is_active: active, position: { defaultValue: 0 } }),
   magazine: resource('blog_posts', 'id', 'Magazine', 'created_at', ['title', 'slug', 'category', 'status', 'published_at'], ['title', 'slug', 'excerpt', 'content', 'cover_image_url', 'author_name', 'category', 'tags', 'status', 'published_at'], ['title', 'slug', 'content'], { status: { defaultValue: 'draft' } }),
   gallery: resource('media_library', 'id', 'Médiathèque', 'created_at', ['file_name', 'provider', 'category', 'url', 'created_at'], ['file_name', 'url', 'provider', 'provider_key', 'pathname', 'mime_type', 'size_bytes', 'category', 'source', 'alt_text', 'metadata'], ['file_name', 'url'], { metadata: emptyObject }),
-  mailing: resource('mailing_contacts', 'id', 'Mailing', 'created_at', ['name', 'email', 'category', 'created_at'], ['name', 'email', 'category'], ['email']),
+  mailing: resource('mailing_contacts', 'id', 'Mailing', 'created_at', ['name', 'email', 'category', 'created_at'], ['name', 'email', 'category'], ['email'], {}, { generatePrimaryKey: true }),
   messages: resource('messages', 'id', 'Messagerie', 'created_at', ['direction', 'channel', 'recipient', 'subject', 'status', 'created_at'], ['direction', 'channel', 'recipient', 'sender', 'subject', 'body', 'status', 'model_id', 'provider_message_id', 'metadata'], ['direction', 'body'], { direction: { type: 'select', options: [{ label: 'Entrant', value: 'inbound' }, { label: 'Sortant', value: 'outbound' }] }, status: { defaultValue: 'new' }, metadata: emptyObject }),
   notifications: resource('notifications', 'id', 'Notifications', 'created_at', ['type', 'title', 'body', 'audience_role', 'is_read', 'created_at'], ['recipient_user_id', 'audience_role', 'type', 'title', 'body', 'href', 'is_read', 'read_at', 'metadata'], ['title', 'body'], { is_read: inactive, metadata: emptyObject }),
   absences: resource('absences', 'id', 'Absences', 'created_at', ['model_id', 'event_date', 'reason', 'status', 'created_at'], ['model_id', 'event_date', 'reason', 'status', 'notes'], ['model_id', 'event_date'], { event_date: { type: 'date' }, status: { defaultValue: 'pending' } }),

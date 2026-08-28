@@ -53,6 +53,9 @@ export async function POST(request: Request, context: Context) {
     const message = error instanceof CrudValidationError ? error.message : 'Formulaire invalide.';
     return NextResponse.json({ error: message }, { status: 400 });
   }
+  if (access.definition.generatePrimaryKey && !row[access.definition.primaryKey]) {
+    row[access.definition.primaryKey] = crypto.randomUUID();
+  }
 
   const supabase = createSupabaseAdminClient() as any;
   const { data, error } = await supabase.from(access.definition.table).insert(row).select('*').single();
