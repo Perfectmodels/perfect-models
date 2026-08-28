@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getCurrentAppProfile } from '@/lib/auth/profile';
+import { readCourseProgress } from '@/lib/classroom-progress';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 
 export const dynamic = 'force-dynamic';
@@ -20,7 +21,7 @@ export default async function ClassroomPage() {
     supabase.from('classroom_requests').select('id,request_type,status,message,created_at').eq('model_id', profile.profileId).order('created_at', { ascending: false }).limit(5),
   ]);
   const lessons = Array.isArray(courses.data) ? courses.data : [];
-  const progressMap = new Map<string, number>((progress.data || []).map((row: any) => [String(row.course_id), Number(row.progress || (row.completed_at ? 100 : 0))]));
+  const progressMap = new Map<string, number>((progress.data || []).map((row: any) => [String(row.course_id), readCourseProgress(row)]));
   const average = lessons.length ? Math.round(lessons.reduce((sum: number, lesson: any) => sum + Math.min(100, progressMap.get(lesson.id) || 0), 0) / lessons.length) : 0;
   const completed = lessons.filter((lesson: any) => (progressMap.get(lesson.id) || 0) >= 100).length;
 

@@ -21,7 +21,7 @@ export const RESOURCE_DEFINITIONS = {
   'registration-staff': { table: 'registration_staff', primaryKey: 'id', title: 'Équipe d’enregistrement', orderBy: 'created_at', columns: ['name', 'email', 'phone', 'is_active'] },
   'admin-permissions': { table: 'admin_permissions', primaryKey: 'permission_key', title: 'Permissions admin', orderBy: 'permission_key', columns: ['permission_key', 'value', 'updated_at'] },
   'beauty-contests': { table: 'beauty_contests', primaryKey: 'id', title: 'Concours de beauté', orderBy: 'created_at', columns: ['name', 'status', 'created_at', 'updated_at'] },
-  courses: { table: 'courses', primaryKey: 'id', title: 'Classroom', orderBy: 'position', columns: ['id', 'title', 'is_active', 'position', 'updated_at'] },
+  courses: { table: 'courses', primaryKey: 'id', title: 'Classroom', orderBy: 'position', columns: ['id', 'title', 'description', 'is_active', 'position', 'updated_at'] },
   'course-progress': { table: 'course_progress', primaryKey: 'id', title: 'Progression Classroom', orderBy: 'updated_at', columns: ['user_id', 'course_id', 'completed_at', 'updated_at'] },
   'classroom-messages': { table: 'classroom_messages', primaryKey: 'id', title: 'Messages Classroom', orderBy: 'created_at', columns: ['model_id', 'direction', 'subject', 'status', 'created_at'] },
   'classroom-requests': { table: 'classroom_requests', primaryKey: 'id', title: 'Demandes Classroom', orderBy: 'created_at', columns: ['model_id', 'request_type', 'status', 'created_at'] },

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import FirstLoginSecurityPrompt from '@/components/auth/FirstLoginSecurityPrompt';
 import { getCurrentAppProfile } from '@/lib/auth/profile';
+import { readCourseProgress } from '@/lib/classroom-progress';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 
 export const dynamic = 'force-dynamic';
@@ -37,7 +38,7 @@ export default async function Page() {
   const portfolio = Array.isArray(images.data) ? images.data : [];
   const activeCourses = Array.isArray(courses.data) ? courses.data : [];
   const progressRows = Array.isArray(progress.data) ? progress.data : [];
-  const progressMap = new Map<string, number>(progressRows.map((row: any) => [String(row.course_id), Number(row.progress || (row.completed_at ? 100 : 0))]));
+  const progressMap = new Map<string, number>(progressRows.map((row: any) => [String(row.course_id), readCourseProgress(row)]));
   const trainingProgress = activeCourses.length ? Math.round(activeCourses.reduce((total: number, course: any) => total + Math.min(100, progressMap.get(course.id) || 0), 0) / activeCourses.length) : 0;
   const readinessChecks = [model?.image_url, model?.phone, model?.email, model?.height, model?.location, model?.experience, model?.journey, Array.isArray(model?.categories) && model.categories.length, model?.measurements && Object.keys(model.measurements).length, portfolio.length];
   const profileScore = Math.round((readinessChecks.filter(Boolean).length / readinessChecks.length) * 100);

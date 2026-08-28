@@ -39,7 +39,7 @@ const navigation: NavigationSection[] = [
     { to: '/admin/payments', label: 'Finances', icon: CurrencyDollarIcon, description: 'Paiements mannequins', permission: 'payments' },
     { to: '/admin/absences', label: 'Présences', icon: CalendarIcon, description: 'Suivi équipe', permission: 'absences' },
     { to: '/admin/classroom-progress', label: 'Progression', icon: PresentationChartLineIcon, description: 'Parcours de formation', permission: 'classroomProgress' },
-    { to: '/formations', label: 'Classroom', icon: AcademicCapIcon, description: 'Contenu pédagogique', permission: 'classroom' },
+    { to: '/admin/classroom', label: 'Classroom', icon: AcademicCapIcon, description: 'Contenu pédagogique', permission: 'classroom' },
   ]},
   { title: 'Administrer', items: [
     { to: '/admin/model-access', label: 'Accès & rôles', icon: KeyIcon, description: 'Comptes et droits', permission: 'modelAccess', adminOnly: true },
