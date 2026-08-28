@@ -3,6 +3,7 @@ import { getCurrentAppProfile } from '@/lib/auth/profile';
 import { RESOURCE_DEFINITIONS, isResourceName } from '@/lib/resource-registry';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { hasResourcePermission } from '@/lib/auth/admin-access';
+import { CrudValidationError, sanitizeResourcePayload } from '@/lib/admin-crud';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,12 +28,13 @@ export async function PATCH(request: Request, context: Context) {
   const resolved = await resolve(context);
   if ('error' in resolved) return resolved.error;
   const body = await request.json().catch(() => null);
-  if (!body || typeof body !== 'object' || Array.isArray(body)) {
-    return NextResponse.json({ error: 'Payload invalide.' }, { status: 400 });
+  let updates: Record<string, unknown>;
+  try {
+    updates = sanitizeResourcePayload(resolved.resource, body, 'update');
+  } catch (error) {
+    const message = error instanceof CrudValidationError ? error.message : 'Formulaire invalide.';
+    return NextResponse.json({ error: message }, { status: 400 });
   }
-
-  const updates: Record<string, unknown> = { ...(body as Record<string, unknown>) };
-  delete updates[resolved.definition.primaryKey];
   const supabase = createSupabaseAdminClient() as any;
   const { data, error } = await supabase
     .from(resolved.definition.table)
@@ -47,6 +49,9 @@ export async function PATCH(request: Request, context: Context) {
 export async function DELETE(_request: Request, context: Context) {
   const resolved = await resolve(context);
   if ('error' in resolved) return resolved.error;
+  if (resolved.definition.canDelete === false) {
+    return NextResponse.json({ error: 'Cette ressource est disponible en lecture seule.' }, { status: 405 });
+  }
   const supabase = createSupabaseAdminClient() as any;
   const { error } = await supabase
     .from(resolved.definition.table)

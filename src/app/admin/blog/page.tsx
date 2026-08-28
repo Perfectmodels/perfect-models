@@ -20,5 +20,5 @@ export default async function AdminBlogPage() {
   const { data, error } = await query;
   if (error) throw new Error(`Lecture Supabase ${definition.table}: ${error.message}`);
 
-  return <SupabaseResourceManager resource="magazine" title={definition.title} primaryKey={definition.primaryKey} columns={definition.columns} initialRows={Array.isArray(data) ? data : []} />;
+  return <SupabaseResourceManager resource="magazine" title={definition.title} primaryKey={definition.primaryKey} columns={definition.columns} fields={definition.fields} initialRows={Array.isArray(data) ? data : []} />;
 }

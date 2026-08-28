@@ -73,7 +73,10 @@ export default async function AdminResourceRoute({ params }: { params: Promise<{
       title={definition.title}
       primaryKey={definition.primaryKey}
       columns={definition.columns}
+      fields={definition.fields}
       initialRows={Array.isArray(data) ? data : []}
+      canCreate={definition.canCreate}
+      canDelete={definition.canDelete}
     />
   );
 }
