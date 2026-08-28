@@ -3,37 +3,46 @@
 @tailwind utilities;
 
 @layer base {
-  html { @apply bg-pm-dark; }
+  html { @apply bg-pm-dark scroll-smooth; }
   body { @apply bg-pm-dark text-pm-off-white font-montserrat antialiased selection:bg-pm-wine selection:text-pm-ivory overflow-x-hidden; }
-  h1, h2, h3, h4 { @apply font-playfair leading-[1.05] tracking-tight; }
+  h1, h2, h3, h4 { @apply font-playfair leading-[1.02] tracking-tight; }
+  img { image-rendering: auto; }
   a, button, input, textarea, select { -webkit-tap-highlight-color: transparent; }
   @media print { .print-hide { @apply hidden; } .printable-content { @apply block; } body { @apply bg-white text-black; } }
 }
 
 @layer components {
-  .page-container { @apply max-w-[1800px] mx-auto px-4 sm:px-8 lg:px-20 py-16 sm:py-24 lg:py-32; }
-  .section-label { @apply text-pm-gold text-[10px] font-black tracking-[0.4em] sm:tracking-[0.5em] uppercase mb-4 sm:mb-8 block; }
-  .btn-premium { @apply relative overflow-hidden px-6 sm:px-10 lg:px-12 py-4 sm:py-5 font-bold uppercase tracking-[0.2em] sm:tracking-[0.3em] text-[10px] sm:text-[11px] transition-all duration-700 border border-pm-gold/40 hover:border-pm-gold hover:text-pm-dark z-10 inline-block text-center cursor-pointer; }
-  .btn-premium::before { content: ''; @apply absolute inset-0 bg-pm-gold translate-y-full transition-transform duration-700 ease-[cubic-bezier(0.19,1,0.22,1)] -z-10; }
+  .page-container { @apply max-w-[1700px] mx-auto px-5 sm:px-8 lg:px-12 xl:px-16 py-16 sm:py-24 lg:py-32; }
+  .section-label { @apply text-pm-gold text-[9px] font-black tracking-[0.38em] sm:tracking-[0.45em] uppercase mb-4 sm:mb-7 block; }
+
+  .btn-premium { @apply relative overflow-hidden px-6 sm:px-10 lg:px-12 py-4 sm:py-5 font-bold uppercase tracking-[0.2em] sm:tracking-[0.28em] text-[9px] sm:text-[10px] transition-all duration-500 border border-pm-gold/45 hover:border-pm-gold hover:text-pm-dark z-10 inline-block text-center cursor-pointer; }
+  .btn-premium::before { content: ''; @apply absolute inset-0 bg-pm-gold translate-y-full transition-transform duration-500 ease-[cubic-bezier(0.19,1,0.22,1)] -z-10; }
   .btn-premium:hover::before { @apply translate-y-0; }
-  .glass-card { @apply bg-white/[0.03] backdrop-blur-2xl border border-white/10; }
+
+  .glass-card { @apply bg-white/[0.035] backdrop-blur-2xl border border-white/10; }
   .gold-gradient-text { @apply text-pm-gold-light; }
   .admin-label { @apply block text-[10px] font-black text-pm-gold/60 uppercase tracking-[0.2em] mb-2; }
   .admin-input, .admin-textarea, .admin-select { @apply w-full bg-transparent border-b border-white/10 py-3 px-0 text-pm-off-white transition-all duration-500 placeholder:text-white/10 focus:outline-none focus:border-pm-gold; }
   .admin-textarea { @apply min-h-[100px] resize-none; }
-  .contact-input { @apply w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-pm-off-white placeholder:text-white/20 transition-all duration-300 focus:outline-none focus:border-pm-gold focus:bg-white/10; }
+  .contact-input { @apply w-full bg-white/5 border border-white/10 px-4 py-3 text-pm-off-white placeholder:text-white/20 transition-all duration-300 focus:outline-none focus:border-pm-gold focus:bg-white/[.08]; }
   .contact-input option { @apply bg-pm-dark text-pm-off-white; }
-  .login-modal-input { @apply w-full rounded-xl border border-white/10 bg-white/[0.045] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/20 hover:border-white/20 focus:border-pm-gold/70 focus:ring-4 focus:ring-pm-gold/10; }
-  .pmm-button { @apply inline-flex min-h-12 items-center justify-center gap-4 border px-6 py-3 text-[9px] font-black uppercase tracking-[.24em] transition duration-300 sm:px-8; }
+  .login-modal-input { @apply w-full border border-white/10 bg-white/[0.045] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/20 hover:border-white/20 focus:border-pm-gold/70 focus:ring-4 focus:ring-pm-gold/10; }
+
+  .pmm-button { @apply inline-flex min-h-12 items-center justify-center gap-4 border px-6 py-3 text-[8px] font-black uppercase tracking-[.24em] transition duration-300 sm:px-8 sm:text-[9px]; }
   .pmm-button--light { @apply border-pm-ivory bg-pm-ivory text-pm-ink hover:border-pm-gold hover:bg-pm-gold; }
   .pmm-button--ghost { @apply border-white/25 bg-transparent text-white hover:border-pm-gold hover:text-pm-gold-light; }
-  .pmm-text-link { @apply inline-flex items-center gap-3 border-b border-current pb-2 text-[9px] font-black uppercase tracking-[.28em] text-pm-ivory transition hover:text-pm-gold; }
+  .pmm-text-link { @apply inline-flex items-center gap-3 border-b border-current pb-2 text-[8px] font-black uppercase tracking-[.26em] text-pm-ivory transition duration-300 hover:text-pm-gold sm:text-[9px]; }
+
+  .editorial-kicker { @apply text-[8px] font-black uppercase tracking-[.34em] sm:text-[9px]; }
+  .editorial-rule { @apply border-t border-current/15; }
+  .editorial-panel { @apply border border-current/10 bg-transparent; }
 }
 
 @layer utilities {
   .animate-glow { animation: glow 4s ease-in-out infinite; }
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .bg-dots { background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); }
+  .text-balance { text-wrap: balance; }
 }
 
 /* Canonical editorial admin module: keep the existing link as a compatibility entry point, but display it as Blog. */
