@@ -5,7 +5,6 @@ import {
   supabaseAdminUpdateUser,
   supabaseInviteUserByEmail,
 } from '@/lib/supabase-backend';
-import { collectionToArray, getCollection, setCollection } from '@/lib/app-data';
 import type { AppRole } from '@/lib/auth/profile';
 
 const allowed = new Set<AppRole>(['manager', 'student', 'jury', 'registration', 'jury-contest']);
@@ -44,6 +43,9 @@ export async function POST(request: Request) {
     const permissions = role === 'manager'
       ? { ...(profileData.permissions || {}), isManager: true }
       : { ...(profileData.permissions || {}), isActive: true };
+    const adminPermissions = role === 'manager'
+      ? { ...MANAGER_DEFAULT_PERMISSIONS, ...(profileData.adminPermissions || {}) }
+      : undefined;
 
     const invited: any = await supabaseInviteUserByEmail(email, `${SITE_URL}/auth/complete?next=/auth/set-password`, {
       name,
@@ -68,6 +70,56 @@ export async function POST(request: Request) {
       },
     });
 
+    if (role === 'student') {
+      await privilegedSupabaseUpsert('models', {
+        id: profileId,
+        auth_user_id: userId,
+        username: identifier,
+        name,
+        email,
+        phone: profileData.phone || null,
+        gender: profileData.gender || null,
+        height: profileData.height || null,
+        location: profileData.location || null,
+        level: profileData.level || 'Débutant',
+        image_url: profileData.imageUrl || null,
+        categories: Array.isArray(profileData.categories) ? profileData.categories : [],
+        measurements: profileData.measurements || {},
+        distinctions: Array.isArray(profileData.distinctions) ? profileData.distinctions : [],
+        experience: profileData.experience || '',
+        journey: profileData.journey || '',
+        permissions,
+        quiz_scores: profileData.quizScores || {},
+        is_public: Boolean(profileData.isPublic),
+        is_active: true,
+        status: 'active',
+        raw_data: profileData,
+        updated_at: new Date().toISOString(),
+      }, 'id');
+    } else if (role === 'jury') {
+      await privilegedSupabaseUpsert('jury_members', {
+        id: userId,
+        name,
+        email,
+        phone: profileData.phone || null,
+        is_active: true,
+        permissions,
+        raw_data: { ...profileData, agency_identifier: identifier, profile_id: profileId },
+        updated_at: new Date().toISOString(),
+      }, 'id');
+    } else if (role === 'registration') {
+      await privilegedSupabaseUpsert('registration_staff', {
+        id: userId,
+        name,
+        email,
+        phone: profileData.phone || null,
+        is_active: true,
+        permissions,
+        raw_data: { ...profileData, agency_identifier: identifier, profile_id: profileId },
+        updated_at: new Date().toISOString(),
+      }, 'id');
+    }
+
     await privilegedSupabaseUpsert('profiles', {
       user_id: userId,
       role,
@@ -77,25 +129,14 @@ export async function POST(request: Request) {
       model_id: role === 'student' ? profileId : null,
       must_change_password: true,
       is_active: true,
-      metadata: { permissions, source: 'admin_invite' },
+      metadata: {
+        permissions,
+        ...(adminPermissions ? { admin_permissions: adminPermissions } : {}),
+        source: 'admin_invite',
+        profile_id: profileId,
+      },
       updated_at: new Date().toISOString(),
     }, 'user_id');
-
-    if (role === 'manager') {
-      const adminPermissions = ((await getCollection('adminPermissions').catch(() => null)) || {}) as Record<string, any>;
-      adminPermissions[userId] = { ...MANAGER_DEFAULT_PERMISSIONS, ...(profileData.adminPermissions || {}) };
-      await setCollection('adminPermissions', adminPermissions);
-    }
-
-    const key = role === 'student' ? 'models' : role === 'jury' ? 'juryMembers' : role === 'registration' ? 'registrationStaff' : null;
-    if (key) {
-      const items = collectionToArray(await getCollection(key));
-      const item = { ...profileData, id: profileId, name, username: identifier, email, authUserId: userId, supabaseUserId: userId };
-      const index = items.findIndex((entry) => String(entry?.id) === profileId);
-      if (index >= 0) items[index] = { ...items[index], ...item };
-      else items.push(item);
-      await setCollection(key, items);
-    }
 
     return NextResponse.json({ success: true, userId, invitationSent: true }, { status: 201 });
   } catch (error: any) {
