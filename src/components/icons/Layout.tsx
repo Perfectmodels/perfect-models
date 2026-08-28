@@ -6,6 +6,7 @@ import Header, { Breadcrumb } from './Header';
 import Footer from './Footer';
 import { AnnouncementMarquee } from './Marquee';
 import AdminLayout from '../admin/AdminLayout';
+import PublicPageHero from '../public/PublicPageHero';
 
 type RuntimeData = {
   navLinks?: Array<{ path: string; label: string; inFooter?: boolean; footerLabel?: string }>;
@@ -20,10 +21,11 @@ const Layout: React.FC<{ children: React.ReactNode; runtimeData?: RuntimeData | 
   if (pathname.startsWith('/login') || pathname.startsWith('/auth/')) return <>{children}</>;
 
   return (
-    <div className="min-h-screen bg-pm-ivory font-montserrat flex flex-col">
+    <div className="flex min-h-screen flex-col bg-pm-ivory font-montserrat">
       <AnnouncementMarquee />
       <Header />
       <main className="flex-grow">
+        <PublicPageHero pathname={pathname} />
         <Breadcrumb />
         {children}
       </main>
