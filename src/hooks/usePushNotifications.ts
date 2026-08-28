@@ -1,18 +1,28 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 type Notice = { title: string; body: string; icon?: string; id: number };
-type IntakeItem = { id?: string; firstName?: string; lastName?: string; name?: string; role?: string; status?: string; submissionDate?: string };
+type IntakeItem = {
+  id?: string;
+  first_name?: string;
+  last_name?: string;
+  full_name?: string;
+  applicant_name?: string;
+  application_type?: string;
+  status?: string;
+  created_at?: string;
+};
 
-const STORAGE_KEY = 'pmm-admin-seen-intake-v1';
+const STORAGE_KEY = 'pmm-admin-seen-intake-v2';
 const POLL_MS = 20_000;
 
-const asArray = (value: unknown): IntakeItem[] => Array.isArray(value)
-  ? value.filter(Boolean) as IntakeItem[]
-  : value && typeof value === 'object'
-    ? Object.values(value).filter(Boolean) as IntakeItem[]
-    : [];
+const itemId = (source: string, item: IntakeItem) => `${source}:${String(item.id || `${item.created_at || ''}:${item.full_name || item.applicant_name || ''}`)}`;
 
-const itemId = (source: string, item: IntakeItem) => `${source}:${String(item.id || `${item.submissionDate || ''}:${item.firstName || item.name || ''}`)}`;
+async function fetchResource(resource: string): Promise<IntakeItem[]> {
+  const response = await fetch(`/api/admin/resources/${resource}`, { credentials: 'include', cache: 'no-store' });
+  if (!response.ok) return [];
+  const payload = await response.json().catch(() => null);
+  return Array.isArray(payload?.data) ? payload.data.filter(Boolean) : [];
+}
 
 export function usePushNotifications(onNotification?: (notification: Notice) => void) {
   const [state, setState] = useState({
@@ -55,18 +65,15 @@ export function usePushNotifications(onNotification?: (notification: Notice) => 
     const poll = async () => {
       if (stopped || document.visibilityState === 'hidden') return;
       try {
-        const [castingResponse, pfdResponse] = await Promise.all([
-          fetch('/api/data/castingApplications', { credentials: 'include', cache: 'no-store' }),
-          fetch('/api/data/fashionDayApplications', { credentials: 'include', cache: 'no-store' }),
+        const [casting, pfd] = await Promise.all([
+          fetchResource('casting-applications'),
+          fetchResource('fashion-day-applications'),
         ]);
-        if (!castingResponse.ok || !pfdResponse.ok) return;
-        const casting = asArray(await castingResponse.json());
-        const pfd = asArray(await pfdResponse.json());
         const all = [
           ...casting.map((item) => ({ source: 'casting', item })),
           ...pfd.map((item) => ({ source: 'pfd', item })),
         ];
-        const pending = all.filter(({ item }) => item.status === 'Nouveau');
+        const pending = all.filter(({ item }) => ['Nouveau', 'new', 'pending'].includes(String(item.status || '')));
         await setBadge(pending.length);
 
         const seen = readSeen();
@@ -80,16 +87,18 @@ export function usePushNotifications(onNotification?: (notification: Notice) => 
 
         const fresh = all
           .filter(({ source, item }) => !seen.has(itemId(source, item)))
-          .sort((a, b) => new Date(a.item.submissionDate || 0).getTime() - new Date(b.item.submissionDate || 0).getTime());
+          .sort((a, b) => new Date(a.item.created_at || 0).getTime() - new Date(b.item.created_at || 0).getTime());
 
         for (const { source, item } of fresh) {
           const id = itemId(source, item);
           seen.add(id);
           const person = source === 'casting'
-            ? `${item.firstName || ''} ${item.lastName || ''}`.trim() || 'Un nouveau profil'
-            : item.name || 'Un nouveau participant';
+            ? item.full_name || `${item.first_name || ''} ${item.last_name || ''}`.trim() || 'Un nouveau profil'
+            : item.applicant_name || 'Un nouveau participant';
           const title = source === 'casting' ? 'Nouvelle candidature mannequin' : 'Nouvelle candidature Perfect Fashion Day';
-          const body = source === 'casting' ? `${person} vient de postuler sur le site.` : `${person}${item.role ? ` · ${item.role}` : ''} vient de soumettre sa candidature.`;
+          const body = source === 'casting'
+            ? `${person} vient de postuler sur le site.`
+            : `${person}${item.application_type ? ` · ${item.application_type}` : ''} vient de soumettre sa candidature.`;
           onNotification?.({ title, body, id: Date.now() });
           if (state.permission === 'granted') {
             try {
