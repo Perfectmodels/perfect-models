@@ -1,14 +1,18 @@
-import React, { useEffect, useState } from 'react';
-import { useData } from '../contexts/DataContext';
-import { notifyAdmin } from '../utils/adminNotify';
+'use client';
+
+import React, { useEffect, useId, useState } from 'react';
 
 interface BookingFormProps {
   prefilledModelName?: string;
+  modelId?: string;
   onSuccess?: () => void;
 }
 
-const BookingForm: React.FC<BookingFormProps> = ({ prefilledModelName, onSuccess }) => {
-  const { addDocument } = useData();
+const fieldClass = 'min-h-12 w-full rounded-xl border border-pm-ink/15 bg-white px-4 py-3 text-[15px] text-pm-ink outline-none transition placeholder:text-pm-ink/35 focus-visible:border-pm-coral focus-visible:ring-4 focus-visible:ring-pm-coral/10 disabled:cursor-not-allowed disabled:bg-pm-ink/[.04]';
+const labelClass = 'mb-2 block text-xs font-extrabold uppercase tracking-[.1em] text-pm-ink/65';
+
+const BookingForm: React.FC<BookingFormProps> = ({ prefilledModelName, modelId, onSuccess }) => {
+  const baseId = useId();
   const [formData, setFormData] = useState({
     clientName: '',
     clientEmail: '',
@@ -16,6 +20,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ prefilledModelName, onSuccess
     requestedModels: prefilledModelName || '',
     startDate: '',
     endDate: '',
+    projectType: 'Shooting photo',
     message: '',
   });
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -25,7 +30,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ prefilledModelName, onSuccess
     if (prefilledModelName) setFormData((current) => ({ ...current, requestedModels: prefilledModelName }));
   }, [prefilledModelName]);
 
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData((current) => ({ ...current, [event.target.name]: event.target.value }));
   };
 
@@ -34,67 +39,59 @@ const BookingForm: React.FC<BookingFormProps> = ({ prefilledModelName, onSuccess
     setStatus('loading');
     setStatusMessage('');
 
-    try {
-      const id = await addDocument('bookingRequests', {
-        submissionDate: new Date().toISOString(),
-        status: 'Nouveau',
-        ...formData,
-      });
-      if (!id) throw new Error('La demande n’a pas pu être enregistrée.');
+    if (formData.startDate && formData.endDate && formData.endDate < formData.startDate) {
+      setStatus('error');
+      setStatusMessage('La date de fin doit être postérieure à la date de début.');
+      return;
+    }
 
-      notifyAdmin('booking', `${formData.clientName} — ${formData.requestedModels}`, '/admin/bookings').catch(() => undefined);
+    try {
+      const response = await fetch('/api/intake/booking', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...formData, modelId: modelId || null }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || 'La demande n’a pas pu être enregistrée.');
+
       setStatus('success');
-      setStatusMessage('Demande de booking envoyée ! Un email de confirmation vous a été adressé.');
+      setStatusMessage('Demande de booking enregistrée. Notre équipe vous recontactera.');
       setFormData({
-        clientName: '', clientEmail: '', clientCompany: '', requestedModels: prefilledModelName || '', startDate: '', endDate: '', message: '',
+        clientName: '', clientEmail: '', clientCompany: '', requestedModels: prefilledModelName || '', startDate: '', endDate: '', projectType: 'Shooting photo', message: '',
       });
       onSuccess?.();
     } catch (error) {
-      console.error(error);
       setStatus('error');
-      setStatusMessage("Une erreur est survenue lors de l'envoi de votre demande.");
+      setStatusMessage(error instanceof Error ? error.message : "Une erreur est survenue lors de l'envoi de votre demande.");
     }
   };
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <FormInput label="Votre Nom Complet" name="clientName" value={formData.clientName} onChange={handleChange} required />
-        <FormInput label="Votre Email" name="clientEmail" type="email" value={formData.clientEmail} onChange={handleChange} required />
-      </div>
-      <FormInput label="Société (optionnel)" name="clientCompany" value={formData.clientCompany} onChange={handleChange} />
-      <FormInput label="Mannequin(s) souhaité(s)" name="requestedModels" value={formData.requestedModels} onChange={handleChange} required disabled={!!prefilledModelName} />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <FormInput label="Date de début (souhaitée)" name="startDate" type="date" value={formData.startDate} onChange={handleChange} />
-        <FormInput label="Date de fin (souhaitée)" name="endDate" type="date" value={formData.endDate} onChange={handleChange} />
-      </div>
-      <FormTextArea label="Message / Détails du projet" name="message" value={formData.message} onChange={handleChange} required />
+  const id = (name: string) => `${baseId}-${name}`;
 
-      <button type="submit" disabled={status === 'loading'} className="w-full px-8 py-3 bg-pm-gold text-pm-dark font-bold uppercase tracking-widest rounded-full transition-all hover:bg-white disabled:opacity-50">
-        {status === 'loading' ? 'Envoi...' : 'Envoyer la demande'}
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6" aria-describedby={statusMessage ? id('status') : undefined}>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div><label htmlFor={id('clientName')} className={labelClass}>Votre nom complet <span aria-hidden="true">*</span></label><input id={id('clientName')} name="clientName" className={fieldClass} value={formData.clientName} onChange={handleChange} required autoComplete="name" /></div>
+        <div><label htmlFor={id('clientEmail')} className={labelClass}>Votre e-mail <span aria-hidden="true">*</span></label><input id={id('clientEmail')} name="clientEmail" type="email" inputMode="email" autoComplete="email" className={fieldClass} value={formData.clientEmail} onChange={handleChange} required /></div>
+      </div>
+      <div><label htmlFor={id('clientCompany')} className={labelClass}>Société / marque</label><input id={id('clientCompany')} name="clientCompany" className={fieldClass} value={formData.clientCompany} onChange={handleChange} autoComplete="organization" /></div>
+      <div><label htmlFor={id('requestedModels')} className={labelClass}>Mannequin souhaité <span aria-hidden="true">*</span></label><input id={id('requestedModels')} name="requestedModels" className={fieldClass} value={formData.requestedModels} onChange={handleChange} required disabled={Boolean(prefilledModelName)} aria-describedby={prefilledModelName ? id('model-help') : undefined} />{prefilledModelName && <p id={id('model-help')} className="mt-2 text-sm text-pm-ink/50">Le mannequin est pré-sélectionné depuis sa fiche publique.</p>}</div>
+      <div><label htmlFor={id('projectType')} className={labelClass}>Type de projet</label><select id={id('projectType')} name="projectType" className={fieldClass} value={formData.projectType} onChange={handleChange}><option>Shooting photo</option><option>Défilé de mode</option><option>Publicité / campagne</option><option>Vidéo / audiovisuel</option><option>Événement / accueil</option><option>Essayage / showroom</option><option>Influence / contenu digital</option><option>Autre</option></select></div>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div><label htmlFor={id('startDate')} className={labelClass}>Date de début souhaitée</label><input id={id('startDate')} name="startDate" type="date" className={fieldClass} value={formData.startDate} onChange={handleChange} /></div>
+        <div><label htmlFor={id('endDate')} className={labelClass}>Date de fin souhaitée</label><input id={id('endDate')} name="endDate" type="date" min={formData.startDate || undefined} className={fieldClass} value={formData.endDate} onChange={handleChange} /></div>
+      </div>
+      <div><label htmlFor={id('message')} className={labelClass}>Détails du projet <span aria-hidden="true">*</span></label><textarea id={id('message')} name="message" value={formData.message} onChange={handleChange} required rows={5} maxLength={3000} className={`${fieldClass} min-h-36 resize-y`} placeholder="Lieu, horaires, usage des images, équipe, attentes particulières…" /><p className="mt-2 text-right text-xs text-pm-ink/45">{formData.message.length}/3000</p></div>
+
+      <button type="submit" disabled={status === 'loading'} className="min-h-12 w-full rounded-full bg-pm-coral px-8 py-3 text-sm font-extrabold uppercase tracking-[.1em] text-white transition hover:bg-pm-wine focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-pm-coral disabled:opacity-50">
+        {status === 'loading' ? 'Envoi…' : 'Envoyer la demande'}
       </button>
 
-      {statusMessage && (
-        <p className={`text-center text-sm p-3 rounded-md ${status === 'success' ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}`}>
-          {statusMessage}
-        </p>
-      )}
+      <div aria-live={status === 'error' ? 'assertive' : 'polite'} aria-atomic="true">
+        {statusMessage && <p id={id('status')} role={status === 'error' ? 'alert' : 'status'} className={`rounded-xl border p-3 text-center text-sm font-semibold ${status === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-900' : 'border-red-200 bg-red-50 text-red-800'}`}>{statusMessage}</p>}
+      </div>
     </form>
   );
 };
-
-const FormInput: React.FC<{ label: string; name: string; value: string; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; type?: string; required?: boolean; disabled?: boolean }> = (props) => (
-  <div>
-    <label htmlFor={props.name} className="admin-label">{props.label}</label>
-    <input {...props} id={props.name} className="admin-input" />
-  </div>
-);
-
-const FormTextArea: React.FC<{ label: string; name: string; value: string; onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void; required?: boolean }> = (props) => (
-  <div>
-    <label htmlFor={props.name} className="admin-label">{props.label}</label>
-    <textarea {...props} id={props.name} rows={5} className="admin-input admin-textarea" />
-  </div>
-);
 
 export default BookingForm;
