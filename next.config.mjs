@@ -3,6 +3,15 @@ const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   experimental: { optimizePackageImports: ['@heroicons/react', 'lucide-react'] },
+  images: {
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 60 * 60 * 24,
+    remotePatterns: [
+      { protocol: 'https', hostname: 'i.ibb.co' },
+      { protocol: 'https', hostname: 'i.postimg.cc' },
+      { protocol: 'https', hostname: '*.supabase.co' },
+    ],
+  },
   async headers() {
     return [{
       source: '/:path*',
