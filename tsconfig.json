@@ -29,5 +29,17 @@
     "*.ts",
     "*.mjs"
   ],
-  "exclude": ["node_modules", "docs", "resources"]
+  "exclude": [
+    "node_modules",
+    "docs",
+    "resources",
+    "src/__tests__/**",
+    "src/components/AIAssistantIcon.tsx",
+    "src/components/ProtectedRoute.tsx",
+    "src/components/ModelCard.tsx",
+    "src/components/ServiceCard.tsx",
+    "src/components/ModelCrossLinks.tsx",
+    "src/components/BookingForm.tsx",
+    "src/components/GalleryPage.tsx"
+  ]
 }

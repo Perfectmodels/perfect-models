@@ -55,7 +55,7 @@ export async function POST(request: Request, context: Context) {
     if (!photos.every(imgbb)) return NextResponse.json({ error: 'Les photos doivent provenir du service d’images autorisé.' }, { status: 400 });
     table = 'casting_applications';
     row = {
-      legacy_id: crypto.randomUUID(), full_name: `${firstName} ${lastName}`, first_name: firstName, last_name: lastName,
+      full_name: `${firstName} ${lastName}`, first_name: firstName, last_name: lastName,
       email: userEmail, phone, gender: text(raw.gender, 20) || null, birth_date: birthDate, city: text(raw.city, 80) || null,
       height_cm: height, status: 'Nouveau', photos,
       measurements: { hips: text(raw.hips, 20), chest: text(raw.chest, 20), waist: text(raw.waist, 20), weight: text(raw.weight, 20), shoeSize: text(raw.shoeSize, 20), eyeColor: text(raw.eyeColor, 40), hairColor: text(raw.hairColor, 60) },
@@ -66,25 +66,25 @@ export async function POST(request: Request, context: Context) {
     const name = text(raw.name, 120); const userEmail = email(raw.email); const message = text(raw.message, 5000);
     if (!name || !userEmail || !message) return NextResponse.json({ error: 'Nom, email et message requis.' }, { status: 400 });
     table = 'contact_messages';
-    row = { legacy_id: crypto.randomUUID(), name, email: userEmail, phone: text(raw.phone, 40) || null, subject: text(raw.subject, 180) || null, message, status: 'Nouveau', raw_data: raw };
+    row = { name, email: userEmail, phone: text(raw.phone, 40) || null, subject: text(raw.subject, 180) || null, message, status: 'Nouveau', raw_data: raw };
     notificationType = 'contact'; notificationTitle = 'Nouveau message de contact'; legacyEmailKey = 'contactMessages';
   } else if (kind === 'booking') {
     const name = text(raw.clientName || raw.name, 120); const userEmail = email(raw.clientEmail || raw.email);
     if (!name || !userEmail) return NextResponse.json({ error: 'Nom et email requis.' }, { status: 400 });
     table = 'booking_requests';
-    row = { legacy_id: crypto.randomUUID(), name, email: userEmail, phone: text(raw.phone, 40) || null, model_id: text(raw.modelId, 160) || null, status: 'Nouveau', raw_data: raw };
+    row = { name, email: userEmail, phone: text(raw.phone, 40) || null, model_id: text(raw.modelId, 160) || null, status: 'Nouveau', raw_data: raw };
     notificationType = 'booking'; notificationTitle = 'Nouvelle demande de booking'; legacyEmailKey = 'bookingRequests';
   } else if (kind === 'fashion-day') {
     const name = text(raw.name || raw.applicantName || raw.brandName || raw.designerName, 160); const userEmail = email(raw.email);
     if (!name || !userEmail) return NextResponse.json({ error: 'Nom et email requis.' }, { status: 400 });
     table = 'fashion_day_applications';
-    row = { legacy_id: crypto.randomUUID(), applicant_name: name, email: userEmail, phone: text(raw.phone, 40) || null, application_type: text(raw.type || raw.applicationType || raw.role || raw.category, 100) || null, status: 'Nouveau', raw_data: raw };
+    row = { applicant_name: name, email: userEmail, phone: text(raw.phone, 40) || null, application_type: text(raw.type || raw.applicationType || raw.role || raw.category, 100) || null, status: 'Nouveau', raw_data: raw };
     notificationType = 'fashionday'; notificationTitle = 'Nouvelle candidature Fashion Day';
   } else if (kind === 'recovery') {
     const userEmail = email(raw.email); const identifier = text(raw.identifier, 160);
     if (!userEmail && !identifier) return NextResponse.json({ error: 'Email ou identifiant requis.' }, { status: 400 });
     table = 'recovery_requests';
-    row = { legacy_id: crypto.randomUUID(), email: userEmail || null, identifier: identifier || null, status: 'Nouveau', raw_data: raw };
+    row = { email: userEmail || null, identifier: identifier || null, status: 'Nouveau', raw_data: raw };
     notificationType = 'recovery'; notificationTitle = 'Nouvelle demande de récupération';
   } else {
     return NextResponse.json({ error: 'Type de formulaire inconnu.' }, { status: 404 });

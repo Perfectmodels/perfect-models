@@ -56,9 +56,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Image trop lourde (4,5 Mo maximum).' }, { status: 413 });
     }
 
-    // The public casting form is intentionally upload-only: it may upload
-    // candidate photos, but it must never gain access to the media library.
-    const isPublicCastingUpload = scope === 'casting';
+    // Public casting uploads are restricted to casting-prefixed scopes and same-origin requests.
+    const isPublicCastingUpload = scope === 'casting' || scope.startsWith('casting-');
     if (isPublicCastingUpload && !isSameOrigin(request)) {
       return NextResponse.json({ error: 'Origine de téléversement non autorisée.' }, { status: 403 });
     }
