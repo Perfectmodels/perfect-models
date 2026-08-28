@@ -8,7 +8,9 @@ export const dynamic = 'force-dynamic';
 
 function formatDate(value?: string) {
   if (!value) return 'À définir';
-  return new Date(value).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
 }
 
 export default async function Page() {

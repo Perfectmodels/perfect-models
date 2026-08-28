@@ -56,6 +56,7 @@ const titleFromPath = (pathname: string) => pathname === '/manager' ? 'Espace ma
 function allowed(item: NavigationItem, role?: string, permissions?: AdminPagePermissions) {
   if (role !== 'manager') return true;
   if (item.adminOnly) return false;
+  if (item.to === '/admin/messages') return Boolean(permissions?.messages && permissions?.mailing);
   return item.permission ? Boolean(permissions?.[item.permission]) : false;
 }
 

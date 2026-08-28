@@ -49,7 +49,6 @@ export default async function Page() {
     ['Préparer un brief', '/admin/artistic-direction', 'artisticDirection'],
     ['Suivre la formation', '/admin/classroom-progress', 'classroomProgress'],
     ['Consulter les paiements', '/admin/payments', 'payments'],
-    ['Répondre aux messages', '/admin/messages', 'messages'],
   ] as const;
   const visibleActions = actions.filter(([, , permission]) => can(permissions, permission));
 

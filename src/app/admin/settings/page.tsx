@@ -18,21 +18,21 @@ export default async function Page() {
   if (profile.role !== 'admin') redirect(profile.role === 'manager' ? '/manager' : '/profil');
 
   return (
-    <main className="min-h-screen bg-pm-dark px-5 py-20 text-pm-off-white md:px-10">
+    <section className="text-pm-ink">
       <div className="mx-auto max-w-6xl">
-        <p className="text-[10px] font-black uppercase tracking-[0.35em] text-pm-gold">Configuration Supabase</p>
-        <h1 className="mt-2 font-playfair text-4xl font-black text-white md:text-5xl">Paramètres</h1>
-        <p className="mt-4 max-w-2xl text-sm leading-7 text-white/45">L’ancien document de configuration global a été supprimé du parcours d’administration. Chaque domaine possède désormais sa table Supabase et son interface Next.js dédiée.</p>
+        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-pm-coral">Configuration Supabase</p>
+        <h1 className="mt-2 font-playfair text-4xl font-semibold md:text-5xl">Paramètres</h1>
+        <p className="mt-4 max-w-2xl text-sm leading-7 text-pm-ink/45">Chaque domaine possède sa table Supabase et son interface Next.js dédiée.</p>
         <div className="mt-10 grid gap-4 md:grid-cols-2">
           {SECTIONS.map(section => (
-            <Link key={section.href} href={section.href} className="rounded-2xl border border-white/10 bg-white/[.03] p-6 transition hover:border-pm-gold/40 hover:bg-pm-gold/[.04]">
-              <h2 className="font-playfair text-2xl font-bold text-pm-gold">{section.title}</h2>
-              <p className="mt-3 text-sm leading-6 text-white/45">{section.description}</p>
-              <span className="mt-5 inline-block text-xs font-black uppercase tracking-[0.2em] text-white/70">Ouvrir →</span>
+            <Link key={section.href} href={section.href} className="rounded-[1.7rem] border border-pm-ink/[.08] bg-white/75 p-6 shadow-[0_18px_50px_rgba(91,46,37,.06)] transition hover:-translate-y-1 hover:border-pm-coral/35">
+              <h2 className="font-playfair text-2xl font-semibold text-pm-wine">{section.title}</h2>
+              <p className="mt-3 text-sm leading-6 text-pm-ink/45">{section.description}</p>
+              <span className="mt-5 inline-block text-[9px] font-black uppercase tracking-[0.2em] text-pm-coral">Ouvrir →</span>
             </Link>
           ))}
         </div>
       </div>
-    </main>
+    </section>
   );
 }

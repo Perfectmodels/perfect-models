@@ -62,3 +62,10 @@ a[href="/admin/news"] { display: none !important; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
+
+.admin-messaging [class*="border-white"] { border-color: rgba(37, 27, 32, .1) !important; }
+.admin-messaging [class*="bg-white"] { background-color: rgba(255, 255, 255, .72) !important; }
+.admin-messaging [class*="text-white"] { color: rgba(37, 27, 32, .62) !important; }
+.admin-messaging input,
+.admin-messaging textarea { background: rgba(255, 249, 242, .9) !important; color: #251b20 !important; border: 1px solid rgba(37, 27, 32, .1); }
+.admin-messaging section { border-radius: 1.7rem !important; box-shadow: 0 18px 55px rgba(91, 46, 37, .06); }

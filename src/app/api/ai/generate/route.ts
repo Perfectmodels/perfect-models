@@ -1,6 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
 import { NextResponse } from 'next/server';
 import { getCurrentAppProfile } from '@/lib/auth/profile';
+import { hasAdminPermission } from '@/lib/auth/admin-access';
 
 export const runtime = 'nodejs';
 
@@ -16,6 +17,9 @@ export async function POST(request: Request) {
   const profile = await getCurrentAppProfile();
   if (!profile || !['admin', 'manager'].includes(profile.role)) {
     return NextResponse.json({ error: 'Accès administrateur requis.' }, { status: 403 });
+  }
+  if (!hasAdminPermission(profile, 'imageGeneration') && !hasAdminPermission(profile, 'imageAnalysis')) {
+    return NextResponse.json({ error: 'Permission IA insuffisante.' }, { status: 403 });
   }
 
   const apiKey = process.env.GEMINI_API_KEY;

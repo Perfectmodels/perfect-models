@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getCurrentAppProfile } from '@/lib/auth/profile';
+import { hasAdminPermission } from '@/lib/auth/admin-access';
 import { sendTransactionalTemplate } from '@/lib/email/server';
 
 const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
@@ -40,6 +41,9 @@ export async function POST(request: Request) {
     const profile = await getCurrentAppProfile();
     if (!profile || !['admin', 'manager'].includes(profile.role)) {
       return NextResponse.json({ error: 'Authentification administrateur requise.' }, { status: 403 });
+    }
+    if (!hasAdminPermission(profile, 'mailing')) {
+      return NextResponse.json({ error: 'Permission mailing insuffisante.' }, { status: 403 });
     }
 
     const body = await request.json().catch(() => ({}));

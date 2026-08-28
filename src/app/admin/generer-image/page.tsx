@@ -2,12 +2,14 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getCurrentAppProfile } from '@/lib/auth/profile';
+import { hasAdminPermission } from '@/lib/auth/admin-access';
 
 export const metadata: Metadata = { title: 'Assistant éditorial IA | PMM', robots: { index: false, follow: false } };
 
 export default async function Page() {
   const profile = await getCurrentAppProfile();
   if (!profile || !['admin', 'manager'].includes(profile.role)) redirect('/login');
+  if (!hasAdminPermission(profile, 'imageGeneration')) redirect(profile.role === 'manager' ? '/manager' : '/profil');
 
   return (
     <main className="min-h-screen bg-pm-dark px-6 py-24 text-pm-off-white">
