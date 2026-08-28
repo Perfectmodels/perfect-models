@@ -1,69 +1,40 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import Image from 'next/image';
+import Link from 'next/link';
 import { Model } from '../types';
-import { motion } from 'framer-motion';
 
 interface ModelCardProps {
   model: Model;
 }
 
-const fallbackImage = (name: string) =>
-  `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'PMM')}&size=800&background=111111&color=D4AF37&bold=true&format=png`;
-
 const ModelCard: React.FC<ModelCardProps> = ({ model }) => {
-  const fallback = fallbackImage(model.name);
+  const image = model.imageUrl || '/images/grace-elsa.jpg';
 
   return (
-    <motion.div
-      whileHover={{ y: -8 }}
-      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-      className="group relative h-[420px] sm:h-[520px] lg:h-[650px] overflow-hidden bg-pm-gray border border-white/5"
-    >
-      <Link to={`/mannequins/${model.id}`} className="block h-full">
-        <img
-          src={model.imageUrl || fallback}
+    <article className="group relative h-[420px] overflow-hidden rounded-[1.5rem] border border-pm-ink/10 bg-pm-sand shadow-sm sm:h-[520px] lg:h-[650px]">
+      <Link href={`/mannequins/${model.id}`} className="block h-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-pm-coral" aria-label={`Voir le profil de ${model.name}`}>
+        <Image
+          src={image}
           alt={model.name}
-          loading="lazy"
-          decoding="async"
-          onError={(event) => {
-            const image = event.currentTarget;
-            if (image.src !== fallback) image.src = fallback;
-          }}
-          className="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:scale-110"
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          className="object-cover transition-transform duration-500 motion-reduce:transition-none group-hover:scale-[1.025]"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-pm-dark via-transparent to-transparent opacity-40 group-hover:opacity-80 transition-opacity duration-700"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-pm-ink/90 via-pm-ink/10 to-transparent" />
 
-        {/* Badges croisés */}
-        <div className="absolute top-4 left-4 flex flex-col gap-1.5 z-10">
-          {(model.fashionDayEditions?.length ?? 0) > 0 && (
-            <span className="px-2.5 py-1 bg-pm-gold text-pm-dark text-[9px] font-black uppercase tracking-widest rounded-full shadow-lg">
-              PFD Talent
-            </span>
-          )}
-          {model.level === 'Pro' && (
-            <span className="px-2.5 py-1 bg-black/80 border border-pm-gold/40 text-pm-gold text-[9px] font-black uppercase tracking-widest rounded-full backdrop-blur-sm">
-              PRO
-            </span>
-          )}
+        <div className="absolute left-4 top-4 z-10 flex flex-col gap-2">
+          {(model.fashionDayEditions?.length ?? 0) > 0 && <span className="rounded-full bg-pm-gold-light px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[.1em] text-pm-ink shadow">PFD Talent</span>}
+          {model.level === 'Pro' && <span className="rounded-full border border-white/35 bg-pm-ink/75 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[.1em] text-white backdrop-blur-sm">PRO</span>}
         </div>
 
-        <div className="absolute bottom-0 left-0 p-5 sm:p-8 lg:p-10 w-full transform translate-y-4 group-hover:translate-y-0 transition-transform duration-700">
-          <div className="overflow-hidden">
-            <motion.h3 className="text-2xl sm:text-3xl lg:text-4xl font-playfair font-black text-white tracking-tight">
-              {model.name}
-            </motion.h3>
-          </div>
-          <div className="flex justify-between items-center mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-white/10">
-            <span className="text-[10px] font-black uppercase tracking-[0.3em] sm:tracking-[0.4em] text-pm-gold">
-              {model.height} • {model.gender}
-            </span>
-            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/30 group-hover:text-pm-gold transition-colors">
-              View Profile
-            </span>
+        <div className="absolute inset-x-0 bottom-0 p-6 sm:p-8 lg:p-10">
+          <h3 className="font-playfair text-3xl font-semibold tracking-tight text-white sm:text-4xl">{model.name}</h3>
+          <div className="mt-5 flex items-center justify-between gap-5 border-t border-white/20 pt-5">
+            <span className="text-xs font-extrabold uppercase tracking-[.1em] text-pm-gold-light">{model.height || 'Taille à confirmer'} · {model.gender}</span>
+            <span className="text-xs font-extrabold text-white/75" aria-hidden="true">Profil ↗</span>
           </div>
         </div>
       </Link>
-    </motion.div>
+    </article>
   );
 };
 
