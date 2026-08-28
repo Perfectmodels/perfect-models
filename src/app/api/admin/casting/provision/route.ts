@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import { getCurrentAppProfile } from '@/lib/auth/profile';
 import {
+  privilegedSupabaseSelect,
   privilegedSupabaseUpsert,
+  submitSupabaseRow,
   supabaseAdminUpdateUser,
   supabaseInviteUserByEmail,
 } from '@/lib/supabase-backend';
-import { collectionToArray, getCollection, setCollection } from '@/lib/app-data';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -35,32 +36,28 @@ function experienceText(value: unknown) {
   }
 }
 
-function isUuid(value: unknown) {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || ''));
-}
-
 async function archiveActivationMessage(input: { applicationId: string; modelId: string; to: string; name: string; username: string }) {
   const sentAt = new Date().toISOString();
-  const messages = collectionToArray(await getCollection('contactMessages'));
-  messages.push({
-    id: `activation-${slug(input.applicationId)}-${Date.now()}`,
-    submissionDate: sentAt,
-    status: 'Lu',
+  await submitSupabaseRow('contact_messages', {
     name: 'Perfect Models Management',
     email: input.to,
     subject: 'Invitation à votre espace mannequin PMM',
     message: `Invitation Supabase envoyée à ${input.name}.\n\nIdentifiant agence : ${input.username}\nAdresse de connexion : ${input.to}\nLe mannequin choisit lui-même son mot de passe via le lien sécurisé.`,
-    folder: 'sent',
-    label: 'Casting',
-    direction: 'outbound',
-    messageType: 'account_activation',
-    deliveryStatus: 'sent_by_supabase_auth',
-    provider: 'supabase-auth',
-    castingApplicationId: input.applicationId,
-    modelId: input.modelId,
-    recipientName: input.name,
+    status: 'Lu',
+    raw_data: {
+      folder: 'sent',
+      label: 'Casting',
+      direction: 'outbound',
+      messageType: 'account_activation',
+      deliveryStatus: 'sent_by_supabase_auth',
+      provider: 'supabase-auth',
+      castingApplicationId: input.applicationId,
+      modelId: input.modelId,
+      recipientName: input.name,
+      sentAt,
+    },
+    created_at: sentAt,
   });
-  await setCollection('contactMessages', messages);
 }
 
 export async function POST(request: Request) {
@@ -73,39 +70,41 @@ export async function POST(request: Request) {
   const applicationId = String(body?.applicationId || '').trim();
   if (!applicationId) return NextResponse.json({ error: 'Candidature requise.' }, { status: 400 });
 
-  const applications = collectionToArray(await getCollection('castingApplications'));
-  const appIndex = applications.findIndex((item) => String(item?.id || '') === applicationId);
-  if (appIndex < 0) return NextResponse.json({ error: 'Candidature introuvable.' }, { status: 404 });
-
-  const application = applications[appIndex] as any;
+  const applicationRows = await privilegedSupabaseSelect(`casting_applications?select=*&id=eq.${encodeURIComponent(applicationId)}&limit=1`);
+  const application = Array.isArray(applicationRows) ? applicationRows[0] : null;
+  if (!application) return NextResponse.json({ error: 'Candidature introuvable.' }, { status: 404 });
   if (application.status !== 'Accepté') {
     return NextResponse.json({ error: 'La candidature doit être acceptée avant la création du compte.' }, { status: 409 });
   }
 
-  const models = collectionToArray(await getCollection('models'));
-  const fullName = `${String(application.firstName || '').trim()} ${String(application.lastName || '').trim()}`.trim();
-  const existingIndex = models.findIndex((model) =>
-    String(model?.castingApplicationId || '') === applicationId ||
-    String(model?.id || '') === String(application.modelId || '') ||
+  const models = await privilegedSupabaseSelect('models?select=*');
+  const modelRows = Array.isArray(models) ? models : [];
+  const raw = application.raw_data && typeof application.raw_data === 'object' ? application.raw_data : {};
+  const fullName = String(application.full_name || `${application.first_name || raw.firstName || ''} ${application.last_name || raw.lastName || ''}`).trim();
+  const hintedModelId = String(raw.modelId || '').trim();
+  const existingModel = modelRows.find((model: any) =>
+    String(model?.casting_application_id || '') === applicationId ||
+    (hintedModelId && String(model?.id || '') === hintedModelId) ||
     String(model?.name || '').trim().toLowerCase() === fullName.toLowerCase()
-  );
-  const existingModel = existingIndex >= 0 ? models[existingIndex] : null;
+  ) || null;
 
-  if (application.accountProvisionedAt && (existingModel?.supabaseUserId || existingModel?.authUserId)) {
+  if (application.account_provisioned_at && existingModel?.auth_user_id) {
     return NextResponse.json({
       success: true,
       alreadyProvisioned: true,
       modelId: existingModel.id,
       username: existingModel.username,
       email: existingModel.email,
-      activationEmailStatus: application.activationEmailStatus || application.credentialsEmailStatus || null,
+      activationEmailStatus: raw.activationEmailStatus || application.credentials_email_status || null,
     });
   }
 
-  const username = String(existingModel?.username || '').trim() || nextUsername(models, String(application.firstName || ''));
-  const modelId = String(existingModel?.id || '').trim() || `${slug(application.lastName)}-${slug(application.firstName)}-${slug(application.id)}`;
-  const email = String(application.email || '').trim().toLowerCase();
-  const age = application.birthDate ? Math.max(0, new Date().getFullYear() - new Date(application.birthDate).getFullYear()) : undefined;
+  const firstName = String(application.first_name || raw.firstName || '').trim();
+  const lastName = String(application.last_name || raw.lastName || '').trim();
+  const username = String(existingModel?.username || '').trim() || nextUsername(modelRows, firstName);
+  const sourceId = String(raw.id || application.id || '').trim();
+  const modelId = String(existingModel?.id || hintedModelId || `${slug(lastName)}-${slug(firstName)}-${slug(sourceId)}`).trim();
+  const email = String(application.email || raw.email || '').trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return NextResponse.json({ error: 'Adresse email invalide.' }, { status: 400 });
   }
@@ -131,6 +130,20 @@ export async function POST(request: Request) {
   if (!userId) return NextResponse.json({ error: 'Supabase n’a pas retourné d’identifiant utilisateur.' }, { status: 502 });
 
   const now = new Date().toISOString();
+  const measurements = application.measurements && typeof application.measurements === 'object' ? application.measurements : {};
+  const photos = Array.isArray(application.photos) ? application.photos.filter(Boolean) : [];
+  const portrait = String(raw.photoPortraitUrl || photos[0] || existingModel?.image_url || '/logo.svg');
+  const portfolioImages = [raw.photoPortraitUrl, raw.photoFullBodyUrl, raw.photoProfileUrl, ...photos]
+    .filter(Boolean)
+    .map(String)
+    .filter((url, index, list) => list.indexOf(url) === index);
+  const birthDate = String(application.birth_date || raw.birthDate || '').trim() || null;
+  const age = Number.isFinite(Number(application.age))
+    ? Number(application.age)
+    : birthDate
+      ? Math.max(0, new Date().getFullYear() - new Date(birthDate).getFullYear())
+      : null;
+  const height = application.height_cm ? `${application.height_cm}cm` : existingModel?.height || '';
   const permissions = existingModel?.permissions || {
     canAccessFormation: true,
     canAccessClassroom: true,
@@ -140,6 +153,17 @@ export async function POST(request: Request) {
     canEditProfile: true,
     isActive: true,
   };
+  const normalizedMeasurements = existingModel?.measurements || {
+    chest: measurements.chest ? `${measurements.chest}cm` : '',
+    waist: measurements.waist ? `${measurements.waist}cm` : '',
+    hips: measurements.hips ? `${measurements.hips}cm` : '',
+    shoeSize: String(measurements.shoeSize || ''),
+  };
+  const categories = Array.isArray(existingModel?.categories) && existingModel.categories.length ? existingModel.categories : ['Défilé', 'Commercial'];
+  const distinctions = Array.isArray(existingModel?.distinctions) ? existingModel.distinctions : [];
+  const experience = String(existingModel?.experience || experienceText(application.experience || raw.experience));
+  const journey = String(existingModel?.journey || 'Profil issu du casting Perfect Models Management.');
+  const quizScores = existingModel?.quiz_scores || {};
 
   await supabaseAdminUpdateUser(userId, {
     app_metadata: {
@@ -153,125 +177,87 @@ export async function POST(request: Request) {
     },
   });
 
-  const newModel = {
-    ...(existingModel || {}),
+  await privilegedSupabaseUpsert('models', {
     id: modelId,
-    name: fullName,
+    auth_user_id: userId,
+    casting_application_id: application.id,
     username,
-    password: '',
+    name: fullName,
     email,
-    supabaseUserId: userId,
-    authUserId: userId,
-    castingApplicationId: applicationId,
-    phone: application.phone || existingModel?.phone || '',
+    phone: application.phone || raw.phone || null,
+    gender: application.gender || raw.gender || null,
     age,
-    birthDate: application.birthDate || existingModel?.birthDate || '',
-    nationality: application.nationality || existingModel?.nationality || '',
-    instagram: application.instagram || existingModel?.instagram || '',
-    height: String(application.height || '').endsWith('cm') ? String(application.height) : `${application.height || '0'}cm`,
-    gender: application.gender,
-    location: application.city || '',
-    imageUrl: application.photoPortraitUrl || application.photoFullBodyUrl || existingModel?.imageUrl || '/logo.svg',
-    portfolioImages: [
-      application.photoPortraitUrl,
-      application.photoFullBodyUrl,
-      application.photoProfileUrl,
-      ...(existingModel?.portfolioImages || []),
-    ].filter(Boolean).filter((url: string, index: number, list: string[]) => list.indexOf(url) === index),
-    isPublic: existingModel?.isPublic ?? false,
-    isActive: true,
-    status: 'active',
+    birth_date: birthDate,
+    nationality: raw.nationality || null,
+    instagram_url: raw.instagram || null,
+    height,
+    location: application.city || raw.city || null,
     level: existingModel?.level || 'Débutant',
-    distinctions: existingModel?.distinctions || [],
-    measurements: {
-      chest: `${application.chest || '0'}cm`,
-      waist: `${application.waist || '0'}cm`,
-      hips: `${application.hips || '0'}cm`,
-      shoeSize: String(application.shoeSize || '0'),
-    },
-    categories: existingModel?.categories?.length ? existingModel.categories : ['Défilé', 'Commercial'],
-    experience: existingModel?.experience || experienceText(application.experience),
-    journey: existingModel?.journey || 'Profil issu du casting Perfect Models Management.',
-    quizScores: existingModel?.quizScores || {},
+    image_url: portrait,
+    categories,
+    measurements: normalizedMeasurements,
+    distinctions,
+    experience,
+    journey,
     permissions,
-    createdAt: existingModel?.createdAt || now,
-    accountProvisionedAt: now,
-  };
+    quiz_scores: quizScores,
+    is_public: existingModel?.is_public ?? false,
+    is_active: true,
+    status: 'active',
+    raw_data: {
+      ...(existingModel?.raw_data || {}),
+      ...raw,
+      portfolioImages,
+      accountProvisionedAt: now,
+      authUserId: userId,
+      supabaseUserId: userId,
+    },
+    updated_at: now,
+  }, 'id');
 
-  await Promise.all([
-    privilegedSupabaseUpsert('profiles', {
-      user_id: userId,
-      role: 'student',
-      identifier: username,
-      display_name: fullName,
-      email,
-      model_id: modelId,
-      must_change_password: true,
-      is_active: true,
-      metadata: { permissions, source: 'casting', casting_application_id: applicationId },
-      updated_at: now,
-    }, 'user_id'),
-    privilegedSupabaseUpsert('models', {
-      id: modelId,
-      auth_user_id: userId,
-      casting_application_id: isUuid(applicationId) ? applicationId : null,
-      username,
-      name: fullName,
-      email,
-      phone: application.phone || null,
-      gender: application.gender || null,
-      age: Number.isFinite(age) ? age : null,
-      birth_date: application.birthDate || null,
-      nationality: application.nationality || null,
-      instagram_url: application.instagram || null,
-      height: newModel.height,
-      location: application.city || null,
-      level: newModel.level,
-      image_url: newModel.imageUrl,
-      categories: newModel.categories,
-      measurements: newModel.measurements,
-      distinctions: newModel.distinctions,
-      experience: newModel.experience,
-      journey: newModel.journey,
-      permissions,
-      quiz_scores: newModel.quizScores,
-      is_public: false,
-      is_active: true,
-      status: 'active',
-      raw_data: application,
-      updated_at: now,
-    }, 'id'),
-    privilegedSupabaseUpsert('model_account_claims', {
-      model_id: modelId,
-      auth_user_id: userId,
-      agency_identifier: username,
-      full_name: fullName,
-      email,
-      phone: application.phone || null,
-      status: 'invited',
-      verification_method: 'casting_approval',
-      activation_email_status: 'sent_by_supabase_auth',
-      metadata: { casting_application_id: applicationId },
-      updated_at: now,
-    }, 'model_id'),
-  ]);
+  await privilegedSupabaseUpsert('profiles', {
+    user_id: userId,
+    role: 'student',
+    identifier: username,
+    display_name: fullName,
+    email,
+    model_id: modelId,
+    must_change_password: true,
+    is_active: true,
+    metadata: { permissions, source: 'casting', casting_application_id: applicationId },
+    updated_at: now,
+  }, 'user_id');
 
-  if (existingIndex >= 0) models[existingIndex] = newModel;
-  else models.push(newModel);
-  await setCollection('models', models);
+  await privilegedSupabaseUpsert('model_account_claims', {
+    model_id: modelId,
+    auth_user_id: userId,
+    agency_identifier: username,
+    full_name: fullName,
+    email,
+    phone: application.phone || raw.phone || null,
+    status: 'invited',
+    verification_method: 'casting_approval',
+    activation_email_status: 'sent_by_supabase_auth',
+    metadata: { casting_application_id: applicationId },
+    updated_at: now,
+  }, 'model_id');
 
-  applications[appIndex] = {
+  await privilegedSupabaseUpsert('casting_applications', {
     ...application,
     status: 'Accepté',
-    modelId,
-    authUserId: userId,
-    supabaseUserId: userId,
-    accountProvisionedAt: now,
-    activationEmailStatus: 'sent_by_supabase_auth',
-    activationEmailSentAt: now,
-    credentialsEmailStatus: 'replaced_by_secure_invite',
-  };
-  await setCollection('castingApplications', applications);
+    account_provisioned_at: now,
+    credentials_email_status: 'replaced_by_secure_invite',
+    raw_data: {
+      ...raw,
+      modelId,
+      authUserId: userId,
+      supabaseUserId: userId,
+      accountProvisionedAt: now,
+      activationEmailStatus: 'sent_by_supabase_auth',
+      activationEmailSentAt: now,
+    },
+    updated_at: now,
+  }, 'id');
 
   await archiveActivationMessage({ applicationId, modelId, to: email, name: fullName, username }).catch(() => undefined);
 
