@@ -1,2 +1,8 @@
-import LegacyRoute from '@/app/_legacy/LegacyRoute';
-export default function Page() { return <LegacyRoute component="ForumThread" role="student" />; }
+import { notFound, redirect } from 'next/navigation';
+import { ReplyForm } from '@/components/classroom/ForumComposer';
+import { getCurrentAppProfile } from '@/lib/auth/profile';
+import { createSupabaseAdminClient } from '@/lib/supabase/admin';
+
+export const dynamic='force-dynamic';
+type Props={params:Promise<{threadId:string}>};
+export default async function Page({params}:Props){const profile=await getCurrentAppProfile();if(!profile)redirect('/login?next=/formations/forum');if(!['student','admin','manager'].includes(profile.role))redirect('/profil');const{threadId}=await params;const supabase=createSupabaseAdminClient() as any;const{data:thread}=await supabase.from('forum_threads').select('*').eq('id',threadId).maybeSingle();if(!thread)notFound();const{data:replies}=await supabase.from('forum_replies').select('*').eq('thread_id',threadId).order('created_at');return <main className="min-h-screen bg-pm-dark px-5 py-12 text-pm-off-white sm:px-8 lg:px-10"><article className="mx-auto max-w-4xl"><p className="text-[9px] font-black uppercase tracking-[.35em] text-pm-gold">Forum PMM</p><h1 className="mt-4 font-playfair text-4xl font-bold sm:text-5xl">{thread.title||'Discussion'}</h1><p className="mt-6 whitespace-pre-wrap text-sm leading-8 text-white/55">{thread.body}</p><div className="mt-10 space-y-3">{replies?.map((reply:any)=><div key={reply.id} className="border border-white/10 bg-black/20 p-5"><p className="text-[8px] uppercase tracking-wider text-white/25">{new Date(reply.created_at).toLocaleString('fr-FR')}</p><p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-white/50">{reply.body}</p></div>)}</div><ReplyForm threadId={threadId}/></article></main>}
