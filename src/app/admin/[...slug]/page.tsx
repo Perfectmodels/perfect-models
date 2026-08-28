@@ -30,9 +30,22 @@ const ROUTES: Record<string, ResourceName> = {
   magazine: 'magazine',
   payments: 'payments',
   'recovery-requests': 'recovery',
-  settings: 'site-settings',
   'user-permissions': 'admin-permissions',
   'live-chat': 'classroom-messages',
+  services: 'services',
+  'jury-members': 'jury-members',
+  'registration-staff': 'registration-staff',
+  profiles: 'profiles',
+  analytics: 'analytics',
+  navigation: 'navigation',
+  'social-links': 'social-links',
+  content: 'content',
+  'site-settings': 'site-settings',
+  'settings/site': 'site-settings',
+  'settings/social': 'social-links',
+  'settings/navigation': 'navigation',
+  'settings/content': 'content',
+  'settings/profiles': 'profiles',
 };
 
 export default async function AdminResourceRoute({ params }: { params: Promise<{ slug: string[] }> }) {
