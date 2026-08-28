@@ -7,21 +7,17 @@ import Footer from './Footer';
 import { AnnouncementMarquee } from './Marquee';
 import AdminLayout from '../admin/AdminLayout';
 
-interface LayoutProps {
-  children: React.ReactNode;
-}
+type RuntimeData = {
+  navLinks?: Array<{ path: string; label: string; inFooter?: boolean; footerLabel?: string }>;
+  socialLinks?: Record<string, string>;
+  contactInfo?: { email?: string; phone?: string; address?: string };
+};
 
-const Layout: React.FC<LayoutProps> = ({ children }) => {
+const Layout: React.FC<{ children: React.ReactNode; runtimeData?: RuntimeData | null }> = ({ children, runtimeData }) => {
   const pathname = usePathname() || '/';
 
-  if (pathname.startsWith('/admin')) {
-    return <AdminLayout>{children}</AdminLayout>;
-  }
-
-  // Authentication owns the full viewport and must not inherit the public site chrome.
-  if (pathname.startsWith('/login') || pathname.startsWith('/auth/')) {
-    return <>{children}</>;
-  }
+  if (pathname.startsWith('/admin')) return <AdminLayout>{children}</AdminLayout>;
+  if (pathname.startsWith('/login') || pathname.startsWith('/auth/')) return <>{children}</>;
 
   return (
     <div className="min-h-screen bg-pm-dark font-montserrat flex flex-col">
@@ -31,7 +27,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <Breadcrumb />
         {children}
       </main>
-      <Footer />
+      <Footer runtimeData={runtimeData} />
     </div>
   );
 };
