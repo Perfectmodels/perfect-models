@@ -138,6 +138,14 @@ export async function POST(request: Request) {
       updated_at: new Date().toISOString(),
     }, 'user_id');
 
+    if (adminPermissions) {
+      await privilegedSupabaseUpsert('admin_permissions', {
+        permission_key: userId,
+        value: adminPermissions,
+        updated_at: new Date().toISOString(),
+      }, 'permission_key');
+    }
+
     return NextResponse.json({ success: true, userId, invitationSent: true }, { status: 201 });
   } catch (error: any) {
     const message = String(error?.message || 'Invitation Supabase impossible.');

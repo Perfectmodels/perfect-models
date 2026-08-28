@@ -15,7 +15,7 @@ const SECTIONS = [
 export default async function Page() {
   const profile = await getCurrentAppProfile();
   if (!profile) redirect('/login?next=/admin/settings');
-  if (!['admin', 'manager'].includes(profile.role)) redirect('/profil');
+  if (profile.role !== 'admin') redirect(profile.role === 'manager' ? '/manager' : '/profil');
 
   return (
     <main className="min-h-screen bg-pm-dark px-5 py-20 text-pm-off-white md:px-10">

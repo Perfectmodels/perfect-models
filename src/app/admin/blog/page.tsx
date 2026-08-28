@@ -3,6 +3,7 @@ import SupabaseResourceManager from '@/components/admin/SupabaseResourceManager'
 import { getCurrentAppProfile } from '@/lib/auth/profile';
 import { RESOURCE_DEFINITIONS } from '@/lib/resource-registry';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
+import { hasAdminPermission } from '@/lib/auth/admin-access';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,6 +11,7 @@ export default async function AdminBlogPage() {
   const profile = await getCurrentAppProfile();
   if (!profile) redirect('/login?next=/admin/blog');
   if (!['admin', 'manager'].includes(profile.role)) redirect('/profil');
+  if (!hasAdminPermission(profile, 'magazine')) redirect(profile.role === 'manager' ? '/manager' : '/profil');
 
   const definition = RESOURCE_DEFINITIONS.magazine;
   const supabase = createSupabaseAdminClient() as any;
