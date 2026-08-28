@@ -23,8 +23,8 @@ export default {
         'pm-paper': '#FFFCF8',
       },
       fontFamily: {
-        playfair: ['"Cormorant Garamond"', 'Georgia', 'serif'],
-        montserrat: ['"Manrope"', 'Arial', 'sans-serif'],
+        playfair: ['var(--font-pmm-display)', 'Georgia', 'serif'],
+        montserrat: ['var(--font-pmm-sans)', 'Arial', 'sans-serif'],
       },
       animation: {
         marquee: 'marquee 180s linear infinite',
