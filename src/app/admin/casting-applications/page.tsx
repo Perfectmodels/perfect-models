@@ -21,9 +21,19 @@ export default async function Page() {
     .range(0, INITIAL_PAGE_SIZE - 1);
   if (error) throw new Error(error.message);
 
+  const rows = (Array.isArray(data) ? data : []).map((application: any) => {
+    const hasSupabaseAuthInvite = application.credentials_email_status === 'sent_by_supabase_auth';
+    if (hasSupabaseAuthInvite) return application;
+    return {
+      ...application,
+      legacy_account_provisioned_at: application.account_provisioned_at || null,
+      account_provisioned_at: null,
+    };
+  });
+
   return (
     <CastingApplicationsManager
-      initialRows={Array.isArray(data) ? data : []}
+      initialRows={rows}
       initialTotal={Number(count || 0)}
       canProvision={profile.role === 'admin'}
     />
