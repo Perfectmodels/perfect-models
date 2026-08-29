@@ -21,7 +21,7 @@ async function resolve(context: Context) {
   if (!hasResourcePermission(profile, resource)) {
     return { error: NextResponse.json({ error: 'Permission manager insuffisante.' }, { status: 403 }) } as const;
   }
-  return { resource, id, definition: RESOURCE_DEFINITIONS[resource] } as const;
+  return { profile, resource, id, definition: RESOURCE_DEFINITIONS[resource] } as const;
 }
 
 export async function PATCH(request: Request, context: Context) {
@@ -35,7 +35,27 @@ export async function PATCH(request: Request, context: Context) {
     const message = error instanceof CrudValidationError ? error.message : 'Formulaire invalide.';
     return NextResponse.json({ error: message }, { status: 400 });
   }
+
   const supabase = createSupabaseAdminClient() as any;
+
+  if (resolved.resource === 'casting-applications' && updates.status === 'Accepté') {
+    if (resolved.profile.role !== 'admin') {
+      return NextResponse.json({ error: 'La validation finale d’une candidature est réservée à un administrateur.' }, { status: 403 });
+    }
+    const { data: current, error: readError } = await supabase
+      .from(resolved.definition.table)
+      .select('account_provisioned_at')
+      .eq(resolved.definition.primaryKey, decodeURIComponent(resolved.id))
+      .maybeSingle();
+    if (readError) return NextResponse.json({ error: readError.message }, { status: 400 });
+    if (!current?.account_provisioned_at) {
+      return NextResponse.json({
+        error: 'Pour accepter cette candidature, utilisez « Valider & créer le compte » afin de créer le compte Supabase Auth et d’envoyer l’invitation.',
+        code: 'CASTING_PROVISION_REQUIRED',
+      }, { status: 409 });
+    }
+  }
+
   const { data, error } = await supabase
     .from(resolved.definition.table)
     .update(updates)
