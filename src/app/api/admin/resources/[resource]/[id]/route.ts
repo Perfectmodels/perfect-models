@@ -1,26 +1,19 @@
 import { NextResponse } from 'next/server';
 import { getCurrentAppProfile } from '@/lib/auth/profile';
-import { RESOURCE_DEFINITIONS, isResourceName } from '@/lib/resource-registry';
+import { RESOURCE_DEFINITIONS, isResourceName } from '@/lib/agency-resource-registry';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { hasResourcePermission } from '@/lib/auth/admin-access';
 import { CrudValidationError, sanitizeResourcePayload } from '@/lib/admin-crud';
 
 export const dynamic = 'force-dynamic';
-
 type Context = { params: Promise<{ resource: string; id: string }> };
 
 async function resolve(context: Context) {
   const { resource, id } = await context.params;
   const profile = await getCurrentAppProfile();
-  if (!profile || !['admin', 'manager'].includes(profile.role)) {
-    return { error: NextResponse.json({ error: 'Non autorisé.' }, { status: 401 }) } as const;
-  }
-  if (!isResourceName(resource)) {
-    return { error: NextResponse.json({ error: 'Ressource inconnue.' }, { status: 404 }) } as const;
-  }
-  if (!hasResourcePermission(profile, resource)) {
-    return { error: NextResponse.json({ error: 'Permission manager insuffisante.' }, { status: 403 }) } as const;
-  }
+  if (!profile || !['admin', 'manager'].includes(profile.role)) return { error: NextResponse.json({ error: 'Non autorisé.' }, { status: 401 }) } as const;
+  if (!isResourceName(resource)) return { error: NextResponse.json({ error: 'Ressource inconnue.' }, { status: 404 }) } as const;
+  if (!hasResourcePermission(profile, resource)) return { error: NextResponse.json({ error: 'Permission manager insuffisante.' }, { status: 403 }) } as const;
   return { profile, resource, id, definition: RESOURCE_DEFINITIONS[resource] } as const;
 }
 
@@ -29,39 +22,18 @@ export async function PATCH(request: Request, context: Context) {
   if ('error' in resolved) return resolved.error;
   const body = await request.json().catch(() => null);
   let updates: Record<string, unknown>;
-  try {
-    updates = sanitizeResourcePayload(resolved.resource, body, 'update');
-  } catch (error) {
-    const message = error instanceof CrudValidationError ? error.message : 'Formulaire invalide.';
-    return NextResponse.json({ error: message }, { status: 400 });
-  }
-
+  try { updates = sanitizeResourcePayload(resolved.resource, body, 'update'); }
+  catch (error) { return NextResponse.json({ error: error instanceof CrudValidationError ? error.message : 'Formulaire invalide.' }, { status: 400 }); }
   const supabase = createSupabaseAdminClient() as any;
 
   if (resolved.resource === 'casting-applications' && updates.status === 'Accepté') {
-    if (resolved.profile.role !== 'admin') {
-      return NextResponse.json({ error: 'La validation finale d’une candidature est réservée à un administrateur.' }, { status: 403 });
-    }
-    const { data: current, error: readError } = await supabase
-      .from(resolved.definition.table)
-      .select('account_provisioned_at')
-      .eq(resolved.definition.primaryKey, decodeURIComponent(resolved.id))
-      .maybeSingle();
+    if (resolved.profile.role !== 'admin') return NextResponse.json({ error: 'La validation finale d’une candidature est réservée à un administrateur.' }, { status: 403 });
+    const { data: current, error: readError } = await supabase.from(resolved.definition.table).select('account_provisioned_at').eq(resolved.definition.primaryKey, decodeURIComponent(resolved.id)).maybeSingle();
     if (readError) return NextResponse.json({ error: readError.message }, { status: 400 });
-    if (!current?.account_provisioned_at) {
-      return NextResponse.json({
-        error: 'Pour accepter cette candidature, utilisez « Valider & créer le compte » afin de créer le compte Supabase Auth et d’envoyer l’invitation.',
-        code: 'CASTING_PROVISION_REQUIRED',
-      }, { status: 409 });
-    }
+    if (!current?.account_provisioned_at) return NextResponse.json({ error: 'Pour accepter cette candidature, utilisez « Valider & créer le compte » afin de créer le compte Supabase Auth et d’envoyer l’invitation.', code: 'CASTING_PROVISION_REQUIRED' }, { status: 409 });
   }
 
-  const { data, error } = await supabase
-    .from(resolved.definition.table)
-    .update(updates)
-    .eq(resolved.definition.primaryKey, decodeURIComponent(resolved.id))
-    .select('*')
-    .single();
+  const { data, error } = await supabase.from(resolved.definition.table).update(updates).eq(resolved.definition.primaryKey, decodeURIComponent(resolved.id)).select('*').single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ data });
 }
@@ -69,14 +41,9 @@ export async function PATCH(request: Request, context: Context) {
 export async function DELETE(_request: Request, context: Context) {
   const resolved = await resolve(context);
   if ('error' in resolved) return resolved.error;
-  if (resolved.definition.canDelete === false) {
-    return NextResponse.json({ error: 'Cette ressource est disponible en lecture seule.' }, { status: 405 });
-  }
+  if (resolved.definition.canDelete === false) return NextResponse.json({ error: 'Cette ressource est disponible en lecture seule.' }, { status: 405 });
   const supabase = createSupabaseAdminClient() as any;
-  const { error } = await supabase
-    .from(resolved.definition.table)
-    .delete()
-    .eq(resolved.definition.primaryKey, decodeURIComponent(resolved.id));
+  const { error } = await supabase.from(resolved.definition.table).delete().eq(resolved.definition.primaryKey, decodeURIComponent(resolved.id));
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ success: true });
 }
