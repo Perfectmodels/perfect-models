@@ -107,7 +107,6 @@ const ERP_RESOURCE_DEFINITIONS = {
 
 export const RESOURCE_DEFINITIONS = {
   ...LEGACY_RESOURCE_DEFINITIONS,
-  'booking-requests': { ...LEGACY_RESOURCE_DEFINITIONS.bookings, title: 'Demandes de booking' },
   ...ERP_RESOURCE_DEFINITIONS,
 };
 
