@@ -1,4 +1,4 @@
-import { RESOURCE_DEFINITIONS, type CrudField, type ResourceName } from '@/lib/resource-registry';
+import { RESOURCE_DEFINITIONS, type CrudField, type ResourceName } from '@/lib/agency-resource-registry';
 
 export class CrudValidationError extends Error {
   constructor(message: string) {
