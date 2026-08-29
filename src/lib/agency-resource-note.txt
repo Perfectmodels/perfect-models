@@ -1,0 +1,1 @@
+Le registre métier est branché sur le CRUD admin dans les commits suivants.
