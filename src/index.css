@@ -4,7 +4,7 @@
 
 @layer base {
   html { @apply bg-pm-ivory scroll-smooth; }
-  body { @apply bg-pm-ivory text-pm-ink font-montserrat antialiased selection:bg-pm-coral selection:text-white overflow-x-hidden; }
+  body { @apply bg-pm-ivory text-pm-ink font-montserrat antialiased selection:bg-pm-rose selection:text-white overflow-x-hidden; }
   h1, h2, h3, h4 { @apply font-playfair leading-[1.02] tracking-tight; }
   img { image-rendering: auto; }
   a, button, input, textarea, select { -webkit-tap-highlight-color: transparent; }
@@ -19,17 +19,17 @@
   .btn-premium::before { content: ''; @apply absolute inset-0 bg-pm-gold translate-y-full transition-transform duration-500 ease-[cubic-bezier(0.19,1,0.22,1)] -z-10; }
   .btn-premium:hover::before { @apply translate-y-0; }
 
-  .glass-card { @apply bg-white/75 backdrop-blur-2xl border border-pm-ink/10 shadow-[0_24px_70px_rgba(91,46,37,.08)]; }
+  .glass-card { @apply bg-white/78 backdrop-blur-2xl border border-pm-ink/10 shadow-[0_24px_70px_rgba(91,46,37,.08)]; }
   .gold-gradient-text { @apply text-pm-gold-light; }
   .admin-label { @apply block text-[10px] font-black text-pm-wine/70 uppercase tracking-[0.2em] mb-2; }
   .admin-input, .admin-textarea, .admin-select { @apply w-full bg-transparent border-b border-pm-ink/15 py-3 px-0 text-pm-ink transition-all duration-500 placeholder:text-pm-ink/25 focus:outline-none focus:border-pm-coral; }
   .admin-textarea { @apply min-h-[100px] resize-none; }
-  .contact-input { @apply w-full bg-white/5 border border-white/10 px-4 py-3 text-pm-off-white placeholder:text-white/20 transition-all duration-300 focus:outline-none focus:border-pm-gold focus:bg-white/[.08]; }
+  .contact-input { @apply w-full bg-white/5 border border-white/10 px-4 py-3 text-pm-off-white placeholder:text-white/30 transition-all duration-300 focus:outline-none focus:border-pm-gold focus:bg-white/[.08]; }
   .contact-input option { @apply bg-pm-dark text-pm-off-white; }
-  .login-modal-input { @apply w-full border border-white/10 bg-white/[0.045] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/20 hover:border-white/20 focus:border-pm-gold/70 focus:ring-4 focus:ring-pm-gold/10; }
+  .login-modal-input { @apply w-full border border-white/10 bg-white/[0.045] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/30 hover:border-white/20 focus:border-pm-gold/70 focus:ring-4 focus:ring-pm-gold/10; }
 
-  .pmm-button { @apply inline-flex min-h-12 items-center justify-center gap-4 border px-6 py-3 text-[8px] font-black uppercase tracking-[.24em] transition duration-300 sm:px-8 sm:text-[9px]; }
-  .pmm-button--light { @apply border-pm-ivory bg-pm-ivory text-pm-ink hover:border-pm-gold hover:bg-pm-gold; }
+  .pmm-button { @apply inline-flex min-h-12 items-center justify-center gap-4 rounded-full border px-6 py-3 text-[9px] font-black uppercase tracking-[.19em] transition duration-300 sm:px-8; }
+  .pmm-button--light { @apply border-pm-ivory bg-pm-ivory text-pm-ink hover:border-pm-gold-light hover:bg-pm-gold-light; }
   .pmm-button--ghost { @apply border-white/25 bg-transparent text-white hover:border-pm-gold hover:text-pm-gold-light; }
   .pmm-text-link { @apply inline-flex items-center gap-3 border-b border-current pb-2 text-[8px] font-black uppercase tracking-[.26em] text-pm-ivory transition duration-300 hover:text-pm-gold sm:text-[9px]; }
 
@@ -41,7 +41,14 @@
   .control-kicker { @apply text-[9px] font-extrabold uppercase tracking-[.24em] text-pm-wine/65; }
   .control-button { @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-pm-ink px-5 py-3 text-[9px] font-black uppercase tracking-[.18em] text-white transition hover:-translate-y-0.5 hover:bg-pm-wine; }
   .control-button--soft { @apply bg-pm-peach text-pm-wine hover:bg-pm-coral-soft hover:text-pm-ink; }
-  .warm-grid { background-image: linear-gradient(rgba(37,27,32,.055) 1px, transparent 1px), linear-gradient(90deg, rgba(37,27,32,.055) 1px, transparent 1px); background-size: 34px 34px; }
+
+  .brand-gradient { background: linear-gradient(110deg, #7d1f4d 0%, #e64c78 31%, #f25f4b 54%, #f2a43a 76%, #147d75 100%); }
+  .brand-grid { background-image: linear-gradient(rgba(37,24,32,.055) 1px, transparent 1px), linear-gradient(90deg, rgba(37,24,32,.055) 1px, transparent 1px); background-size: 42px 42px; }
+  .warm-grid { background-image: linear-gradient(rgba(37,24,32,.055) 1px, transparent 1px), linear-gradient(90deg, rgba(37,24,32,.055) 1px, transparent 1px); background-size: 34px 34px; }
+  .photo-card { @apply relative overflow-hidden rounded-[1.8rem] bg-pm-sand shadow-[0_26px_70px_rgba(74,31,49,.12)]; }
+  .color-card { @apply relative overflow-hidden rounded-[1.7rem] border border-pm-ink/[.07] p-6 shadow-[0_18px_45px_rgba(91,46,37,.07)]; }
+  .soft-section { @apply relative overflow-hidden bg-pm-paper; }
+  .soft-section::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle at 12% 12%, rgba(255,217,199,.55), transparent 28%), radial-gradient(circle at 88% 8%, rgba(189,230,208,.48), transparent 24%), radial-gradient(circle at 72% 78%, rgba(232,215,240,.45), transparent 24%); }
 }
 
 @layer utilities {
@@ -63,9 +70,9 @@ a[href="/admin/news"] { display: none !important; }
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
 
-.admin-messaging [class*="border-white"] { border-color: rgba(37, 27, 32, .1) !important; }
+.admin-messaging [class*="border-white"] { border-color: rgba(37, 24, 32, .1) !important; }
 .admin-messaging [class*="bg-white"] { background-color: rgba(255, 255, 255, .72) !important; }
-.admin-messaging [class*="text-white"] { color: rgba(37, 27, 32, .62) !important; }
+.admin-messaging [class*="text-white"] { color: rgba(37, 24, 32, .62) !important; }
 .admin-messaging input,
-.admin-messaging textarea { background: rgba(255, 249, 242, .9) !important; color: #251b20 !important; border: 1px solid rgba(37, 27, 32, .1); }
+.admin-messaging textarea { background: rgba(255, 248, 241, .9) !important; color: #251820 !important; border: 1px solid rgba(37, 24, 32, .1); }
 .admin-messaging section { border-radius: 1.7rem !important; box-shadow: 0 18px 55px rgba(91, 46, 37, .06); }
