@@ -4,9 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 
-function safeNext(value: string | null) {
-  return value && value.startsWith('/') && !value.startsWith('//') ? value : '/auth/set-password';
-}
+function safeNext(value: string | null) { return value && value.startsWith('/') && !value.startsWith('//') ? value : '/auth/set-password'; }
 
 export default function CompleteAuthPage() {
   const router = useRouter();
@@ -22,7 +20,6 @@ export default function CompleteAuthPage() {
         const accessToken = hash.get('access_token');
         const refreshToken = hash.get('refresh_token');
         const code = searchParams.get('code');
-
         if (accessToken && refreshToken) {
           const { error } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
           if (error) throw error;
@@ -34,13 +31,24 @@ export default function CompleteAuthPage() {
 
         const { data, error } = await supabase.auth.getUser();
         if (error || !data.user) throw error || new Error('Session absente.');
+        if (data.user.app_metadata?.account_source === 'model-self-signup') {
+          setMessage('Confirmation reçue. Rattachement de votre profil mannequin…');
+          const { data: sessionData } = await supabase.auth.getSession();
+          const token = sessionData.session?.access_token;
+          if (!token) throw new Error('Session de confirmation absente.');
+          const response = await fetch('/api/auth/model-signup/finalize', { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(result.error || 'Rattachement impossible.');
+          if (active) router.replace(result.redirect || '/profil');
+          return;
+        }
         if (active) router.replace(safeNext(searchParams.get('next')));
       } catch (error) {
         console.error('[auth/complete]', error);
-        if (active) setMessage('Ce lien est invalide ou a expiré. Demandez une nouvelle invitation.');
+        if (active) setMessage('Ce lien est invalide, a expiré ou n’a pas pu terminer l’activation. Demandez un nouveau lien si nécessaire.');
       }
     }
-    complete();
+    void complete();
     return () => { active = false; };
   }, [router, searchParams]);
 

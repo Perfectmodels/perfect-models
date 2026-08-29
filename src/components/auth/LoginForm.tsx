@@ -21,9 +21,7 @@ export default function LoginForm() {
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
-    setBusy(true);
-    setError('');
-    setResetSent(false);
+    setBusy(true); setError(''); setResetSent(false);
     const result = await login(identifier, password);
     setBusy(false);
     if (!result.success) return setError(result.error || 'Connexion impossible.');
@@ -33,9 +31,7 @@ export default function LoginForm() {
 
   const forgot = async () => {
     if (!identifier.includes('@')) return setError('Saisissez votre adresse e-mail dans le premier champ pour recevoir le lien de réinitialisation.');
-    setBusy(true);
-    setError('');
-    setResetSent(false);
+    setBusy(true); setError(''); setResetSent(false);
     const result = await resetPassword(identifier);
     setBusy(false);
     if (!result.success) return setError(result.error || 'Envoi impossible.');
@@ -57,11 +53,15 @@ export default function LoginForm() {
       <div aria-live="polite" aria-atomic="true">{resetSent && <p role="status" className="mt-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-900">Si un compte correspond à cette adresse, les instructions de réinitialisation ont été envoyées.</p>}</div>
 
       <button disabled={busy} className="control-button mt-8 min-h-12 w-full disabled:cursor-wait disabled:opacity-50">{busy ? 'Connexion…' : 'Se connecter'}</button>
-      <button type="button" disabled={busy} onClick={() => void forgot()} className="mt-5 min-h-11 w-full rounded-full text-center text-xs font-extrabold uppercase tracking-[.1em] text-pm-ink/55 transition hover:bg-pm-peach hover:text-pm-wine focus-visible:outline focus-visible:outline-2 focus-visible:outline-pm-coral disabled:opacity-50">Mot de passe oublié ?</button>
+      <button type="button" disabled={busy} onClick={() => void forgot()} className="mt-4 min-h-11 w-full rounded-full text-center text-xs font-extrabold uppercase tracking-[.1em] text-pm-ink/55 transition hover:bg-pm-peach hover:text-pm-wine focus-visible:outline focus-visible:outline-2 focus-visible:outline-pm-coral disabled:opacity-50">Mot de passe oublié ?</button>
 
-      <div className="mt-10 border-t border-pm-ink/10 pt-6 text-center">
-        <Link href="/" className="inline-flex min-h-11 items-center px-3 text-xs font-extrabold uppercase tracking-[.1em] text-pm-ink/50 transition hover:text-pm-wine focus-visible:outline focus-visible:outline-2 focus-visible:outline-pm-coral">Retour au site</Link>
+      <div className="mt-7 rounded-2xl border border-pm-coral/20 bg-pm-peach/70 p-5 text-left">
+        <p className="text-xs font-extrabold uppercase tracking-[.12em] text-pm-wine">Vous êtes déjà mannequin PMM ?</p>
+        <p className="mt-2 text-sm leading-6 text-pm-ink/60">Si votre profil figure dans la liste de l’agence mais que vous n’avez pas encore de compte, activez votre espace personnel.</p>
+        <Link href="/inscription/mannequin" className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-full bg-pm-wine px-5 text-xs font-extrabold uppercase tracking-[.1em] text-white transition hover:bg-pm-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pm-coral">Inscription mannequin</Link>
       </div>
+
+      <div className="mt-8 border-t border-pm-ink/10 pt-6 text-center"><Link href="/" className="inline-flex min-h-11 items-center px-3 text-xs font-extrabold uppercase tracking-[.1em] text-pm-ink/50 transition hover:text-pm-wine focus-visible:outline focus-visible:outline-2 focus-visible:outline-pm-coral">Retour au site</Link></div>
     </form>
   );
 }
