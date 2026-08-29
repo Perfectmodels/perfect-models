@@ -2,6 +2,7 @@ import { notFound, redirect } from 'next/navigation';
 import PaginatedResourceManager from '@/components/admin/PaginatedResourceManager';
 import { getCurrentAppProfile } from '@/lib/auth/profile';
 import { RESOURCE_DEFINITIONS, type ResourceName } from '@/lib/resource-registry';
+import { enhanceAdminFields } from '@/lib/admin-field-options';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { hasResourcePermission } from '@/lib/auth/admin-access';
 
@@ -63,6 +64,7 @@ export default async function AdminResourceRoute({ params }: { params: Promise<{
   if (!hasResourcePermission(profile, resource)) redirect(profile.role === 'manager' ? '/manager' : '/profil');
 
   const definition = RESOURCE_DEFINITIONS[resource];
+  const fields = enhanceAdminFields(resource, definition.fields);
   const supabase = createSupabaseAdminClient() as any;
   let query = supabase.from(definition.table).select('*', { count: 'exact' });
   if (definition.orderBy) query = query.order(definition.orderBy, { ascending: false, nullsFirst: false });
@@ -75,7 +77,7 @@ export default async function AdminResourceRoute({ params }: { params: Promise<{
       title={definition.title}
       primaryKey={definition.primaryKey}
       columns={definition.columns}
-      fields={definition.fields}
+      fields={fields}
       initialRows={Array.isArray(data) ? data : []}
       initialTotal={Number(count || 0)}
       canCreate={definition.canCreate}
