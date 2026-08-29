@@ -4,7 +4,8 @@ import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 export type PendingModelClaim = {
   userId: string; email: string; phone: string; birthDate: string; gender: string; nationality: string; city: string;
   heightCm: number | null; measurements: { chest?: number; waist?: number; hips?: number; shoeSize?: string };
-  instagramUrl: string | null; verificationMode: 'automatic' | 'agency_review'; submittedAt: string; emailConfirmedAt?: string;
+  instagramUrl: string | null; verificationMode: 'automatic' | 'agency_review'; submittedAt: string;
+  emailConfirmedAt?: string; previousClaimStatus?: string;
 };
 
 export function normalizePhone(value: unknown) { return String(value || '').replace(/[^0-9+]/g, '').replace(/^00/, '+'); }
@@ -42,7 +43,7 @@ export async function activateModelClaim(model: any, authUser: any) {
     measurements: measures, instagram_url: pending.instagramUrl || model.instagram_url, permissions: resolvedPermissions,
     is_active: true, status: 'active', claim_status: 'claimed', claimed_at: now,
     raw_data: { ...raw, pendingClaim: null, lastClaim: { ...pending, status: 'claimed', completedAt: now } }, updated_at: now,
-  }).eq('id', model.id).is('auth_user_id', null).select('id').maybeSingle();
+  }).eq('id', model.id).is('auth_user_id', null).eq('claim_status', 'pending_email_confirmation').select('id').maybeSingle();
   if (linkError || !linked) throw new Error(linkError?.message || 'Ce profil vient déjà d’être rattaché à un autre compte.');
 
   const { error: authError } = await supabase.auth.admin.updateUserById(authUser.id, { app_metadata: { ...(authUser.app_metadata || {}), role: 'student', identifier, model_id: model.id, profile_id: model.id, account_source: 'model-self-signup', pending_model_id: null, must_change_password: false } });

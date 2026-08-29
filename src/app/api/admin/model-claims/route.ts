@@ -23,14 +23,21 @@ export async function POST(request: Request) {
 
   if (action === 'approve') {
     if (!userData.user.email_confirmed_at) return NextResponse.json({ error: 'Le mannequin n’a pas encore confirmé son adresse e-mail.' }, { status: 409 });
-    try { const result = await activateModelClaim(model, userData.user); return NextResponse.json({ success: true, ...result }); }
-    catch (cause) { return NextResponse.json({ error: cause instanceof Error ? cause.message : 'Activation impossible.' }, { status: 409 }); }
+    const { error: statusError } = await supabase.from('models').update({ claim_status: 'pending_email_confirmation' }).eq('id', model.id).eq('claim_status', 'pending_agency_review').is('auth_user_id', null);
+    if (statusError) return NextResponse.json({ error: statusError.message }, { status: 500 });
+    const refreshed = { ...model, claim_status: 'pending_email_confirmation' };
+    try { const result = await activateModelClaim(refreshed, userData.user); return NextResponse.json({ success: true, ...result }); }
+    catch (cause) {
+      await supabase.from('models').update({ claim_status: 'pending_agency_review' }).eq('id', model.id).is('auth_user_id', null);
+      return NextResponse.json({ error: cause instanceof Error ? cause.message : 'Activation impossible.' }, { status: 409 });
+    }
   }
 
   const now = new Date().toISOString();
   await supabase.from('profiles').delete().eq('user_id', userId);
   if (userData.user.app_metadata?.account_source === 'model-self-signup' && String(userData.user.app_metadata?.pending_model_id || '') === String(model.id)) await supabase.auth.admin.deleteUser(userId);
-  const { error: releaseError } = await supabase.from('models').update({ claim_status: 'pending_claim', raw_data: { ...raw, pendingClaim: null, lastRejectedClaim: { ...pending, rejectedAt: now } }, updated_at: now }).eq('id', model.id).is('auth_user_id', null);
+  const previousStatus = ['available','pending_claim','not_applicable'].includes(String(pending.previousClaimStatus || '')) ? String(pending.previousClaimStatus) : 'available';
+  const { error: releaseError } = await supabase.from('models').update({ claim_status: previousStatus, raw_data: { ...raw, pendingClaim: null, lastRejectedClaim: { ...pending, rejectedAt: now } }, updated_at: now }).eq('id', model.id).is('auth_user_id', null);
   if (releaseError) return NextResponse.json({ error: releaseError.message }, { status: 500 });
   return NextResponse.json({ success: true, released: true });
 }

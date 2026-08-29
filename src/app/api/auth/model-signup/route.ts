@@ -2,12 +2,12 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { getSupabasePublishableKey, getSupabaseUrl } from '@/lib/supabase/config';
-import { normalizePhone, objectValue, validPassword, verificationMode } from '@/lib/model-claims';
+import { normalizePhone, validPassword, verificationMode } from '@/lib/model-claims';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'https://www.perfectmodels.online').replace(/\/$/, '');
-const claimedStates = new Set(['pending_email_confirmation', 'pending_agency_review', 'claimed', 'claim_in_progress']);
+const unavailableStates = new Set(['pending_agency_review', 'claimed', 'claim_in_progress']);
 
 function numberOrNull(value: unknown, min: number, max: number) { const parsed = Number(value); return Number.isFinite(parsed) && parsed >= min && parsed <= max ? parsed : null; }
 
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
   const admin = createSupabaseAdminClient() as any;
   const { data: model, error: modelError } = await admin.from('models').select('*').eq('id', modelId).maybeSingle();
   if (modelError || !model) return NextResponse.json({ error: 'Profil mannequin introuvable.' }, { status: 404 });
-  if (model.auth_user_id || claimedStates.has(String(model.claim_status || ''))) return NextResponse.json({ error: 'Ce profil est déjà rattaché à un compte ou fait l’objet d’une activation en cours.' }, { status: 409 });
+  if (model.auth_user_id || unavailableStates.has(String(model.claim_status || ''))) return NextResponse.json({ error: 'Ce profil est déjà rattaché à un compte ou fait l’objet d’une validation en cours.' }, { status: 409 });
 
   const mode = verificationMode(model, { email, phone, birthDate });
   const publicClient = createClient(getSupabaseUrl(), getSupabasePublishableKey(), { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
@@ -51,18 +51,17 @@ export async function POST(request: Request) {
     instagramUrl: String(body.instagramUrl || '').trim() || null,
     verificationMode: mode, submittedAt: now,
   };
-  const raw = objectValue(model.raw_data);
-  const { data: reserved, error: reserveError } = await admin.from('models').update({ claim_status: 'pending_email_confirmation', raw_data: { ...raw, pendingClaim }, updated_at: now }).eq('id', model.id).is('auth_user_id', null).or('claim_status.is.null,claim_status.eq.pending_claim,claim_status.eq.not_applicable,claim_status.eq.rejected').select('id').maybeSingle();
-  if (reserveError || !reserved) {
-    await admin.auth.admin.deleteUser(userId).catch(() => undefined);
-    return NextResponse.json({ error: 'Ce profil vient d’être réservé par une autre inscription. Rechargez la page.' }, { status: 409 });
-  }
-
   const identifier = String(model.username || `Man-PMM-${String(model.id).slice(0, 6)}`);
   const { error: authMetaError } = await admin.auth.admin.updateUserById(userId, { app_metadata: { ...(signup.user.app_metadata || {}), role: 'student', identifier, pending_model_id: model.id, account_source: 'model-self-signup', must_change_password: false } });
-  if (authMetaError) return NextResponse.json({ error: authMetaError.message }, { status: 500 });
-  const { error: profileError } = await admin.from('profiles').upsert({ user_id: userId, role: 'student', identifier, display_name: model.name, email, model_id: null, must_change_password: false, is_active: false, metadata: { source: 'model-self-signup', pending_model_id: model.id, claim_status: 'pending_email_confirmation' }, updated_at: now }, { onConflict: 'user_id' });
-  if (profileError) return NextResponse.json({ error: profileError.message }, { status: 500 });
+  if (authMetaError) {
+    await admin.auth.admin.deleteUser(userId).catch(() => undefined);
+    return NextResponse.json({ error: authMetaError.message }, { status: 500 });
+  }
+  const { error: profileError } = await admin.from('profiles').upsert({ user_id: userId, role: 'student', identifier, display_name: model.name, email, model_id: null, must_change_password: false, is_active: false, metadata: { source: 'model-self-signup', pending_model_id: model.id, pending_claim: pendingClaim, claim_status: 'pending_email_confirmation' }, updated_at: now }, { onConflict: 'user_id' });
+  if (profileError) {
+    await admin.auth.admin.deleteUser(userId).catch(() => undefined);
+    return NextResponse.json({ error: profileError.message }, { status: 500 });
+  }
 
   return NextResponse.json({ success: true, confirmationRequired: true, email, verification: mode === 'automatic' ? 'automatic_after_email' : 'agency_review_after_email' }, { status: 201 });
 }
