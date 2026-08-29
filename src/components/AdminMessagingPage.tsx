@@ -1,24 +1,19 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
+import { Link2, Loader2, Mail, X } from 'lucide-react';
 
 type Tab = 'inbox' | 'sent' | 'campaigns' | 'contacts' | 'compose';
 type TemplateId = 'partnership' | 'services' | 'sponsorship' | 'casting' | 'shooting' | 'followup';
 type Contact = { id: string; name?: string | null; email?: string | null; category?: string | null };
-type Message = {
-  id: string;
-  direction?: string | null;
-  channel?: string | null;
-  recipient?: string | null;
-  sender?: string | null;
-  subject?: string | null;
-  body?: string | null;
-  status?: string | null;
-  provider_message_id?: string | null;
-  metadata?: Record<string, unknown> | null;
-  created_at?: string | null;
-};
+type Message = { id:string; direction?:string|null; channel?:string|null; recipient?:string|null; sender?:string|null; subject?:string|null; body?:string|null; status?:string|null; provider_message_id?:string|null; metadata?:Record<string,unknown>|null; created_at?:string|null; client_id?:string|null; casting_id?:string|null; booking_id?:string|null; invoice_id?:string|null };
+type Client = { id:string; name?:string|null };
+type Casting = { id:string; title?:string|null };
+type Booking = { id:string; title?:string|null };
+type Invoice = { id:string; invoice_number?:string|null };
+type ContextDraft = { clientId:string; castingId:string; bookingId:string; invoiceId:string };
 
+const EMPTY_CONTEXT: ContextDraft = { clientId:'', castingId:'', bookingId:'', invoiceId:'' };
 const TEMPLATES: Record<TemplateId, { label: string; subject: string; body: string }> = {
   partnership: { label: 'Demande de partenariat', subject: 'Proposition de partenariat — Perfect Models Management', body: 'Bonjour,\n\nPerfect Models Management souhaite vous proposer une collaboration autour de nos activités de mode, de production et de valorisation des talents.\n\nNous serions heureux d’échanger avec votre équipe afin d’identifier les possibilités de partenariat adaptées à vos objectifs.\n\nSeriez-vous disponible pour un échange ?\n\nCordialement,\nPerfect Models Management' },
   services: { label: 'Proposition de services', subject: 'Proposition de services — Perfect Models Management', body: 'Bonjour,\n\nNous vous contactons afin de vous présenter les services de Perfect Models Management : mannequins, casting, production de défilés, shootings et accompagnement de projets mode.\n\nNous pouvons vous proposer des profils et une production adaptés à vos prochaines campagnes.\n\nAu plaisir d’échanger avec vous.\n\nCordialement,\nPerfect Models Management' },
@@ -27,161 +22,46 @@ const TEMPLATES: Record<TemplateId, { label: string; subject: string; body: stri
   shooting: { label: 'Shooting / campagne', subject: 'Collaboration shooting & campagne — Perfect Models Management', body: 'Bonjour,\n\nNous souhaitons vous proposer une collaboration autour d’un shooting ou d’une campagne avec les talents de Perfect Models Management.\n\nNous pouvons construire une proposition selon votre univers, vos objectifs et votre budget.\n\nCordialement,\nPerfect Models Management' },
   followup: { label: 'Relance partenariat', subject: 'Relance — Proposition de partenariat Perfect Models Management', body: 'Bonjour,\n\nNous revenons vers vous concernant notre précédente proposition de collaboration avec Perfect Models Management.\n\nNous restons disponibles pour vous présenter plus précisément nos projets et possibilités de partenariat.\n\nCordialement,\nPerfect Models Management' },
 };
+const EXCLUDED_PREFIXES = ['rh@','recrutement@','recrutement.','ressources.humaines@','capital.humain@','capitalhumain@','cv@','jobs@','emploi@','emplois@','recruittalents@','recruitment@'];
+const isCommercialContact=(email:string)=>{const value=email.trim().toLowerCase();return !EXCLUDED_PREFIXES.some(prefix=>value.startsWith(prefix))&&!value.endsWith('@gmail.com')&&!value.endsWith('@yahoo.com')&&!value.endsWith('@outlook.com');};
 
-const EXCLUDED_PREFIXES = ['rh@', 'recrutement@', 'recrutement.', 'ressources.humaines@', 'capital.humain@', 'capitalhumain@', 'cv@', 'jobs@', 'emploi@', 'emplois@', 'recruittalents@', 'recruitment@'];
-const isCommercialContact = (email: string) => {
-  const value = email.trim().toLowerCase();
-  return !EXCLUDED_PREFIXES.some(prefix => value.startsWith(prefix)) && !value.endsWith('@gmail.com') && !value.endsWith('@yahoo.com') && !value.endsWith('@outlook.com');
-};
+async function resource<T>(name:string,init?:RequestInit):Promise<T>{const response=await fetch(`/api/admin/resources/${name}`,{credentials:'include',cache:'no-store',...init,headers:{'Content-Type':'application/json',...(init?.headers||{})}});const payload=await response.json().catch(()=>({}));if(!response.ok)throw new Error(payload?.error||payload?.message||'Opération Supabase impossible.');return (payload?.data??payload) as T;}
 
-async function resource<T>(name: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`/api/admin/resources/${name}`, {
-    credentials: 'include',
-    cache: 'no-store',
-    ...init,
-    headers: { 'Content-Type': 'application/json', ...(init?.headers || {}) },
-  });
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(payload?.error || payload?.message || 'Opération Supabase impossible.');
-  return (payload?.data ?? payload) as T;
+export default function AdminMessagingPage(){
+  const [tab,setTab]=useState<Tab>('inbox'); const [subject,setSubject]=useState(''); const [body,setBody]=useState(''); const [to,setTo]=useState(''); const [sending,setSending]=useState(false); const [loading,setLoading]=useState(true); const [notice,setNotice]=useState('');
+  const [contactName,setContactName]=useState(''); const [contactEmail,setContactEmail]=useState(''); const [contactCategory,setContactCategory]=useState('Entreprise');
+  const [contacts,setContacts]=useState<Contact[]>([]); const [messages,setMessages]=useState<Message[]>([]); const [clients,setClients]=useState<Client[]>([]); const [castings,setCastings]=useState<Casting[]>([]); const [bookings,setBookings]=useState<Booking[]>([]); const [invoices,setInvoices]=useState<Invoice[]>([]);
+  const [composeContext,setComposeContext]=useState<ContextDraft>(EMPTY_CONTEXT); const [contextMessage,setContextMessage]=useState<Message|null>(null); const [contextDraft,setContextDraft]=useState<ContextDraft>(EMPTY_CONTEXT); const [contextBusy,setContextBusy]=useState(false);
+
+  useEffect(()=>{let active=true;Promise.all([resource<Contact[]>('mailing?pageSize=100'),resource<Message[]>('messages?pageSize=100'),resource<Client[]>('clients?pageSize=100'),resource<Casting[]>('castings?pageSize=100'),resource<Booking[]>('bookings?pageSize=100'),resource<Invoice[]>('invoices?pageSize=100')]).then(([contactRows,messageRows,clientRows,castingRows,bookingRows,invoiceRows])=>{if(!active)return;setContacts(contactRows.filter(c=>c.email&&isCommercialContact(c.email)));setMessages(messageRows);setClients(clientRows);setCastings(castingRows);setBookings(bookingRows);setInvoices(invoiceRows);}).catch(error=>active&&setNotice(error instanceof Error?error.message:'Chargement impossible.')).finally(()=>active&&setLoading(false));return()=>{active=false;};},[]);
+
+  const clientNames=useMemo(()=>new Map(clients.map(row=>[row.id,row.name||'Client'])),[clients]); const castingNames=useMemo(()=>new Map(castings.map(row=>[row.id,row.title||'Casting'])),[castings]); const bookingNames=useMemo(()=>new Map(bookings.map(row=>[row.id,row.title||'Booking'])),[bookings]); const invoiceNames=useMemo(()=>new Map(invoices.map(row=>[row.id,row.invoice_number||'Facture'])),[invoices]);
+  const orderedMessages=useMemo(()=>[...messages].sort((a,b)=>String(b.created_at||'').localeCompare(String(a.created_at||''))),[messages]); const sentLogs=useMemo(()=>orderedMessages.filter(x=>x.direction==='outbound'),[orderedMessages]); const inbox=useMemo(()=>orderedMessages.filter(x=>x.direction==='inbound'),[orderedMessages]); const campaigns=useMemo(()=>sentLogs.filter(x=>x.metadata?.kind==='campaign'),[sentLogs]);
+  const useTemplate=(id:TemplateId)=>{const template=TEMPLATES[id];setSubject(template.subject);setBody(template.body);setTab('compose');};
+
+  const linkMessage=async(messageId:string,draft:ContextDraft)=>{const response=await fetch('/api/admin/messages/context',{method:'PATCH',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({messageId,...draft})});const result=await response.json().catch(()=>({}));if(!response.ok)throw new Error(result.error||'Rattachement impossible.');setMessages(rows=>rows.map(item=>item.id===messageId?{...item,client_id:result.data?.client_id||null,casting_id:result.data?.casting_id||null,booking_id:result.data?.booking_id||null,invoice_id:result.data?.invoice_id||null}:item));return result;};
+  const openContext=(message:Message)=>{setContextMessage(message);setContextDraft({clientId:message.client_id||'',castingId:message.casting_id||'',bookingId:message.booking_id||'',invoiceId:message.invoice_id||''});setNotice('');};
+  const saveContext=async()=>{if(!contextMessage)return;setContextBusy(true);setNotice('');try{await linkMessage(contextMessage.id,contextDraft);setContextMessage(null);setNotice('Message relié au dossier métier.');}catch(error){setNotice(error instanceof Error?error.message:'Rattachement impossible.');}finally{setContextBusy(false);}};
+
+  const saveContact=async()=>{if(!contactName.trim()||!contactEmail.includes('@')||!isCommercialContact(contactEmail)){setNotice('Seuls les contacts professionnels non-RH sont autorisés.');return;}const email=contactEmail.trim().toLowerCase();if(contacts.some(c=>c.email?.toLowerCase()===email)){setNotice('Ce contact existe déjà dans Supabase.');return;}try{const created=await resource<Contact>('mailing',{method:'POST',body:JSON.stringify({name:contactName.trim(),email,category:contactCategory,raw_data:{source:'admin-messaging'}})});setContacts(current=>[created,...current]);setContactName('');setContactEmail('');setNotice('Contact professionnel enregistré dans Supabase.');}catch(error){setNotice(error instanceof Error?error.message:'Enregistrement impossible.');}};
+
+  const send=async(campaign=false)=>{const recipients=[...new Set(to.split(/[\n,;]+/).map(x=>x.trim().toLowerCase()).filter(x=>x.includes('@')&&isCommercialContact(x)))].map(email=>({email}));if(!subject.trim()||!body.trim()||!recipients.length){setNotice('Renseignez un objet, un message et au moins un destinataire professionnel.');return;}setSending(true);setNotice('');try{for(let index=0;index<recipients.length;index+=25){const batch=recipients.slice(index,index+25);const response=await fetch('/api/email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'raw',to:batch,subject,htmlContent:`<div style="font-family:Arial;line-height:1.7;white-space:pre-wrap">${body.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')}</div>`})});const emailResult=await response.json().catch(()=>({}));if(!response.ok)throw new Error(emailResult.error||'Échec de l’envoi');const created=await resource<Message>('messages',{method:'POST',body:JSON.stringify({direction:'outbound',channel:'email',recipient:batch.map(x=>x.email).join(', '),sender:'Perfect Models Management',subject,body,status:'sent',provider_message_id:emailResult.messageId||null,metadata:{kind:campaign||recipients.length>1?'campaign':'message',recipients:batch.map(x=>x.email),provider:'brevo'}})});if(Object.values(composeContext).some(Boolean))await linkMessage(created.id,composeContext);setMessages(current=>[created,...current]);}setNotice(`${recipients.length} destinataire(s) traité(s), journalisés et reliés au dossier sélectionné.`);setTo('');setBody('');setSubject('');setComposeContext(EMPTY_CONTEXT);setTab('sent');}catch(error){setNotice(error instanceof Error?error.message:'Erreur d’envoi');}finally{setSending(false);}};
+  const formatDate=(value?:string|null)=>value?new Date(value).toLocaleString('fr-FR'):'';
+  const contextBadges=(message:Message)=>{const entries=[[message.client_id?`Client · ${clientNames.get(message.client_id)||message.client_id}`:'', 'bg-pm-peach text-pm-wine'],[message.casting_id?`Casting · ${castingNames.get(message.casting_id)||message.casting_id}`:'','bg-pm-gold-light/50 text-pm-ink'],[message.booking_id?`Booking · ${bookingNames.get(message.booking_id)||message.booking_id}`:'','bg-pm-sage text-pm-teal'],[message.invoice_id?`Facture · ${invoiceNames.get(message.invoice_id)||message.invoice_id}`:'','bg-white text-pm-ink']].filter(([label])=>Boolean(label));return entries.map(([label,tone])=><span key={label} className={`rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[.05em] ${tone}`}>{label}</span>);};
+  const messageList=(rows:Message[],empty:string)=>rows.length===0?<div className="py-16 text-center text-pm-ink/40">{empty}</div>:rows.map(message=><article key={message.id} className="border-b border-pm-ink/[.08] py-4 last:border-0"><div className="flex flex-wrap items-start justify-between gap-3"><div className="min-w-0 flex-1"><p className="font-bold">{message.subject||'(Sans objet)'}</p><p className="mt-1 text-sm text-pm-ink/55">{message.direction==='inbound'?`De : ${message.sender||'Expéditeur'}`:`À : ${message.recipient||'Destinataire'}`}</p><p className="mt-1 text-xs text-pm-ink/35">{formatDate(message.created_at)}</p><div className="mt-3 flex flex-wrap gap-1.5">{contextBadges(message)}</div></div><button type="button" onClick={()=>openContext(message)} className="inline-flex min-h-9 items-center gap-2 rounded-full border border-pm-ink/10 bg-white px-3 text-xs font-bold"><Link2 size={13}/> Relier au dossier</button></div></article>);
+  const field='min-h-11 w-full rounded-xl border border-pm-ink/15 bg-white px-3 text-sm text-pm-ink outline-none focus:border-pm-coral focus:ring-4 focus:ring-pm-coral/10';
+
+  return <div className="p-1 text-pm-ink md:p-3"><div className="mx-auto max-w-7xl"><div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between"><div><p className="control-kicker">Communication · CRM</p><h1 className="mt-2 font-playfair text-4xl font-semibold">Messagerie métier</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-pm-ink/50">Chaque échange peut être rattaché à un client, casting, booking ou facture afin de conserver l’historique dans le bon dossier.</p></div><button onClick={()=>setTab('compose')} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-pm-ink px-5 text-xs font-black uppercase tracking-[.08em] text-white"><Mail size={15}/> Nouveau message</button></div><div className="mb-6 flex flex-wrap gap-2 border-b border-pm-ink/10 pb-3">{([['inbox','Boîte de réception'],['sent','Envoyés'],['campaigns','Campagnes'],['contacts','Contacts'],['compose','Composer']] as [Tab,string][]).map(([id,label])=><button key={id} onClick={()=>setTab(id)} className={`rounded-full px-4 py-2 text-sm font-bold ${tab===id?'bg-pm-wine text-white':'bg-white text-pm-ink/55 hover:bg-pm-peach'}`}>{label}</button>)}</div>{notice&&<div className="mb-5 rounded-xl border border-pm-gold/20 bg-pm-gold-light/30 p-4 text-sm font-semibold text-pm-ink">{notice}</div>}{loading&&<div className="py-16 text-center text-pm-ink/40">Chargement depuis Supabase…</div>}
+
+    {!loading&&tab==='inbox'&&<section className="control-card"><h2 className="font-playfair text-2xl font-semibold">Boîte de réception</h2><div className="mt-4">{messageList(inbox,'Aucun message entrant synchronisé.')}</div></section>}
+    {!loading&&tab==='sent'&&<section className="control-card"><h2 className="font-playfair text-2xl font-semibold">Messages envoyés</h2><div className="mt-4">{messageList(sentLogs,'Aucun message envoyé.')}</div></section>}
+    {!loading&&tab==='campaigns'&&<section className="control-card"><h2 className="font-playfair text-2xl font-semibold">Campagnes</h2><div className="mt-5 grid gap-4 md:grid-cols-3">{Object.entries(TEMPLATES).map(([id,template])=><button key={id} onClick={()=>useTemplate(id as TemplateId)} className="rounded-xl border border-pm-ink/10 bg-white p-5 text-left hover:border-pm-coral/40"><div className="font-bold">{template.label}</div><div className="mt-2 text-xs text-pm-ink/40">{template.subject}</div></button>)}</div><p className="mt-8 text-sm text-pm-ink/50">{campaigns.length} campagne(s) enregistrée(s) dans Supabase.</p></section>}
+    {!loading&&tab==='contacts'&&<section className="grid gap-6 lg:grid-cols-[1fr_1.5fr]"><div className="control-card"><h2 className="mb-5 font-playfair text-2xl font-semibold">Ajouter un contact professionnel</h2><input value={contactName} onChange={event=>setContactName(event.target.value)} placeholder="Entreprise" className={`${field} mb-3`}/><input value={contactEmail} onChange={event=>setContactEmail(event.target.value)} placeholder="email professionnel" className={`${field} mb-3`}/><input value={contactCategory} onChange={event=>setContactCategory(event.target.value)} placeholder="Catégorie" className={`${field} mb-4`}/><button onClick={saveContact} className="rounded-full bg-pm-ink px-5 py-3 text-xs font-black uppercase text-white">Enregistrer</button></div><div className="control-card"><h2 className="mb-4 font-playfair text-2xl font-semibold">Destinataires ({contacts.length})</h2>{contacts.length===0?<p className="py-10 text-center text-pm-ink/40">Aucun contact professionnel.</p>:contacts.map(contact=><div key={contact.id} className="border-b border-pm-ink/10 py-3"><div className="font-bold">{contact.name||'Contact'}</div><div className="text-sm text-pm-ink/50">{contact.email} · {contact.category||'Autre'}</div></div>)}</div></section>}
+    {!loading&&tab==='compose'&&<section className="control-card"><div className="mb-5 flex flex-wrap gap-2">{Object.entries(TEMPLATES).map(([id,template])=><button key={id} onClick={()=>useTemplate(id as TemplateId)} className="rounded-full border border-pm-ink/10 bg-white px-3 py-2 text-xs font-bold text-pm-ink/60 hover:border-pm-coral/40">{template.label}</button>)}</div><div className="grid gap-4"><textarea value={to} onChange={event=>setTo(event.target.value)} placeholder="Destinataires — emails séparés par virgule, point-virgule ou retour à la ligne" className={`${field} min-h-24 py-3`}/><input value={subject} onChange={event=>setSubject(event.target.value)} placeholder="Objet" className={field}/><textarea value={body} onChange={event=>setBody(event.target.value)} placeholder="Votre message" className={`${field} min-h-72 resize-y py-3`}/><ContextSelectors value={composeContext} onChange={setComposeContext} clients={clients} castings={castings} bookings={bookings} invoices={invoices} field={field}/><div className="flex flex-wrap justify-end gap-3"><button disabled={sending} onClick={()=>void send(false)} className="rounded-full border border-pm-ink/15 px-5 py-3 text-sm font-bold disabled:opacity-50">{sending?'Envoi…':'Envoyer'}</button><button disabled={sending} onClick={()=>void send(true)} className="rounded-full bg-pm-ink px-5 py-3 text-sm font-bold text-white disabled:opacity-50">{sending?'Envoi…':'Envoyer comme campagne'}</button></div></div></section>}
+
+    {contextMessage&&<div className="fixed inset-0 z-[80] grid place-items-center bg-pm-ink/50 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="message-context-title" onMouseDown={()=>{if(!contextBusy)setContextMessage(null)}}><div className="w-full max-w-2xl rounded-[1.7rem] bg-pm-paper p-6 shadow-2xl" onMouseDown={event=>event.stopPropagation()}><div className="flex items-start justify-between gap-4"><div><p className="control-kicker">Historique CRM</p><h2 id="message-context-title" className="mt-2 font-playfair text-3xl font-semibold">Relier ce message</h2><p className="mt-2 text-sm text-pm-ink/50">{contextMessage.subject||'(Sans objet)'}</p></div><button type="button" onClick={()=>setContextMessage(null)} className="grid h-10 w-10 place-items-center rounded-full bg-pm-peach" aria-label="Fermer"><X size={18}/></button></div><div className="mt-6"><ContextSelectors value={contextDraft} onChange={setContextDraft} clients={clients} castings={castings} bookings={bookings} invoices={invoices} field={field}/></div><div className="mt-6 flex justify-end gap-3"><button type="button" disabled={contextBusy} onClick={()=>setContextMessage(null)} className="rounded-full border border-pm-ink/15 px-5 py-3 text-xs font-bold">Annuler</button><button type="button" disabled={contextBusy} onClick={()=>void saveContext()} className="inline-flex items-center gap-2 rounded-full bg-pm-ink px-5 py-3 text-xs font-black uppercase text-white disabled:opacity-50">{contextBusy?<Loader2 size={14} className="animate-spin"/>:<Link2 size={14}/>} Enregistrer le rattachement</button></div></div></div>}
+  </div></div>;
 }
 
-export default function AdminMessagingPage() {
-  const [tab, setTab] = useState<Tab>('inbox');
-  const [subject, setSubject] = useState('');
-  const [body, setBody] = useState('');
-  const [to, setTo] = useState('');
-  const [sending, setSending] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [notice, setNotice] = useState('');
-  const [contactName, setContactName] = useState('');
-  const [contactEmail, setContactEmail] = useState('');
-  const [contactCategory, setContactCategory] = useState('Entreprise');
-  const [contacts, setContacts] = useState<Contact[]>([]);
-  const [messages, setMessages] = useState<Message[]>([]);
-
-  useEffect(() => {
-    let active = true;
-    Promise.all([resource<Contact[]>('mailing'), resource<Message[]>('messages')])
-      .then(([contactRows, messageRows]) => {
-        if (!active) return;
-        setContacts(contactRows.filter(c => c.email && isCommercialContact(c.email)));
-        setMessages(messageRows);
-      })
-      .catch(error => active && setNotice(error instanceof Error ? error.message : 'Chargement impossible.'))
-      .finally(() => active && setLoading(false));
-    return () => { active = false; };
-  }, []);
-
-  const orderedMessages = useMemo(() => [...messages].sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || ''))), [messages]);
-  const sentLogs = useMemo(() => orderedMessages.filter(x => x.direction === 'outbound'), [orderedMessages]);
-  const inbox = useMemo(() => orderedMessages.filter(x => x.direction === 'inbound'), [orderedMessages]);
-  const campaigns = useMemo(() => sentLogs.filter(x => x.metadata?.kind === 'campaign'), [sentLogs]);
-
-  const useTemplate = (id: TemplateId) => {
-    const template = TEMPLATES[id];
-    setSubject(template.subject);
-    setBody(template.body);
-    setTab('compose');
-  };
-
-  const saveContact = async () => {
-    if (!contactName.trim() || !contactEmail.includes('@') || !isCommercialContact(contactEmail)) {
-      setNotice('Seuls les contacts professionnels non-RH sont autorisés.');
-      return;
-    }
-    const email = contactEmail.trim().toLowerCase();
-    if (contacts.some(c => c.email?.toLowerCase() === email)) {
-      setNotice('Ce contact existe déjà dans Supabase.');
-      return;
-    }
-    try {
-      const created = await resource<Contact>('mailing', {
-        method: 'POST',
-        body: JSON.stringify({ name: contactName.trim(), email, category: contactCategory, raw_data: { source: 'admin-messaging' } }),
-      });
-      setContacts(current => [created, ...current]);
-      setContactName('');
-      setContactEmail('');
-      setNotice('Contact professionnel enregistré dans Supabase.');
-    } catch (error) {
-      setNotice(error instanceof Error ? error.message : 'Enregistrement impossible.');
-    }
-  };
-
-  const send = async (campaign = false) => {
-    const recipients = [...new Set(to.split(/[\n,;]+/).map(x => x.trim().toLowerCase()).filter(x => x.includes('@') && isCommercialContact(x)))].map(email => ({ email }));
-    if (!subject.trim() || !body.trim() || !recipients.length) {
-      setNotice('Renseignez un objet, un message et au moins un destinataire professionnel.');
-      return;
-    }
-    setSending(true);
-    setNotice('');
-    try {
-      for (let index = 0; index < recipients.length; index += 25) {
-        const batch = recipients.slice(index, index + 25);
-        const response = await fetch('/api/email', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            type: 'raw',
-            to: batch,
-            subject,
-            htmlContent: `<div style="font-family:Arial;line-height:1.7;white-space:pre-wrap">${body.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>')}</div>`,
-          }),
-        });
-        const emailResult = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(emailResult.error || 'Échec de l’envoi');
-
-        const created = await resource<Message>('messages', {
-          method: 'POST',
-          body: JSON.stringify({
-            direction: 'outbound',
-            channel: 'email',
-            recipient: batch.map(x => x.email).join(', '),
-            sender: 'Perfect Models Management',
-            subject,
-            body,
-            status: 'sent',
-            provider_message_id: emailResult.messageId || null,
-            metadata: {
-              kind: campaign || recipients.length > 1 ? 'campaign' : 'message',
-              recipients: batch.map(x => x.email),
-              provider: 'brevo',
-            },
-          }),
-        });
-        setMessages(current => [created, ...current]);
-      }
-      setNotice(`${recipients.length} destinataire(s) traité(s) et journalisé(s) dans Supabase.`);
-      setTo('');
-      setBody('');
-      setSubject('');
-      setTab('sent');
-    } catch (error) {
-      setNotice(error instanceof Error ? error.message : 'Erreur d’envoi');
-    } finally {
-      setSending(false);
-    }
-  };
-
-  const formatDate = (value?: string | null) => value ? new Date(value).toLocaleString('fr-FR') : '';
-
-  return <div className="admin-messaging p-1 text-pm-ink md:p-3">
-    <div className="mx-auto max-w-7xl">
-      <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-        <div><p className="text-[11px] uppercase tracking-[.3em] text-[#c9a84c]">Communication · Supabase</p><h1 className="mt-2 text-3xl font-semibold">Messagerie</h1><p className="mt-2 text-sm text-white/50">Messages, campagnes et contacts sont stockés dans les tables normalisées Supabase.</p></div>
-        <button onClick={() => setTab('compose')} className="rounded-full bg-[#c9a84c] px-5 py-3 text-sm font-semibold text-black">Nouveau message</button>
-      </div>
-      <div className="mb-6 flex flex-wrap gap-2 border-b border-white/10 pb-3">{([['inbox','Boîte de réception'],['sent','Envoyés'],['campaigns','Campagnes'],['contacts','Contacts'],['compose','Composer']] as [Tab,string][]).map(([id,label]) => <button key={id} onClick={() => setTab(id)} className={`rounded-full px-4 py-2 text-sm ${tab === id ? 'bg-[#c9a84c] text-black' : 'bg-white/5 text-white/65 hover:bg-white/10'}`}>{label}</button>)}</div>
-      {notice && <div className="mb-5 rounded-xl border border-[#c9a84c]/20 bg-[#c9a84c]/10 p-4 text-sm text-[#f4dc92]">{notice}</div>}
-      {loading && <div className="py-16 text-center text-white/40">Chargement depuis Supabase…</div>}
-
-      {!loading && tab === 'inbox' && <section className="rounded-2xl border border-white/10 bg-white/[.03] p-5"><h2 className="mb-4 text-xl">Boîte de réception</h2>{inbox.length === 0 ? <div className="py-16 text-center text-white/40">Aucun message entrant synchronisé.</div> : inbox.map(message => <div key={message.id} className="border-b border-white/10 py-4"><div className="font-medium">{message.sender || 'Expéditeur'}</div><div className="text-sm text-white/60">{message.subject}</div><div className="mt-1 text-xs text-white/35">{formatDate(message.created_at)}</div></div>)}</section>}
-      {!loading && tab === 'sent' && <section className="rounded-2xl border border-white/10 bg-white/[.03] p-5"><h2 className="mb-4 text-xl">Messages envoyés</h2>{sentLogs.length === 0 ? <div className="py-16 text-center text-white/40">Aucun message envoyé.</div> : sentLogs.map(message => <div key={message.id} className="border-b border-white/10 py-4"><div className="flex justify-between gap-4"><div><div className="font-medium">{message.subject}</div><div className="text-sm text-white/55">À : {message.recipient}</div></div><span className="text-xs text-[#c9a84c]">{message.status}</span></div><div className="mt-1 text-xs text-white/35">{formatDate(message.created_at)}</div></div>)}</section>}
-      {!loading && tab === 'campaigns' && <section className="rounded-2xl border border-white/10 bg-white/[.03] p-5"><h2 className="mb-5 text-xl">Campagnes</h2><div className="grid gap-4 md:grid-cols-3">{Object.entries(TEMPLATES).map(([id, template]) => <button key={id} onClick={() => useTemplate(id as TemplateId)} className="rounded-xl border border-white/10 p-5 text-left hover:border-[#c9a84c]/50"><div className="font-medium">{template.label}</div><div className="mt-2 text-xs text-white/40">{template.subject}</div></button>)}</div><p className="mt-8 text-sm text-white/50">{campaigns.length} campagne(s) enregistrée(s) dans Supabase.</p></section>}
-      {!loading && tab === 'contacts' && <section className="grid gap-6 lg:grid-cols-[1fr_1.5fr]"><div className="rounded-2xl border border-white/10 bg-white/[.03] p-5"><h2 className="mb-5 text-xl">Ajouter un contact professionnel</h2><input value={contactName} onChange={event => setContactName(event.target.value)} placeholder="Entreprise" className="mb-3 w-full rounded-xl bg-white/5 p-3 outline-none"/><input value={contactEmail} onChange={event => setContactEmail(event.target.value)} placeholder="email professionnel" className="mb-3 w-full rounded-xl bg-white/5 p-3 outline-none"/><input value={contactCategory} onChange={event => setContactCategory(event.target.value)} placeholder="Catégorie" className="mb-4 w-full rounded-xl bg-white/5 p-3 outline-none"/><button onClick={saveContact} className="rounded-full bg-[#c9a84c] px-5 py-3 font-semibold text-black">Enregistrer dans Supabase</button></div><div className="rounded-2xl border border-white/10 bg-white/[.03] p-5"><h2 className="mb-4 text-xl">Destinataires ({contacts.length})</h2>{contacts.length === 0 ? <p className="py-10 text-center text-white/40">Aucun contact professionnel.</p> : contacts.map(contact => <div key={contact.id} className="border-b border-white/10 py-3"><div>{contact.name || 'Contact'}</div><div className="text-sm text-white/50">{contact.email} · {contact.category || 'Autre'}</div></div>)}</div></section>}
-      {!loading && tab === 'compose' && <section className="rounded-2xl border border-white/10 bg-white/[.03] p-5"><div className="mb-5 flex flex-wrap gap-2">{Object.entries(TEMPLATES).map(([id, template]) => <button key={id} onClick={() => useTemplate(id as TemplateId)} className="rounded-full border border-white/10 px-3 py-2 text-xs text-white/65 hover:border-[#c9a84c]/50">{template.label}</button>)}</div><div className="grid gap-4"><textarea value={to} onChange={event => setTo(event.target.value)} placeholder="Destinataires — emails séparés par virgule, point-virgule ou retour à la ligne" className="min-h-24 rounded-xl bg-white/5 p-4 outline-none"/><input value={subject} onChange={event => setSubject(event.target.value)} placeholder="Objet" className="rounded-xl bg-white/5 p-4 outline-none"/><textarea value={body} onChange={event => setBody(event.target.value)} placeholder="Votre message" className="min-h-80 rounded-xl bg-white/5 p-4 outline-none"/><div className="flex flex-wrap justify-end gap-3"><button disabled={sending} onClick={() => send(false)} className="rounded-full border border-white/15 px-5 py-3 text-sm disabled:opacity-50">{sending ? 'Envoi…' : 'Envoyer'}</button><button disabled={sending} onClick={() => send(true)} className="rounded-full bg-[#c9a84c] px-5 py-3 text-sm font-semibold text-black disabled:opacity-50">{sending ? 'Envoi…' : 'Envoyer comme campagne'}</button></div></div></section>}
-    </div>
-  </div>;
-}
+function ContextSelectors({value,onChange,clients,castings,bookings,invoices,field}:{value:ContextDraft;onChange:(value:ContextDraft)=>void;clients:Client[];castings:Casting[];bookings:Booking[];invoices:Invoice[];field:string}){return <div className="rounded-2xl bg-pm-ivory p-4"><p className="mb-3 text-[9px] font-black uppercase tracking-[.14em] text-pm-wine">Dossier métier associé</p><div className="grid gap-3 md:grid-cols-2"><Select label="Client" value={value.clientId} onChange={clientId=>onChange({...value,clientId})} rows={clients.map(row=>({value:row.id,label:row.name||row.id}))} field={field}/><Select label="Casting" value={value.castingId} onChange={castingId=>onChange({...value,castingId})} rows={castings.map(row=>({value:row.id,label:row.title||row.id}))} field={field}/><Select label="Booking" value={value.bookingId} onChange={bookingId=>onChange({...value,bookingId})} rows={bookings.map(row=>({value:row.id,label:row.title||row.id}))} field={field}/><Select label="Facture" value={value.invoiceId} onChange={invoiceId=>onChange({...value,invoiceId})} rows={invoices.map(row=>({value:row.id,label:row.invoice_number||row.id}))} field={field}/></div></div>}
+function Select({label,value,onChange,rows,field}:{label:string;value:string;onChange:(value:string)=>void;rows:Array<{value:string;label:string}>;field:string}){return <label><span className="mb-1.5 block text-xs font-bold">{label}</span><select value={value} onChange={event=>onChange(event.target.value)} className={field}><option value="">Aucun</option>{rows.map(row=><option key={row.value} value={row.value}>{row.label}</option>)}</select></label>}
