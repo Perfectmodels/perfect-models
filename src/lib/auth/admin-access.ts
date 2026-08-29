@@ -1,12 +1,27 @@
 import type { AdminPagePermissions } from '@/types';
-import type { ResourceName } from '@/lib/resource-registry';
+import type { ResourceName } from '@/lib/agency-resource-registry';
 import type { AppSessionProfile } from './profile';
 
 export const RESOURCE_PERMISSION_MAP: Partial<Record<ResourceName, keyof AdminPagePermissions>> = {
   models: 'models',
+  availability: 'models',
   'casting-applications': 'castingApplications',
   'casting-scores': 'castingResults',
+  castings: 'castingApplications',
+  'casting-talents': 'castingResults',
+  'booking-requests': 'bookings',
   bookings: 'bookings',
+  'booking-options': 'bookings',
+  'calendar-events': 'bookings',
+  clients: 'bookings',
+  'client-contacts': 'bookings',
+  'client-selections': 'bookings',
+  'selection-items': 'bookings',
+  quotes: 'payments',
+  invoices: 'payments',
+  'invoice-payments': 'payments',
+  contracts: 'payments',
+  'image-rights': 'payments',
   'fashion-day-applications': 'fashionDayApplications',
   'fashion-day-events': 'fashionDayEvents',
   'fashion-day-reservations': 'fashionDayEvents',
