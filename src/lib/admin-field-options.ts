@@ -1,7 +1,6 @@
-import type { CrudField, CrudFieldOption, ResourceName } from '@/lib/resource-registry';
+import type { CrudField, CrudFieldOption, ResourceName } from '@/lib/agency-resource-registry';
 
 const option = (label: string, value = label): CrudFieldOption => ({ label, value });
-
 const GENDER_OPTIONS = [option('Femme'), option('Homme'), option('Autre')];
 const LEVEL_OPTIONS = [option('Débutant'), option('Intermédiaire'), option('Confirmé'), option('Professionnel')];
 const CURRENCY_OPTIONS = [option('Franc CFA (XAF)', 'XAF'), option('Euro (EUR)', 'EUR'), option('Dollar US (USD)', 'USD')];
@@ -18,7 +17,15 @@ const CASTING_STATUS_OPTIONS = [option('Nouveau'), option('En étude'), option('
 const STATUS_BY_RESOURCE: Partial<Record<ResourceName, readonly CrudFieldOption[]>> = {
   models: [option('Actif', 'active'), option('Inactif', 'inactive'), option('À réclamer', 'pending_claim')],
   'casting-applications': CASTING_STATUS_OPTIONS,
-  bookings: [option('Nouveau', 'new'), option('En étude', 'pending'), option('Confirmé', 'confirmed'), option('Refusé', 'rejected'), option('Annulé', 'cancelled')],
+  'booking-requests': [option('Nouveau', 'new'), option('En étude', 'pending'), option('Confirmé', 'confirmed'), option('Refusé', 'rejected'), option('Annulé', 'cancelled')],
+  bookings: [option('Option', 'option'), option('Confirmé', 'confirmed'), option('En production', 'in_production'), option('Terminé', 'completed'), option('Annulé', 'cancelled')],
+  castings: [option('Brouillon', 'draft'), option('Ouvert', 'open'), option('Matching', 'matching'), option('Shortlist', 'shortlist'), option('Callback', 'callback'), option('Clôturé', 'closed'), option('Annulé', 'cancelled')],
+  'booking-options': [option('Active', 'active'), option('Libérée', 'released'), option('Confirmée', 'confirmed'), option('Expirée', 'expired'), option('Annulée', 'cancelled')],
+  clients: [option('Prospect', 'lead'), option('Actif', 'active'), option('Inactif', 'inactive'), option('Archivé', 'archived')],
+  quotes: [option('Brouillon', 'draft'), option('Envoyé', 'sent'), option('Accepté', 'accepted'), option('Refusé', 'rejected'), option('Expiré', 'expired'), option('Annulé', 'cancelled')],
+  contracts: [option('Brouillon', 'draft'), option('Envoyé', 'sent'), option('Vu', 'viewed'), option('Signé', 'signed'), option('Expiré', 'expired'), option('Annulé', 'cancelled')],
+  invoices: [option('Brouillon', 'draft'), option('Envoyée', 'sent'), option('Partiel', 'partial'), option('Payée', 'paid'), option('En retard', 'overdue'), option('Annulée', 'cancelled')],
+  'image-rights': [option('Brouillon', 'draft'), option('Actifs', 'active'), option('À renouveler', 'expiring'), option('Expirés', 'expired'), option('Renouvelés', 'renewed'), option('Annulés', 'cancelled')],
   absences: [option('En attente', 'pending'), option('Justifiée', 'approved'), option('Refusée', 'rejected')],
   payments: [option('En attente', 'pending'), option('Payé', 'paid'), option('Impayé', 'unpaid'), option('Annulé', 'cancelled')],
   magazine: [option('Brouillon', 'draft'), option('Publié', 'published'), option('Archivé', 'archived')],
@@ -39,18 +46,16 @@ export function enhanceAdminFields(resource: ResourceName, fields: readonly Crud
   return fields.map((field) => {
     if (field.name === 'gender') return { ...field, type: 'select', options: GENDER_OPTIONS };
     if (field.name === 'level') return { ...field, type: 'select', options: LEVEL_OPTIONS };
-    if (field.name === 'currency') return { ...field, type: 'select', options: CURRENCY_OPTIONS };
+    if (field.name === 'currency' || field.name === 'rate_currency') return { ...field, type: 'select', options: CURRENCY_OPTIONS };
     if (field.name === 'channel') return { ...field, type: 'select', options: MESSAGE_CHANNEL_OPTIONS };
     if (field.name === 'platform') return { ...field, type: 'select', options: SOCIAL_PLATFORM_OPTIONS };
     if (field.name === 'application_type') return { ...field, type: 'select', options: APPLICATION_TYPE_OPTIONS };
     if (field.name === 'entity_type') return { ...field, type: 'select', options: ENTITY_TYPE_OPTIONS };
     if (field.name === 'status' && STATUS_BY_RESOURCE[resource]) return { ...field, type: 'select', options: STATUS_BY_RESOURCE[resource] };
-
     if (resource === 'services' && field.name === 'category') return { ...field, type: 'select', options: SERVICE_CATEGORY_OPTIONS };
     if (resource === 'magazine' && field.name === 'category') return { ...field, type: 'select', options: ARTICLE_CATEGORY_OPTIONS };
     if (resource === 'gallery' && field.name === 'provider') return { ...field, type: 'select', options: MEDIA_PROVIDER_OPTIONS };
     if (resource === 'gallery' && field.name === 'category') return { ...field, type: 'select', options: MEDIA_CATEGORY_OPTIONS };
-
     return field;
   });
 }
