@@ -1,5 +1,12 @@
-import Link from 'next/link';
+import ProfileSidebar from '@/components/profile/ProfileSidebar';
 
 export default function ProfileLayout({ children }: { children: React.ReactNode }) {
-  return <div className="bg-pm-ivory"><nav className="sticky top-0 z-40 border-b border-pm-ink/10 bg-pm-ivory/92 px-4 py-3 backdrop-blur-xl sm:px-6" aria-label="Espace mannequin"><div className="mx-auto flex max-w-7xl items-center gap-2 overflow-x-auto"><Link href="/profil" className="shrink-0 rounded-full bg-pm-wine px-4 py-2 text-[10px] font-black uppercase tracking-[.1em] text-white">Mon profil</Link><Link href="/profil/agency" className="shrink-0 rounded-full border border-pm-ink/10 bg-white px-4 py-2 text-[10px] font-black uppercase tracking-[.1em] text-pm-ink">Carrière & agence</Link><Link href="/profil/classroom" className="shrink-0 rounded-full border border-pm-ink/10 bg-white px-4 py-2 text-[10px] font-black uppercase tracking-[.1em] text-pm-ink">Classroom</Link><Link href="/profil/formation" className="shrink-0 rounded-full border border-pm-ink/10 bg-white px-4 py-2 text-[10px] font-black uppercase tracking-[.1em] text-pm-ink">Formation</Link></div></nav>{children}</div>;
+  return (
+    <div className="min-h-screen min-w-0 overflow-x-clip bg-pm-ivory text-pm-ink">
+      <div className="mx-auto grid min-h-screen w-full min-w-0 max-w-[1800px] lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[310px_minmax(0,1fr)]">
+        <ProfileSidebar />
+        <div className="min-w-0 overflow-x-clip">{children}</div>
+      </div>
+    </div>
+  );
 }
