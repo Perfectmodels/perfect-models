@@ -3,6 +3,7 @@ import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
+const HIDDEN_TYPES = ['visit'];
 
 function sameOrigin(request: Request) {
   const origin = request.headers.get('origin');
@@ -37,6 +38,10 @@ function audienceFilter(userId: string, role: string) {
   return clauses.join(',');
 }
 
+function hideTechnical<T extends { neq: (column: string, value: string) => T }>(query: T) {
+  return HIDDEN_TYPES.reduce((current, type) => current.neq('type', type), query);
+}
+
 export async function GET(request: Request) {
   const identity = await notificationIdentity();
   if (!identity) return NextResponse.json({ error: 'Connexion requise.' }, { status: 401 });
@@ -44,17 +49,19 @@ export async function GET(request: Request) {
   const admin = createSupabaseAdminClient() as any;
   const filter = audienceFilter(identity.userId, identity.role);
   const limit = safeLimit(new URL(request.url).searchParams.get('limit'));
-  const [{ data, error }, { count, error: countError }] = await Promise.all([
-    admin.from('notifications')
-      .select('id,type,title,body,href,is_read,created_at')
-      .or(filter)
-      .order('created_at', { ascending: false })
-      .limit(limit),
-    admin.from('notifications')
-      .select('id', { count: 'exact', head: true })
-      .or(filter)
-      .eq('is_read', false),
-  ]);
+  let itemsQuery = admin.from('notifications')
+    .select('id,type,title,body,href,is_read,created_at')
+    .or(filter)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  let countQuery = admin.from('notifications')
+    .select('id', { count: 'exact', head: true })
+    .or(filter)
+    .eq('is_read', false);
+  itemsQuery = hideTechnical(itemsQuery);
+  countQuery = hideTechnical(countQuery);
+
+  const [{ data, error }, { count, error: countError }] = await Promise.all([itemsQuery, countQuery]);
   if (error || countError) {
     console.error('[notifications] read failed', error || countError);
     return NextResponse.json({ error: 'Impossible de charger les notifications pour le moment.' }, { status: 503 });
@@ -76,6 +83,7 @@ export async function PATCH(request: Request) {
     .update({ is_read: true, read_at: now })
     .or(filter)
     .eq('is_read', false);
+  query = hideTechnical(query);
 
   if (body.all !== true) {
     const id = String(body.id || '').trim();
