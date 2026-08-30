@@ -96,7 +96,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <div className="pointer-events-none fixed bottom-4 left-4 right-4 z-[9999] flex flex-col items-end gap-2 sm:bottom-6 sm:left-auto sm:right-6" aria-label="Messages de l’application">
+      <div className="pointer-events-none fixed bottom-4 left-4 right-4 z-[9999] flex flex-col items-start gap-2 sm:bottom-6 sm:left-6 sm:right-auto" aria-label="Messages de l’application">
         <AnimatePresence mode="popLayout">
           {toasts.map((item) => <div key={item.id} className="pointer-events-auto w-full sm:w-auto"><ToastItem toast={item} onDismiss={dismiss} /></div>)}
         </AnimatePresence>
