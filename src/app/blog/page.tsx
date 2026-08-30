@@ -3,9 +3,10 @@ import Link from 'next/link';
 import VisualMasthead from '@/components/public/VisualMasthead';
 import { buildPageMetadata, MARKETING_PAGES } from '@/lib/seo';
 import { getPublicArticles } from '@/lib/public-content';
+import { getPublicSiteImages, imageOverrides } from '@/lib/site-images';
 
 export const metadata = buildPageMetadata({ ...MARKETING_PAGES.magazine, path: '/blog' });
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
 
 function formatDate(value?: string) {
   if (!value) return '';
@@ -16,9 +17,10 @@ function formatDate(value?: string) {
 const colors = ['bg-pm-peach', 'bg-pm-mint', 'bg-pm-lilac', 'bg-pm-sky', 'bg-pm-gold-light/70', 'bg-pm-coral-soft/65'];
 
 export default async function BlogPage() {
-  const articles = await getPublicArticles();
+  const [articles, siteImages] = await Promise.all([getPublicArticles(), getPublicSiteImages()]);
   const [featured, ...rest] = articles;
-  const images = articles.map((article) => article.imageUrl).filter(Boolean).slice(0, 5);
+  const articleImages = articles.map((article) => article.imageUrl).filter(Boolean).slice(0, 5);
+  const images = imageOverrides(siteImages, ['blog.hero.primary', 'blog.hero.secondary', 'blog.hero.tertiary'], [articleImages[0], articleImages[1], articleImages[2]]);
 
   return (
     <main className="min-h-screen bg-pm-ivory text-pm-ink">
