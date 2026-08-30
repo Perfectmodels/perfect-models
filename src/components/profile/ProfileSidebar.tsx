@@ -31,7 +31,8 @@ function NavItems({ pathname, compact = false }: { pathname: string; compact?: b
     <nav aria-label="Navigation espace mannequin" className={compact ? 'grid gap-2 sm:grid-cols-2' : 'grid gap-2'}>
       {items.map((item) => {
         const Icon = item.icon;
-        const active = activeFor(pathname, item.href, item.exact);
+        const exact = 'exact' in item ? item.exact : false;
+        const active = activeFor(pathname, item.href, exact);
         return (
           <Link
             key={item.href}
