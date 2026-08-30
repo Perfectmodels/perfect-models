@@ -56,6 +56,25 @@ export function absoluteUrl(value = '/') {
   return `${SITE_URL}${value.startsWith('/') ? value : `/${value}`}`;
 }
 
+export function buildSharePreviewUrl({
+  title,
+  description,
+  path,
+  image,
+  type = 'website',
+  category,
+}: Pick<PageMetadataInput, 'title' | 'description' | 'path' | 'image' | 'type' | 'category'>) {
+  const params = new URLSearchParams({
+    title,
+    description,
+    path,
+    type,
+  });
+  if (category) params.set('category', category);
+  if (image) params.set('image', absoluteUrl(image));
+  return `${SITE_URL}/api/og-preview?${params.toString()}`;
+}
+
 export function buildPageMetadata({
   title,
   description,
@@ -70,6 +89,17 @@ export function buildPageMetadata({
 }: PageMetadataInput): Metadata {
   const canonical = absoluteUrl(path);
   const absoluteImage = image ? absoluteUrl(image) : undefined;
+  const previewImage = buildSharePreviewUrl({ title, description, path, image, type, category });
+  const socialImages = [
+    {
+      url: previewImage,
+      width: 1200,
+      height: 630,
+      type: 'image/png',
+      alt: `${title} — ${SITE_NAME}`,
+    },
+    ...(absoluteImage ? [{ url: absoluteImage, alt: title }] : []),
+  ];
   const openGraph: Record<string, unknown> = {
     type,
     locale: SITE_LOCALE,
@@ -77,11 +107,9 @@ export function buildPageMetadata({
     siteName: SITE_NAME,
     title,
     description,
+    images: socialImages,
   };
 
-  if (absoluteImage) {
-    openGraph.images = [{ url: absoluteImage, alt: `${title} — ${SITE_NAME}` }];
-  }
   if (type === 'article' && publishedTime) openGraph.publishedTime = publishedTime;
   if (type === 'article' && authors?.length) openGraph.authors = authors;
 
@@ -130,7 +158,7 @@ export function buildPageMetadata({
       card: 'summary_large_image',
       title,
       description,
-      ...(absoluteImage ? { images: [absoluteImage] } : {}),
+      images: [previewImage],
     },
     other: {
       'geo.region': 'GA-1',
