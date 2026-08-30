@@ -65,6 +65,18 @@ export function absoluteRuntimeUrl(config: SiteRuntimeConfig, value = '/') {
   return `${config.siteUrl}${value.startsWith('/') ? value : `/${value}`}`;
 }
 
+function hasSpecificStreetAddress(config: SiteRuntimeConfig) {
+  const address = clean(config.address).toLocaleLowerCase('fr');
+  if (!address) return false;
+  const city = clean(config.city).toLocaleLowerCase('fr');
+  const genericLocations = new Set([
+    city,
+    `${city}, gabon`,
+    `${city}, ga`,
+  ]);
+  return !genericLocations.has(address);
+}
+
 export function buildOrganizationJsonLd(config: SiteRuntimeConfig) {
   return {
     '@context': 'https://schema.org',
@@ -81,11 +93,23 @@ export function buildOrganizationJsonLd(config: SiteRuntimeConfig) {
     ...(config.description ? { description: config.description } : {}),
     address: {
       '@type': 'PostalAddress',
-      ...(config.address ? { streetAddress: config.address } : {}),
+      ...(hasSpecificStreetAddress(config) ? { streetAddress: config.address } : {}),
       addressLocality: config.city,
       addressRegion: config.region,
       addressCountry: config.countryCode,
     },
+    areaServed: [
+      { '@type': 'City', name: config.city },
+      { '@type': 'Country', name: 'Gabon' },
+    ],
+    knowsAbout: [
+      'Mannequinat professionnel',
+      'Casting de mannequins',
+      'Booking de mannequins professionnels',
+      'Modèles photo et campagnes publicitaires',
+      'Formation de mannequins',
+      'Production et défilés de mode',
+    ],
     ...(config.geo ? { geo: { '@type': 'GeoCoordinates', latitude: config.geo.latitude, longitude: config.geo.longitude } } : {}),
     ...(config.socialLinks.length ? { sameAs: config.socialLinks } : {}),
   };
@@ -93,9 +117,13 @@ export function buildOrganizationJsonLd(config: SiteRuntimeConfig) {
 
 export function buildWebsiteJsonLd(config: SiteRuntimeConfig) {
   return {
-    '@context': 'https://schema.org', '@type': 'WebSite', '@id': `${config.siteUrl}/#website`, url: config.siteUrl,
-    name: config.siteName, alternateName: config.shortName, inLanguage: config.language,
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    '@id': `${config.siteUrl}/#website`,
+    url: config.siteUrl,
+    name: config.siteName,
+    alternateName: config.shortName,
+    inLanguage: config.language,
     publisher: { '@id': `${config.siteUrl}/#organization` },
-    potentialAction: { '@type': 'SearchAction', target: { '@type': 'EntryPoint', urlTemplate: `${config.siteUrl}/blog?search={search_term_string}` }, 'query-input': 'required name=search_term_string' },
   };
 }
