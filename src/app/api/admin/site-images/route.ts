@@ -21,14 +21,31 @@ function objectValue(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
 }
 
-function validImage(value: string) {
+function isDirectImgBB(value: string) {
   if (!value) return true;
-  if (value.startsWith('/')) return /^\/[A-Za-z0-9_./-]+$/.test(value);
   try {
     const url = new URL(value);
-    return url.protocol === 'https:' && (url.hostname === 'i.ibb.co' || url.hostname.endsWith('.vercel-storage.com'));
+    return url.protocol === 'https:' && url.hostname === 'i.ibb.co' && url.pathname.length > 1;
   } catch {
     return false;
+  }
+}
+
+async function isReachableImage(value: string) {
+  if (!value) return true;
+  if (!isDirectImgBB(value)) return false;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8_000);
+  try {
+    let response = await fetch(value, { method: 'HEAD', cache: 'no-store', redirect: 'follow', signal: controller.signal });
+    if (!response.ok || !String(response.headers.get('content-type') || '').toLowerCase().startsWith('image/')) {
+      response = await fetch(value, { method: 'GET', cache: 'no-store', redirect: 'follow', signal: controller.signal, headers: { Range: 'bytes=0-0' } });
+    }
+    return response.ok && String(response.headers.get('content-type') || '').toLowerCase().startsWith('image/');
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timeout);
   }
 }
 
@@ -65,7 +82,8 @@ export async function PATCH(request: Request) {
   const key = String(body?.key || '').trim();
   const value = String(body?.value || '').trim();
   if (!SITE_IMAGE_SLOT_KEYS.has(key)) return NextResponse.json({ error: 'Emplacement visuel inconnu.' }, { status: 400 });
-  if (!validImage(value)) return NextResponse.json({ error: 'Utilisez une image de la médiathèque, une URL ImgBB sécurisée ou un chemin local du site.' }, { status: 400 });
+  if (value && !isDirectImgBB(value)) return NextResponse.json({ error: 'Les nouvelles images du site doivent être téléversées via le module ImgBB.' }, { status: 400 });
+  if (value && !(await isReachableImage(value))) return NextResponse.json({ error: 'Cette image ImgBB est inaccessible ou ne renvoie pas un contenu image valide.' }, { status: 400 });
 
   try {
     const supabase = createSupabaseAdminClient() as any;
