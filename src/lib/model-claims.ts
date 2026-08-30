@@ -35,7 +35,7 @@ export async function activateModelClaim(model: any, authUser: any) {
     hips_cm: pending.measurements?.hips ?? model.hips_cm ?? null,
     shoe_size: pending.measurements?.shoeSize || model.shoe_size || null,
     measurements: measures, instagram_url: pending.instagramUrl || model.instagram_url, permissions: resolvedPermissions,
-    is_active: true, status: 'active', claim_status: 'claimed', claimed_at: now,
+    is_public: true, is_active: true, status: 'active', claim_status: 'claimed', claimed_at: now,
     raw_data: { ...raw, pendingClaim: null, lastClaim: { ...pending, status: 'claimed', completedAt: now } }, updated_at: now,
   }).eq('id', model.id).is('auth_user_id', null).eq('claim_status', 'pending_email_confirmation').select('id').maybeSingle();
   if (linkError || !linked) throw new Error(linkError?.message || 'Ce profil vient déjà d’être rattaché à un autre compte.');
