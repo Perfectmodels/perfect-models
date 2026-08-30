@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import HomeExperience from '@/components/public/HomeExperience';
+import HomeExperienceLive from '@/components/public/HomeExperienceLive';
 import { getFashionDayEvents, getPublicArticles, getPublicModels, getPublicServices } from '@/lib/public-content';
 import { getPublicSiteImages } from '@/lib/site-images';
 import { buildPageMetadata, MARKETING_PAGES } from '@/lib/seo';
@@ -17,7 +17,7 @@ export default async function Page() {
   ]);
 
   return (
-    <HomeExperience
+    <HomeExperienceLive
       models={models.slice(0, 18)}
       services={services.slice(0, 10)}
       events={events}
