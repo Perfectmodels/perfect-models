@@ -19,12 +19,12 @@ export default function Page() {
         <div className="pointer-events-none absolute -right-12 top-10 font-playfair text-[30vw] font-black italic leading-none text-white/[.025] sm:text-[22vw]">CAST</div>
         <div className="relative mx-auto grid max-w-7xl gap-14 lg:grid-cols-[1.4fr_.6fr] lg:items-end">
           <div>
-            <p className="editorial-kicker text-pm-gold">Casting · Perfect Models Management</p>
+            <p className="editorial-kicker text-pm-gold">Casting mannequin · Libreville, Gabon</p>
             <h1 className="mt-6 max-w-5xl font-playfair text-[clamp(3.8rem,10vw,8.5rem)] font-black italic leading-[.82] tracking-[-.055em]">
-              Entrez dans <span className="text-pm-gold">le cadre.</span>
+              Casting mannequin <span className="text-pm-gold">au Gabon.</span>
             </h1>
             <p className="mt-8 max-w-2xl text-sm leading-7 text-white/55 sm:text-base sm:leading-8">
-              PMM recherche des visages, des silhouettes et surtout des personnalités capables de porter une image avec justesse. Déposez votre candidature et présentez-nous votre univers.
+              Perfect Models Management reçoit les candidatures de nouveaux talents à Libreville et au Gabon pour ses prochaines productions, campagnes, shootings et défilés. Déposez votre dossier et présentez-nous votre univers.
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <Link href="/casting-formulaire" className="pmm-button border-pm-gold bg-pm-gold text-black hover:bg-pm-gold-light">Déposer ma candidature</Link>
