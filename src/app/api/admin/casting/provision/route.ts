@@ -230,10 +230,10 @@ export async function POST(request: Request) {
       journey,
       permissions,
       quiz_scores: quizScores,
-      is_public: existingModel?.is_public ?? false,
+      is_public: true,
       is_active: true,
       status: 'active',
-      claim_status: 'invited',
+      claim_status: 'pending_activation',
       raw_data: {
         ...(existingModel?.raw_data || {}),
         ...raw,
@@ -287,7 +287,13 @@ export async function POST(request: Request) {
     if (newlyInvited) {
       await supabase.auth.admin.deleteUser(userId).catch(() => undefined);
     }
-    return NextResponse.json({ error: `Le compte n’a pas pu être finalisé : ${String(error?.message || 'erreur Supabase')}` }, { status: 500 });
+    const isClaimStatusConstraint = String(error?.code || '') === '23514' || String(error?.message || '').includes('models_claim_status_check');
+    return NextResponse.json({
+      error: isClaimStatusConstraint
+        ? 'Le statut d’activation du mannequin n’a pas pu être enregistré. La création a été annulée proprement ; vous pouvez relancer la validation.'
+        : `Le compte n’a pas pu être finalisé : ${String(error?.message || 'erreur Supabase')}`,
+      code: isClaimStatusConstraint ? 'MODEL_CLAIM_STATUS_INVALID' : 'CASTING_PROVISION_FAILED',
+    }, { status: 500 });
   }
 
   await archiveActivationMessage({ applicationId, modelId, to: email, name: fullName, username }).catch(() => undefined);
