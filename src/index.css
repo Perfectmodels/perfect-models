@@ -3,11 +3,15 @@
 @tailwind utilities;
 
 @layer base {
-  html { @apply bg-pm-ivory scroll-smooth; }
-  body { @apply bg-pm-ivory text-pm-ink font-montserrat antialiased selection:bg-pm-rose selection:text-white overflow-x-hidden; }
+  html { @apply bg-pm-ivory scroll-smooth; width: 100%; max-width: 100%; overflow-x: clip; }
+  body { @apply bg-pm-ivory text-pm-ink font-montserrat antialiased selection:bg-pm-rose selection:text-white; width: 100%; max-width: 100%; overflow-x: clip; }
   h1, h2, h3, h4 { @apply font-playfair leading-[1.02] tracking-tight; }
-  img { image-rendering: auto; }
+  img { image-rendering: auto; max-width: 100%; }
+  video, canvas, svg { max-width: 100%; }
   a, button, input, textarea, select { -webkit-tap-highlight-color: transparent; }
+  main, section, article, aside, nav, header, footer { min-width: 0; max-width: 100%; }
+  h1, h2, h3, h4, h5, h6, p, a, button, label, td, th, dd, dt { overflow-wrap: anywhere; }
+  input, textarea, select { max-width: 100%; min-width: 0; }
   @media print { .print-hide { @apply hidden; } .printable-content { @apply block; } body { @apply bg-white text-black; } }
 }
 
@@ -56,6 +60,7 @@
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .bg-dots { background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); }
   .text-balance { text-wrap: balance; }
+  .viewport-safe { min-width: 0; max-width: 100%; overflow-x: clip; }
 }
 
 /* Canonical editorial admin module: keep the existing link as a compatibility entry point, but display it as Blog. */
