@@ -19,7 +19,7 @@
   .btn-premium::before { content: ''; @apply absolute inset-0 bg-pm-gold translate-y-full transition-transform duration-500 ease-[cubic-bezier(0.19,1,0.22,1)] -z-10; }
   .btn-premium:hover::before { @apply translate-y-0; }
 
-  .glass-card { @apply bg-white/78 backdrop-blur-2xl border border-pm-ink/10 shadow-[0_24px_70px_rgba(91,46,37,.08)]; }
+  .glass-card { @apply bg-white/75 backdrop-blur-2xl border border-pm-ink/10 shadow-[0_24px_70px_rgba(91,46,37,.08)]; }
   .gold-gradient-text { @apply text-pm-gold-light; }
   .admin-label { @apply block text-[10px] font-black text-pm-wine/70 uppercase tracking-[0.2em] mb-2; }
   .admin-input, .admin-textarea, .admin-select { @apply w-full bg-transparent border-b border-pm-ink/15 py-3 px-0 text-pm-ink transition-all duration-500 placeholder:text-pm-ink/25 focus:outline-none focus:border-pm-coral; }
