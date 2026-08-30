@@ -2,21 +2,24 @@ import Image from 'next/image';
 import Link from 'next/link';
 import VisualMasthead from '@/components/public/VisualMasthead';
 import { getFashionDayEvents, getPublicModels, getPublicServices } from '@/lib/public-content';
+import { getPublicSiteImages, imageOverrides } from '@/lib/site-images';
 import { buildPageMetadata, MARKETING_PAGES } from '@/lib/seo';
 
 export const metadata = buildPageMetadata(MARKETING_PAGES.services);
-export const revalidate = 3600;
+export const dynamic = 'force-dynamic';
 
 const categoryOrder = ['Services Mannequinat', 'Services Mode et Stylisme', 'Services Événementiels'];
 const colors = ['bg-pm-peach', 'bg-pm-mint', 'bg-pm-lilac', 'bg-pm-sky', 'bg-pm-gold-light/70', 'bg-pm-coral-soft/65'];
 
 export default async function Page() {
-  const [services, models, events] = await Promise.all([getPublicServices(), getPublicModels(), getFashionDayEvents()]);
+  const [services, models, events, siteImages] = await Promise.all([getPublicServices(), getPublicModels(), getFashionDayEvents(), getPublicSiteImages()]);
   const groups = categoryOrder.map((category) => ({ category, items: services.filter((service) => service.category === category) })).filter((group) => group.items.length > 0);
-  const images = Array.from(new Set([
+  const dynamicImages = Array.from(new Set([
     ...models.slice(0, 8).flatMap((model) => [model.imageUrl, ...(model.portfolioImages || []).slice(0, 1)]),
     ...events.slice(0, 3).flatMap((event) => [event.coverImageUrl, ...(event.galleryImages || []).slice(0, 1)]),
   ].filter(Boolean))) as string[];
+  const heroImages = imageOverrides(siteImages, ['services.hero.primary', 'services.hero.secondary', 'services.hero.tertiary'], [dynamicImages[0], dynamicImages[1], dynamicImages[2]]);
+  const stripImages = imageOverrides(siteImages, ['services.strip.1', 'services.strip.2', 'services.strip.3', 'services.strip.4', 'services.strip.5'], [dynamicImages[0], dynamicImages[1], dynamicImages[2], dynamicImages[3], dynamicImages[4]]);
 
   return (
     <main className="min-h-screen bg-pm-ivory text-pm-ink">
@@ -25,14 +28,14 @@ export default async function Page() {
         title="Des services pensés"
         accent="pour l’image et la présence."
         description="De la détection de talents à la production d’image, nos expertises accompagnent mannequins, marques, créateurs et événements dans une logique professionnelle complète."
-        images={images}
+        images={heroImages}
         tone="gold"
         primary={{ label: 'Explorer les expertises', href: '#expertises' }}
         secondary={{ label: 'Présenter un projet', href: '/contact' }}
         meta={[`${services.length} services`, 'Talent management', 'Production', 'Événementiel']}
       />
 
-      {images.length > 2 && <section className="bg-pm-ink px-5 py-7 sm:px-8 lg:px-12 xl:px-16"><div className="mx-auto grid max-w-[1550px] grid-cols-2 gap-3 md:grid-cols-5">{images.slice(0, 5).map((image, index) => <div key={image} className={`relative overflow-hidden rounded-[1.4rem] ${index === 0 || index === 4 ? 'aspect-[3/4]' : 'aspect-square'}`}><Image src={image} alt="Expertises Perfect Models Management" fill sizes="(max-width:768px) 50vw, 20vw" className="object-cover" /></div>)}</div></section>}
+      {stripImages.length > 2 && <section className="bg-pm-ink px-5 py-7 sm:px-8 lg:px-12 xl:px-16"><div className="mx-auto grid max-w-[1550px] grid-cols-2 gap-3 md:grid-cols-5">{stripImages.slice(0, 5).map((image, index) => <div key={`${image}-${index}`} className={`relative overflow-hidden rounded-[1.4rem] ${index === 0 || index === 4 ? 'aspect-[3/4]' : 'aspect-square'}`}><Image src={image} alt="Expertises Perfect Models Management" fill sizes="(max-width:768px) 50vw, 20vw" className="object-cover" /></div>)}</div></section>}
 
       <section id="expertises" className="soft-section px-5 py-20 sm:px-8 sm:py-28 lg:px-12 xl:px-16">
         <div className="relative mx-auto max-w-[1550px]">
