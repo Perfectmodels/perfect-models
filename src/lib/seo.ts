@@ -5,7 +5,7 @@ export const SITE_NAME = 'Perfect Models Management';
 export const SITE_SHORT_NAME = 'PMM';
 export const SITE_LOCALE = 'fr_GA';
 export const DEFAULT_DESCRIPTION =
-  'Agence de mannequins, référence de la mode, du stylisme, du mannequinat et de la culture à Libreville, Gabon : booking, casting, formation, créateurs, défilés et événements avec Perfect Models Management.';
+  'Agence de mannequins à Libreville, Gabon : booking de talents, castings, modèles photo, publicité, défilés, formation et productions de mode avec Perfect Models Management.';
 
 export const SOCIAL_LINKS = [
   'https://www.facebook.com/perfectmodels.ga/',
@@ -152,34 +152,27 @@ export const organizationJsonLd = {
   logo: `${SITE_URL}/logo.svg`,
   image: `${SITE_URL}/opengraph-image`,
   email: 'contact@perfectmodels.online',
-  telephone: '+24100000000',
   foundingDate: '2021',
   description: DEFAULT_DESCRIPTION,
   priceRange: '$$',
   address: {
     '@type': 'PostalAddress',
-    streetAddress: 'Libreville',
     addressLocality: 'Libreville',
     addressRegion: 'Estuaire',
     addressCountry: 'GA',
-  },
-  geo: {
-    '@type': 'GeoCoordinates',
-    latitude: 0.3901,
-    longitude: 9.4544,
   },
   areaServed: [
     { '@type': 'City', name: 'Libreville' },
     { '@type': 'Country', name: 'Gabon' },
   ],
   knowsAbout: [
-    'Mode et Stylisme',
-    'Mannequinat et Castings',
-    'Culture Gabonaise et Événements',
-    'Haute Couture et Créateurs de Mode',
+    'Mannequinat professionnel',
+    'Casting de mannequins',
     'Booking de mannequins professionnels',
+    'Modèles photo et campagnes publicitaires',
     'Formation de mannequins',
-    'Production et Défilés de mode',
+    'Production et défilés de mode',
+    'Mode et stylisme au Gabon',
   ],
   sameAs: SOCIAL_LINKS,
 };
@@ -197,7 +190,7 @@ export const websiteJsonLd = {
     '@type': 'SearchAction',
     target: {
       '@type': 'EntryPoint',
-      urlTemplate: `${SITE_URL}/magazine?search={search_term_string}`,
+      urlTemplate: `${SITE_URL}/blog?search={search_term_string}`,
     },
     'query-input': 'required name=search_term_string',
   },
@@ -218,66 +211,66 @@ export function breadcrumbJsonLd(items: Array<{ name: string; path: string }>) {
 
 export const MARKETING_PAGES = {
   home: {
-    title: 'Mode, Stylisme, Mannequinat & Culture à Libreville, Gabon',
+    title: 'Agence de mannequins à Libreville, Gabon',
     description:
-      'Perfect Models Management, agence leader de mannequins, stylisme et culture à Libreville, Gabon : découvrez nos talents, castings, défilés, formations et créateurs de mode.',
+      'Perfect Models Management est une agence de mannequins à Libreville : booking, casting, modèles photo, publicité, défilés et talents professionnels au Gabon.',
     path: '/',
-    keywords: ['mode Gabon', 'stylisme Libreville', 'mannequinat Gabon', 'culture gabonaise', 'agence mannequin Libreville'],
+    keywords: ['agence mannequin Libreville', 'agence mannequin Gabon', 'mannequins professionnels Gabon', 'booking mannequin Libreville'],
   },
   agency: {
-    title: 'Maison de la Mode, du Stylisme et de la Culture au Gabon',
+    title: 'Agence de mannequinat à Libreville, Gabon',
     description:
-      'Découvrez Perfect Models Management à Libreville : notre vision du mannequinat, du stylisme, de la culture gabonaise et notre promotion des créateurs locaux.',
+      'Découvrez Perfect Models Management, agence de mannequinat basée à Libreville : management de talents, casting, booking, formation et productions de mode au Gabon.',
     path: '/agence',
-    keywords: ['mode et culture Gabon', 'stylisme Libreville', 'créateurs de mode Gabon', 'agence mannequinat Libreville'],
+    keywords: ['agence mannequin Libreville', 'agence de mannequinat Gabon', 'management talents Gabon', 'agence mode Libreville'],
   },
   models: {
-    title: 'Mannequins professionnels, Stylisme & Portfolios au Gabon',
+    title: 'Mannequins professionnels au Gabon — Booking à Libreville',
     description:
-      'Découvrez le book des mannequins professionnels de Perfect Models Management à Libreville : profils pour défilés de mode, shootings, stylisme, publicités et campagnes.',
+      'Découvrez les mannequins professionnels représentés par Perfect Models Management à Libreville : portfolios, mensurations, spécialités et demandes de booking.',
     path: '/mannequins',
-    keywords: ['mannequins professionnels Gabon', 'modèles photo Libreville', 'défilé de mode Gabon', 'stylisme photo'],
+    keywords: ['mannequins professionnels Gabon', 'mannequin professionnel Libreville', 'modèles photo Libreville', 'booking mannequin Gabon'],
   },
   magazine: {
-    title: 'Focus Model 241 — Magazine de la Mode, du Stylisme et de la Culture au Gabon',
+    title: 'Mannequinat au Gabon — Conseils, castings & actualités',
     description:
-      'Toute l’actualité de la mode gabonaise, du stylisme, de la culture et du mannequinat : portraits de talents, créateurs, événements, coulisses et tendances à Libreville.',
-    path: '/magazine',
-    keywords: ['magazine mode Gabon', 'culture et stylisme Gabon', 'actualité mode gabonaise', 'créateurs gabonais'],
+      'Conseils pour mannequins, castings, portraits de talents, coulisses, événements et actualités du mannequinat et de la mode au Gabon avec Perfect Models Management.',
+    path: '/blog',
+    keywords: ['mannequinat Gabon', 'casting mannequin Gabon', 'conseils mannequin', 'actualité mode Gabon'],
   },
   services: {
-    title: 'Services Mode, Booking, Casting & Stylisme à Libreville, Gabon',
+    title: 'Booking, casting & mannequins à Libreville, Gabon',
     description:
-      'Booking de mannequins, organisation de défilés, casting professionnel, direction artistique, conseils stylisme et formation mannequins avec PMM au Gabon.',
+      'Booking de mannequins professionnels, casting, modèles photo, publicité, défilés, shootings et prestations événementielles avec Perfect Models Management à Libreville.',
     path: '/services',
-    keywords: ['booking mannequin Gabon', 'casting professionnel Libreville', 'stylisme et défilé Gabon'],
+    keywords: ['booking mannequin Libreville', 'casting professionnel Libreville', 'modèle photo Gabon', 'mannequin publicité Gabon'],
   },
   fashionDay: {
-    title: 'Perfect Fashion Day : Le Grand Événement de la Mode et de la Culture au Gabon',
+    title: 'Perfect Fashion Day — Défilé de mode à Libreville',
     description:
-      'Découvrez le Perfect Fashion Day à Libreville : défilés de mode, créateurs, stylistes, mannequins et temps forts culturels organisés par Perfect Models Management.',
+      'Découvrez le Perfect Fashion Day à Libreville : créateurs, stylistes, mannequins, défilés et temps forts culturels organisés par Perfect Models Management au Gabon.',
     path: '/fashion-day',
-    keywords: ['Perfect Fashion Day', 'défilé de mode Libreville', 'événement culturel et mode Gabon'],
+    keywords: ['Perfect Fashion Day', 'défilé de mode Libreville', 'événement mode Gabon', 'créateurs Gabon'],
   },
   casting: {
-    title: 'Casting Mannequins & Talents de la Mode au Gabon — Rejoindre PMM',
+    title: 'Casting mannequin au Gabon — Candidatures à Libreville',
     description:
-      'Participez aux castings mannequins de Perfect Models Management à Libreville et devenez un visage de la mode, du stylisme et de la culture gabonaise.',
+      'Candidatez aux castings Perfect Models Management à Libreville. Découvrez les critères, le processus de sélection et les démarches pour devenir mannequin au Gabon.',
     path: '/casting',
-    keywords: ['casting mannequin Libreville', 'devenir mannequin Gabon', 'rejoindre agence mode Gabon'],
+    keywords: ['casting mannequin Libreville', 'casting mannequin Gabon', 'devenir mannequin Gabon', 'agence casting Libreville'],
   },
   gallery: {
-    title: 'Galerie Photos : Défilés de Mode, Stylisme & Shootings au Gabon',
+    title: 'Photos de mannequins & défilés au Gabon',
     description:
-      'Explorez la galerie photo exclusive de Perfect Models Management : défilés de haute couture, shootings mode, créateurs et événements culturels au Gabon.',
+      'Explorez les shootings, portraits de mannequins, défilés et productions de Perfect Models Management à Libreville et au Gabon.',
     path: '/galerie',
-    keywords: ['shooting mode Gabon', 'photos défilé Libreville', 'galerie mannequins Gabon'],
+    keywords: ['photos mannequins Gabon', 'shooting mode Libreville', 'photos défilé Libreville', 'portfolio mannequin Gabon'],
   },
   contact: {
-    title: 'Contact & Booking Agence de Mode et Mannequinat à Libreville',
+    title: 'Booking mannequin à Libreville — Contact Perfect Models',
     description:
-      'Contactez Perfect Models Management à Libreville pour tout booking mannequin, partenariat créateur, projet stylisme ou production événementielle au Gabon.',
+      'Contactez Perfect Models Management à Libreville pour un booking mannequin, un casting, un shooting, une campagne publicitaire, un défilé ou un partenariat au Gabon.',
     path: '/contact',
-    keywords: ['contact agence mode Gabon', 'booking mannequin Libreville', 'agence stylisme Gabon'],
+    keywords: ['booking mannequin Libreville', 'contact agence mannequin Gabon', 'casting Libreville', 'agence mannequin Gabon'],
   },
 } as const;
