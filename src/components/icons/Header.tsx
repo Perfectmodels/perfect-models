@@ -62,6 +62,7 @@ export default function Header() {
         </nav>
 
         <div className="ml-auto flex items-center gap-2 xl:ml-5">
+          <Link href="/inscription/mannequin" className={`hidden rounded-full border px-4 py-3 text-[8px] font-black uppercase tracking-[.16em] transition md:inline-flex ${active('/inscription/mannequin') ? 'border-pm-wine bg-pm-wine text-white' : 'border-pm-wine/22 bg-white text-pm-wine hover:border-pm-wine hover:bg-pm-peach'}`}>Activer mon compte</Link>
           <Link href="/login" className="hidden px-3 py-2 text-[8px] font-black uppercase tracking-[.18em] text-pm-ink/42 hover:text-pm-wine sm:block">Espace privé</Link>
           <Link href="/contact?subject=booking" className="hidden rounded-full border border-pm-wine/18 bg-pm-peach/65 px-4 py-3 text-[8px] font-black uppercase tracking-[.18em] text-pm-wine transition hover:bg-pm-gold-light lg:inline-flex">Booking</Link>
           <Link href="/casting-formulaire" className="hidden rounded-full bg-pm-coral px-4 py-3 text-[8px] font-black uppercase tracking-[.18em] text-white shadow-[0_10px_28px_rgba(242,95,75,.2)] transition hover:bg-pm-berry lg:inline-flex">Candidater ↗</Link>
@@ -76,8 +77,13 @@ export default function Header() {
         <div className="relative mx-auto flex min-h-[calc(100svh-9rem)] max-w-3xl flex-col justify-center">
           <div className="mb-8 flex items-center gap-3 rounded-[1.4rem] bg-pm-wine p-4 text-white shadow-lg"><span className="relative h-14 w-14 overflow-hidden rounded-xl bg-white"><Image src="/logopmm.jpg" alt="" fill sizes="56px" className="object-cover" /></span><div><p className="font-playfair text-2xl font-semibold">Perfect Models Management</p><p className="mt-1 text-[8px] font-black uppercase tracking-[.22em] text-pm-gold-light">Talent · Image · Culture</p></div></div>
           <nav className="grid gap-2 sm:grid-cols-2">{NAV_LINKS.map((link, index) => <motion.div key={link.path} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * .04 }}><Link href={link.path} className={`flex items-end justify-between rounded-[1.3rem] p-5 ${active(link.path) ? 'bg-pm-wine text-white' : index % 4 === 0 ? 'bg-pm-peach' : index % 4 === 1 ? 'bg-pm-mint' : index % 4 === 2 ? 'bg-pm-lilac' : 'bg-pm-gold-light/70'}`}><span className="font-playfair text-3xl font-semibold">{link.label}</span><span className="text-[8px] font-black uppercase tracking-[.2em] opacity-45">0{index + 1}</span></Link></motion.div>)}</nav>
-          <div className="mt-7 grid gap-3 sm:grid-cols-2"><Link href="/casting-formulaire" className="pmm-button border-pm-coral bg-pm-coral text-white">Candidater ↗</Link><Link href="/contact?subject=booking" className="pmm-button border-pm-ink/15 bg-white text-pm-ink">Booking</Link></div>
-          <Link href="/login" className="mt-6 text-[8px] font-black uppercase tracking-[.25em] text-pm-wine/60">Espace privé ↗</Link>
+          <div className="mt-7 rounded-[1.4rem] border border-pm-wine/12 bg-white p-4">
+            <p className="text-[8px] font-black uppercase tracking-[.2em] text-pm-coral">Déjà mannequin Perfect Models ?</p>
+            <p className="mt-2 text-sm leading-6 text-pm-ink/55">Retrouvez votre fiche agence, actualisez vos informations et créez votre accès personnel.</p>
+            <Link href="/inscription/mannequin" className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-full bg-pm-wine px-5 text-[9px] font-black uppercase tracking-[.16em] text-white">Activer mon compte mannequin ↗</Link>
+          </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2"><Link href="/casting-formulaire" className="pmm-button border-pm-coral bg-pm-coral text-white">Nouveau talent · Candidater ↗</Link><Link href="/contact?subject=booking" className="pmm-button border-pm-ink/15 bg-white text-pm-ink">Booking</Link></div>
+          <Link href="/login" className="mt-6 text-[8px] font-black uppercase tracking-[.25em] text-pm-wine/60">Déjà un compte ? Se connecter ↗</Link>
         </div>
       </motion.div>}
     </AnimatePresence>
