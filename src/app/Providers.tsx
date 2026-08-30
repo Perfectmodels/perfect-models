@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { ToastProvider } from '@/components/ui/Toast';
+import NotificationCenter from '@/components/notifications/NotificationCenter';
 import Layout from '@/components/icons/Layout';
 import { PWAInstaller } from '@/components/PWAInstaller';
 import { registerServiceWorker } from '@/utils/pwa';
@@ -42,6 +43,7 @@ export default function Providers({ children, initialData }: { children: React.R
       <ToastProvider>
         <RuntimeEffects />
         <Layout runtimeData={initialData}>{children}</Layout>
+        <NotificationCenter />
         <PWAInstaller />
       </ToastProvider>
     </AuthProvider>
