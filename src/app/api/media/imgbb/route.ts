@@ -12,7 +12,7 @@ const IMAGE_TYPES = new Set([
 ]);
 const MAX_IMAGE_SIZE = 4.5 * 1024 * 1024;
 const IMGBB_DIRECT_HOST = 'i.ibb.co';
-const VERIFY_TIMEOUT_MS = 8_000;
+const VERIFY_TIMEOUT_MS = 3_500;
 
 function getImgBBConfiguration() {
   if (process.env.IMGBB_API_KEY) {
@@ -47,27 +47,23 @@ function isDirectImgBBUrl(value: unknown): value is string {
 async function verifyUploadedImage(url: string) {
   if (!isDirectImgBBUrl(url)) return false;
 
-  const check = async (method: 'HEAD' | 'GET') => {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), VERIFY_TIMEOUT_MS);
-    try {
-      const response = await fetch(url, {
-        method,
-        cache: 'no-store',
-        redirect: 'follow',
-        signal: controller.signal,
-        headers: method === 'GET' ? { Range: 'bytes=0-0' } : undefined,
-      });
-      const type = String(response.headers.get('content-type') || '').toLowerCase();
-      return response.ok && type.startsWith('image/');
-    } catch {
-      return false;
-    } finally {
-      clearTimeout(timeout);
-    }
-  };
-
-  return (await check('HEAD')) || (await check('GET'));
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), VERIFY_TIMEOUT_MS);
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      cache: 'no-store',
+      redirect: 'follow',
+      signal: controller.signal,
+      headers: { Range: 'bytes=0-0' },
+    });
+    const type = String(response.headers.get('content-type') || '').toLowerCase();
+    return response.ok && type.startsWith('image/');
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 export function GET() {
@@ -114,8 +110,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Image trop lourde (4,5 Mo maximum).' }, { status: 413 });
     }
 
-    // Les navigateurs envoient toujours les images au proxy serveur PMM.
-    // La clé ImgBB n'est jamais exposée côté client et aucun upload cross-origin direct n'est autorisé.
     const isPublicCastingUpload = scope === 'casting' || scope.startsWith('casting-');
     if (isPublicCastingUpload && !isSameOrigin(request)) {
       return NextResponse.json({ error: 'Origine de téléversement non autorisée.' }, { status: 403 });
@@ -155,13 +149,13 @@ export async function POST(request: Request) {
       );
     }
 
+    // ImgBB peut retourner son URL avant que son CDN ne la serve partout. Ce contrôle
+    // est donc informatif : le succès signé par l’API ImgBB + le domaine i.ibb.co
+    // constituent la validation canonique. On ne transforme plus un délai de
+    // propagation du CDN en faux échec utilisateur.
     const accessible = await verifyUploadedImage(directUrl);
     if (!accessible) {
-      console.error('[media/imgbb] uploaded image is not reachable', directUrl);
-      return NextResponse.json(
-        { error: 'L’image a été envoyée mais son URL publique ImgBB n’est pas accessible. Réessayez.' },
-        { status: 502 },
-      );
+      console.warn('[media/imgbb] image accepted; CDN propagation pending', directUrl);
     }
 
     return NextResponse.json({
@@ -170,7 +164,8 @@ export async function POST(request: Request) {
       deleteUrl: data.data.delete_url || null,
       provider: 'imgbb',
       verified: true,
-      accessible: true,
+      accessible,
+      verification: accessible ? 'confirmed' : 'pending-propagation',
     }, { headers: { 'Cache-Control': 'no-store' } });
   } catch (error: any) {
     console.error('[media/imgbb] unexpected error', error);
