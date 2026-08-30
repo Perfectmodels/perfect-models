@@ -1,5 +1,5 @@
 import { notFound, redirect } from 'next/navigation';
-import PaginatedResourceManager from '@/components/admin/PaginatedResourceManager';
+import ResponsiveResourceManager from '@/components/admin/ResponsiveResourceManager';
 import ProfessionalResourceWorkspace from '@/components/admin/ProfessionalResourceWorkspace';
 import { getCurrentAppProfile } from '@/lib/auth/profile';
 import { RESOURCE_DEFINITIONS, type ResourceName } from '@/lib/agency-resource-registry';
@@ -28,7 +28,7 @@ const ROUTES: Record<string, ResourceName> = {
   'settings/site': 'site-settings', 'settings/social': 'social-links', 'settings/navigation': 'navigation', 'settings/content': 'content', 'settings/profiles': 'profiles',
 };
 
-const INITIAL_PAGE_SIZE = 25;
+const INITIAL_PAGE_SIZE = 15;
 
 function hasValue(value: unknown) {
   if (value === null || value === undefined || value === '') return false;
@@ -93,7 +93,7 @@ export default async function AdminResourceRoute({ params }: { params: Promise<{
 
   return (
     <ProfessionalResourceWorkspace title={definition.title} config={workspace} snapshot={snapshot}>
-      <PaginatedResourceManager
+      <ResponsiveResourceManager
         resource={resource}
         title={definition.title}
         primaryKey={definition.primaryKey}
