@@ -122,9 +122,9 @@ export async function POST(request: Request) {
     }
     if (!isPublicCastingUpload) {
       const profile = await getCurrentAppProfile();
-      const isAdminUpload = profile?.role === 'admin';
+      const isStaffUpload = profile ? ['admin', 'manager'].includes(profile.role) : false;
       const isOwnModelMedia = profile?.role === 'student' && scope.startsWith('models/');
-      if (!isAdminUpload && !isOwnModelMedia) {
+      if (!isStaffUpload && !isOwnModelMedia) {
         return NextResponse.json({ error: 'Accès autorisé requis.' }, { status: 403 });
       }
     }
