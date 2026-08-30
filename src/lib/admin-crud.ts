@@ -5,7 +5,14 @@ export class CrudValidationError extends Error {
   constructor(message: string) { super(message); this.name = 'CrudValidationError'; }
 }
 type Mode = 'create' | 'update';
+const IMAGE_LIST_FIELDS = new Set(['photos', 'gallery_images', 'images']);
 function isBlank(value: unknown) { return value === undefined || value === null || (typeof value === 'string' && value.trim() === ''); }
+function isImageUrlField(name: string) { return /(^|_)(image|photo|logo|avatar|thumbnail)_url$/i.test(name) || ['image_url', 'cover_image_url', 'logo_url'].includes(name); }
+function isDirectImgBB(value: unknown) {
+  if (typeof value !== 'string' || !value) return false;
+  try { const url = new URL(value); return url.protocol === 'https:' && url.hostname === 'i.ibb.co' && url.pathname.length > 1; }
+  catch { return false; }
+}
 function parseJson(field: CrudField, value: unknown) {
   if (typeof value !== 'string') { if (typeof value === 'object' && value !== null) return value; throw new CrudValidationError(`${field.label} doit contenir un objet ou une liste JSON valide.`); }
   try { return JSON.parse(value); } catch { throw new CrudValidationError(`${field.label} contient un JSON invalide.`); }
@@ -40,6 +47,26 @@ function normalize(field: CrudField, value: unknown) {
   return text;
 }
 
+function assertImagePayload(resource: ResourceName, field: CrudField, value: unknown, source: Record<string, unknown>) {
+  if (isImageUrlField(field.name)) {
+    if (!isDirectImgBB(value)) throw new CrudValidationError(`${field.label} doit être téléversée via le module ImgBB.`);
+    return;
+  }
+  if (field.type === 'json' && IMAGE_LIST_FIELDS.has(field.name)) {
+    const list = Array.isArray(value) ? value : [];
+    if (list.some((item) => typeof item !== 'string' || !isDirectImgBB(item))) {
+      throw new CrudValidationError(`${field.label} doit contenir uniquement des images téléversées via ImgBB.`);
+    }
+    return;
+  }
+  if (resource === 'gallery' && field.name === 'url') {
+    const mime = String(source.mime_type || '').toLowerCase();
+    const provider = String(source.provider || '').toLowerCase();
+    const looksLikeImage = mime.startsWith('image/') || provider === 'imgbb';
+    if (looksLikeImage && !isDirectImgBB(value)) throw new CrudValidationError('Les images de la médiathèque doivent être téléversées via ImgBB.');
+  }
+}
+
 export function sanitizeResourcePayload(resource: ResourceName, input: unknown, mode: Mode) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw new CrudValidationError('Le formulaire envoyé est invalide.');
   const definition = RESOURCE_DEFINITIONS[resource];
@@ -53,7 +80,9 @@ export function sanitizeResourcePayload(resource: ResourceName, input: unknown, 
       if (mode === 'update' && hasValue) output[field.name] = null;
       continue;
     }
-    output[field.name] = normalize(field, value);
+    const normalized = normalize(field, value);
+    assertImagePayload(resource, field, normalized, source);
+    output[field.name] = normalized;
   }
   if (mode === 'update') delete output[definition.primaryKey];
   if (Object.keys(output).length === 0) throw new CrudValidationError('Aucune modification valide à enregistrer.');
