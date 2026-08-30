@@ -1,11 +1,7 @@
 import 'server-only';
 
 import type { Article, Model, Service, FashionDayEvent } from '@/types';
-
-const SUPABASE_URL = String(
-  process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://qzkodgqxrcxsnfwpmwfb.supabase.co',
-).replace(/\/$/, '');
-const SUPABASE_SECRET_KEY = String(process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '');
+import { getSupabasePublishableKey, getSupabaseUrl } from '@/lib/supabase/config';
 
 function uniqueBy<T>(items: T[], keyOf: (item: T) => string) {
   const seen = new Set<string>();
@@ -18,16 +14,20 @@ function uniqueBy<T>(items: T[], keyOf: (item: T) => string) {
 }
 
 export async function selectPublicRows(path: string): Promise<any[]> {
-  if (!SUPABASE_URL || !SUPABASE_SECRET_KEY) {
-    console.error('[public-content] configuration Supabase serveur absente');
+  let supabaseUrl = '';
+  let publishableKey = '';
+  try {
+    supabaseUrl = getSupabaseUrl();
+    publishableKey = getSupabasePublishableKey();
+  } catch (error) {
+    console.error('[public-content] configuration Supabase publique absente', error);
     return [];
   }
 
   try {
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/${path.replace(/^\//, '')}`, {
+    const response = await fetch(`${supabaseUrl}/rest/v1/${path.replace(/^\//, '')}`, {
       headers: {
-        apikey: SUPABASE_SECRET_KEY,
-        Authorization: `Bearer ${SUPABASE_SECRET_KEY}`,
+        apikey: publishableKey,
       },
       next: { revalidate: 60 },
     });
