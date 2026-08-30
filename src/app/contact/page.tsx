@@ -1,19 +1,20 @@
 import ContactForm from '@/components/forms/ContactForm';
 import VisualMasthead from '@/components/public/VisualMasthead';
 import { getPublicAppState } from '@/lib/public-app-state';
+import { getPublicSiteImages, imageOverrides } from '@/lib/site-images';
 import { buildPageMetadata, MARKETING_PAGES } from '@/lib/seo';
 
 export const metadata = buildPageMetadata(MARKETING_PAGES.contact);
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
 
 const socialLabel = (name: string) => name.charAt(0).toUpperCase() + name.slice(1);
 
 export default async function Page() {
-  const data = await getPublicAppState();
+  const [data, siteImages] = await Promise.all([getPublicAppState(), getPublicSiteImages()]);
   const contact = (data.contactInfo || {}) as { email?: string; phone?: string; address?: string };
   const social = (data.socialLinks || {}) as Record<string, string>;
-  const siteImages = (data.siteImages || {}) as Record<string, string>;
-  const images = Array.from(new Set([siteImages.hero, siteImages.about, siteImages.agencyHistory, siteImages.castingBg, siteImages.fashionDayBg].filter(Boolean)));
+  const legacy = [siteImages.hero, siteImages.about, siteImages.agencyHistory, siteImages.castingBg, siteImages.fashionDayBg].filter(Boolean);
+  const images = imageOverrides(siteImages, ['contact.hero.primary', 'contact.hero.secondary', 'contact.hero.tertiary'], [legacy[0], legacy[1], legacy[2]]);
 
   return (
     <main className="min-h-screen bg-pm-ivory text-pm-ink">
