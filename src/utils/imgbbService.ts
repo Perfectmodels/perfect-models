@@ -8,6 +8,16 @@ export interface ImgBBUploadOptions {
 const normalizeScope = (value?: string) =>
   String(value || 'media').replace(/[^a-z0-9/_-]+/gi, '-');
 
+export function isDirectImgBBImageUrl(value: unknown): value is string {
+  if (typeof value !== 'string' || !value) return false;
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' && url.hostname === 'i.ibb.co' && url.pathname.length > 1;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Upload an image through the server-only ImgBB proxy.
  *
@@ -37,8 +47,8 @@ export async function uploadToImgbb(
   });
   const data = await response.json().catch(() => ({}));
 
-  if (!response.ok || !data?.url) {
-    throw new Error(data?.error || "Échec de l'upload ImgBB");
+  if (!response.ok || !data?.verified || !data?.accessible || !isDirectImgBBImageUrl(data?.url)) {
+    throw new Error(data?.error || "L'image ImgBB n'a pas pu être vérifiée après téléversement.");
   }
 
   onProgress?.(100);
