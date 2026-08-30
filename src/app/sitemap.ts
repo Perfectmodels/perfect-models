@@ -8,7 +8,7 @@ const staticRoutes = [
   ['/', 1, 'daily'],
   ['/agence', 0.8, 'weekly'],
   ['/mannequins', 0.95, 'daily'],
-  ['/magazine', 0.9, 'daily'],
+  ['/blog', 0.9, 'daily'],
   ['/services', 0.9, 'weekly'],
   ['/fashion-day', 0.85, 'weekly'],
   ['/casting', 0.8, 'weekly'],
@@ -40,7 +40,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority,
     })),
     ...articles.map((article) => ({
-      url: `${SITE_URL}/magazine/${encodeURIComponent(article.slug)}`,
+      url: `${SITE_URL}/blog/${encodeURIComponent(article.slug)}`,
       lastModified: validDate(article.date) || now,
       changeFrequency: 'weekly' as const,
       priority: article.isFeatured ? 0.85 : 0.75,
