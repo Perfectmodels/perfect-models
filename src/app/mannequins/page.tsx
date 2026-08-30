@@ -3,14 +3,16 @@ import Link from 'next/link';
 import ModelsDirectory from '@/components/models/ModelsDirectory';
 import VisualMasthead from '@/components/public/VisualMasthead';
 import { getPublicModels } from '@/lib/public-content';
+import { getPublicSiteImages, imageOverrides } from '@/lib/site-images';
 import { buildPageMetadata, MARKETING_PAGES } from '@/lib/seo';
 
-export const revalidate = 3600;
+export const dynamic = 'force-dynamic';
 export const metadata: Metadata = buildPageMetadata(MARKETING_PAGES.models);
 
 export default async function Page() {
-  const models = await getPublicModels();
-  const images = models.flatMap((model) => [model.imageUrl, ...(model.portfolioImages || [])]).filter(Boolean).slice(0, 5) as string[];
+  const [models, siteImages] = await Promise.all([getPublicModels(), getPublicSiteImages()]);
+  const dynamicImages = models.flatMap((model) => [model.imageUrl, ...(model.portfolioImages || [])]).filter(Boolean).slice(0, 5) as string[];
+  const images = imageOverrides(siteImages, ['models.hero.primary', 'models.hero.secondary', 'models.hero.tertiary'], [dynamicImages[0], dynamicImages[1], dynamicImages[2]]);
 
   return (
     <main className="min-h-screen bg-pm-ivory text-pm-ink">
