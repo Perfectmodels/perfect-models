@@ -1,6 +1,6 @@
 import React from 'react';
 import { ImageResponse } from 'next/og';
-import { absoluteRuntimeUrl, getSiteRuntimeConfig } from '@/lib/site-runtime';
+import { getSiteRuntimeConfig } from '@/lib/site-runtime';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -45,7 +45,7 @@ export async function GET(request: Request) {
   const category = truncate(requestUrl.searchParams.get('category') || '', 34);
   const requestedImage = requestUrl.searchParams.get('image') || '';
   const contentImage = safeContentImage(requestedImage, config.siteUrl);
-  const logo = absoluteRuntimeUrl(config, config.logo);
+  const logo = `${config.siteUrl.replace(/\/$/, '')}/logopmm.jpg`;
   const domain = new URL(config.siteUrl).hostname.replace(/^www\./, '');
   const label = category || (kind === 'article' ? 'Magazine PMM' : kind === 'profile' ? 'Talent PMM' : kind === 'service' ? 'Service PMM' : path === '/' ? 'Libreville · Gabon' : 'Perfect Models Management');
   const hasImage = Boolean(contentImage);
@@ -69,7 +69,6 @@ export async function GET(request: Request) {
     justifyContent: 'space-between',
     padding: hasImage ? '54px 54px 48px 64px' : '58px 78px 52px 78px',
     position: 'relative',
-    zIndex: 2,
   };
 
   const brandRow = h(
