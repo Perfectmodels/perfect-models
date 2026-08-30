@@ -21,9 +21,9 @@ export function isDirectImgBBImageUrl(value: unknown): value is string {
 /**
  * Upload an image through the server-only ImgBB proxy.
  *
- * The string overload remains temporarily compatible with legacy callers that
- * used to pass a client-side API key. The key is deliberately ignored: secrets
- * now live exclusively in the `IMGBB_API_KEY` Vercel environment variable.
+ * The server validates the ImgBB API response and direct i.ibb.co URL. CDN
+ * reachability is intentionally not a hard requirement because newly uploaded
+ * images can take a few seconds to propagate even after ImgBB reports success.
  */
 export async function uploadToImgbb(
   file: File,
@@ -47,8 +47,8 @@ export async function uploadToImgbb(
   });
   const data = await response.json().catch(() => ({}));
 
-  if (!response.ok || !data?.verified || !data?.accessible || !isDirectImgBBImageUrl(data?.url)) {
-    throw new Error(data?.error || "L'image ImgBB n'a pas pu être vérifiée après téléversement.");
+  if (!response.ok || !data?.verified || !isDirectImgBBImageUrl(data?.url)) {
+    throw new Error(data?.error || "L'image ImgBB n'a pas pu être validée après téléversement.");
   }
 
   onProgress?.(100);
