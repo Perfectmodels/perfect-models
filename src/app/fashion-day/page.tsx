@@ -2,25 +2,29 @@ import type { Metadata } from 'next';
 import FashionDayClient from '@/features/fashion-day/FashionDayClient';
 import JsonLd from '@/components/JsonLd';
 import { getFashionDayEvents } from '@/lib/public-content';
+import { getPublicSiteImages } from '@/lib/site-images';
 import { absoluteUrl, buildPageMetadata, MARKETING_PAGES, SITE_URL } from '@/lib/seo';
 
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(): Promise<Metadata> {
-  const events = (await getFashionDayEvents()).slice().sort((a, b) => b.edition - a.edition);
+  const [rawEvents, siteImages] = await Promise.all([getFashionDayEvents(), getPublicSiteImages()]);
+  const events = rawEvents.slice().sort((a, b) => b.edition - a.edition);
   const latest = events[0];
   if (!latest) return buildPageMetadata(MARKETING_PAGES.fashionDay);
   return buildPageMetadata({
     ...MARKETING_PAGES.fashionDay,
     title: `Perfect Fashion Day — Édition ${latest.edition} : ${latest.theme}`,
     description: latest.description || MARKETING_PAGES.fashionDay.description,
-    image: latest.coverImageUrl || latest.galleryImages?.[0],
+    image: siteImages['fashionDay.hero.override'] || latest.coverImageUrl || latest.galleryImages?.[0],
     keywords: [...MARKETING_PAGES.fashionDay.keywords, latest.theme, `édition ${latest.edition}`],
   });
 }
 
 export default async function Page() {
-  const events = (await getFashionDayEvents()).slice().sort((a, b) => b.edition - a.edition);
+  const [rawEvents, siteImages] = await Promise.all([getFashionDayEvents(), getPublicSiteImages()]);
+  const override = siteImages['fashionDay.hero.override'];
+  const events = rawEvents.slice().sort((a, b) => b.edition - a.edition).map((event) => override ? { ...event, coverImageUrl: override } : event);
   const eventSchemas = events.slice(0, 6).map((event) => ({
     '@context': 'https://schema.org',
     '@type': 'Event',
