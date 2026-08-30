@@ -2,20 +2,22 @@ import Image from 'next/image';
 import Link from 'next/link';
 import VisualMasthead from '@/components/public/VisualMasthead';
 import { getPublicAppState } from '@/lib/public-app-state';
+import { getPublicSiteImages, imageOverride, imageOverrides } from '@/lib/site-images';
 import { buildPageMetadata, MARKETING_PAGES } from '@/lib/seo';
 
 export const metadata = buildPageMetadata(MARKETING_PAGES.agency);
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
 
 const valueColors = ['bg-pm-peach', 'bg-pm-mint', 'bg-pm-lilac', 'bg-pm-gold-light/65', 'bg-pm-sky', 'bg-pm-coral-soft/65'];
 
 export default async function Page() {
-  const data = await getPublicAppState();
+  const [data, siteImages] = await Promise.all([getPublicAppState(), getPublicSiteImages()]);
   const agency = (data.agencyInfo || { about: { p1: '', p2: '' }, values: [] }) as { about: { p1?: string; p2?: string }; values?: Array<{ name: string; description: string }> };
   const timeline = Array.isArray(data.agencyTimeline) ? data.agencyTimeline as Array<{ year: string; event: string }> : [];
-  const siteImages = (data.siteImages || {}) as Record<string, string>;
-  const heroImages = Array.from(new Set([siteImages.agencyHistory, siteImages.hero, siteImages.about, siteImages.fashionDayBg, siteImages.castingBg].filter(Boolean)));
-  const mainImage = heroImages[0] || '/images/grace-elsa.jpg';
+  const legacyPool = [siteImages.agencyHistory, siteImages.hero, siteImages.about, siteImages.fashionDayBg, siteImages.castingBg, siteImages.classroomBg].filter(Boolean);
+  const heroImages = imageOverrides(siteImages, ['agency.hero.primary', 'agency.hero.secondary', 'agency.hero.tertiary'], [legacyPool[0], legacyPool[1], legacyPool[2]]);
+  const mainImage = imageOverride(siteImages, 'agency.story.main', siteImages.agencyHistory || heroImages[0] || '/images/grace-elsa.jpg');
+  const galleryImages = imageOverrides(siteImages, ['agency.gallery.1', 'agency.gallery.2', 'agency.gallery.3', 'agency.gallery.4'], [legacyPool[0], legacyPool[2], legacyPool[3], legacyPool[4]]);
 
   return (
     <main className="min-h-screen bg-pm-ivory text-pm-ink">
@@ -41,7 +43,7 @@ export default async function Page() {
         </div>
       </section>
 
-      {heroImages.length > 1 && <section className="bg-pm-ink px-5 py-8 sm:px-8 lg:px-12 xl:px-16"><div className="mx-auto grid max-w-[1550px] grid-cols-2 gap-3 md:grid-cols-4">{heroImages.slice(0, 4).map((image, index) => <div key={image} className={`relative overflow-hidden rounded-[1.5rem] ${index === 0 ? 'aspect-[4/5]' : index === 3 ? 'aspect-[4/5]' : 'aspect-square'}`}><Image src={image} alt="Univers Perfect Models Management" fill sizes="(max-width:768px) 50vw, 25vw" className="object-cover" /></div>)}</div></section>}
+      {galleryImages.length > 1 && <section className="bg-pm-ink px-5 py-8 sm:px-8 lg:px-12 xl:px-16"><div className="mx-auto grid max-w-[1550px] grid-cols-2 gap-3 md:grid-cols-4">{galleryImages.slice(0, 4).map((image, index) => <div key={`${image}-${index}`} className={`relative overflow-hidden rounded-[1.5rem] ${index === 0 ? 'aspect-[4/5]' : index === 3 ? 'aspect-[4/5]' : 'aspect-square'}`}><Image src={image} alt="Univers Perfect Models Management" fill sizes="(max-width:768px) 50vw, 25vw" className="object-cover" /></div>)}</div></section>}
 
       {agency.values?.length ? <section className="bg-pm-paper px-5 py-20 sm:px-8 sm:py-24 lg:px-12 xl:px-16"><div className="mx-auto max-w-[1550px]"><div className="grid gap-8 lg:grid-cols-[.6fr_1.4fr] lg:items-end"><div><p className="text-[9px] font-black uppercase tracking-[.28em] text-pm-rose">Nos fondamentaux</p><p className="mt-5 max-w-sm text-sm leading-7 text-pm-ink/52">Des principes concrets qui guident le management, l’image et les relations professionnelles.</p></div><h2 className="font-playfair text-5xl font-semibold sm:text-7xl">Ce que nous <em className="font-normal text-pm-wine">défendons.</em></h2></div><div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">{agency.values.map((value, index) => <article key={value.name} className={`color-card min-h-64 ${valueColors[index % valueColors.length]}`}><span className="font-playfair text-3xl italic text-pm-wine">0{index + 1}</span><div className="mt-10"><h3 className="font-playfair text-3xl font-semibold">{value.name}</h3><p className="mt-4 text-sm leading-7 text-pm-ink/56">{value.description}</p></div></article>)}</div></div></section> : null}
 
