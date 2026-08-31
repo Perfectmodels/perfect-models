@@ -6,6 +6,8 @@ export class CrudValidationError extends Error {
 }
 type Mode = 'create' | 'update';
 const IMAGE_LIST_FIELDS = new Set(['photos', 'gallery_images', 'images']);
+const PROFILE_ROLES = new Set(['admin', 'manager', 'student', 'jury', 'registration', 'jury-contest']);
+const PROFILE_ROLE_ALIASES: Record<string, string> = { model: 'student', staff: 'registration' };
 function isBlank(value: unknown) { return value === undefined || value === null || (typeof value === 'string' && value.trim() === ''); }
 function isImageUrlField(name: string) { return /(^|_)(image|photo|logo|avatar|thumbnail)_url$/i.test(name) || ['image_url', 'cover_image_url', 'logo_url'].includes(name); }
 function isDirectImgBB(value: unknown) {
@@ -47,6 +49,16 @@ function normalize(field: CrudField, value: unknown) {
   return text;
 }
 
+function normalizeResourceValue(resource: ResourceName, field: CrudField, value: unknown) {
+  if (resource !== 'profiles' || field.name !== 'role') return value;
+  const requestedRole = String(value || '').trim();
+  const role = PROFILE_ROLE_ALIASES[requestedRole] || requestedRole;
+  if (!PROFILE_ROLES.has(role)) {
+    throw new CrudValidationError('Rôle utilisateur invalide. Utilisez Administrateur, Manager, Mannequin, Jury, Équipe d’enregistrement ou Jury concours.');
+  }
+  return role;
+}
+
 function assertImagePayload(resource: ResourceName, field: CrudField, value: unknown, source: Record<string, unknown>) {
   if (isImageUrlField(field.name)) {
     if (!isDirectImgBB(value)) throw new CrudValidationError(`${field.label} doit être téléversée via le module ImgBB.`);
@@ -80,7 +92,7 @@ export function sanitizeResourcePayload(resource: ResourceName, input: unknown, 
       if (mode === 'update' && hasValue) output[field.name] = null;
       continue;
     }
-    const normalized = normalize(field, value);
+    const normalized = normalizeResourceValue(resource, field, normalize(field, value));
     assertImagePayload(resource, field, normalized, source);
     output[field.name] = normalized;
   }
