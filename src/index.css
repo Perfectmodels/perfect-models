@@ -81,3 +81,126 @@ a[href="/admin/news"] { display: none !important; }
 .admin-messaging input,
 .admin-messaging textarea { background: rgba(255, 248, 241, .9) !important; color: #251820 !important; border: 1px solid rgba(37, 24, 32, .1); }
 .admin-messaging section { border-radius: 1.7rem !important; box-shadow: 0 18px 55px rgba(91, 46, 37, .06); }
+
+/* Admin responsiveness: actions must remain reachable without horizontal panning. */
+body:has(nav[aria-label="Navigation de gestion"]) main,
+body:has(nav[aria-label="Navigation de gestion"]) main > *,
+body:has(nav[aria-label="Navigation de gestion"]) main section,
+body:has(nav[aria-label="Navigation de gestion"]) main article {
+  min-width: 0;
+  max-width: 100%;
+}
+
+body:has(nav[aria-label="Navigation de gestion"]) main {
+  overflow-x: clip;
+}
+
+body:has(nav[aria-label="Navigation de gestion"]) main a,
+body:has(nav[aria-label="Navigation de gestion"]) main button {
+  max-width: 100%;
+  white-space: normal;
+}
+
+body:has(nav[aria-label="Navigation de gestion"]) [role="dialog"],
+body:has(nav[aria-label="Navigation de gestion"]) [role="dialog"] > * {
+  min-width: 0;
+  max-width: 100vw;
+}
+
+/* Legacy wide casting table becomes a responsive card collection on laptop/tablet/mobile. */
+@media (max-width: 1535px) {
+  body:has(nav[aria-label="Navigation de gestion"]) div.overflow-x-auto:has(> table[class*="min-w-[1040px]"]) {
+    overflow-x: visible !important;
+  }
+
+  body:has(nav[aria-label="Navigation de gestion"]) table[class*="min-w-[1040px]"] {
+    display: block;
+    width: 100%;
+    min-width: 0 !important;
+    table-layout: auto;
+  }
+
+  body:has(nav[aria-label="Navigation de gestion"]) table[class*="min-w-[1040px]"] thead {
+    display: none;
+  }
+
+  body:has(nav[aria-label="Navigation de gestion"]) table[class*="min-w-[1040px]"] tbody {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+    gap: .75rem;
+    padding: .75rem;
+  }
+
+  body:has(nav[aria-label="Navigation de gestion"]) table[class*="min-w-[1040px]"] tbody tr {
+    display: flex;
+    min-width: 0;
+    max-width: 100%;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid rgba(37, 24, 32, .09);
+    border-radius: 1.25rem;
+    background: #fff;
+    box-shadow: 0 10px 30px rgba(91, 46, 37, .045);
+  }
+
+  body:has(nav[aria-label="Navigation de gestion"]) table[class*="min-w-[1040px]"] tbody td {
+    position: static !important;
+    display: grid;
+    width: 100%;
+    min-width: 0;
+    max-width: none !important;
+    grid-template-columns: 8.2rem minmax(0, 1fr);
+    align-items: start;
+    gap: .75rem;
+    padding: .65rem .85rem;
+    text-align: left;
+    background: transparent !important;
+    border-bottom: 1px solid rgba(37, 24, 32, .055);
+  }
+
+  body:has(nav[aria-label="Navigation de gestion"]) table[class*="min-w-[1040px]"] tbody td::before {
+    color: rgba(125, 31, 77, .62);
+    font-size: .58rem;
+    font-weight: 900;
+    letter-spacing: .08em;
+    line-height: 1.35;
+    text-transform: uppercase;
+  }
+
+  body:has(nav[aria-label="Navigation de gestion"]) table[class*="min-w-[1040px]"] tbody td:nth-child(1)::before { content: 'Candidat'; }
+  body:has(nav[aria-label="Navigation de gestion"]) table[class*="min-w-[1040px]"] tbody td:nth-child(2)::before { content: 'Contact'; }
+  body:has(nav[aria-label="Navigation de gestion"]) table[class*="min-w-[1040px]"] tbody td:nth-child(3)::before { content: 'Profil'; }
+  body:has(nav[aria-label="Navigation de gestion"]) table[class*="min-w-[1040px]"] tbody td:nth-child(4)::before { content: 'Expérience'; }
+  body:has(nav[aria-label="Navigation de gestion"]) table[class*="min-w-[1040px]"] tbody td:nth-child(5)::before { content: 'Décision'; }
+  body:has(nav[aria-label="Navigation de gestion"]) table[class*="min-w-[1040px]"] tbody td:nth-child(6)::before { content: 'Compte'; }
+  body:has(nav[aria-label="Navigation de gestion"]) table[class*="min-w-[1040px]"] tbody td:nth-child(7)::before { content: 'Soumis le'; }
+  body:has(nav[aria-label="Navigation de gestion"]) table[class*="min-w-[1040px]"] tbody td:nth-child(8)::before { content: 'Action'; }
+
+  body:has(nav[aria-label="Navigation de gestion"]) table[class*="min-w-[1040px]"] tbody td:last-child {
+    border-bottom: 0;
+    grid-template-columns: 1fr;
+    padding-top: .8rem;
+  }
+
+  body:has(nav[aria-label="Navigation de gestion"]) table[class*="min-w-[1040px]"] tbody td:last-child::before {
+    display: none;
+  }
+
+  body:has(nav[aria-label="Navigation de gestion"]) table[class*="min-w-[1040px]"] tbody td:last-child button,
+  body:has(nav[aria-label="Navigation de gestion"]) table[class*="min-w-[1040px]"] tbody td:last-child a {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+}
+
+@media (max-width: 479px) {
+  body:has(nav[aria-label="Navigation de gestion"]) table[class*="min-w-[1040px]"] tbody td {
+    grid-template-columns: 1fr;
+    gap: .3rem;
+  }
+
+  body:has(nav[aria-label="Navigation de gestion"]) main [class*="tracking-["] {
+    overflow-wrap: anywhere;
+  }
+}
