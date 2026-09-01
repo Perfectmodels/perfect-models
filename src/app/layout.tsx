@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Cormorant_Garamond, Manrope } from 'next/font/google';
 import '../index.css';
+import '../brand-monochrome.css';
 import ClientShell from './ClientShell';
 import JsonLd from '@/components/JsonLd';
 import { absoluteRuntimeUrl, buildOrganizationJsonLd, buildWebsiteJsonLd, getSiteRuntimeConfig } from '@/lib/site-runtime';
@@ -65,7 +66,7 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export const viewport: Viewport = { width: 'device-width', initialScale: 1, themeColor: '#FFF9F2', colorScheme: 'light' };
+export const viewport: Viewport = { width: 'device-width', initialScale: 1, themeColor: '#050505', colorScheme: 'light' };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const [config, initialData] = await Promise.all([getSiteRuntimeConfig(), getPublicAppState()]);

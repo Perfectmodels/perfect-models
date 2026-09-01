@@ -1,0 +1,97 @@
+:root {
+  --pmm-black: #050505;
+  --pmm-ink: #0b0b0b;
+  --pmm-white: #ffffff;
+  --pmm-ivory: #f7f5ef;
+  --pmm-gold: #c6a15b;
+  --pmm-gold-light: #d8c28d;
+  --pmm-gold-deep: #8a6f3b;
+}
+
+::selection {
+  background: var(--pmm-gold);
+  color: var(--pmm-black);
+}
+
+body {
+  background: var(--pmm-ivory);
+  color: var(--pmm-ink);
+}
+
+.brand-gradient {
+  background: linear-gradient(112deg, #050505 0%, #111111 58%, #8a6f3b 100%) !important;
+}
+
+.soft-section::before {
+  background:
+    linear-gradient(135deg, rgba(198,161,91,.07), transparent 28%),
+    repeating-linear-gradient(90deg, rgba(5,5,5,.025) 0 1px, transparent 1px 48px) !important;
+}
+
+.brand-grid,
+.warm-grid {
+  background-image:
+    linear-gradient(rgba(5,5,5,.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(5,5,5,.045) 1px, transparent 1px) !important;
+  background-size: 42px 42px !important;
+}
+
+.african-trim {
+  background-color: var(--pmm-black);
+  background-image:
+    linear-gradient(135deg, transparent 25%, var(--pmm-gold) 25% 37.5%, transparent 37.5% 62.5%, var(--pmm-gold) 62.5% 75%, transparent 75%),
+    linear-gradient(45deg, transparent 25%, rgba(216,194,141,.7) 25% 37.5%, transparent 37.5% 62.5%, rgba(216,194,141,.7) 62.5% 75%, transparent 75%);
+  background-size: 34px 18px;
+  background-position: 0 0, 17px 0;
+}
+
+.african-pattern {
+  background-image:
+    linear-gradient(45deg, transparent 46%, rgba(198,161,91,.55) 46% 54%, transparent 54%),
+    linear-gradient(-45deg, transparent 46%, rgba(198,161,91,.35) 46% 54%, transparent 54%);
+  background-size: 42px 42px;
+}
+
+.color-card {
+  border-radius: 0 !important;
+  border-color: rgba(5,5,5,.12) !important;
+  box-shadow: none !important;
+}
+
+.photo-card,
+.control-card {
+  border-radius: .25rem !important;
+  box-shadow: 0 18px 50px rgba(0,0,0,.08) !important;
+}
+
+.control-button,
+.pmm-button {
+  border-radius: 0 !important;
+}
+
+.control-button--soft {
+  border: 1px solid rgba(5,5,5,.18) !important;
+  background: #fff !important;
+  color: #050505 !important;
+}
+
+.control-button--soft:hover {
+  border-color: var(--pmm-gold) !important;
+  background: var(--pmm-gold) !important;
+}
+
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+button:focus-visible,
+a:focus-visible {
+  outline-color: var(--pmm-gold) !important;
+}
+
+@media (max-width: 767px) {
+  .color-card,
+  .photo-card,
+  .control-card {
+    border-radius: 0 !important;
+  }
+}
