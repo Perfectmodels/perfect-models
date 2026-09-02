@@ -101,7 +101,8 @@ export async function findProfile(user: unknown): Promise<AppSessionProfile | nu
 export async function getCurrentAppProfile(): Promise<AppSessionProfile | null> {
   try {
     const { data } = await auth.getVerifiedUser();
-    return data?.user ? ensureUserProfile(data.user) : null;
+    const profile = data?.user ? await ensureUserProfile(data.user) : null;
+    return profile?.status === 'inactive' ? null : profile;
   } catch {
     return null;
   }
