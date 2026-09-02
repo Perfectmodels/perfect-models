@@ -98,6 +98,7 @@ export async function supabaseInviteUserByEmail(email: string, redirectTo: strin
   return authRequest(withRedirect('/invite', redirectTo), { email, data }, { method: 'POST', admin: true });
 }
 export async function supabaseAdminCreateUser(attributes: Record<string, any>) { return authRequest('/admin/users', attributes, { method: 'POST', admin: true }); }
+export async function supabaseAdminGetUser(userId: string) { return authRequest(`/admin/users/${encodeURIComponent(userId)}`, undefined, { method: 'GET', admin: true }) as Promise<SupabaseAuthUser>; }
 export async function supabaseAdminUpdateUser(userId: string, attributes: Record<string, any>) { return authRequest(`/admin/users/${encodeURIComponent(userId)}`, attributes, { method: 'PUT', admin: true }); }
 
 export async function getSupabaseAccessToken() { return (await cookies()).get('sb_access_token')?.value || null; }
