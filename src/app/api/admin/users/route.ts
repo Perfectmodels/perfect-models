@@ -9,16 +9,10 @@ import {
   supabaseInviteUserByEmail,
 } from '@/lib/supabase-backend';
 import type { AppRole } from '@/lib/auth/profile';
+import { defaultManagerPermissions, MANAGER_DEFAULT_PERMISSIONS } from '@/lib/manager-permissions';
 
 const allowed = new Set<AppRole>(['admin', 'manager', 'student', 'jury', 'registration', 'jury-contest']);
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'https://www.perfectmodels.online').replace(/\/$/, '');
-const MANAGER_DEFAULT_PERMISSIONS = {
-  dashboard: false, models: true, absences: true, agency: false, artisticDirection: true, beautyContests: false, bookings: true, castingApplications: false,
-  castingResults: false, classroom: true, classroomProgress: true, comments: false, fashionDayApplications: false, fashionDayEvents: false, gallery: false,
-  imageAnalysis: false, imageGeneration: false, liveChat: false, magazine: false, mailing: false, mediaLibrary: false, messages: true, modelAccess: false, news: false,
-  payments: true, recovery: false, settings: false, userPermissions: false,
-};
-
 function validEmail(value: unknown) {
   const email = String(value || '').trim().toLowerCase();
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : '';
@@ -41,6 +35,8 @@ async function listUsers() {
   const permissionMap = new Map((Array.isArray(permissionRows) ? permissionRows : []).map((row: any) => [String(row.permission_key || ''), objectValue(row.value)]));
   return (Array.isArray(profileRows) ? profileRows : []).map((row: any) => {
     const metadata = objectValue(row.metadata);
+    const storedPermissions = permissionMap.get(String(row.user_id || ''));
+    const metadataPermissions = objectValue(metadata.admin_permissions);
     return {
       uid: String(row.user_id || ''),
       email: String(row.email || ''),
@@ -51,7 +47,7 @@ async function listUsers() {
       isActive: row.is_active !== false,
       mustChangePassword: Boolean(row.must_change_password),
       permissions: objectValue(metadata.permissions),
-      adminPermissions: permissionMap.get(String(row.user_id || '')) || objectValue(metadata.admin_permissions),
+      adminPermissions: storedPermissions || (Object.keys(metadataPermissions).length ? metadataPermissions : String(row.role) === 'manager' ? defaultManagerPermissions() : {}),
       createdAt: row.created_at || null,
       updatedAt: row.updated_at || null,
     };

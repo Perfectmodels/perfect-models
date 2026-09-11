@@ -5,6 +5,9 @@ import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+const MAX_PORTFOLIO_IMAGES = 24;
+const MAX_BATCH_SIZE = 8;
+
 function text(value: unknown, max = 500) {
   return String(value ?? '').trim().slice(0, max);
 }
@@ -35,27 +38,36 @@ export async function POST(request: Request) {
   const access = await requireOwnModel();
   if ('error' in access) return access.error;
   const body = await request.json().catch(() => null) as Record<string, unknown> | null;
-  const url = directImgBB(body?.url);
-  if (!url) return NextResponse.json({ error: 'Une image ImgBB valide est requise.' }, { status: 400 });
+  const requestedUrls = Array.isArray(body?.urls) ? body.urls : [body?.url];
+  const urls = [...new Set(requestedUrls.map(directImgBB).filter(Boolean))].slice(0, MAX_BATCH_SIZE);
+  if (!urls.length) return NextResponse.json({ error: 'Au moins une image ImgBB valide est requise.' }, { status: 400 });
 
-  const { data: existing } = await access.supabase
+  const { data: existing, count: existingCount, error: existingError } = await access.supabase
     .from('model_portfolio_images')
-    .select('id,position')
+    .select('id,url,position', { count: 'exact' })
     .eq('model_id', access.model.id)
-    .order('position', { ascending: false })
-    .limit(1);
-  const nextPosition = Array.isArray(existing) && existing.length ? Number(existing[0]?.position || 0) + 1 : 0;
+    .order('position', { ascending: false });
+  if (existingError) return NextResponse.json({ error: 'Le portfolio n’a pas pu être vérifié.' }, { status: 503 });
+
+  const existingUrls = new Set((existing || []).map((row: any) => String(row.url || '')));
+  const available = Math.max(0, MAX_PORTFOLIO_IMAGES - Number(existingCount || 0));
+  const newUrls = urls.filter((url) => !existingUrls.has(url)).slice(0, available);
+  if (!available) return NextResponse.json({ error: `Votre portfolio est limité à ${MAX_PORTFOLIO_IMAGES} photos.` }, { status: 409 });
+  if (!newUrls.length) return NextResponse.json({ error: 'Ces images figurent déjà dans votre portfolio.' }, { status: 409 });
+
+  const highestPosition = Array.isArray(existing) && existing.length ? Number(existing[0]?.position || 0) : -1;
+  const rows = newUrls.map((url, index) => ({
+    model_id: access.model.id,
+    url,
+    position: highestPosition + index + 1,
+    caption: newUrls.length === 1 ? text(body?.caption, 300) || null : null,
+  }));
 
   const { data, error } = await access.supabase
     .from('model_portfolio_images')
-    .insert({
-      model_id: access.model.id,
-      url,
-      position: nextPosition,
-      caption: text(body?.caption, 300) || null,
-    })
+    .insert(rows)
     .select('id,url,position,caption')
-    .single();
+    .order('position', { ascending: true });
 
   if (error) {
     if (String(error.code || '') === '23505') return NextResponse.json({ error: 'Cette image figure déjà dans votre portfolio.' }, { status: 409 });
@@ -63,7 +75,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'L’image n’a pas pu être ajoutée au portfolio.' }, { status: 503 });
   }
 
-  return NextResponse.json({ success: true, image: data }, { status: 201 });
+  return NextResponse.json({ success: true, images: data || [], ignored: urls.length - newUrls.length }, { status: 201 });
 }
 
 export async function PATCH(request: Request) {

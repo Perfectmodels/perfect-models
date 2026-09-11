@@ -117,7 +117,12 @@ export async function POST(request: Request) {
     if (!isPublicCastingUpload) {
       const profile = await getCurrentAppProfile();
       const isStaffUpload = profile ? ['admin', 'manager'].includes(profile.role) : false;
-      const isOwnModelMedia = profile?.role === 'student' && scope.startsWith('models/');
+      const ownModelScope = profile?.profileId ? `models/${profile.profileId}` : '';
+      const isOwnModelMedia = profile?.role === 'student' && Boolean(ownModelScope) && (
+        scope === `${ownModelScope}/profile` ||
+        scope === `${ownModelScope}/portfolio` ||
+        scope === `${ownModelScope}/comp-card`
+      );
       if (!isStaffUpload && !isOwnModelMedia) {
         return NextResponse.json({ error: 'Accès autorisé requis.' }, { status: 403 });
       }

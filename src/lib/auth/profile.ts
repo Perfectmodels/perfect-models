@@ -1,5 +1,7 @@
 import { auth } from './server';
 import { privilegedSupabaseSelect, privilegedSupabaseUpsert } from '../supabase-backend';
+import { defaultManagerPermissions } from '../manager-permissions';
+import type { AdminPagePermissions } from '@/types';
 
 export type AppRole = 'admin' | 'manager' | 'student' | 'jury' | 'registration' | 'jury-contest';
 export interface AppSessionProfile {
@@ -12,7 +14,7 @@ export interface AppSessionProfile {
   status: string;
   mustChangePassword: boolean;
   permissions: Record<string, boolean>;
-  adminPermissions?: Record<string, boolean>;
+  adminPermissions?: AdminPagePermissions;
   contestId?: string | null;
 }
 
@@ -43,17 +45,18 @@ function objectValue(value: unknown) {
   return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, any> : {};
 }
 
-async function delegatedPermissions(role: AppRole, uid: string, metadata?: Record<string, any>) {
+async function delegatedPermissions(role: AppRole, uid: string, metadata?: Record<string, any>): Promise<AdminPagePermissions | undefined> {
   if (role !== 'admin' && role !== 'manager') return undefined;
   const rows = await privilegedSupabaseSelect(
     `admin_permissions?permission_key=eq.${encodeURIComponent(uid)}&select=value&limit=1`,
   ).catch(() => []);
   const value = Array.isArray(rows) ? rows[0]?.value : null;
-  if (value && typeof value === 'object' && !Array.isArray(value)) return value as Record<string, boolean>;
+  if (value && typeof value === 'object' && !Array.isArray(value)) return value as AdminPagePermissions;
   const fallback = metadata?.admin_permissions;
-  return fallback && typeof fallback === 'object' && !Array.isArray(fallback)
-    ? fallback as Record<string, boolean>
-    : undefined;
+  if (fallback && typeof fallback === 'object' && !Array.isArray(fallback) && Object.keys(fallback).length) {
+    return fallback as AdminPagePermissions;
+  }
+  return role === 'manager' ? defaultManagerPermissions() : undefined;
 }
 
 export async function findProfile(user: unknown): Promise<AppSessionProfile | null> {

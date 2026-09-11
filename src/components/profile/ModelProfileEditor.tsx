@@ -1,8 +1,10 @@
 'use client';
 
 import { FormEvent, useMemo, useState } from 'react';
+import Image from 'next/image';
 import { Check, Crown, ImagePlus, Loader2, Save, Trash2, UserRoundPen } from 'lucide-react';
 import ImgBBUploader from '@/components/ImgBBUploader';
+import ModelPortfolioUploader from '@/components/profile/ModelPortfolioUploader';
 
 type PortfolioImage = { id: string; url: string; position: number; caption: string | null };
 
@@ -37,6 +39,8 @@ type Props = {
   initialModel: ModelForm;
   initialPortfolio: PortfolioImage[];
 };
+
+const MAX_PORTFOLIO_IMAGES = 24;
 
 const inputClass = 'min-h-12 w-full min-w-0 rounded-xl border border-pm-ink/15 bg-white px-4 py-3 text-sm text-pm-ink outline-none transition placeholder:text-pm-ink/35 focus:border-pm-coral focus:ring-4 focus:ring-pm-coral/10';
 const labelClass = 'mb-2 block text-[10px] font-black uppercase tracking-[.12em] text-pm-ink/55';
@@ -126,16 +130,18 @@ export default function ModelProfileEditor({ modelId, initialModel, initialPortf
     await persist(next, value ? 'Votre composite peut maintenant être partagé publiquement.' : 'Votre composite est désormais privé.');
   }
 
-  async function addPortfolio(url: string) {
+  async function addPortfolio(urls: string[]) {
+    if (!urls.length) return;
     setPortfolioBusy('adding'); setError(''); setNotice('');
     try {
       const response = await fetch('/api/model/portfolio', {
-        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }),
+        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ urls }),
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data?.error || 'Ajout impossible.');
-      setPortfolio((current) => [...current, data.image].sort((a, b) => a.position - b.position));
-      setNotice('Photo ajoutée à votre portfolio.');
+      const added = Array.isArray(data.images) ? data.images : data.image ? [data.image] : [];
+      setPortfolio((current) => [...current, ...added].sort((a, b) => a.position - b.position));
+      setNotice(`${added.length} photo${added.length > 1 ? 's ajoutées' : ' ajoutée'} à votre portfolio.`);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Ajout impossible.');
     } finally {
@@ -240,7 +246,7 @@ export default function ModelProfileEditor({ modelId, initialModel, initialPortf
         <div className="min-w-0 space-y-6">
           <section className="min-w-0 overflow-hidden rounded-[2rem] bg-pm-ink p-5 text-white sm:p-6">
             <p className="text-[9px] font-black uppercase tracking-[.18em] text-pm-gold-light">Photo principale</p>
-            <div className="mt-4 aspect-[4/5] w-full min-w-0 overflow-hidden rounded-[1.4rem] bg-white/8">{form.imageUrl ? <img src={form.imageUrl} alt="Photo principale" className="h-full w-full object-cover"/> : <div className="grid h-full place-items-center text-white/30"><ImagePlus size={44}/></div>}</div>
+            <div className="relative mt-4 aspect-[4/5] w-full min-w-0 overflow-hidden rounded-[1.4rem] bg-white/8">{form.imageUrl ? <Image src={form.imageUrl} alt="Photo principale" fill sizes="(max-width: 1535px) 100vw, 30vw" className="object-cover"/> : <div className="grid h-full place-items-center text-white/30"><ImagePlus size={44}/></div>}</div>
             <p className="mt-4 text-xs leading-5 text-white/50">Cette image apparaît en priorité sur votre fiche publique et votre espace professionnel.</p>
             <div className="mt-4"><ImgBBUploader value="" onChange={(url)=>void setUploadedProfileImage(url)} scope={`models/${modelId}/profile`} publicMode compact /></div>
             {profileImageInPortfolio && <p className="mt-3 flex items-center gap-2 text-[10px] font-bold text-pm-gold-light"><Check size={13}/>Cette photo est aussi dans votre portfolio.</p>}
@@ -249,7 +255,7 @@ export default function ModelProfileEditor({ modelId, initialModel, initialPortf
           <section className="min-w-0 overflow-hidden rounded-[2rem] border border-pm-ink/10 bg-white p-5 sm:p-6">
             <p className="text-[9px] font-black uppercase tracking-[.18em] text-pm-coral">Composite officiel</p>
             <h2 className="mt-2 font-playfair text-3xl font-semibold">Mon composite</h2>
-            <div className="mt-4 aspect-[3/4] w-full min-w-0 overflow-hidden rounded-[1.4rem] bg-pm-ivory">{form.compCardUrl ? <img src={form.compCardUrl} alt="Composite officiel" className="h-full w-full object-contain"/> : <div className="grid h-full place-items-center p-6 text-center text-sm text-pm-ink/35">Aucun composite image téléversé.</div>}</div>
+            <div className="relative mt-4 aspect-[3/4] w-full min-w-0 overflow-hidden rounded-[1.4rem] bg-pm-ivory">{form.compCardUrl ? <Image src={form.compCardUrl} alt="Composite officiel" fill sizes="(max-width: 1535px) 100vw, 30vw" className="object-contain"/> : <div className="grid h-full place-items-center p-6 text-center text-sm text-pm-ink/35">Aucun composite image téléversé.</div>}</div>
             <div className="mt-4 rounded-xl bg-pm-wine p-4 text-white"><ImgBBUploader value="" onChange={(url)=>void setUploadedCompCard(url)} scope={`models/${modelId}/comp-card`} publicMode compact /></div>
             <label className="mt-4 flex min-w-0 cursor-pointer items-start gap-3 rounded-xl border border-pm-ink/10 bg-pm-ivory p-4"><input type="checkbox" checked={form.compCardPublic} disabled={!form.compCardUrl || saving} onChange={(e)=>void toggleCompCardPublic(e.target.checked)} className="mt-1 h-4 w-4 shrink-0 accent-pm-wine"/><span className="min-w-0"><span className="block text-sm font-extrabold">Autoriser le partage public</span><span className="mt-1 block text-xs leading-5 text-pm-ink/45">Vous gardez la possibilité de rendre le composite privé à tout moment.</span></span></label>
           </section>
@@ -259,7 +265,14 @@ export default function ModelProfileEditor({ modelId, initialModel, initialPortf
       <section className="min-w-0 rounded-[2rem] border border-pm-ink/10 bg-white p-5 shadow-[0_18px_55px_rgba(37,24,32,.05)] sm:p-7">
         <div className="flex min-w-0 flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0"><p className="text-[9px] font-black uppercase tracking-[.18em] text-pm-coral">Portfolio personnel</p><h2 className="mt-2 break-words font-playfair text-3xl font-semibold sm:text-4xl">Mes photos</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-pm-ink/50">Ajoutez vos images vous-même. Vous pouvez retirer une photo ou la définir comme photo principale sans intervention de l’agence.</p></div>
-          <div className="min-w-0 rounded-xl bg-pm-wine p-3 text-white"><ImgBBUploader value="" onChange={(url)=>void addPortfolio(url)} scope={`models/${modelId}/portfolio`} publicMode compact /></div>
+          <div className="min-w-0 rounded-2xl bg-pm-wine p-3 text-white sm:p-4">
+            <ModelPortfolioUploader
+              modelId={modelId}
+              disabled={portfolioBusy === 'adding'}
+              remainingSlots={Math.max(0, MAX_PORTFOLIO_IMAGES - portfolio.length)}
+              onUploaded={addPortfolio}
+            />
+          </div>
         </div>
 
         {portfolioBusy === 'adding' && <div className="mt-5 flex items-center gap-2 text-sm font-semibold text-pm-wine"><Loader2 size={16} className="animate-spin"/>Ajout au portfolio…</div>}
@@ -268,7 +281,7 @@ export default function ModelProfileEditor({ modelId, initialModel, initialPortf
           const busy = portfolioBusy === image.id;
           const cover = form.imageUrl === image.url;
           return <article key={image.id} className="group min-w-0 overflow-hidden rounded-[1.3rem] border border-pm-ink/10 bg-pm-ivory">
-            <div className="relative aspect-[4/5] min-w-0 overflow-hidden"><img src={image.url} alt={image.caption || 'Photo du portfolio'} className="h-full w-full object-cover"/>{cover && <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-pm-gold px-2.5 py-1 text-[8px] font-black uppercase tracking-[.08em] text-pm-ink"><Crown size={10}/>Principale</span>}</div>
+            <div className="relative aspect-[4/5] min-w-0 overflow-hidden"><Image src={image.url} alt={image.caption || 'Photo du portfolio'} fill sizes="(max-width: 640px) 50vw, (max-width: 1280px) 33vw, 20vw" className="object-cover"/>{cover && <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-pm-gold px-2.5 py-1 text-[8px] font-black uppercase tracking-[.08em] text-pm-ink"><Crown size={10}/>Principale</span>}</div>
             <div className="grid grid-cols-2 gap-2 p-2">
               <button type="button" disabled={busy || cover} onClick={()=>void setCover(image)} className="min-h-10 min-w-0 rounded-xl bg-white px-2 text-[9px] font-black uppercase tracking-[.06em] text-pm-wine disabled:opacity-35">Principale</button>
               <button type="button" disabled={busy} onClick={()=>void removePortfolio(image)} className="grid min-h-10 place-items-center rounded-xl bg-white text-red-600 disabled:opacity-35" aria-label="Retirer la photo">{busy ? <Loader2 size={15} className="animate-spin"/> : <Trash2 size={15}/>}</button>

@@ -36,6 +36,7 @@ const navigation: NavigationSection[] = [
     { to: '/admin/castings', label: 'Castings actifs', icon: ClipboardDocumentListIcon, description: 'Briefs et critères clients', permission: 'castingApplications' },
     { to: '/admin/casting-matching', label: 'Matching talents', icon: SparklesIcon, description: 'Scores et recommandations', permission: 'castingApplications' },
     { to: '/admin/casting-pipeline', label: 'Pipeline & shortlists', icon: ClipboardDocumentCheckIcon, description: 'Invités, callbacks, sélection, booking', permission: 'castingResults' },
+    { to: '/admin/casting-results', label: 'Résultats du jury', icon: PresentationChartLineIcon, description: 'Notes et consolidation des évaluations', permission: 'castingResults' },
   ]},
   { title: 'Bookings', items: [
     { to: '/admin/calendar', label: 'Calendrier agence', icon: CalendarIcon, description: 'Castings, options, jobs et conflits', permission: 'bookings' },
@@ -59,15 +60,21 @@ const navigation: NavigationSection[] = [
   ]},
   { title: 'Communication & contenu', items: [
     { to: '/admin/messages', label: 'Messagerie', icon: ChatBubbleLeftRightIcon, description: 'Inbox et communications agence', permission: 'messages' },
-    { to: '/admin/mailing', label: 'Mailing', icon: PaperAirplaneIcon, description: 'Campagnes email', permission: 'mailing', adminOnly: true },
+    { to: '/admin/mailing', label: 'Mailing', icon: PaperAirplaneIcon, description: 'Campagnes email', permission: 'mailing' },
     { to: '/admin/media-library', label: 'Portfolio / Médias', icon: PhotoIcon, description: 'Photos, vidéos et albums', permission: 'mediaLibrary' },
     { to: '/admin/blog', label: 'Journal', icon: NewspaperIcon, description: 'Actualités et publications', permission: 'magazine' },
+    { to: '/admin/comments', label: 'Commentaires', icon: ChatBubbleLeftRightIcon, description: 'Modération des réactions publiques', permission: 'comments' },
+    { to: '/admin/analyser-image', label: 'Analyse d’image', icon: SparklesIcon, description: 'Assistance à l’analyse visuelle', permission: 'imageAnalysis' },
+    { to: '/admin/generer-image', label: 'Génération d’image', icon: PhotoIcon, description: 'Assistant visuel du journal', permission: 'imageGeneration' },
     { to: '/admin/artistic-direction', label: 'Direction artistique', icon: PaintBrushIcon, description: 'Briefs de shootings et productions', permission: 'artisticDirection' },
+    { to: '/admin/fashion-day-applications', label: 'Dossiers Fashion Day', icon: ClipboardDocumentListIcon, description: 'Candidatures et dossiers participants', permission: 'fashionDayApplications' },
     { to: '/admin/fashion-day-events', label: 'Perfect Fashion Day', icon: SparklesIcon, description: 'Éditions et programme', permission: 'fashionDayEvents' },
+    { to: '/admin/beauty-contests', label: 'Concours beauté', icon: SparklesIcon, description: 'Candidats, étapes et résultats', permission: 'beautyContests' },
   ]},
   { title: 'Formation', items: [
     { to: '/admin/classroom', label: 'Classroom', icon: AcademicCapIcon, description: 'Contenu pédagogique', permission: 'classroom' },
     { to: '/admin/classroom-progress', label: 'Progression', icon: PresentationChartLineIcon, description: 'Suivi des formations', permission: 'classroomProgress' },
+    { to: '/admin/live-chat', label: 'Chat Classroom', icon: ChatBubbleLeftRightIcon, description: 'Échanges avec les apprenants', permission: 'liveChat' },
     { to: '/admin/absences', label: 'Présences', icon: CalendarIcon, description: 'Absences et justificatifs', permission: 'absences' },
   ]},
   { title: 'Administration', items: [
@@ -83,6 +90,7 @@ const titleFromPath = (pathname: string) => pathname === '/manager' ? 'Espace ma
 function allowed(item: NavigationItem, role?: string, permissions?: AdminPagePermissions) {
   if (role !== 'manager') return true;
   if (item.adminOnly) return false;
+  if (item.to === '/admin/mailing') return Boolean(permissions?.mailing && permissions?.messages);
   return item.permission ? Boolean(permissions?.[item.permission]) : false;
 }
 function NavigationList({ pathname, role, permissions, onNavigate }: { pathname: string; role?: string; permissions?: AdminPagePermissions; onNavigate?: () => void }) {

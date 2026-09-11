@@ -107,8 +107,9 @@ export default async function Page({ searchParams }: PageProps) {
   const nextCourse = activeCourses.find((course: any) => (progressMap.get(course.id) || 0) < 100);
 
   const actionItems = [
-    !model?.image_url ? { title: 'Photo principale manquante', body: 'Votre fiche publique a besoin d’une photo principale validée.', href: '/contact?subject=Photo%20profil%20mannequin', cta: 'Contacter l’agence' } : null,
-    profileScore < 80 ? { title: `Profil complété à ${profileScore}%`, body: 'Certaines informations professionnelles sont encore à compléter.', href: '/contact?subject=Mise%20à%20jour%20profil%20mannequin', cta: 'Demander une mise à jour' } : null,
+    !model ? { title: 'Fiche mannequin à rattacher', body: 'Votre compte est actif, mais aucune fiche mannequin ne lui est encore associée.', href: '/contact?subject=Rattachement%20fiche%20mannequin', cta: 'Contacter l’agence' } : null,
+    model && !model.image_url ? { title: 'Photo principale manquante', body: 'Ajoutez une photo principale pour compléter votre fiche publique.', href: '/profil/edition', cta: 'Ajouter ma photo' } : null,
+    model && profileScore < 80 ? { title: `Profil complété à ${profileScore}%`, body: 'Certaines informations professionnelles sont encore à compléter.', href: '/profil/edition', cta: 'Modifier mon profil' } : null,
     nextCourse ? { title: 'Formation à poursuivre', body: nextCourse.title, href: `/formation/module/${nextCourse.id}`, cta: 'Continuer le module' } : null,
     Number(notifications.count || 0) > 0 ? { title: 'Consulter les informations récentes', body: `${notifications.count || 0} notification(s) disponibles dans votre fil personnel.`, href: '#notifications', cta: 'Voir le fil' } : null,
   ].filter(Boolean) as Array<{ title: string; body: string; href: string; cta: string }>;
@@ -133,6 +134,7 @@ export default async function Page({ searchParams }: PageProps) {
               <h1 className="mt-4 font-playfair text-5xl font-semibold leading-[.9] tracking-[-.04em] sm:text-6xl lg:text-7xl">Bonjour, {model?.name || profile.name}.</h1>
               <p className="mt-5 max-w-2xl text-sm leading-7 text-pm-ink/65">Votre carrière, votre image et votre formation réunies dans un seul espace personnel.</p>
               <div className="mt-7 flex flex-wrap gap-3">
+                {model?.id && <Link href="/profil/edition" className="control-button">Modifier mon profil ↗</Link>}
                 <Link href="/profil/classroom" className="control-button">Continuer ma formation ↗</Link>
                 <Link href={model?.id ? `/mannequins/${model.id}` : '/mannequins'} className="control-button control-button--soft">Voir mon profil public</Link>
               </div>
@@ -175,7 +177,7 @@ export default async function Page({ searchParams }: PageProps) {
         <section className="grid gap-5 xl:grid-cols-[1.15fr_.85fr]">
           <div className="control-card">
             <div className="flex items-center justify-between"><div><p className="control-kicker">Portfolio</p><h2 className="mt-2 font-playfair text-3xl font-semibold">Vos images</h2></div><span className="text-xs font-extrabold uppercase tracking-[.08em] text-pm-ink/45">{Number(images.count || 0)} média(s)</span></div>
-            {portfolio.length ? <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">{portfolio.map((image: any, index: number) => <div key={image.id || `${image.position}-${image.url}`} className="relative aspect-[3/4] overflow-hidden rounded-[1.2rem] bg-pm-sand"><Image src={image.url} alt={image.caption || `Portfolio mannequin ${index + 1}`} fill sizes="(max-width: 640px) 50vw, 25vw" className="object-cover" /></div>)}</div> : <div className="mt-6 rounded-[1.5rem] border border-dashed border-pm-ink/15 bg-pm-ivory p-8 text-center text-sm text-pm-ink/45">Votre portfolio sera enrichi par l’équipe PMM.</div>}
+            {portfolio.length ? <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">{portfolio.map((image: any, index: number) => <div key={image.id || `${image.position}-${image.url}`} className="relative aspect-[3/4] overflow-hidden rounded-[1.2rem] bg-pm-sand"><Image src={image.url} alt={image.caption || `Portfolio mannequin ${index + 1}`} fill sizes="(max-width: 640px) 50vw, 25vw" className="object-cover" /></div>)}</div> : <div className="mt-6 rounded-[1.5rem] border border-dashed border-pm-ink/15 bg-pm-ivory p-8 text-center text-sm text-pm-ink/45">{model ? <>Votre portfolio est vide. <Link href="/profil/edition" className="font-extrabold text-pm-wine underline underline-offset-4">Ajouter mes premières photos</Link>.</> : 'Votre portfolio sera disponible après le rattachement de votre fiche mannequin.'}</div>}
             <Pager current={pages.portfolio} total={Number(images.count || 0)} size={PORTFOLIO_SIZE} param="portfolioPage" state={queryState} />
           </div>
 
