@@ -15,8 +15,11 @@ const fallbackNav: NavLink[] = [
   { path: '/blog', label: 'Journal' },
 ];
 
+const privatePrefixes = ['/profil', '/formations', '/formation', '/admin', '/manager'];
+const isPublicFooterLink = (path: string) => !privatePrefixes.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
+
 export default function Footer({ runtimeData }: { runtimeData?: RuntimeData | null }) {
-  const configured = (runtimeData?.navLinks || []).filter((link) => link.inFooter);
+  const configured = (runtimeData?.navLinks || []).filter((link) => link.inFooter && isPublicFooterLink(link.path));
   const navLinks = configured.length ? configured : fallbackNav;
   const socialLinks = runtimeData?.socialLinks;
   const contact = runtimeData?.contactInfo;
