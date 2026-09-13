@@ -17,7 +17,13 @@ const Layout: React.FC<{ children: React.ReactNode; runtimeData?: RuntimeData | 
   const pathname = usePathname() || '/';
 
   if (pathname.startsWith('/admin') || pathname.startsWith('/manager')) return <AdminLayout>{children}</AdminLayout>;
-  if (pathname.startsWith('/login') || pathname.startsWith('/auth/')) return <>{children}</>;
+  if (
+    pathname.startsWith('/login') ||
+    pathname.startsWith('/auth/') ||
+    pathname.startsWith('/profil') ||
+    pathname.startsWith('/formations') ||
+    pathname.startsWith('/formation/')
+  ) return <>{children}</>;
 
   return (
     <div className="flex min-h-screen flex-col bg-pm-ivory font-montserrat">
