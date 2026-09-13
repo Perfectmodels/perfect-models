@@ -6,7 +6,6 @@ import {
   BadgeCheck,
   BookOpen,
   BriefcaseBusiness,
-  GraduationCap,
   Images,
   LayoutDashboard,
   Menu,
@@ -19,7 +18,6 @@ const items = [
   { href: '/profil/comp-card', label: 'Ma Comp Card', icon: Images },
   { href: '/profil/agency', label: 'Carrière & agence', icon: BriefcaseBusiness },
   { href: '/profil/classroom', label: 'Classroom', icon: BookOpen },
-  { href: '/profil/formation', label: 'Formation', icon: GraduationCap },
 ] as const;
 
 function activeFor(pathname: string, href: string, exact?: boolean) {
@@ -68,7 +66,7 @@ export default function ProfileSidebar() {
             </span>
             <p className="mt-5 text-[9px] font-black uppercase tracking-[.22em] text-pm-gold-light">Espace mannequin</p>
             <p className="mt-2 font-playfair text-2xl font-semibold leading-tight">Mon espace professionnel</p>
-            <p className="mt-3 text-xs leading-5 text-white/50">Profil, médias, composite, carrière et formation au même endroit.</p>
+            <p className="mt-3 text-xs leading-5 text-white/50">Profil, médias, composite, carrière et Classroom au même endroit.</p>
           </div>
           <div className="mt-5 min-w-0"><NavItems pathname={pathname} /></div>
           <p className="mt-auto pt-6 text-[10px] leading-5 text-pm-ink/35">Perfect Models Management · Portail talent</p>
