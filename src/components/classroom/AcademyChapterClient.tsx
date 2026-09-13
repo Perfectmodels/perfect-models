@@ -95,9 +95,8 @@ export default function AcademyChapterClient({ chapterId, questions, initialProg
 
   useEffect(() => {
     if (supervision || quizActive || status === 'passed') return;
-    const timer = window.setInterval(() => void syncProgress(), 15000);
-    return () => window.clearInterval(timer);
-  }, [quizActive, status, supervision, syncProgress]);
+    if (activeSeconds > 0 && activeSeconds % 15 === 0) void syncProgress();
+  }, [activeSeconds, quizActive, status, supervision, syncProgress]);
 
   useEffect(() => {
     if (!supervision && status !== 'passed' && readPercent >= minimumReadPercent && activeSeconds >= minimumReadSeconds) {
