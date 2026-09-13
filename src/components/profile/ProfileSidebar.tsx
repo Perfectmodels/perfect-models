@@ -21,6 +21,7 @@ const items = [
 ] as const;
 
 function activeFor(pathname: string, href: string, exact?: boolean) {
+  if (href === '/profil/classroom' && (pathname.startsWith('/formations') || pathname.startsWith('/formation/'))) return true;
   return exact ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
 }
 
