@@ -52,6 +52,7 @@ export default async function Page({ params }: Props) {
   const sections = Array.isArray(chapter.sections) ? chapter.sections as Section[] : [];
   const keyPoints = Array.isArray(chapter.key_points) ? chapter.key_points.map(String) : [];
   const questionRows = (questions || []) as Question[];
+  const nextHref = next ? `/formations/${encodeURIComponent(module.slug)}/${encodeURIComponent(next.slug)}` : null;
 
   return (
     <main className="min-h-screen bg-pm-ivory px-5 py-10 text-pm-ink sm:px-8 lg:px-10">
@@ -68,10 +69,10 @@ export default async function Page({ params }: Props) {
         <div className="space-y-5">{sections.map((section, index) => <section key={`${section.title}-${index}`} className="control-card"><p className="control-kicker">Partie {String(index + 1).padStart(2, '0')}</p><h2 className="mt-2 font-playfair text-4xl font-semibold">{section.title || 'À retenir'}</h2><p className="mt-6 text-[15px] leading-8 text-pm-ink/62">{section.content || chapter.summary}</p></section>)}</div>
         {keyPoints.length > 0 && <section className="rounded-[2rem] bg-pm-sage p-7 sm:p-9"><p className="text-[9px] font-black uppercase tracking-[.22em] text-pm-teal">Mémoriser</p><h2 className="mt-2 font-playfair text-4xl font-semibold">Les points essentiels</h2><ul className="mt-6 grid gap-3 md:grid-cols-3">{keyPoints.map((item) => <li key={item} className="rounded-[1.2rem] bg-white/60 p-4 text-sm leading-6 text-pm-ink/60">✓ {item}</li>)}</ul></section>}
         {chapter.practical_exercise && <section className="rounded-[2rem] bg-pm-coral p-7 text-white sm:p-9"><p className="text-[9px] font-black uppercase tracking-[.22em] text-white/65">Atelier pratique</p><h2 className="mt-2 font-playfair text-4xl font-semibold">Passer de la théorie au geste</h2><p className="mt-5 max-w-3xl text-sm leading-7 text-white/82">{chapter.practical_exercise}</p></section>}
-        <AcademyChapterClient chapterId={chapter.id} questions={questionRows} initialProgress={progress} minimumReadPercent={Number(chapter.minimum_read_percent)} minimumReadSeconds={Number(chapter.minimum_read_seconds)} passScore={Number(chapter.pass_score)} supervision={profile.role !== 'student'} />
+        <AcademyChapterClient chapterId={chapter.id} questions={questionRows} initialProgress={progress} minimumReadPercent={Number(chapter.minimum_read_percent)} minimumReadSeconds={Number(chapter.minimum_read_seconds)} passScore={Number(chapter.pass_score)} supervision={profile.role !== 'student'} nextHref={nextHref} />
         <nav className="grid gap-3 sm:grid-cols-2">
           {previous ? <Link href={`/formations/${encodeURIComponent(module.slug)}/${encodeURIComponent(previous.slug)}`} className="rounded-[1.5rem] border border-pm-ink/10 bg-white p-5"><span className="text-[8px] font-black uppercase tracking-[.15em] text-pm-ink/35">← Chapitre précédent</span><p className="mt-2 font-playfair text-2xl font-semibold">{previous.title}</p></Link> : <Link href="/formations" className="rounded-[1.5rem] border border-pm-ink/10 bg-white p-5"><p className="font-playfair text-2xl font-semibold">Perfect Models Academy</p></Link>}
-          {next ? <div className="rounded-[1.5rem] border border-pm-ink/10 bg-white p-5 text-right"><span className="text-[8px] font-black uppercase tracking-[.15em] text-pm-ink/35">Après validation →</span><p className="mt-2 font-playfair text-2xl font-semibold">{next.title}</p></div> : <div className="rounded-[1.5rem] bg-pm-wine p-5 text-right text-white"><p className="font-playfair text-2xl font-semibold">Validation & certificat</p></div>}
+          {next ? <div className="rounded-[1.5rem] border border-pm-ink/10 bg-white p-5 text-right"><span className="text-[8px] font-black uppercase tracking-[.15em] text-pm-ink/35">Déverrouillé uniquement après réussite du quiz →</span><p className="mt-2 font-playfair text-2xl font-semibold">{next.title}</p></div> : <div className="rounded-[1.5rem] bg-pm-wine p-5 text-right text-white"><p className="font-playfair text-2xl font-semibold">Validation & certificat</p></div>}
         </nav>
       </article>
     </main>
