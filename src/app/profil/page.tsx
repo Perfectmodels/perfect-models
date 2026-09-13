@@ -3,7 +3,6 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import FirstLoginSecurityPrompt from '@/components/auth/FirstLoginSecurityPrompt';
 import { getCurrentAppProfile } from '@/lib/auth/profile';
-import { readCourseProgress } from '@/lib/classroom-progress';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 
 export const dynamic = 'force-dynamic';
@@ -12,8 +11,11 @@ const LIST_SIZE = 4;
 const PORTFOLIO_SIZE = 8;
 
 type SearchParams = Record<string, string | string[] | undefined>;
-
 type PageProps = { searchParams: Promise<SearchParams> };
+
+type AcademyModule = { id: string; slug: string; title: string; description?: string; position: number };
+type AcademyChapter = { id: string; module_id: string; slug: string; title: string; position: number };
+type AcademyProgress = { chapter_id: string; read_percent: number; status: string; best_score: number | null };
 
 function formatDate(value?: string) {
   if (!value) return 'À définir';
@@ -62,12 +64,13 @@ export default async function Page({ searchParams }: PageProps) {
     rangeFor(pages.payments, LIST_SIZE),
   ];
 
-  const [images, courses, progress, notifications, bookings, absences, payments, events] = await Promise.all([
+  const [images, modulesRes, chaptersRes, academyProgressRes, notifications, bookings, absences, payments, events] = await Promise.all([
     model
       ? supabase.from('model_portfolio_images').select('id,url,position,caption', { count: 'exact' }).eq('model_id', profile.profileId).order('position').range(...portfolioRange)
       : Promise.resolve({ data: [], count: 0 }),
-    supabase.from('courses').select('id,title,description,position').eq('is_active', true).order('position'),
-    supabase.from('course_progress').select('course_id,progress,completed_at,updated_at').eq('user_id', profile.userId),
+    supabase.from('academy_modules').select('id,slug,title,description,position').eq('is_active', true).order('position'),
+    supabase.from('academy_chapters').select('id,module_id,slug,title,position').eq('is_active', true).order('position'),
+    supabase.from('academy_chapter_progress').select('chapter_id,read_percent,status,best_score').eq('user_id', profile.userId),
     supabase.from('notifications').select('id,title,body,href,is_read,created_at', { count: 'exact' }).or(`recipient_user_id.eq.${profile.userId},audience_role.eq.student`).order('created_at', { ascending: false }).range(...notificationRange),
     model
       ? supabase.from('booking_requests').select('id,name,status,created_at', { count: 'exact' }).eq('model_id', profile.profileId).order('created_at', { ascending: false }).range(...bookingRange)
@@ -84,12 +87,27 @@ export default async function Page({ searchParams }: PageProps) {
   ]);
 
   const portfolio = Array.isArray(images.data) ? images.data : [];
-  const activeCourses = Array.isArray(courses.data) ? courses.data : [];
-  const progressRows = Array.isArray(progress.data) ? progress.data : [];
-  const progressMap = new Map<string, number>(progressRows.map((row: any) => [String(row.course_id), readCourseProgress(row)]));
-  const trainingProgress = activeCourses.length
-    ? Math.round(activeCourses.reduce((total: number, course: any) => total + Math.min(100, progressMap.get(course.id) || 0), 0) / activeCourses.length)
+  const academyModules = (modulesRes.data || []) as AcademyModule[];
+  const academyChapters = (chaptersRes.data || []) as AcademyChapter[];
+  const academyProgressRows = (academyProgressRes.data || []) as AcademyProgress[];
+  const academyProgressMap = new Map(academyProgressRows.map((row) => [row.chapter_id, row]));
+  const moduleMap = new Map(academyModules.map((module) => [module.id, module]));
+  const readingProgress = academyChapters.length
+    ? Math.round(academyChapters.reduce((total, chapter) => total + Math.min(100, Number(academyProgressMap.get(chapter.id)?.read_percent || 0)), 0) / academyChapters.length)
     : 0;
+  const passedChapters = academyChapters.filter((chapter) => academyProgressMap.get(chapter.id)?.status === 'passed').length;
+  const validationProgress = academyChapters.length ? Math.round((passedChapters / academyChapters.length) * 100) : 0;
+  const nextChapter = academyChapters.find((chapter) => academyProgressMap.get(chapter.id)?.status !== 'passed');
+  const nextModule = nextChapter ? moduleMap.get(nextChapter.module_id) : null;
+
+  const moduleStats = academyModules.map((module) => {
+    const own = academyChapters.filter((chapter) => chapter.module_id === module.id);
+    const reading = own.length
+      ? Math.round(own.reduce((sum, chapter) => sum + Math.min(100, Number(academyProgressMap.get(chapter.id)?.read_percent || 0)), 0) / own.length)
+      : 0;
+    const passed = own.filter((chapter) => academyProgressMap.get(chapter.id)?.status === 'passed').length;
+    return { module, reading, passed, count: own.length };
+  });
 
   const readinessChecks = [
     model?.image_url,
@@ -104,13 +122,12 @@ export default async function Page({ searchParams }: PageProps) {
     Number(images.count || 0) > 0,
   ];
   const profileScore = Math.round((readinessChecks.filter(Boolean).length / readinessChecks.length) * 100);
-  const nextCourse = activeCourses.find((course: any) => (progressMap.get(course.id) || 0) < 100);
 
   const actionItems = [
     !model ? { title: 'Fiche mannequin à rattacher', body: 'Votre compte est actif, mais aucune fiche mannequin ne lui est encore associée.', href: '/contact?subject=Rattachement%20fiche%20mannequin', cta: 'Contacter l’agence' } : null,
     model && !model.image_url ? { title: 'Photo principale manquante', body: 'Ajoutez une photo principale pour compléter votre fiche publique.', href: '/profil/edition', cta: 'Ajouter ma photo' } : null,
     model && profileScore < 80 ? { title: `Profil complété à ${profileScore}%`, body: 'Certaines informations professionnelles sont encore à compléter.', href: '/profil/edition', cta: 'Modifier mon profil' } : null,
-    nextCourse ? { title: 'Formation à poursuivre', body: nextCourse.title, href: `/formation/module/${nextCourse.id}`, cta: 'Continuer le module' } : null,
+    nextChapter && nextModule ? { title: 'Classroom à poursuivre', body: `${nextModule.title} · ${nextChapter.title}`, href: `/formations/${encodeURIComponent(nextModule.slug)}/${encodeURIComponent(nextChapter.slug)}`, cta: 'Continuer le chapitre' } : null,
     Number(notifications.count || 0) > 0 ? { title: 'Consulter les informations récentes', body: `${notifications.count || 0} notification(s) disponibles dans votre fil personnel.`, href: '#notifications', cta: 'Voir le fil' } : null,
   ].filter(Boolean) as Array<{ title: string; body: string; href: string; cta: string }>;
 
@@ -132,14 +149,14 @@ export default async function Page({ searchParams }: PageProps) {
             <div>
               <p className="text-xs font-extrabold uppercase tracking-[.15em] text-pm-wine">Mon espace mannequin · PMM Campus</p>
               <h1 className="mt-4 font-playfair text-5xl font-semibold leading-[.9] tracking-[-.04em] sm:text-6xl lg:text-7xl">Bonjour, {model?.name || profile.name}.</h1>
-              <p className="mt-5 max-w-2xl text-sm leading-7 text-pm-ink/65">Votre carrière, votre image et votre formation réunies dans un seul espace personnel.</p>
+              <p className="mt-5 max-w-2xl text-sm leading-7 text-pm-ink/65">Votre carrière, votre image et votre Classroom réunies dans un seul espace personnel.</p>
               <div className="mt-7 flex flex-wrap gap-3">
                 {model?.id && <Link href="/profil/edition" className="control-button">Modifier mon profil ↗</Link>}
-                <Link href="/profil/classroom" className="control-button">Continuer ma formation ↗</Link>
+                <Link href="/profil/classroom" className="control-button">Continuer ma Classroom ↗</Link>
                 <Link href={model?.id ? `/mannequins/${model.id}` : '/mannequins'} className="control-button control-button--soft">Voir mon profil public</Link>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3"><Score value={profileScore} label="Profil prêt" tone="bg-pm-coral text-white"/><Score value={trainingProgress} label="Formation" tone="bg-pm-wine text-white"/></div>
+            <div className="grid grid-cols-2 gap-3"><Score value={profileScore} label="Profil prêt" tone="bg-pm-coral text-white"/><Score value={readingProgress} label="Lecture Classroom" tone="bg-pm-wine text-white"/></div>
           </div>
         </section>
 
@@ -161,9 +178,9 @@ export default async function Page({ searchParams }: PageProps) {
 
           <div className="space-y-5">
             <section className="control-card">
-              <div className="flex items-end justify-between gap-4"><div><p className="control-kicker">Classroom</p><h2 className="mt-2 font-playfair text-3xl font-semibold">Votre parcours d’apprentissage</h2></div><Link href="/profil/classroom" className="inline-flex min-h-11 items-center text-sm font-extrabold text-pm-coral underline underline-offset-4">Ouvrir la formation ↗</Link></div>
-              <div className="mt-6 rounded-[1.5rem] bg-pm-sage p-5 sm:p-6"><div className="flex items-end justify-between gap-4"><div><p className="text-xs font-extrabold uppercase tracking-[.1em] text-pm-teal">Prochaine étape</p><h3 className="mt-2 font-playfair text-2xl font-semibold">{nextCourse?.title || (activeCourses.length ? 'Parcours terminé' : 'Cours en préparation')}</h3></div><span className="font-playfair text-4xl font-semibold text-pm-teal">{trainingProgress}%</span></div><div className="mt-5 h-3 overflow-hidden rounded-full bg-white/65" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={trainingProgress} aria-label="Progression globale de formation"><div className="h-full rounded-full bg-pm-teal" style={{ width: `${trainingProgress}%` }} /></div></div>
-              <div className="mt-5 grid gap-3 sm:grid-cols-3">{activeCourses.slice(0, 3).map((course: any, index: number) => { const value = Math.min(100, progressMap.get(course.id) || 0); return <Link key={course.id} href={`/formation/module/${course.id}`} className="rounded-[1.3rem] border border-pm-ink/[.07] bg-white/70 p-4 transition hover:-translate-y-0.5 motion-reduce:transform-none"><p className="text-xs font-extrabold uppercase tracking-[.08em] text-pm-wine">Module 0{index + 1}</p><p className="mt-3 line-clamp-2 font-playfair text-xl font-semibold">{course.title}</p><p className="mt-4 text-xs font-bold text-pm-ink/50">{value}% complété</p></Link>; })}{!activeCourses.length && <p className="text-sm text-pm-ink/45">Les prochains cours seront publiés par l’agence.</p>}</div>
+              <div className="flex items-end justify-between gap-4"><div><p className="control-kicker">Classroom</p><h2 className="mt-2 font-playfair text-3xl font-semibold">Votre parcours d’apprentissage</h2></div><Link href="/profil/classroom" className="inline-flex min-h-11 items-center text-sm font-extrabold text-pm-coral underline underline-offset-4">Ouvrir la Classroom ↗</Link></div>
+              <div className="mt-6 rounded-[1.5rem] bg-pm-sage p-5 sm:p-6"><div className="flex items-end justify-between gap-4"><div><p className="text-xs font-extrabold uppercase tracking-[.1em] text-pm-teal">Prochaine étape</p><h3 className="mt-2 font-playfair text-2xl font-semibold">{nextChapter && nextModule ? `${nextModule.title} · ${nextChapter.title}` : (academyChapters.length ? 'Parcours validé' : 'Cours en préparation')}</h3></div><span className="font-playfair text-4xl font-semibold text-pm-teal">{readingProgress}%</span></div><div className="mt-5 h-3 overflow-hidden rounded-full bg-white/65" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={readingProgress} aria-label="Progression de lecture Classroom"><div className="h-full rounded-full bg-pm-teal" style={{ width: `${readingProgress}%` }} /></div><p className="mt-3 text-xs font-bold text-pm-ink/50">Lecture : {readingProgress}% · Validation quiz : {validationProgress}% ({passedChapters}/{academyChapters.length} chapitres)</p></div>
+              <div className="mt-5 grid gap-3 sm:grid-cols-3">{moduleStats.slice(0, 3).map(({ module, reading, passed, count }, index) => <Link key={module.id} href={`/formations/module/${encodeURIComponent(module.slug)}`} className="rounded-[1.3rem] border border-pm-ink/[.07] bg-white/70 p-4 transition hover:-translate-y-0.5 motion-reduce:transform-none"><p className="text-xs font-extrabold uppercase tracking-[.08em] text-pm-wine">Module {String(module.position).padStart(2, '0')}</p><p className="mt-3 line-clamp-2 font-playfair text-xl font-semibold">{module.title}</p><p className="mt-4 text-xs font-bold text-pm-ink/50">Lecture {reading}% · {passed}/{count} validés</p></Link>)}{!academyModules.length && <p className="text-sm text-pm-ink/45">Les prochains cours seront publiés par l’agence.</p>}</div>
             </section>
 
             <section className="grid gap-4 sm:grid-cols-3">
