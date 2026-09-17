@@ -60,6 +60,12 @@ create index if not exists monthly_payments_reference_idx
   on public.monthly_payments (reference)
   where reference is not null;
 
+create unique index if not exists monthly_payments_method_reference_unique_idx
+  on public.monthly_payments (payment_method, lower(reference))
+  where reference is not null
+    and btrim(reference) <> ''
+    and payment_method is not null;
+
 create index if not exists monthly_payments_submitted_by_user_idx
   on public.monthly_payments (submitted_by_user_id)
   where submitted_by_user_id is not null;
