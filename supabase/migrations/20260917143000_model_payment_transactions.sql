@@ -53,12 +53,17 @@ begin
   end if;
 end $$;
 
-create index if not exists monthly_payments_model_period_idx
-  on public.monthly_payments (model_id, period desc);
-
 create index if not exists monthly_payments_status_created_idx
   on public.monthly_payments (status, created_at desc);
 
 create index if not exists monthly_payments_reference_idx
   on public.monthly_payments (reference)
   where reference is not null;
+
+create index if not exists monthly_payments_submitted_by_user_idx
+  on public.monthly_payments (submitted_by_user_id)
+  where submitted_by_user_id is not null;
+
+create index if not exists monthly_payments_validated_by_user_idx
+  on public.monthly_payments (validated_by_user_id)
+  where validated_by_user_id is not null;
