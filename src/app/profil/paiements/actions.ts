@@ -90,6 +90,7 @@ export async function submitModelPayment(formData: FormData) {
     },
   });
 
+  if (error?.code === '23505') errorRedirect('duplicate');
   if (error) errorRedirect('save');
 
   revalidatePath('/profil');
