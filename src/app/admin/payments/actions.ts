@@ -34,7 +34,7 @@ async function updateStatus(formData: FormData, status: 'validated' | 'rejected'
   if (readError || !current?.id) redirect('/admin/payments?error=missing');
   if (current.status !== 'pending') redirect('/admin/payments?error=already-reviewed');
 
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from('monthly_payments')
     .update({
       status,
@@ -44,9 +44,12 @@ async function updateStatus(formData: FormData, status: 'validated' | 'rejected'
       updated_at: new Date().toISOString(),
     })
     .eq('id', id)
-    .eq('status', 'pending');
+    .eq('status', 'pending')
+    .select('id')
+    .maybeSingle();
 
   if (error) redirect('/admin/payments?error=save');
+  if (!updated?.id) redirect('/admin/payments?error=already-reviewed');
 
   revalidatePath('/admin/payments');
   revalidatePath('/manager');
