@@ -22,6 +22,8 @@ const STATUS = {
   invoice: status(['Brouillon', 'draft'], ['Envoyée', 'sent'], ['Paiement partiel', 'partial'], ['Payée', 'paid'], ['En retard', 'overdue'], ['Annulée', 'cancelled']),
   rights: status(['Brouillon', 'draft'], ['Actifs', 'active'], ['À renouveler', 'expiring'], ['Expirés', 'expired'], ['Renouvelés', 'renewed'], ['Annulés', 'cancelled']),
   selection: status(['Brouillon', 'draft'], ['Active', 'active'], ['Clôturée', 'closed'], ['Expirée', 'expired']),
+  finance: status(['Brouillon', 'draft'], ['En attente', 'pending'], ['Confirmée', 'confirmed'], ['Annulée', 'cancelled']),
+  budget: status(['Brouillon', 'draft'], ['Actif', 'active'], ['Clôturé', 'closed'], ['Annulé', 'cancelled']),
 };
 
 const f = (name: string, label: string, type: CrudField['type'] = 'text', extra: Partial<CrudField> = {}): CrudField => ({ name, label, type, ...extra });
@@ -91,6 +93,14 @@ const ERP_RESOURCE_DEFINITIONS = {
   'invoice-payments': r('invoice_payments', 'Encaissements clients', 'paid_at',
     ['invoice_id', 'amount', 'paid_at', 'payment_method', 'reference'],
     [relation('invoice_id', 'Facture', true), money('amount', 'Montant'), datetime('paid_at', 'Payé le', true), f('payment_method', 'Moyen de paiement', 'select', { options: [option('Virement', 'bank_transfer'), option('Mobile Money', 'mobile_money'), option('Espèces', 'cash'), option('Chèque', 'cheque'), option('Carte', 'card'), option('Autre', 'other')] }), f('reference', 'Référence'), textarea('notes', 'Notes')]),
+
+  'finance-transactions': r('finance_transactions', 'Grand livre financier', 'transaction_date',
+    ['transaction_date', 'direction', 'category', 'label', 'amount', 'currency', 'status', 'payment_method', 'account'],
+    [date('transaction_date', 'Date', true), f('direction', 'Flux', 'select', { required: true, options: [option('Recette', 'income'), option('Dépense', 'expense'), option('Transfert', 'transfer')] }), f('category', 'Catégorie', 'text', { required: true }), f('label', 'Libellé', 'text', { required: true }), money('amount', 'Montant'), f('currency', 'Devise', 'select', { options: [option('Franc CFA', 'XAF'), option('Euro', 'EUR'), option('Dollar US', 'USD')], defaultValue: 'XAF' }), f('status', 'Statut', 'select', { options: STATUS.finance, defaultValue: 'confirmed' }), f('payment_method', 'Moyen de paiement', 'select', { options: [option('Espèces', 'cash'), option('Mobile Money', 'mobile_money'), option('Virement', 'bank_transfer'), option('Chèque', 'cheque'), option('Carte', 'card'), option('Autre', 'other')] }), f('account', 'Compte / caisse'), f('counterparty', 'Tiers'), f('reference', 'Référence'), textarea('notes', 'Notes')]),
+
+  'finance-budgets': r('finance_budgets', 'Budgets & prévisions', 'period_start',
+    ['name', 'category', 'period_start', 'period_end', 'planned_income', 'planned_expense', 'currency', 'status'],
+    [f('name', 'Budget', 'text', { required: true }), f('category', 'Catégorie'), date('period_start', 'Début', true), date('period_end', 'Fin', true), money('planned_income', 'Recettes prévues'), money('planned_expense', 'Dépenses prévues'), f('currency', 'Devise', 'select', { options: [option('Franc CFA', 'XAF'), option('Euro', 'EUR'), option('Dollar US', 'USD')], defaultValue: 'XAF' }), f('status', 'Statut', 'select', { options: STATUS.budget, defaultValue: 'active' }), textarea('notes', 'Notes')]),
 
   'image-rights': r('image_rights', 'Droits d’image', 'updated_at',
     ['campaign', 'model_id', 'client_id', 'status', 'starts_on', 'ends_on', 'rights_fee'],
