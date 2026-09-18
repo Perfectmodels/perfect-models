@@ -17,6 +17,7 @@ const ROUTES: Record<string, ResourceName> = {
   'booking-requests': 'booking-requests', bookings: 'bookings', 'booking-options': 'booking-options',
   clients: 'clients', 'client-contacts': 'client-contacts', 'calendar-events': 'calendar-events',
   quotes: 'quotes', contracts: 'contracts', invoices: 'invoices', 'invoice-payments': 'invoice-payments', 'image-rights': 'image-rights',
+  'finance/transactions': 'finance-transactions', 'finance/budgets': 'finance-budgets',
   'client-selections': 'client-selections', 'selection-items': 'selection-items',
   absences: 'absences', agency: 'content', 'artistic-direction': 'photoshoot-briefs', 'beauty-contests': 'beauty-contests',
   classroom: 'courses', 'classroom-progress': 'course-progress', comments: 'comments',
