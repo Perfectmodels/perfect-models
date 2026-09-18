@@ -30,7 +30,7 @@ const FAMILY_BY_RESOURCE: Record<string, FamilyKey> = {
   'casting-applications': 'casting', castings: 'casting', 'casting-talents': 'casting',
   'booking-requests': 'production', bookings: 'production', 'booking-options': 'production', 'calendar-events': 'production',
   clients: 'crm', 'client-contacts': 'crm', 'client-selections': 'crm', 'selection-items': 'crm',
-  quotes: 'finance', contracts: 'finance', invoices: 'finance', 'invoice-payments': 'finance', 'image-rights': 'finance', payments: 'finance',
+  quotes: 'finance', contracts: 'finance', invoices: 'finance', 'invoice-payments': 'finance', 'image-rights': 'finance', payments: 'finance', 'finance-transactions': 'finance', 'finance-budgets': 'finance',
   'beauty-contests': 'events', 'fashion-day-applications': 'events', 'fashion-day-events': 'events', 'jury-members': 'events', 'registration-staff': 'events',
   magazine: 'editorial', gallery: 'editorial', services: 'editorial', content: 'editorial', navigation: 'editorial', 'social-links': 'editorial', 'site-settings': 'editorial',
   mailing: 'communication', messages: 'communication', notifications: 'communication',
