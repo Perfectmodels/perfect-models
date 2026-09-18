@@ -7,7 +7,7 @@ import {
   AcademicCapIcon, Bars3Icon, BellAlertIcon, BellIcon, BellSlashIcon, BookOpenIcon,
   BriefcaseIcon, BuildingStorefrontIcon, CalendarIcon, ChatBubbleLeftRightIcon,
   ChevronRightIcon, ClipboardDocumentCheckIcon, ClipboardDocumentListIcon, Cog6ToothIcon,
-  CurrencyDollarIcon, HomeIcon, KeyIcon, MagnifyingGlassIcon, NewspaperIcon, PaintBrushIcon,
+  BanknotesIcon, CurrencyDollarIcon, HomeIcon, KeyIcon, MagnifyingGlassIcon, NewspaperIcon, PaintBrushIcon,
   PaperAirplaneIcon, PhotoIcon, PresentationChartLineIcon, SparklesIcon, UsersIcon, XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -50,7 +50,9 @@ const navigation: NavigationSection[] = [
     { to: '/admin/client-selections', label: 'Sélections clients', icon: SparklesIcon, description: 'Shortlists partageables sans compte', permission: 'bookings' },
   ]},
   { title: 'Finance & juridique', items: [
-    { to: '/admin/finance', label: 'Cockpit financier', icon: CurrencyDollarIcon, description: 'CA, commissions, impayés et échéances', permission: 'payments' },
+    { to: '/admin/finance', label: 'Cockpit financier', icon: CurrencyDollarIcon, description: 'Trésorerie, marge, impayés et échéances', permission: 'payments' },
+    { to: '/admin/finance/transactions', label: 'Recettes & dépenses', icon: BanknotesIcon, description: 'Grand livre, caisse et transferts', permission: 'payments' },
+    { to: '/admin/finance/budgets', label: 'Budgets', icon: PresentationChartLineIcon, description: 'Prévisions et enveloppes', permission: 'payments' },
     { to: '/admin/quotes', label: 'Devis', icon: ClipboardDocumentListIcon, description: 'Propositions commerciales', permission: 'payments' },
     { to: '/admin/invoices', label: 'Factures', icon: CurrencyDollarIcon, description: 'Facturation et échéances clients', permission: 'payments' },
     { to: '/admin/invoice-payments', label: 'Encaissements', icon: CurrencyDollarIcon, description: 'Paiements et soldes clients', permission: 'payments' },
