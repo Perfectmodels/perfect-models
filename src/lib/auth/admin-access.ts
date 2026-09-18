@@ -3,49 +3,22 @@ import type { ResourceName } from '@/lib/agency-resource-registry';
 import type { AppSessionProfile } from './profile';
 
 export const RESOURCE_PERMISSION_MAP: Partial<Record<ResourceName, keyof AdminPagePermissions>> = {
-  models: 'models',
-  availability: 'models',
-  'casting-applications': 'castingApplications',
-  'casting-scores': 'castingResults',
-  castings: 'castingApplications',
-  'casting-talents': 'castingResults',
-  'booking-requests': 'bookings',
-  bookings: 'bookings',
-  'booking-options': 'bookings',
-  'calendar-events': 'bookings',
-  clients: 'bookings',
-  'client-contacts': 'bookings',
-  'client-selections': 'bookings',
-  'selection-items': 'bookings',
-  quotes: 'payments',
-  invoices: 'payments',
-  'invoice-payments': 'payments',
-  contracts: 'payments',
-  'image-rights': 'payments',
-  'fashion-day-applications': 'fashionDayApplications',
-  'fashion-day-events': 'fashionDayEvents',
-  'fashion-day-reservations': 'fashionDayEvents',
-  services: 'agency',
-  magazine: 'magazine',
-  gallery: 'mediaLibrary',
-  mailing: 'mailing',
-  messages: 'messages',
-  notifications: 'messages',
-  absences: 'absences',
-  payments: 'payments',
-  comments: 'comments',
-  recovery: 'recovery',
-  'photoshoot-briefs': 'artisticDirection',
-  'beauty-contests': 'beautyContests',
-  courses: 'classroom',
-  'course-progress': 'classroomProgress',
-  'classroom-messages': 'liveChat',
-  'classroom-requests': 'classroomProgress',
+  models: 'models', availability: 'models',
+  'casting-applications': 'castingApplications', 'casting-scores': 'castingResults', castings: 'castingApplications', 'casting-talents': 'castingResults',
+  'booking-requests': 'bookings', bookings: 'bookings', 'booking-options': 'bookings', 'calendar-events': 'bookings',
+  clients: 'bookings', 'client-contacts': 'bookings', 'client-selections': 'bookings', 'selection-items': 'bookings',
+  quotes: 'payments', invoices: 'payments', 'invoice-payments': 'payments', contracts: 'payments', 'image-rights': 'payments',
+  'finance-transactions': 'payments', 'finance-budgets': 'payments',
+  'fashion-day-applications': 'fashionDayApplications', 'fashion-day-events': 'fashionDayEvents', 'fashion-day-reservations': 'fashionDayEvents',
+  services: 'agency', magazine: 'magazine', gallery: 'mediaLibrary', mailing: 'mailing', messages: 'messages', notifications: 'messages',
+  absences: 'absences', payments: 'payments', comments: 'comments', recovery: 'recovery', 'photoshoot-briefs': 'artisticDirection',
+  'beauty-contests': 'beautyContests', courses: 'classroom', 'course-progress': 'classroomProgress', 'classroom-messages': 'liveChat', 'classroom-requests': 'classroomProgress',
 };
 
 export function hasAdminPermission(profile: AppSessionProfile, permission: keyof AdminPagePermissions) {
   if (profile.role === 'admin') return true;
   if (profile.role !== 'manager') return false;
+  if (permission === 'payments' && profile.adminPermissions?.payments !== false) return true;
   return Boolean(profile.adminPermissions?.[permission]);
 }
 
