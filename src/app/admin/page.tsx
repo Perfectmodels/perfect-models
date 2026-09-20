@@ -79,6 +79,21 @@ export default async function AdminPage() {
         ['01','Casting','/admin/castings','Créer le brief et matcher les talents'],['02','Shortlist','/admin/casting-pipeline','Faire évoluer les profils dans le pipeline'],['03','Booking','/admin/bookings','Confirmer le job et synchroniser le calendrier'],['04','Contrat','/admin/contracts','Centraliser les accords et signatures'],['05','Facture','/admin/invoices','Facturer le client et suivre l’échéance'],['06','Paiement','/admin/finance','Calculer commission et net mannequin'],
       ].map(([n,title,href,desc]) => <Link key={n} href={href} className="rounded-2xl bg-pm-peach p-4"><span className="text-[9px] font-black text-pm-coral">{n}</span><h3 className="mt-3 font-playfair text-xl font-bold">{title}</h3><p className="mt-2 text-xs leading-5 text-pm-ink/45">{desc}</p></Link>)}</div></div></section>
 
+    <section className="control-card"><div className="flex flex-wrap items-end justify-between gap-4"><div><p className="control-kicker">Cockpit 360°</p><h2 className="mt-2 font-playfair text-3xl font-semibold">Toutes les fonctions, sans parcours inutile</h2><p className="mt-2 max-w-2xl text-sm text-pm-ink/50">Chaque domaine ouvre directement son espace de travail. Les relations sont affichées avec des noms lisibles et les actions restent au niveau du dossier.</p></div></div><div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{[
+      ['Talents','/admin/models','Fiches 360°, profils, mensurations et accès'],
+      ['Castings','/admin/castings','Briefs, matching, pipeline et résultats'],
+      ['Bookings','/admin/bookings','Options, productions et calendrier'],
+      ['Clients CRM','/admin/clients','Clients, contacts et sélections'],
+      ['Contrats','/admin/contracts','Documents, signatures et échéances'],
+      ['Facturation','/admin/invoices','Devis, factures et encaissements'],
+      ['Finance','/admin/finance','Cotisations, transactions et budgets'],
+      ['Droits d’image','/admin/image-rights','Usages, territoires et expirations'],
+      ['Classroom','/admin/classroom','Cours et progression des talents'],
+      ['Communication','/admin/mailing','Mailing, messages et contenus'],
+      ['Médiathèque','/admin/media-library','Images et ressources de marque'],
+      ['Paramètres','/admin/settings','Site, navigation et profils'],
+    ].map(([name,href,desc])=><Link key={name} href={href} className="group rounded-2xl border border-pm-ink/[.07] bg-pm-ivory p-4 transition hover:-translate-y-0.5 hover:border-pm-coral/30"><div className="flex items-center justify-between"><h3 className="font-playfair text-xl font-bold">{name}</h3><span className="text-pm-coral">↗</span></div><p className="mt-2 text-xs leading-5 text-pm-ink/45">{desc}</p></Link>)}</div></section>
+
     <section className="grid gap-5 lg:grid-cols-3"><Activity title="Castings récents" href="/admin/castings" rows={(recentCastings.data || []).map((row:any)=>({title:row.title,meta:`${row.status} · ${dateLabel(row.starts_at)}`}))}/><Activity title="Bookings récents" href="/admin/bookings" rows={(recentBookings.data || []).map((row:any)=>({title:row.title,meta:`${row.status} · ${dateLabel(row.starts_at)}`}))}/><Activity title="Clients CRM" href="/admin/clients" rows={(recentClients.data || []).map((row:any)=>({title:row.name,meta:`${row.client_type} · ${row.status}`}))}/></section>
   </div>;
 }
