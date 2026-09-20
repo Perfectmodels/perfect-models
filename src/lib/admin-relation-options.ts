@@ -1,19 +1,20 @@
 import 'server-only';
 import type { CrudField } from '@/lib/resource-registry';
+import { formatStatus } from '@/lib/admin-formatters';
 
 type SupabaseAdmin = any;
 type Option = { label: string; value: string };
 
 const RELATIONS: Record<string, { table: string; select: string; order?: string; label: (row: any) => string }> = {
   model_id: { table: 'models', select: 'id,name,email', order: 'name', label: (row) => `${row.name || row.id}${row.email ? ` · ${row.email}` : ''}` },
-  client_id: { table: 'agency_clients', select: 'id,name,client_type,status', order: 'name', label: (row) => `${row.name || row.id}${row.client_type ? ` · ${row.client_type}` : ''}` },
-  casting_id: { table: 'castings', select: 'id,title,status,starts_at', order: 'title', label: (row) => `${row.title || row.id}${row.status ? ` · ${row.status}` : ''}` },
-  booking_id: { table: 'bookings', select: 'id,title,status,starts_at', order: 'title', label: (row) => `${row.title || row.id}${row.status ? ` · ${row.status}` : ''}` },
-  booking_request_id: { table: 'booking_requests', select: 'id,name,email,status,created_at', label: (row) => `${row.name || row.email || row.id}${row.status ? ` · ${row.status}` : ''}` },
-  option_id: { table: 'booking_options', select: 'id,title,status,starts_at', order: 'title', label: (row) => `${row.title || row.id}${row.status ? ` · ${row.status}` : ''}` },
-  quote_id: { table: 'quotes', select: 'id,quote_number,status,total,currency', order: 'quote_number', label: (row) => `${row.quote_number || row.id}${row.status ? ` · ${row.status}` : ''}` },
-  invoice_id: { table: 'invoices', select: 'id,invoice_number,status,total,currency', order: 'invoice_number', label: (row) => `${row.invoice_number || row.id}${row.status ? ` · ${row.status}` : ''}` },
-  selection_id: { table: 'client_selections', select: 'id,title,status,expires_at', order: 'title', label: (row) => `${row.title || row.id}${row.status ? ` · ${row.status}` : ''}` },
+  client_id: { table: 'agency_clients', select: 'id,name,client_type,status', order: 'name', label: (row) => `${row.name || row.id}${row.client_type ? ` · ${formatStatus(row.client_type)}` : ''}` },
+  casting_id: { table: 'castings', select: 'id,title,status,starts_at', order: 'title', label: (row) => `${row.title || row.id}${row.status ? ` · ${formatStatus(row.status)}` : ''}` },
+  booking_id: { table: 'bookings', select: 'id,title,status,starts_at', order: 'title', label: (row) => `${row.title || row.id}${row.status ? ` · ${formatStatus(row.status)}` : ''}` },
+  booking_request_id: { table: 'booking_requests', select: 'id,name,email,status,created_at', label: (row) => `${row.name || row.email || row.id}${row.status ? ` · ${formatStatus(row.status)}` : ''}` },
+  option_id: { table: 'booking_options', select: 'id,title,status,starts_at', order: 'title', label: (row) => `${row.title || row.id}${row.status ? ` · ${formatStatus(row.status)}` : ''}` },
+  quote_id: { table: 'quotes', select: 'id,quote_number,status,total,currency', order: 'quote_number', label: (row) => `${row.quote_number || row.id}${row.status ? ` · ${formatStatus(row.status)}` : ''}` },
+  invoice_id: { table: 'invoices', select: 'id,invoice_number,status,total,currency', order: 'invoice_number', label: (row) => `${row.invoice_number || row.id}${row.status ? ` · ${formatStatus(row.status)}` : ''}` },
+  selection_id: { table: 'client_selections', select: 'id,title,status,expires_at', order: 'title', label: (row) => `${row.title || row.id}${row.status ? ` · ${formatStatus(row.status)}` : ''}` },
 };
 
 export async function hydrateAdminRelationOptions(supabase: SupabaseAdmin, fields: readonly CrudField[]): Promise<CrudField[]> {
