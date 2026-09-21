@@ -26,6 +26,7 @@ type Props = {
   emptyLabel?: string;
   maxVisible?: number;
   autoEdit?: boolean;
+  entityLabel?: string;
 };
 
 const IMAGE_LIST_FIELDS = new Set(['images', 'photos', 'gallery_images']);
@@ -58,10 +59,11 @@ function formValues(fields: readonly CrudField[], row?: Row) {
 }
 
 function rowTitle(row: Row, fields: readonly CrudField[]) {
-  for (const key of ['title', 'name', 'campaign', 'collaborator_name', 'project_title', 'reference']) {
+  if (row.first_name || row.last_name) return [row.first_name, row.last_name].filter(Boolean).join(' ');
+  for (const key of ['title', 'name', 'subject', 'quote_number', 'invoice_number', 'campaign', 'collaborator_name', 'project_title', 'reference']) {
     if (row[key]) return String(row[key]);
   }
-  for (const key of ['casting_id', 'booking_id', 'client_id', 'transaction_type']) {
+  for (const key of ['model_id', 'invoice_id', 'selection_id', 'casting_id', 'booking_id', 'client_id', 'transaction_type']) {
     const field=fields.find((candidate)=>candidate.name===key);
     const resolved=optionLabel(field,row[key]);
     if(resolved)return resolved;
@@ -81,9 +83,11 @@ function displayValue(row: Row, column: string, fields: readonly CrudField[]) {
   const option = optionLabel(field, value);
   if (option) return option;
   if (value === null || value === undefined || value === '') return '—';
+  if (column.endsWith('_id')) return 'Dossier lié indisponible';
   if (typeof value === 'boolean') return value ? 'Oui' : 'Non';
   if (field?.type === 'date' || field?.type === 'datetime-local' || column.endsWith('_at') || column.endsWith('_on')) return formatDate(value, field?.type === 'datetime-local');
-  if (field?.type === 'number' && /(amount|fee|budget|income|expense|total|rate)/i.test(column)) return formatMoney(value, String(row.currency || 'XAF'));
+  if (column.endsWith('_rate')) return `${value} %`;
+  if (field?.type === 'number' && /(amount|fee|budget|income|expense|total)/i.test(column)) return formatMoney(value, String(row.currency || 'XAF'));
   if (Array.isArray(value)) return value.length ? value.join(', ') : '—';
   if (typeof value === 'object') return `${Object.keys(value as object).length} élément(s)`;
   return String(value);
@@ -92,6 +96,7 @@ function displayValue(row: Row, column: string, fields: readonly CrudField[]) {
 export default function TalentRecordsPanel({
   resource, title, description, rows: initialRows, fields, columns, fixedValues,
   canCreate = true, canEdit = true, canDelete = false, createLabel = 'Ajouter', emptyLabel = 'Aucun dossier.', maxVisible = 8, autoEdit = false,
+  entityLabel = 'talent',
 }: Props) {
   const router = useRouter();
   const [rows, setRows] = useState(initialRows);
@@ -146,7 +151,7 @@ export default function TalentRecordsPanel({
       if (creating) setRows((current) => [payload.data, ...current]);
       else setRows((current) => current.map((row) => String(row.id) === String(payload.data?.id) ? payload.data : row));
       setEditor(null);
-      setNotice(creating ? 'Dossier ajouté à cette fiche talent.' : 'Dossier mis à jour.');
+      setNotice(creating ? `Dossier ajouté à cette fiche ${entityLabel}.` : 'Dossier mis à jour.');
       router.refresh();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Enregistrement impossible.');
@@ -192,7 +197,7 @@ export default function TalentRecordsPanel({
 
     {editor && <div className="fixed inset-0 z-[130] grid place-items-center overflow-y-auto bg-pm-ink/65 p-3 sm:p-6" role="dialog" aria-modal="true"><form onSubmit={save} className="my-auto w-full max-w-3xl rounded-[1.8rem] bg-white p-5 shadow-2xl sm:p-7"><div className="flex items-start justify-between gap-4"><div><p className="control-kicker">{editor.mode === 'create' ? 'Nouveau dossier' : 'Modification'}</p><h3 className="mt-1 font-playfair text-3xl font-semibold">{title}</h3></div><button type="button" disabled={busy} onClick={() => setEditor(null)} className="grid h-10 w-10 place-items-center rounded-full bg-pm-ivory"><X size={17}/></button></div>{error && <p className="mt-4 rounded-xl bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-900">{error}</p>}<div className="mt-6 grid gap-4 sm:grid-cols-2">{fields.map((field) => <Field key={field.name} id={`${formId}-${field.name}`} field={field} value={values[field.name]} onChange={(value) => setValues((current) => ({ ...current, [field.name]:value }))}/>)}</div><div className="mt-7 flex justify-end gap-2"><button type="button" disabled={busy} onClick={() => setEditor(null)} className="min-h-11 rounded-full border border-pm-ink/10 px-5 text-sm font-bold">Annuler</button><button type="submit" disabled={busy} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-pm-wine px-6 text-sm font-black text-white disabled:opacity-50">{busy && <Loader2 size={15} className="animate-spin"/>}Enregistrer</button></div></form></div>}
 
-    {viewing && <div className="fixed inset-0 z-[130] grid place-items-center overflow-y-auto bg-pm-ink/65 p-3 sm:p-6" role="dialog" aria-modal="true"><div className="my-auto w-full max-w-2xl rounded-[1.8rem] bg-white p-5 shadow-2xl sm:p-7"><div className="flex items-start justify-between gap-4"><div><p className="control-kicker">Dossier talent</p><h3 className="mt-1 font-playfair text-3xl font-semibold">{rowTitle(viewing,fields)}</h3></div><button type="button" onClick={() => setViewing(null)} className="grid h-10 w-10 place-items-center rounded-full bg-pm-ivory"><X size={17}/></button></div><dl className="mt-6 grid gap-3 sm:grid-cols-2">{fields.map((field) => <div key={field.name} className={`rounded-xl bg-pm-ivory p-3 ${field.wide ? 'sm:col-span-2' : ''}`}><dt className="text-[9px] font-black uppercase tracking-[.07em] text-pm-ink/35">{field.label}</dt><dd className="mt-1 break-words text-sm font-semibold">{displayValue(viewing,field.name,fields)}</dd></div>)}</dl></div></div>}
+    {viewing && <div className="fixed inset-0 z-[130] grid place-items-center overflow-y-auto bg-pm-ink/65 p-3 sm:p-6" role="dialog" aria-modal="true"><div className="my-auto w-full max-w-2xl rounded-[1.8rem] bg-white p-5 shadow-2xl sm:p-7"><div className="flex items-start justify-between gap-4"><div><p className="control-kicker">Dossier {entityLabel}</p><h3 className="mt-1 font-playfair text-3xl font-semibold">{rowTitle(viewing,fields)}</h3></div><button type="button" onClick={() => setViewing(null)} className="grid h-10 w-10 place-items-center rounded-full bg-pm-ivory"><X size={17}/></button></div><dl className="mt-6 grid gap-3 sm:grid-cols-2">{fields.map((field) => <div key={field.name} className={`rounded-xl bg-pm-ivory p-3 ${field.wide ? 'sm:col-span-2' : ''}`}><dt className="text-[9px] font-black uppercase tracking-[.07em] text-pm-ink/35">{field.label}</dt><dd className="mt-1 break-words text-sm font-semibold">{displayValue(viewing,field.name,fields)}</dd></div>)}</dl></div></div>}
 
     {deleting && <div className="fixed inset-0 z-[140] grid place-items-center bg-pm-ink/65 p-4" role="dialog" aria-modal="true"><div className="w-full max-w-md rounded-[1.8rem] bg-white p-6 shadow-2xl"><div className="grid h-12 w-12 place-items-center rounded-full bg-rose-50 text-rose-800"><Trash2 size={19}/></div><h3 className="mt-5 font-playfair text-3xl font-semibold">Supprimer ce dossier ?</h3><p className="mt-3 text-sm leading-6 text-pm-ink/55">{rowTitle(deleting,fields)} sera supprimé définitivement. Cette action est réservée aux éléments qui ne nécessitent pas d’historique.</p><div className="mt-7 flex justify-end gap-2"><button type="button" disabled={busy} onClick={() => setDeleting(null)} className="min-h-11 rounded-full border border-pm-ink/10 px-5 text-sm font-bold">Annuler</button><button type="button" disabled={busy} onClick={() => void remove()} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-rose-700 px-5 text-sm font-black text-white disabled:opacity-50">{busy && <Loader2 size={15} className="animate-spin"/>}Supprimer</button></div></div></div>}
   </section>;

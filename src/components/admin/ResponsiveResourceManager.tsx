@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
 import {
   AlertTriangle, Check, ChevronLeft, ChevronRight, Database, Eye, Loader2, Pencil,
   Archive, Plus, Search, SlidersHorizontal, Trash2, X,
@@ -24,6 +25,7 @@ type Props = {
   initialTotal: number;
   canCreate?: boolean;
   canDelete?: boolean;
+  detailBasePath?: string;
 };
 
 const DEFAULT_PAGE_SIZE = 15;
@@ -101,7 +103,7 @@ function compactValue(value: unknown, column: string, fields: readonly CrudField
     if (Number.isFinite(amount)) return <span className="font-semibold">{currency === 'XAF' ? `${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(amount)} FCFA` : new Intl.NumberFormat('fr-FR', { style: 'currency', currency, maximumFractionDigits: 2 }).format(amount)}</span>;
   }
   if (value === null || value === undefined || value === '') return <span className="text-pm-ink/35">—</span>;
-  if (column.endsWith('_id')) return <span className="text-pm-ink/55">Dossier lié</span>;
+  if (column.endsWith('_id') && !optionLabel) return <span className="text-pm-ink/55">Dossier lié indisponible</span>;
   if (typeof value === 'boolean') return <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-extrabold ${value ? 'bg-emerald-50 text-emerald-800' : 'bg-stone-100 text-stone-600'}`}>{value ? 'Oui' : 'Non'}</span>;
   if (typeof value === 'object') {
     const count = Array.isArray(value) ? value.length : Object.keys(value as object).length;
@@ -171,7 +173,7 @@ function FieldInput({ resource, field, value, onChange, editing, relationOptions
   return <input id={inputId} type={htmlType} value={String(value)} disabled={disabled} required={field.required} aria-describedby={describedBy} min={field.min} max={field.max} step={field.step} placeholder={field.placeholder || (field.type === 'tags' ? 'Séparez les valeurs par des virgules' : undefined)} onChange={(event) => onChange(event.target.value)} className={inputClass} {...inputHints(field)} />;
 }
 
-export default function ResponsiveResourceManager({ resource, title, primaryKey, columns, fields, initialRows, initialTotal, canCreate = true, canDelete = true }: Props) {
+export default function ResponsiveResourceManager({ resource, title, primaryKey, columns, fields, initialRows, initialTotal, canCreate = true, canDelete = true, detailBasePath }: Props) {
   const [rows, setRows] = useState(initialRows);
   const [total, setTotal] = useState(initialTotal);
   const [query, setQuery] = useState('');
@@ -325,7 +327,7 @@ export default function ResponsiveResourceManager({ resource, title, primaryKey,
         {rows.map((row, index) => <article key={String(row[primaryKey] ?? index)} className="min-w-0 rounded-[1.45rem] border border-pm-ink/[.08] bg-white p-4 shadow-[0_10px_35px_rgba(91,46,37,.04)] sm:p-5">
           <div className="flex items-start justify-between gap-4"><div className="min-w-0"><p className="text-[9px] font-black uppercase tracking-[.12em] text-pm-coral">Dossier</p><h4 className="mt-1 truncate font-playfair text-2xl font-semibold">{displayTitle(row, primaryKey, fields)}</h4></div>{row.status ? compactValue(row.status, 'status', fields, row) : null}</div>
           <dl className="mt-5 grid gap-3 sm:grid-cols-2">{visibleColumns.filter((column) => column !== 'status' && row[column] !== undefined).slice(0, 4).map((column) => <div key={column} className="min-w-0 rounded-xl bg-pm-ivory px-3 py-2.5"><dt className="text-[9px] font-black uppercase tracking-[.08em] text-pm-ink/35">{labelFor(column, fields)}</dt><dd className="mt-1 min-w-0 text-sm text-pm-ink/70">{compactValue(row[column], column, fields, row)}</dd></div>)}</dl>
-          <div className="mt-5 flex flex-wrap gap-2 border-t border-pm-ink/[.07] pt-4"><button type="button" onClick={() => setViewing(row)} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-pm-ink/12 px-4 text-xs font-bold"><Eye size={14}/> Consulter</button><button type="button" onClick={() => openEdit(row)} className="inline-flex min-h-10 items-center gap-2 rounded-full bg-pm-peach px-4 text-xs font-black text-pm-wine"><Pencil size={14}/> Modifier</button>{archiveValue && String(row.status||'') !== archiveValue && <button type="button" onClick={() => setArchiving(row)} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-pm-ink/12 px-3 text-xs font-bold"><Archive size={14}/> {archiveLabel}</button>}{canDelete && <button type="button" onClick={() => setDeleting(row)} className="ml-auto grid h-10 w-10 place-items-center rounded-full text-red-600 hover:bg-red-50" aria-label="Supprimer"><Trash2 size={15}/></button>}</div>
+          <div className="mt-5 flex flex-wrap gap-2 border-t border-pm-ink/[.07] pt-4">{detailBasePath && row[primaryKey] ? <Link href={`${detailBasePath}/${encodeURIComponent(String(row[primaryKey]))}`} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-pm-ink/12 px-4 text-xs font-bold"><Eye size={14}/> Consulter</Link> : <button type="button" onClick={() => setViewing(row)} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-pm-ink/12 px-4 text-xs font-bold"><Eye size={14}/> Consulter</button>}<button type="button" onClick={() => openEdit(row)} className="inline-flex min-h-10 items-center gap-2 rounded-full bg-pm-peach px-4 text-xs font-black text-pm-wine"><Pencil size={14}/> Modifier</button>{archiveValue && String(row.status||'') !== archiveValue && <button type="button" onClick={() => setArchiving(row)} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-pm-ink/12 px-3 text-xs font-bold"><Archive size={14}/> {archiveLabel}</button>}{canDelete && <button type="button" onClick={() => setDeleting(row)} className="ml-auto grid h-10 w-10 place-items-center rounded-full text-red-600 hover:bg-red-50" aria-label="Supprimer"><Trash2 size={15}/></button>}</div>
         </article>)}
       </div>
       {!rows.length && !loading && <div className="rounded-[1.5rem] border border-dashed border-pm-ink/12 bg-white px-5 py-14 text-center"><Database className="mx-auto text-pm-ink/20" size={34}/><p className="mt-3 font-bold text-pm-ink/55">Aucun dossier</p><p className="mt-1 text-sm text-pm-ink/40">Modifiez les filtres ou créez un premier dossier.</p></div>}
