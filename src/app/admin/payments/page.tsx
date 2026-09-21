@@ -89,6 +89,16 @@ export default async function AdminPaymentsPage({ searchParams }: { searchParams
   const pendingTotal = pending.reduce((sum, row) => sum + Number(row.amount || 0), 0);
   const updated = typeof params.updated === 'string' ? params.updated : null;
   const hasError = typeof params.error === 'string';
+  const query = typeof params.q === 'string' ? params.q.trim().toLocaleLowerCase('fr') : '';
+  const statusFilter = typeof params.status === 'string' ? params.status : '';
+  const typeFilter = typeof params.type === 'string' ? params.type : '';
+  const matchesFilters = (row: Row) => {
+    const model = modelFor(row);
+    const searchable = [model?.name, model?.email, row.reference, TYPE_LABELS[row.transaction_type || ''], METHOD_LABELS[row.payment_method || '']].filter(Boolean).join(' ').toLocaleLowerCase('fr');
+    return (!query || searchable.includes(query)) && (!statusFilter || row.status === statusFilter) && (!typeFilter || row.transaction_type === typeFilter);
+  };
+  const filteredRows = rows.filter(matchesFilters);
+  const filteredPending = pending.filter(matchesFilters);
 
   return (
     <main className="min-h-screen bg-pm-ivory px-5 py-10 text-pm-ink sm:px-8 lg:px-10">
@@ -101,7 +111,7 @@ export default async function AdminPaymentsPage({ searchParams }: { searchParams
               <h1 className="mt-4 font-playfair text-5xl font-semibold leading-[.92] tracking-[-.04em] sm:text-6xl">Validation des transactions mannequins.</h1>
               <p className="mt-5 text-sm leading-7 text-white/72">Une déclaration mannequin n’entre dans les encaissements qu’après contrôle de sa référence ou de sa preuve puis validation administrative.</p>
             </div>
-            <Link href={profile.role === 'manager' ? '/manager' : '/admin'} className="control-button border-white/20 bg-white text-pm-wine">Retour au tableau de bord ↗</Link>
+            <div className="flex flex-wrap gap-2"><Link href="/admin/finance/cotisations" className="control-button border-white/20 bg-white text-pm-wine">Saisir / modifier</Link><Link href="/admin/finance?view=cotisations" className="control-button border-white/25 bg-transparent text-white">Vue cotisations</Link></div>
           </div>
         </section>
 
@@ -115,7 +125,14 @@ export default async function AdminPaymentsPage({ searchParams }: { searchParams
           <Metric label="Rejetées" value={String(rejected.length)} note="Non comptabilisées" tone="bg-white" />
         </section>
 
-        {pending.length > 0 && (
+        <form method="get" className="grid gap-3 rounded-[1.5rem] border border-pm-ink/[.07] bg-white p-4 sm:grid-cols-2 lg:grid-cols-[1fr_.45fr_.55fr_auto]">
+          <label><span className="mb-2 block text-[10px] font-black uppercase tracking-[.08em] text-pm-ink/40">Recherche</span><input name="q" defaultValue={typeof params.q === 'string' ? params.q : ''} placeholder="Talent, e-mail ou référence…" className="min-h-11 w-full rounded-xl border border-pm-ink/12 bg-pm-ivory px-3 text-sm outline-none focus:border-pm-coral"/></label>
+          <label><span className="mb-2 block text-[10px] font-black uppercase tracking-[.08em] text-pm-ink/40">Statut</span><select name="status" defaultValue={statusFilter} className="min-h-11 w-full rounded-xl border border-pm-ink/12 bg-pm-ivory px-3 text-sm"><option value="">Tous</option><option value="pending">À vérifier</option><option value="validated">Confirmé</option><option value="rejected">Rejeté</option></select></label>
+          <label><span className="mb-2 block text-[10px] font-black uppercase tracking-[.08em] text-pm-ink/40">Objet</span><select name="type" defaultValue={typeFilter} className="min-h-11 w-full rounded-xl border border-pm-ink/12 bg-pm-ivory px-3 text-sm"><option value="">Tous</option>{Object.entries(TYPE_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+          <div className="flex items-end gap-2"><button type="submit" className="min-h-11 flex-1 rounded-xl bg-pm-ink px-4 text-xs font-black uppercase tracking-[.06em] text-white">Filtrer</button>{(query || statusFilter || typeFilter) && <Link href="/admin/payments" className="grid min-h-11 place-items-center rounded-xl border border-pm-ink/12 px-3 text-xs font-bold">Effacer</Link>}</div>
+        </form>
+
+        {filteredPending.length > 0 && (
           <section className="control-card">
             <div>
               <p className="control-kicker">Contrôle administratif</p>
@@ -123,7 +140,7 @@ export default async function AdminPaymentsPage({ searchParams }: { searchParams
               <p className="mt-3 max-w-3xl text-sm leading-6 text-pm-ink/55">Contrôlez la référence auprès du moyen de paiement concerné ou ouvrez la preuve transmise. Validez uniquement lorsque le versement est confirmé.</p>
             </div>
             <div className="mt-6 grid gap-4 xl:grid-cols-2">
-              {pending.map((row) => <PendingCard key={row.id} row={row} />)}
+              {filteredPending.map((row) => <PendingCard key={row.id} row={row} />)}
             </div>
           </section>
         )}
@@ -131,11 +148,11 @@ export default async function AdminPaymentsPage({ searchParams }: { searchParams
         <section className="control-card">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div><p className="control-kicker">Registre</p><h2 className="mt-2 font-playfair text-3xl font-semibold">Historique des transactions</h2></div>
-            <span className="rounded-full bg-pm-ink px-3 py-2 text-xs font-extrabold text-white">{rows.length} opération{rows.length > 1 ? 's' : ''}</span>
+            <span className="rounded-full bg-pm-ink px-3 py-2 text-xs font-extrabold text-white">{filteredRows.length} opération{filteredRows.length > 1 ? 's' : ''}</span>
           </div>
           <div className="mt-6 grid gap-3">
-            {rows.map((row) => <HistoryRow key={row.id} row={row} />)}
-            {!rows.length && <p className="rounded-[1.4rem] bg-pm-ivory p-6 text-sm text-pm-ink/50">Aucune transaction enregistrée.</p>}
+            {filteredRows.map((row) => <HistoryRow key={row.id} row={row} />)}
+            {!filteredRows.length && <p className="rounded-[1.4rem] bg-pm-ivory p-6 text-sm text-pm-ink/50">Aucune transaction ne correspond aux filtres.</p>}
           </div>
         </section>
       </div>
@@ -153,7 +170,7 @@ function PendingCard({ row }: { row: Row }) {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-xs font-extrabold uppercase tracking-[.08em] text-pm-wine/55">{TYPE_LABELS[row.transaction_type || ''] || 'Paiement'}</p>
-          <h3 className="mt-2 font-playfair text-2xl font-semibold">{declaredName || model?.name || row.model_id}</h3>
+          <h3 className="mt-2 font-playfair text-2xl font-semibold">{declaredName || model?.name || 'Talent non rattaché'}</h3>
           <p className="mt-1 text-xs font-semibold text-pm-ink/45">{model?.email || 'E-mail non renseigné'}</p>
         </div>
         <p className="font-playfair text-3xl font-semibold text-pm-wine">{money(row.amount)}</p>
@@ -192,7 +209,7 @@ function HistoryRow({ row }: { row: Row }) {
   const declaredName = typeof raw?.declared_name === 'string' ? raw.declared_name : null;
   return (
     <article className="grid gap-4 rounded-[1.4rem] border border-pm-ink/8 bg-white p-4 md:grid-cols-[1.2fr_.7fr_.8fr_auto] md:items-center">
-      <div><p className="font-bold">{declaredName || model?.name || row.model_id}</p><p className="mt-1 text-xs text-pm-ink/45">{TYPE_LABELS[row.transaction_type || ''] || 'Paiement'} · {METHOD_LABELS[row.payment_method || ''] || 'Non précisé'}</p></div>
+      <div><Link href={row.model_id ? `/admin/talents/${encodeURIComponent(row.model_id)}` : '/admin/models'} className="font-bold hover:text-pm-coral">{declaredName || model?.name || 'Talent non rattaché'}</Link><p className="mt-1 text-xs text-pm-ink/45">{TYPE_LABELS[row.transaction_type || ''] || 'Paiement'} · {METHOD_LABELS[row.payment_method || ''] || 'Non précisé'}</p></div>
       <div><p className="font-playfair text-xl font-semibold">{money(row.amount)}</p><p className="mt-1 text-xs text-pm-ink/45">{formatDate(row.paid_at)}</p></div>
       <div><p className="text-xs font-extrabold uppercase tracking-[.06em] text-pm-ink/40">Référence</p><p className="mt-1 break-all text-sm font-semibold">{row.reference || '—'}</p></div>
       <span className={`justify-self-start rounded-full px-3 py-2 text-[10px] font-extrabold uppercase tracking-[.06em] ${statusTone(row.status)}`}>{row.status === 'validated' ? 'Comptabilisée' : row.status === 'rejected' ? 'Rejetée' : 'À vérifier'}</span>
