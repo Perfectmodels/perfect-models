@@ -104,6 +104,7 @@ export default async function AdminResourceRoute({ params }: { params: Promise<{
         initialTotal={Number(count || 0)}
         canCreate={definition.canCreate}
         canDelete={definition.canDelete}
+        detailBasePath={resource === 'clients' ? '/admin/clients' : undefined}
       />
     </ProfessionalResourceWorkspace>
   );

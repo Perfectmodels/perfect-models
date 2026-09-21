@@ -17,16 +17,18 @@ const RELATIONS: Record<string, { table: string; select: string; order?: string;
   selection_id: { table: 'client_selections', select: 'id,title,status,expires_at', order: 'title', label: (row) => `${row.title || row.id}${row.status ? ` · ${formatStatus(row.status)}` : ''}` },
 };
 
-export async function hydrateAdminRelationOptions(supabase: SupabaseAdmin, fields: readonly CrudField[]): Promise<CrudField[]> {
+export async function hydrateAdminRelationOptions(supabase: SupabaseAdmin, fields: readonly CrudField[], clientId?: string): Promise<CrudField[]> {
   const names = [...new Set(fields.map((field) => field.name).filter((name) => RELATIONS[name]))];
   if (!names.length) return [...fields];
 
   const resolved = await Promise.all(names.map(async (name) => {
     const config = RELATIONS[name];
     let query = supabase.from(config.table).select(config.select).limit(400);
+    if (clientId && ['casting_id', 'booking_id', 'quote_id', 'invoice_id', 'selection_id'].includes(name)) query = query.eq('client_id', clientId);
     if (config.order) query = query.order(config.order, { ascending: true, nullsFirst: false });
     else query = query.order('created_at', { ascending: false, nullsFirst: false });
-    const { data } = await query;
+    const { data, error } = await query;
+    if (error && clientId) throw new Error('Les dossiers liés ne peuvent pas être chargés. Réessayez.');
     const options: Option[] = (data || []).map((row: any) => ({ value: String(row.id), label: config.label(row) }));
     return [name, options] as const;
   }));
