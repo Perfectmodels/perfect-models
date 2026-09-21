@@ -28,6 +28,7 @@ const STATUS_LABELS: Record<string, string> = {
   tentative: 'À confirmer',
   sent: 'Envoyé',
   viewed: 'Consulté',
+  accepted: 'Accepté',
   signed: 'Signé',
   expired: 'Expiré',
   expiring: 'À renouveler',
@@ -39,6 +40,17 @@ const STATUS_LABELS: Record<string, string> = {
   favorite: 'Favori',
   lead: 'Prospect',
   new: 'Nouveau',
+  brand: 'Marque',
+  agency: 'Agence',
+  production: 'Production',
+  photographer: 'Photographe',
+  studio: 'Studio',
+  designer: 'Créateur',
+  institution: 'Institution',
+  management: 'Management',
+  income: 'Recette',
+  expense: 'Dépense',
+  transfer: 'Transfert',
 };
 
 const PAYMENT_TYPE_LABELS: Record<string, string> = {
