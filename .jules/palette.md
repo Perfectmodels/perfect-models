@@ -1,0 +1,3 @@
+## 2024-07-12 - Dynamic Loading States Accessibility
+**Learning:** The application relies on visual-only decorative spinners for dynamic loading components without providing equivalent screen reader announcements.
+**Action:** Always add `role="status"` and `aria-live="polite"` to the container of dynamic loading components, and explicitly hide decorative visual spinners using `aria-hidden="true"` while providing an `sr-only` text fallback.
