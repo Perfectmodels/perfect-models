@@ -6,6 +6,9 @@ export const revalidate = 60;
 
 export default async function Page() {
   const items = await selectPublicRows('media_library?select=id,url,file_name,category,alt_text,created_at&url=not.is.null&order=created_at.desc&limit=120');
+  const magazineCover = items.find(item => String(item.file_name || '').toLowerCase() === 'perfect_model_couverture_edition_01.png');
+  const magazinePdf = items.find(item => String(item.file_name || '').toLowerCase() === 'perfect_model_magazine_premium_edition_01.pdf');
+  const galleryItems = items.filter(item => !String(item.file_name || '').toLowerCase().endsWith('.pdf'));
   return (
     <main className="min-h-screen bg-pm-ivory text-pm-ink">
       <section className="border-b border-black/10 px-5 py-16 sm:px-8 sm:py-24 lg:px-10 lg:py-28">
@@ -27,6 +30,7 @@ export default async function Page() {
               <p className="mt-6 text-[11px] font-bold uppercase leading-loose tracking-[.24em] text-[#d9bb85]">L’expression de la mode<br />L’attitude avant tout</p>
             </div>
             <span className="border-t border-[#d9bb85]/30 pt-4 text-[9px] uppercase tracking-[.28em] text-white/55">Édition 01 · Portfolio éditorial</span>
+            {magazineCover && <img src={String(magazineCover.url)} alt="Couverture du magazine Perfect Model édition 01" className="absolute inset-0 h-full w-full object-cover" />}
           </div>
           <div>
             <p className="text-[11px] font-extrabold uppercase tracking-[.34em] text-[#d9bb85]">À la une · Notre magazine</p>
@@ -35,15 +39,16 @@ export default async function Page() {
             <p className="mt-5 max-w-xl text-sm leading-8 text-white/60">La première édition de PERFECT MODEL explore le regard, la silhouette, le collectif et cette attitude singulière qui transforme une présence en image de mode. Découvrez les huit chapitres de notre publication éditoriale.</p>
             <div className="mt-9 flex flex-wrap items-center gap-6">
               <a href="/galerie/perfect-model-edition-01" className="inline-flex min-h-12 items-center justify-center bg-[#d9bb85] px-8 text-[11px] font-extrabold uppercase tracking-[.2em] text-[#14110e] transition hover:bg-[#f0d6a7]">Découvrir le magazine ↗</a>
+              {magazinePdf && <a href={String(magazinePdf.url)} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center justify-center border border-white/40 px-6 text-[11px] font-extrabold uppercase tracking-[.2em] text-white transition hover:bg-white/10">Voir le PDF ↗</a>}
               <span className="text-[10px] uppercase tracking-[.25em] text-white/40">Édition 01 · Mode / Image / Attitude</span>
             </div>
           </div>
         </div>
       </section>
       <section className="mx-auto max-w-[1600px] px-3 py-5 sm:px-5 sm:py-8 lg:px-8 lg:py-12">
-        {items.length ? (
+        {galleryItems.length ? (
           <div className="columns-1 gap-3 sm:columns-2 lg:columns-3 xl:columns-4">
-            {items.map((item) => (
+            {galleryItems.map((item) => (
               <figure key={String(item.id)} className="group relative mb-3 break-inside-avoid overflow-hidden bg-black/5">
                 <img src={String(item.url)} alt={String(item.alt_text || item.file_name || 'Perfect Models Management')} loading="lazy" className="h-auto w-full object-cover transition duration-700 group-hover:scale-[1.02]" />
                 <figcaption className="absolute inset-x-0 bottom-0 translate-y-full bg-gradient-to-t from-black/85 via-black/35 to-transparent px-4 pb-4 pt-14 text-[8px] font-black uppercase tracking-[.22em] text-white transition duration-300 group-hover:translate-y-0 sm:text-[9px]">
