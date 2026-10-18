@@ -13,7 +13,7 @@ const fallbackNav: NavLink[] = [
   { path: '/services', label: 'Expertises' },
   { path: '/fashion-day', label: 'Fashion Day' },
   { path: '/blog', label: 'Journal' },
-  { path: '/sondage', label: 'Votre avis' },
+  { path: '/sondage', label: 'Sondage anonyme' },
 ];
 
 const privatePrefixes = ['/profil', '/formations', '/formation', '/admin', '/manager'];
@@ -21,7 +21,7 @@ const isPublicFooterLink = (path: string) => !privatePrefixes.some((prefix) => p
 
 export default function Footer({ runtimeData }: { runtimeData?: RuntimeData | null }) {
   const configured = (runtimeData?.navLinks || []).filter((link) => link.inFooter && isPublicFooterLink(link.path));
-  const navLinks = configured.length ? configured : fallbackNav;
+  const navLinks = configured.length ? [...configured.filter(link => link.path !== '/sondage'), { path: '/sondage', label: 'Sondage anonyme', inFooter: true }] : fallbackNav;
   const socialLinks = runtimeData?.socialLinks;
   const contact = runtimeData?.contactInfo;
   const socials = [
@@ -46,6 +46,7 @@ export default function Footer({ runtimeData }: { runtimeData?: RuntimeData | nu
         <div>
           <Link href="/" className="inline-flex items-center gap-4"><span className="relative h-16 w-16 overflow-hidden border border-white/20 bg-white"><Image src="/logopmm.jpg" alt="" fill sizes="64px" className="object-cover" /></span><span><span className="block font-playfair text-3xl font-semibold tracking-[-.02em]">Perfect Models</span><span className="mt-1.5 block text-[8px] font-black uppercase tracking-[.28em] text-pm-gold-light">Management · Gabon</span></span></Link>
           <p className="mt-7 max-w-sm text-sm leading-7 text-white/55">Agence de management, casting, formation et production dédiée au développement des talents et de l’image de mode au Gabon.</p>
+          <Link href="/sondage" className="mt-7 inline-flex min-h-11 items-center border border-[#C5A467] px-5 text-[10px] font-black uppercase tracking-[.15em] text-[#E5C692] hover:bg-[#C5A467] hover:text-black">Donnez votre avis anonymement →</Link>
           <div className="mt-8 flex gap-6 border-y border-white/10 py-4 text-[8px] font-black uppercase tracking-[.2em] text-white/45"><span>Talent</span><span className="text-pm-gold-light">Image</span><span>Culture</span></div>
         </div>
         <div><p className="mb-6 text-[8px] font-black uppercase tracking-[.34em] text-pm-gold-light">Explorer</p><nav className="grid">{navLinks.slice(0, 7).map((link) => <Link key={link.path} href={link.path} className="flex items-center justify-between border-b border-white/10 py-3 font-playfair text-xl text-white/72 transition hover:border-pm-gold hover:text-pm-gold-light"><span>{link.footerLabel || link.label}</span><span className="text-sm">↗</span></Link>)}</nav></div>
