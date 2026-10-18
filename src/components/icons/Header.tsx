@@ -33,6 +33,7 @@ const NAV_LINKS = [
   { path: '/services', label: 'Expertises' },
   { path: '/fashion-day', label: 'Fashion Day' },
   { path: '/blog', label: 'Journal' },
+  { path: '/sondage', label: 'Votre avis' },
   { path: '/contact', label: 'Contact' },
 ];
 
