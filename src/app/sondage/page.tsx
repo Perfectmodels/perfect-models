@@ -80,7 +80,7 @@ export default function SurveyPage() {
     <main className="min-h-screen bg-[#F8F6F1] text-[#151515]">
       <div className="bg-[#161616] px-5 pb-14 pt-16 text-white sm:pb-20 sm:pt-20">
         <div className="mx-auto max-w-5xl">
-          <p className="text-[10px] font-extrabold uppercase tracking-[.32em] text-[#CFB17E]">Perfect Models Management · Enquête indépendante de satisfaction</p>
+          <p className="text-[10px] font-extrabold uppercase tracking-[.32em] text-[#CFB17E]">Perfect Models Management · Enquête anonyme de satisfaction</p>
           <h1 className="mt-5 max-w-3xl font-playfair text-5xl font-semibold leading-[1.05] sm:text-7xl">Votre voix <em className="text-[#CFB17E]">compte.</em></h1>
           <p className="mt-6 max-w-2xl text-base leading-8 text-white/70">Ce qui fonctionne. Ce qui doit changer. Votre avis contribue à construire une agence plus transparente, professionnelle et à l’écoute.</p>
           <div className="mt-8 flex flex-wrap items-center gap-3 text-xs text-white/75">
@@ -111,7 +111,7 @@ export default function SurveyPage() {
           <div className="mb-6">
             <p className="text-[10px] font-black uppercase tracking-[.2em] text-[#A68550]">Section {section + 1}</p>
             <h2 className="mt-3 font-playfair text-3xl font-semibold sm:text-4xl">{SURVEY_SECTIONS[section]}</h2>
-            <p className="mt-2 text-sm leading-6 text-black/55">Aucune réponse ne permettra de vous identifier. Vous pouvez passer les questions facultatives.</p>
+            <p className="mt-2 text-sm leading-6 text-black/55">Aucun nom n’est demandé. Évitez les détails identifiants dans vos textes et passez les questions facultatives si vous le souhaitez.</p>
           </div>
           <div className="space-y-5">
             {sectionQuestions.length ? sectionQuestions.map(q => {
