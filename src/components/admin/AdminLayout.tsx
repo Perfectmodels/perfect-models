@@ -24,6 +24,7 @@ const navigation: NavigationSection[] = [
   { title: 'Pilotage', items: [
     { to: '/admin', label: 'Dashboard agence', icon: HomeIcon, description: 'KPIs, alertes et priorités', permission: 'dashboard', adminOnly: true },
     { to: '/admin/analytics', label: 'Analytics', icon: PresentationChartLineIcon, description: 'Performance agence, talents et clients', permission: 'dashboard', adminOnly: true },
+    { to: '/admin/sondage', label: 'Sondage anonyme', icon: ChatBubbleLeftRightIcon, description: 'Résultats publics et modération des témoignages', permission: 'dashboard', adminOnly: true },
   ]},
   { title: 'Talents', items: [
     { to: '/admin/models', label: 'Tous les talents', icon: UsersIcon, description: 'Fiches 360° et roster', permission: 'models' },
