@@ -90,7 +90,7 @@ export default async function AdminPage() {
       ['Droits d’image','/admin/image-rights','Usages, territoires et expirations'],
       ['Classroom','/admin/classroom','Cours et progression des talents'],
       ['Communication','/admin/mailing','Mailing, messages et contenus'],
-      ['Écoute & sondage','/admin/sondage','Modération des témoignages et résultats publics'],
+      ['Sondage & résultats','/admin/sondage','Participations anonymes et statistiques publiques'],
       ['Médiathèque','/admin/media-library','Images et ressources de marque'],
       ['Paramètres','/admin/settings','Site, navigation et profils'],
     ].map(([name,href,desc])=><Link key={name} href={href} className="group rounded-2xl border border-pm-ink/[.07] bg-pm-ivory p-4 transition hover:-translate-y-0.5 hover:border-pm-coral/30"><div className="flex items-center justify-between"><h3 className="font-playfair text-xl font-bold">{name}</h3><span className="text-pm-coral">↗</span></div><p className="mt-2 text-xs leading-5 text-pm-ink/45">{desc}</p></Link>)}</div></section>

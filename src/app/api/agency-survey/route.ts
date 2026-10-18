@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { getSupabaseSecretKey } from '@/lib/supabase/config';
 import { SURVEY_QUESTIONS, isInternalRespondent } from '@/lib/agency-survey';
+import { publicSurveyText } from '@/lib/survey-public-text';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -57,7 +58,7 @@ export async function GET(request: NextRequest) {
       }
       if (rows.length < 500) break;
     }
-    // Until at least five respondents, do not show answer distributions or testimonials.
+    // Publish all approved (automatically redacted) testimonials and statistics once the privacy threshold is met. No manual approval.
     const released = total >= MIN_PUBLIC_SAMPLE;
     const releasedCounts = Object.fromEntries(Object.entries(counts).filter(([id]) => (answered[id] || 0) >= MIN_PUBLIC_SAMPLE));
     const result = {
@@ -101,7 +102,7 @@ export async function POST(request: NextRequest) {
       return noStore(NextResponse.json({ error: 'Veuillez sélectionner votre profil.' }, { status: 400 }));
     }
     const answers: Record<string, string | string[] | number> = {};
-    const privateComments: Record<string, string> = {};
+    const publicComments: Record<string, string> = {};
     for (const question of SURVEY_QUESTIONS) {
       const raw = submitted[String(question.id)];
       if (raw === undefined || raw === null || raw === '') continue;
@@ -111,7 +112,7 @@ export async function POST(request: NextRequest) {
           return noStore(NextResponse.json({ error: 'Le texte est trop long.' }, { status: 400 }));
         }
         const comment = raw.trim();
-        if (comment) privateComments[question.id] = comment;
+        if (comment) publicComments[question.id] = publicSurveyText(comment);
       } else if (question.type === 'scale') {
         if (!Number.isInteger(raw as number) || (raw as number) < 0 || (raw as number) > 10) {
           return noStore(NextResponse.json({ error: 'La note est invalide.' }, { status: 400 }));
@@ -134,8 +135,8 @@ export async function POST(request: NextRequest) {
     }
     const db = createSupabaseAdminClient() as any;
     const { error } = await db.from('agency_survey_responses').insert({
-      answers, private_comments: privateComments, public_comments: {},
-      moderation_status: Object.keys(privateComments).length ? 'pending' : 'none',
+      answers, private_comments: {}, public_comments: publicComments,
+      moderation_status: Object.keys(publicComments).length ? 'approved' : 'none',
     });
     if (error) throw error;
     const response = noStore(NextResponse.json({ success: true }, { status: 201 }));

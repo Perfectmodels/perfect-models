@@ -33,7 +33,7 @@ const NAV_LINKS = [
   { path: '/services', label: 'Expertises' },
   { path: '/fashion-day', label: 'Fashion Day' },
   { path: '/blog', label: 'Journal' },
-  { path: '/sondage', label: 'Votre avis' },
+  { path: '/sondage', label: 'Sondage' },
   { path: '/contact', label: 'Contact' },
 ];
 
@@ -79,6 +79,7 @@ export default function Header() {
         </nav>
 
         <div className="ml-auto flex items-center gap-2 xl:ml-5">
+          <Link href="/sondage" className="inline-flex min-h-11 items-center border border-[#C5A467] bg-[#C5A467] px-3 text-[9px] font-black uppercase tracking-[.09em] text-black hover:bg-[#E7C990] xl:hidden">Sondage</Link>
           <Link href="/inscription/mannequin" className="hidden min-h-11 items-center border border-pm-gold bg-pm-gold px-4 text-[8px] font-black uppercase tracking-[.16em] text-black transition hover:bg-pm-gold-light md:inline-flex">Inscription mannequin</Link>
           <Link href="/login" className="hidden px-3 py-2 text-[8px] font-black uppercase tracking-[.18em] text-black/45 transition hover:text-black sm:block">Espace privé</Link>
           <Link href="/contact?subject=booking" className="hidden min-h-11 items-center border border-black/15 bg-white px-4 text-[8px] font-black uppercase tracking-[.18em] text-black transition hover:border-pm-gold lg:inline-flex">Booking</Link>
@@ -96,7 +97,8 @@ export default function Header() {
         <div className="relative mx-auto flex min-h-[calc(100svh-9rem)] max-w-3xl flex-col justify-center">
           <div className="mb-9 flex items-center gap-4 border-y border-pm-gold/35 py-5"><span className="relative h-14 w-14 overflow-hidden border border-white/20 bg-white"><Image src="/logopmm.jpg" alt="" fill sizes="56px" className="object-cover" /></span><div><p className="font-playfair text-2xl font-semibold">Perfect Models Management</p><p className="mt-1 text-[8px] font-black uppercase tracking-[.24em] text-pm-gold-light">Talent · Image · Culture</p></div></div>
           <nav className="grid sm:grid-cols-2">{NAV_LINKS.map((link, index) => <motion.div key={link.path} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * .035 }}><Link href={link.path} className={`flex items-end justify-between border-b border-white/15 px-1 py-5 ${active(link.path) ? 'text-pm-gold-light' : 'text-white'}`}><span className="font-playfair text-3xl font-semibold">{link.label}</span><span className="text-[8px] font-black uppercase tracking-[.2em] text-white/35">0{index + 1}</span></Link></motion.div>)}</nav>
-          <div className="mt-8 grid gap-3 sm:grid-cols-2"><Link href="/inscription/mannequin" className="inline-flex min-h-12 items-center justify-center bg-pm-gold px-5 text-[9px] font-black uppercase tracking-[.16em] text-black">Inscription mannequin</Link><Link href="/casting-formulaire" className="inline-flex min-h-12 items-center justify-center border border-white/25 px-5 text-[9px] font-black uppercase tracking-[.16em] text-white">Candidater ↗</Link></div>
+          <div className="mt-8"><Link href="/sondage" className="flex min-h-12 items-center justify-center bg-[#C5A467] px-5 text-[11px] font-black uppercase tracking-[.16em] text-black">Sondage anonyme · Participer ↗</Link></div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2"><Link href="/inscription/mannequin" className="inline-flex min-h-12 items-center justify-center bg-pm-gold px-5 text-[9px] font-black uppercase tracking-[.16em] text-black">Inscription mannequin</Link><Link href="/casting-formulaire" className="inline-flex min-h-12 items-center justify-center border border-white/25 px-5 text-[9px] font-black uppercase tracking-[.16em] text-white">Candidater ↗</Link></div>
           <div className="mt-3 grid gap-3 sm:grid-cols-2"><Link href="/contact?subject=booking" className="inline-flex min-h-12 items-center justify-center border border-pm-gold/45 px-5 text-[9px] font-black uppercase tracking-[.16em] text-pm-gold-light">Booking</Link><Link href="/login" className="inline-flex min-h-12 items-center justify-center border border-white/15 px-5 text-[9px] font-black uppercase tracking-[.16em] text-white/70">Espace privé</Link></div>
         </div>
       </motion.div>}

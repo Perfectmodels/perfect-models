@@ -37,7 +37,7 @@ export default function SurveyResultsPage() {
       <div className="mx-auto max-w-6xl">
         <p className="text-[10px] font-extrabold uppercase tracking-[.3em] text-[#D3B783]">Perfect Models Management · Transparence</p>
         <h1 className="mt-4 max-w-4xl font-playfair text-5xl sm:text-7xl">La parole aux <em className="text-[#D3B783]">participants.</em></h1>
-        <p className="mt-6 max-w-3xl text-base leading-8 text-white/65">Statistiques du sondage anonyme et témoignages publiés après vérification. Les chiffres proviennent des réponses effectivement enregistrées, sans modification éditoriale.</p>
+        <p className="mt-6 max-w-3xl text-base leading-8 text-white/65">Statistiques et témoignages publiés automatiquement, sans approbation. Les coordonnées évidentes sont masquées et les données sont affichées à partir du seuil de confidentialité.</p>
         <div className="mt-8 flex flex-wrap gap-3">
           <Link href="/sondage" className="inline-flex min-h-12 items-center rounded-full bg-[#D0AD70] px-6 text-sm font-bold text-black">Participer au sondage ↗</Link>
           <button type="button" onClick={load} className="inline-flex min-h-12 items-center rounded-full border border-white/30 px-6 text-sm font-bold text-white">Actualiser les résultats</button>
@@ -55,7 +55,7 @@ export default function SurveyResultsPage() {
         </div>
         {!data.released ? <div className="mt-7 rounded-2xl border border-[#D0AD70]/50 bg-white p-8">
           <h2 className="font-playfair text-3xl">Premiers retours en cours de collecte</h2>
-          <p className="mt-3 text-sm leading-7 text-black/60">Afin de limiter le risque d’identifier une personne à partir de ses choix, les répartitions et témoignages publics apparaîtront à partir de {data.minPublicSample} participants. Les participations enregistrées sont conservées et seront incluses dans les statistiques.</p>
+          <p className="mt-3 text-sm leading-7 text-black/60">Afin de protéger l’anonymat, les répartitions et témoignages publics apparaîtront automatiquement, sans approbation, à partir de {data.minPublicSample} participants. Les participations enregistrées sont conservées et seront incluses dans les statistiques.</p>
         </div> : <>
           <section className="mt-12">
             <div className="flex flex-wrap items-end justify-between gap-4"><div><p className="text-[10px] font-black uppercase tracking-[.2em] text-[#9C7C4B]">Données ouvertes à tous</p><h2 className="mt-3 font-playfair text-4xl">Les résultats question par question</h2></div><p className="max-w-md text-sm leading-6 text-black/50">Chaque pourcentage correspond aux personnes ayant répondu à la question. Les questions à choix multiples peuvent dépasser 100 % au total.</p></div>
@@ -82,13 +82,13 @@ export default function SurveyResultsPage() {
             </div>
           </section>
           <section className="mt-16">
-            <p className="text-[10px] font-black uppercase tracking-[.2em] text-[#9C7C4B]">Paroles anonymes · après modération</p>
+            <p className="text-[10px] font-black uppercase tracking-[.2em] text-[#9C7C4B]">Paroles anonymes · publication automatique</p>
             <h2 className="mt-3 font-playfair text-4xl">Les témoignages publiés</h2>
-            <p className="mt-4 max-w-3xl text-sm leading-7 text-black/55">Ces textes sont des avis personnels non vérifiés. Ils peuvent avoir été raccourcis ou anonymisés pour protéger les participants et les tiers. Les propos non encore modérés n’apparaissent pas.</p>
+            <p className="mt-4 max-w-3xl text-sm leading-7 text-black/55">Ces textes sont les avis personnels des participants, non vérifiés par l’agence. Ils sont publiés sans sélection ni approbation ; seules les coordonnées évidentes sont automatiquement masquées. N’indiquez aucun nom ou détail permettant d’identifier des personnes.</p>
             {comments.length ? <div className="mt-8 grid gap-4 md:grid-cols-2">{comments.map(item => <blockquote key={item.id} className="rounded-2xl border border-black/10 bg-white p-6">
               <p className="text-[10px] font-bold uppercase tracking-[.17em] text-[#9A783F]">Question {item.question} · Témoignage anonyme</p>
               <p className="mt-4 whitespace-pre-wrap break-words text-sm leading-8 text-black/80">{item.text}</p>
-            </blockquote>)}</div> : <div className="mt-7 rounded-xl bg-white p-7 text-sm text-black/55">Aucun témoignage n’a encore été approuvé pour publication.</div>}
+            </blockquote>)}</div> : <div className="mt-7 rounded-xl bg-white p-7 text-sm text-black/55">Aucun témoignage public n’a encore été enregistré.</div>}
           </section>
         </>}
         <div className="mt-14 border-t border-black/10 pt-6 text-xs leading-7 text-black/45">Ce dispositif ne demande ni nom, ni adresse email, ni compte. Pour préserver l’anonymat, aucun résultat individuel ou regroupement par profil n’est publié. Les réponses ne constituent pas un échantillon statistiquement représentatif de l’ensemble de l’agence.</div>
