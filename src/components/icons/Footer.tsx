@@ -13,6 +13,7 @@ const fallbackNav: NavLink[] = [
   { path: '/services', label: 'Expertises' },
   { path: '/fashion-day', label: 'Fashion Day' },
   { path: '/blog', label: 'Journal' },
+  { path: '/sondage', label: 'Votre avis' },
 ];
 
 const privatePrefixes = ['/profil', '/formations', '/formation', '/admin', '/manager'];
