@@ -59,10 +59,11 @@ export async function GET(request: NextRequest) {
     }
     // Until at least five respondents, do not show answer distributions or testimonials.
     const released = total >= MIN_PUBLIC_SAMPLE;
+    const releasedCounts = Object.fromEntries(Object.entries(counts).filter(([id]) => (answered[id] || 0) >= MIN_PUBLIC_SAMPLE));
     const result = {
       total, minPublicSample: MIN_PUBLIC_SAMPLE, released,
-      answered: released ? answered : {}, counts: released ? counts : {},
-      average: released && answered['33']
+      answered: released ? answered : {}, counts: released ? releasedCounts : {},
+      average: released && (answered['33'] || 0) >= MIN_PUBLIC_SAMPLE
         ? Math.round((Object.entries(counts['33'] || {}).reduce((sum, [score, count]) => sum + Number(score) * count, 0) / answered['33']) * 10) / 10
         : null,
       testimonials: released ? published : [],
@@ -112,7 +113,7 @@ export async function POST(request: NextRequest) {
         const comment = raw.trim();
         if (comment) privateComments[question.id] = comment;
       } else if (question.type === 'scale') {
-        if (!Number.isInteger(raw) || (raw as number) < 0 || (raw as number) > 10) {
+        if (!Number.isInteger(raw as number) || (raw as number) < 0 || (raw as number) > 10) {
           return noStore(NextResponse.json({ error: 'La note est invalide.' }, { status: 400 }));
         }
         answers[question.id] = raw as number;
