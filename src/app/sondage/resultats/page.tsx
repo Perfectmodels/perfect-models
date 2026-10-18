@@ -73,10 +73,10 @@ export default function SurveyResultsPage() {
                 return <article key={q.id} className="min-w-0 rounded-2xl border border-black/10 bg-white p-5 sm:p-7">
                   <p className="text-[10px] font-extrabold uppercase tracking-[.18em] text-[#A17E48]">Question {q.id} · {participants} réponse{participants === 1 ? '' : 's'}</p>
                   <h3 className="mt-3 text-base font-bold leading-7">{q.label}</h3>
-                  {participants ? <div className="mt-6 space-y-4">{options.map(option => <div key={option}>
+                  {participants >= data.minPublicSample ? <div className="mt-6 space-y-4">{options.map(option => <div key={option}>
                     <div className="flex items-center justify-between gap-3 text-xs"><span className="min-w-0 break-words text-black/75">{option}</span><span className="shrink-0 font-bold">{percent(counts[option] || 0, participants)} % <span className="font-normal text-black/35">({counts[option] || 0})</span></span></div>
                     <div className="mt-2 h-2 overflow-hidden rounded-full bg-black/10"><div className="h-full rounded-full bg-[#C4A46B]" style={{ width: String(percent(counts[option] || 0, participants)) + '%' }}/></div>
-                  </div>)}</div> : <p className="mt-5 text-sm text-black/45">Pas encore de réponse à cette question.</p>}
+                  </div>)}</div> : <p className="mt-5 text-sm text-black/45">{participants ? 'Répartition visible à partir de ' + data.minPublicSample + ' réponses à cette question.' : 'Pas encore de réponse à cette question.'}</p>}
                 </article>;
               })}
             </div>
