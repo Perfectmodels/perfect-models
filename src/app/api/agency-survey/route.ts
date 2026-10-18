@@ -58,16 +58,28 @@ export async function GET(request: NextRequest) {
       }
       if (rows.length < 500) break;
     }
-    // Publish all approved (automatically redacted) testimonials and statistics once the privacy threshold is met. No manual approval.
-    const released = total >= MIN_PUBLIC_SAMPLE;
-    const releasedCounts = Object.fromEntries(Object.entries(counts).filter(([id]) => (answered[id] || 0) >= MIN_PUBLIC_SAMPLE));
+    // General aggregate statistics are visible as soon as someone participates.
+    // Answers to potentially identifying or highly sensitive questions stay grouped
+    // until five responses have been received for that specific question.
+    const sensitiveQuestionIds = new Set(['1', '16', '18', '19', '31', '32']);
+    const releasedCounts = Object.fromEntries(
+      Object.entries(counts).filter(([id]) => !sensitiveQuestionIds.has(id) || (answered[id] || 0) >= MIN_PUBLIC_SAMPLE),
+    );
+    const rated = answered['33'] || 0;
     const result = {
-      total, minPublicSample: MIN_PUBLIC_SAMPLE, released,
-      answered: released ? answered : {}, counts: released ? releasedCounts : {},
-      average: released && (answered['33'] || 0) >= MIN_PUBLIC_SAMPLE
-        ? Math.round((Object.entries(counts['33'] || {}).reduce((sum, [score, count]) => sum + Number(score) * count, 0) / answered['33']) * 10) / 10
+      total,
+      minPublicSample: MIN_PUBLIC_SAMPLE,
+      released: total > 0,
+      answered,
+      counts: releasedCounts,
+      hiddenQuestions: Object.keys(counts).filter(id => sensitiveQuestionIds.has(id) && (answered[id] || 0) < MIN_PUBLIC_SAMPLE),
+      average: rated
+        ? Math.round((Object.entries(counts['33'] || {}).reduce((sum, [score, count]) => sum + Number(score) * count, 0) / rated) * 10) / 10
         : null,
-      testimonials: released ? published : [],
+      rated,
+      // Free-text submissions can reveal indirect identifiers; retain the
+      // five-person protection even though editorial approval is not required.
+      testimonials: total >= MIN_PUBLIC_SAMPLE ? published : [],
       alreadySubmitted: hasSubmitted(request.cookies.get(COOKIE)?.value),
     };
     return noStore(NextResponse.json(result));
