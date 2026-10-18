@@ -70,7 +70,7 @@ export default function SurveyPage() {
       <div className="mx-auto max-w-2xl rounded-3xl border border-black/10 bg-white p-8 text-center shadow-sm sm:p-14">
         <p className="text-xs font-extrabold uppercase tracking-[.3em] text-[#9A783F]">Votre voix compte</p>
         <h1 className="mt-6 font-playfair text-4xl sm:text-5xl">{status === 'sent' ? 'Merci pour votre participation.' : 'Vous avez déjà participé.'}</h1>
-        <p className="mt-5 leading-7 text-black/60">Vos réponses restent anonymes. Les statistiques sont publiques dès cinq participations ; les témoignages ne paraissent qu’après vérification et anonymisation.</p>
+        <p className="mt-5 leading-7 text-black/60">Vos réponses sont enregistrées sans identité déclarée. Statistiques et témoignages s’affichent automatiquement dès cinq participations, après masquage des coordonnées évidentes.</p>
         <Link href="/sondage/resultats" className="mt-8 inline-flex min-h-12 items-center justify-center rounded-full bg-black px-8 text-sm font-bold text-white">Voir les résultats publics ↗</Link>
       </div>
     </main>
@@ -111,7 +111,7 @@ export default function SurveyPage() {
           <div className="mb-6">
             <p className="text-[10px] font-black uppercase tracking-[.2em] text-[#A68550]">Section {section + 1}</p>
             <h2 className="mt-3 font-playfair text-3xl font-semibold sm:text-4xl">{SURVEY_SECTIONS[section]}</h2>
-            <p className="mt-2 text-sm leading-6 text-black/55">Aucun nom n’est demandé. Évitez les détails identifiants dans vos textes et passez les questions facultatives si vous le souhaitez.</p>
+            <p className="mt-2 text-sm leading-6 text-black/55">Aucun nom n’est demandé. Les textes libres deviennent publics automatiquement : n’y écrivez aucun nom ou détail identifiant.</p>
           </div>
           <div className="space-y-5">
             {sectionQuestions.length ? sectionQuestions.map(q => {
@@ -135,8 +135,8 @@ export default function SurveyPage() {
             }) : <div className={frame}><p className="text-sm leading-7 text-black/65">Cette section ne concerne pas votre profil. Vous pouvez passer à la suivante.</p></div>}
             {section === 8 && <section className={frame}>
               <h3 className="text-lg font-bold">Confidentialité et publication</h3>
-              <p className="mt-3 text-sm leading-7 text-black/65">Les réponses à choix multiples servent à produire des statistiques publiques à partir de cinq participations. Vos textes libres sont conservés pour modération ; seuls des extraits relus, éventuellement modifiés pour effacer les informations personnelles, peuvent être publiés. Aucun nom, email, numéro de téléphone ou adresse IP n’est demandé ni enregistré avec votre réponse. Évitez de citer des personnes identifiables.</p>
-              <label className="mt-5 flex cursor-pointer items-start gap-3 rounded-xl bg-[#F8F4EC] p-4 text-sm leading-6"><input type="checkbox" checked={consent} onChange={e => setConsent(e.target.checked)} className="mt-1 h-4 w-4 shrink-0 accent-[#987545]" /><span>J’ai compris que les statistiques seront publiques et que mes témoignages pourront être publiés après modération et anonymisation.</span></label>
+              <p className="mt-3 text-sm leading-7 text-black/65">Les réponses à choix multiples alimentent les statistiques publiques. Vos textes libres sont publiés automatiquement, sans approbation humaine, après masquage des coordonnées évidentes. Les publications sont visibles à partir de cinq participations pour limiter le risque d’identification. Aucun nom, email, téléphone ou adresse IP n’est demandé ni enregistré avec votre réponse. Ne citez jamais de personne ni de détail identifiant : un filtrage automatique ne garantit pas l’anonymat complet.</p>
+              <label className="mt-5 flex cursor-pointer items-start gap-3 rounded-xl bg-[#F8F4EC] p-4 text-sm leading-6"><input type="checkbox" checked={consent} onChange={e => setConsent(e.target.checked)} className="mt-1 h-4 w-4 shrink-0 accent-[#987545]" /><span>Je comprends que mes réponses et mes textes libres pourront être publiés automatiquement, sans approbation, après masquage des coordonnées évidentes et dès le seuil de confidentialité atteint. Je n’insère aucune information permettant d’identifier une personne.</span></label>
               <div className="absolute -left-[9999px]" aria-hidden="true"><label>Site web<input type="text" tabIndex={-1} autoComplete="off" value={website} onChange={e => setWebsite(e.target.value)} /></label></div>
             </section>}
           </div>
