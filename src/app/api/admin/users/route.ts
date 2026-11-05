@@ -80,6 +80,7 @@ export async function PATCH(request: Request) {
     if (!current) return NextResponse.json({ error: 'Compte applicatif introuvable.' }, { status: 404 });
 
     const currentRole = String(current.role || 'student') as AppRole;
+    const mustChangePassword = body.mustChangePassword === undefined ? Boolean(current.must_change_password) : body.mustChangePassword === true;
     const activeAdmins = await privilegedSupabaseSelect('profiles?select=user_id&role=eq.admin&is_active=eq.true');
     const wouldRemoveAdmin = currentRole === 'admin' && (role !== 'admin' || !isActive);
     if (wouldRemoveAdmin && Array.isArray(activeAdmins) && activeAdmins.length <= 1) {
@@ -109,6 +110,7 @@ export async function PATCH(request: Request) {
         identifier: current.identifier || authUser?.app_metadata?.identifier,
         profile_id: current.model_id || metadata.profile_id || uid,
         model_id: role === 'student' ? current.model_id || authUser?.app_metadata?.model_id : undefined,
+        must_change_password: mustChangePassword,
       },
     });
 
@@ -116,6 +118,7 @@ export async function PATCH(request: Request) {
       ...current,
       role,
       is_active: isActive,
+      must_change_password: mustChangePassword,
       metadata: {
         ...metadata,
         permissions,

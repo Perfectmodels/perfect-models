@@ -34,5 +34,5 @@ export const MODEL_ADMIN_FIELDS: CrudField[] = [
   { name: 'journey', label: 'Parcours', type: 'textarea', wide: true },
   { name: 'is_public', label: 'Visible publiquement', type: 'boolean', defaultValue: true, help: 'Les profils mannequins sont publics par défaut sur le roster Perfect Models Management.' },
   { name: 'is_active', label: 'Actif dans l’agence', type: 'boolean', defaultValue: true },
-  { name: 'status', label: 'Statut', type: 'select', defaultValue: 'active', options: [option('Actif', 'active'), option('Inactif', 'inactive'), option('Suspendu', 'suspended')] },
+  { name: 'status', label: 'Statut', type: 'select', defaultValue: 'active', options: [option('Actif', 'active'), option('Inactif', 'inactive'), option('Suspendu', 'suspended'), option('Archivé', 'archived')] },
 ];

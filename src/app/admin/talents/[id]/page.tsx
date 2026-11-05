@@ -1,34 +1,178 @@
-import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
+import Talent360Workspace, { type TalentActivity, type TalentCourse, type TalentDocument, type TalentResourcePanel } from '@/components/admin/Talent360Workspace';
 import { getCurrentAppProfile } from '@/lib/auth/profile';
 import { hasAdminPermission } from '@/lib/auth/admin-access';
+import { RESOURCE_DEFINITIONS, type ResourceName } from '@/lib/agency-resource-registry';
+import { hydrateAdminRelationOptions } from '@/lib/admin-relation-options';
+import { MODEL_ADMIN_COLUMNS, MODEL_ADMIN_FIELDS } from '@/lib/model-admin-fields';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
+import { formatEventType, formatPaymentType, formatProjectType, formatStatus } from '@/lib/admin-formatters';
 
-export const dynamic = 'force-dynamic';
-const money=(v:number)=>new Intl.NumberFormat('fr-FR',{style:'currency',currency:'XAF',maximumFractionDigits:0}).format(v||0);
-const date=(v?:string|null)=>v?new Date(v).toLocaleDateString('fr-FR'):'—';
+export const dynamic='force-dynamic';
+type Params=Promise<{id:string}>;
+type SearchParams=Promise<Record<string,string|string[]|undefined>>;
 
-export default async function Talent360Page({params}:{params:Promise<{id:string}>}) {
- const profile=await getCurrentAppProfile();
- if(!profile) redirect('/login?next=/admin/models');
- if(!['admin','manager'].includes(profile.role)||!hasAdminPermission(profile,'models')) redirect(profile.role==='manager'?'/manager':'/profil');
- const {id}=await params; const supabase=createSupabaseAdminClient() as any;
- const [{data:model},{data:payments},{data:bookings},{data:contracts},{data:availability},{data:castings}] = await Promise.all([
-  supabase.from('models').select('*').eq('id',id).maybeSingle(),
-  supabase.from('monthly_payments').select('id,amount,status,transaction_type,payment_method,reference,paid_at,submitted_at').eq('model_id',id).order('created_at',{ascending:false}).limit(12),
-  supabase.from('bookings').select('id,title,status,starts_at,fee_gross,model_net_amount').eq('model_id',id).order('starts_at',{ascending:false}).limit(8),
-  supabase.from('contracts').select('id,title,status,signed_at,expires_at').eq('model_id',id).order('updated_at',{ascending:false}).limit(8),
-  supabase.from('model_availability').select('id,status,starts_at,ends_at,reason').eq('model_id',id).order('starts_at',{ascending:false}).limit(8),
-  supabase.from('casting_talents').select('id,stage,match_score,casting_id').eq('model_id',id).order('updated_at',{ascending:false}).limit(8),
- ]);
- if(!model) notFound();
- const paid=(payments||[]).filter((x:any)=>x.status==='validated').reduce((s:number,x:any)=>s+Number(x.amount||0),0);
- const tabs=[['Profil & mensurations','#profil'],['Portfolio & composite',`/admin/models?talent=${id}`],['Disponibilités','#disponibilites'],['Castings','#castings'],['Bookings','#bookings'],['Contrats','#contrats'],['Finance & cotisations','#finance'],['Classroom',`/admin/classroom-progress?talent=${id}`],['Accès & sécurité','/admin/model-access']];
- return <div className="space-y-5 pb-12"><section className="rounded-[2rem] bg-pm-wine p-6 text-white sm:p-8"><Link href="/admin/models" className="text-xs font-black uppercase tracking-[.08em] text-pm-gold-light">← Tous les talents</Link><div className="mt-5 flex flex-col gap-5 sm:flex-row sm:items-center">{model.image_url?<img src={model.image_url} alt="" className="h-32 w-28 rounded-2xl object-cover"/>:<div className="h-32 w-28 rounded-2xl bg-white/10"/>}<div><p className="text-xs font-black uppercase tracking-[.14em] text-pm-gold-light">Talent 360°</p><h1 className="mt-2 font-playfair text-4xl font-semibold sm:text-5xl">{model.name}</h1><p className="mt-2 text-sm text-white/65">{model.location||'Localisation non renseignée'} · {model.height_cm?model.height_cm+' cm':'Taille non renseignée'} · {model.status||'—'}</p></div></div></section>
- <nav className="flex gap-2 overflow-x-auto pb-1">{tabs.map(([label,href])=><Link key={label} href={href} className="whitespace-nowrap rounded-full border border-pm-ink/10 bg-white px-4 py-2 text-xs font-black">{label}</Link>)}</nav>
- <section id="profil" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{[['Poitrine',model.chest_cm&&model.chest_cm+' cm'],['Taille',model.waist_cm&&model.waist_cm+' cm'],['Hanches',model.hips_cm&&model.hips_cm+' cm'],['Pointure',model.shoe_size]].map(([l,v])=><div key={l as string} className="control-card"><p className="control-kicker">{l}</p><p className="mt-3 font-playfair text-3xl font-semibold">{v||'—'}</p></div>)}</section>
- <section id="finance" className="control-card"><div className="flex justify-between gap-4"><div><p className="control-kicker">Finance & cotisations</p><h2 className="mt-1 font-playfair text-2xl font-semibold">{money(paid)} validés</h2></div><Link href="/admin/payments" className="text-xs font-black text-pm-coral">Gérer →</Link></div><div className="mt-5 grid gap-2">{(payments||[]).map((p:any)=><div key={p.id} className="grid gap-2 rounded-xl bg-pm-ivory p-3 sm:grid-cols-[1fr_auto_auto]"><div><b>{p.transaction_type||'Paiement'}</b><p className="text-xs text-pm-ink/45">{p.payment_method||'—'} · {p.reference||'sans référence'}</p></div><span>{date(p.paid_at||p.submitted_at)}</span><b>{money(Number(p.amount||0))}</b></div>)}</div></section>
- <div className="grid gap-5 xl:grid-cols-2"><Panel id="bookings" title="Bookings" rows={bookings||[]} render={(r:any)=><><b>{r.title}</b><span>{r.status} · {date(r.starts_at)} · {money(Number(r.model_net_amount||r.fee_gross||0))}</span></>}/><Panel id="contrats" title="Contrats" rows={contracts||[]} render={(r:any)=><><b>{r.title}</b><span>{r.status} · signé {date(r.signed_at)} · expire {date(r.expires_at)}</span></>}/><Panel id="disponibilites" title="Disponibilités" rows={availability||[]} render={(r:any)=><><b>{r.status}</b><span>{date(r.starts_at)} → {date(r.ends_at)} {r.reason?'· '+r.reason:''}</span></>}/><Panel id="castings" title="Castings" rows={castings||[]} render={(r:any)=><><b>{r.stage}</b><span>{r.match_score!=null?r.match_score+'% de matching':'Matching non renseigné'}</span></>}/></div>
- </div>
+function one(value:string|string[]|undefined){return Array.isArray(value)?value[0]||'':value||'';}
+function objectValue(value:unknown){return value&&typeof value==='object'&&!Array.isArray(value)?value as Record<string,any>:{};}
+function list(value:unknown){return Array.isArray(value)?value:[];}
+function hasValue(value:unknown){return value!==null&&value!==undefined&&value!==''&&(!Array.isArray(value)||value.length>0);}
+function timestamp(row:any){return row?.updated_at||row?.created_at||row?.submitted_at||row?.paid_at||row?.starts_at||row?.event_date||null;}
+function classroomPercent(value:unknown,completed=false){if(completed)return 100;const data=objectValue(value);for(const key of ['percent','progress','value','readPercent']){const candidate=Number(data[key]);if(Number.isFinite(candidate))return Math.max(0,Math.min(100,Math.round(candidate)));}return 0;}
+
+export default async function Talent360Page({params,searchParams}:{params:Params;searchParams:SearchParams}){
+  const profile=await getCurrentAppProfile();
+  if(!profile)redirect('/login?next=/admin/models');
+  if(!['admin','manager'].includes(profile.role)||!hasAdminPermission(profile,'models'))redirect(profile.role==='manager'?'/manager':'/profil');
+  const [{id},query]=await Promise.all([params,searchParams]);
+  const supabase=createSupabaseAdminClient() as any;
+  const {data:model,error:modelError}=await supabase.from('models').select('*').eq('id',id).maybeSingle();
+  if(modelError)throw new Error(`Lecture de la fiche talent impossible : ${modelError.message}`);
+  if(!model)notFound();
+
+  const authUserId=String(model.auth_user_id||'');
+  const email=String(model.email||'').trim();
+  const identifier=String(model.username||'').trim();
+  const now=new Date();
+  const in60=new Date(now);in60.setDate(in60.getDate()+60);
+  const canViewCastings=hasAdminPermission(profile,'castingApplications')||hasAdminPermission(profile,'castingResults');
+  const canViewBookings=hasAdminPermission(profile,'bookings');
+  const canViewFinance=hasAdminPermission(profile,'payments');
+  const canViewClassroom=hasAdminPermission(profile,'classroom')||hasAdminPermission(profile,'classroomProgress');
+  const canViewAccess=profile.role==='admin'||hasAdminPermission(profile,'modelAccess');
+  const canViewRecovery=profile.role==='admin'||hasAdminPermission(profile,'recovery');
+
+  const [
+    portfolioRes,collaborationsRes,eventsRes,availabilityRes,castingTalentsRes,bookingsRes,optionsRes,
+    contractsRes,rightsRes,paymentsRes,ledgerRes,profileRes,coursesRes,progressRes,
+    academyModulesRes,academyChaptersRes,academyProgressRes,recoveryRes,
+  ]=await Promise.all([
+    supabase.from('model_portfolio_images').select('id,url,position,caption').eq('model_id',id).order('position',{ascending:true}),
+    supabase.from('model_collaborations').select('*').eq('model_id',id).order('collaboration_date',{ascending:false,nullsFirst:false}),
+    supabase.from('model_events').select('*').eq('model_id',id).order('event_date',{ascending:false,nullsFirst:false}),
+    supabase.from('model_availability').select('*').eq('model_id',id).order('starts_at',{ascending:false}).limit(100),
+    canViewCastings?supabase.from('casting_talents').select('*').eq('model_id',id).order('updated_at',{ascending:false}).limit(100):Promise.resolve({data:[]}),
+    canViewBookings?supabase.from('bookings').select('*').eq('model_id',id).order('starts_at',{ascending:false,nullsFirst:false}).limit(100):Promise.resolve({data:[]}),
+    canViewBookings?supabase.from('booking_options').select('*').eq('model_id',id).order('starts_at',{ascending:false}).limit(100):Promise.resolve({data:[]}),
+    canViewFinance?supabase.from('contracts').select('*').eq('model_id',id).order('updated_at',{ascending:false}).limit(100):Promise.resolve({data:[]}),
+    canViewFinance?supabase.from('image_rights').select('*').eq('model_id',id).order('ends_on',{ascending:false}).limit(100):Promise.resolve({data:[]}),
+    canViewFinance?supabase.from('monthly_payments').select('*').eq('model_id',id).order('created_at',{ascending:false}).limit(100):Promise.resolve({data:[]}),
+    canViewFinance?supabase.from('finance_transactions').select('*').eq('model_id',id).order('transaction_date',{ascending:false}).limit(100):Promise.resolve({data:[]}),
+    canViewAccess?(authUserId?supabase.from('profiles').select('*').eq('user_id',authUserId).maybeSingle():supabase.from('profiles').select('*').eq('model_id',id).maybeSingle()):Promise.resolve({data:null}),
+    canViewClassroom?supabase.from('courses').select('id,title,description,is_active,position').eq('is_active',true).order('position'):Promise.resolve({data:[]}),
+    canViewClassroom&&authUserId?supabase.from('course_progress').select('*').eq('user_id',authUserId):Promise.resolve({data:[]}),
+    canViewClassroom?supabase.from('academy_modules').select('id,slug,title,description,position').eq('is_active',true).order('position'):Promise.resolve({data:[]}),
+    canViewClassroom?supabase.from('academy_chapters').select('id,module_id,slug,title,position').eq('is_active',true).order('position'):Promise.resolve({data:[]}),
+    canViewClassroom&&authUserId?supabase.from('academy_chapter_progress').select('chapter_id,read_percent,status,best_score,updated_at').eq('user_id',authUserId):Promise.resolve({data:[]}),
+    canViewRecovery&&email?supabase.from('recovery_requests').select('*').eq('email',email).order('created_at',{ascending:false}).limit(20):canViewRecovery&&identifier?supabase.from('recovery_requests').select('*').eq('identifier',identifier).order('created_at',{ascending:false}).limit(20):Promise.resolve({data:[]}),
+  ]);
+
+  const portfolio=list(portfolioRes.data) as any[];
+  const collaborations=list(collaborationsRes.data) as any[];
+  const events=list(eventsRes.data) as any[];
+  const availability=list(availabilityRes.data) as any[];
+  const castingTalents=list(castingTalentsRes.data) as any[];
+  const bookings=list(bookingsRes.data) as any[];
+  const options=list(optionsRes.data) as any[];
+  const contracts=list(contractsRes.data) as any[];
+  const rights=list(rightsRes.data) as any[];
+  const payments=list(paymentsRes.data) as any[];
+  const ledger=list(ledgerRes.data) as any[];
+  const accountRow=profileRes.data||null;
+
+  const castingIds=[...new Set(castingTalents.map((row)=>String(row.casting_id||'')).filter(Boolean))];
+  const {data:castingDossiers}=castingIds.length?await supabase.from('castings').select('id,title,status,starts_at,documents,updated_at').in('id',castingIds):{data:[]};
+
+  async function panel(resource:ResourceName,rows:any[],overrides:Partial<TalentResourcePanel>={}):Promise<TalentResourcePanel>{
+    const definition=RESOURCE_DEFINITIONS[resource];
+    const hydrated=await hydrateAdminRelationOptions(supabase,definition.fields);
+    const fixedValues={model_id:id,...(overrides.fixedValues||{})};
+    return {
+      resource,
+      title:overrides.title||definition.title,
+      description:overrides.description,
+      rows,
+      fields:hydrated.filter((field)=>!Object.prototype.hasOwnProperty.call(fixedValues,field.name)),
+      columns:[...definition.columns],
+      fixedValues,
+      canCreate:overrides.canCreate??definition.canCreate,
+      canEdit:overrides.canEdit??true,
+      canDelete:overrides.canDelete??false,
+      createLabel:overrides.createLabel,
+      emptyLabel:overrides.emptyLabel,
+    };
+  }
+
+  const panels=await Promise.all([
+    panel('model-collaborations',collaborations,{title:'Collaborations',description:'Marques, clients, partenaires et campagnes associés au talent.',canDelete:true,createLabel:'Ajouter une collaboration'}),
+    panel('model-events',events,{title:'Palmarès, shootings & défilés',description:'Expériences publiques et preuves visuelles du parcours.',canDelete:true,createLabel:'Ajouter au palmarès'}),
+    panel('availability',availability,{title:'Disponibilités',description:'Périodes disponibles, indisponibles ou à confirmer.',canDelete:true,createLabel:'Ajouter une période'}),
+    panel('casting-talents',castingTalents,{title:'Castings',description:'Pipeline, invitations, shortlist, callbacks et décisions.',canCreate:canViewCastings,canEdit:canViewCastings,canDelete:canViewCastings,createLabel:'Lier à un casting'}),
+    panel('bookings',bookings,{title:'Bookings',description:'Options confirmées, productions et cachets du talent.',canCreate:canViewBookings,canEdit:canViewBookings,canDelete:false,createLabel:'Créer un booking'}),
+    panel('booking-options',options,{title:'Options',description:'Priorités, échéances et conflits de dates.',canCreate:canViewBookings,canEdit:canViewBookings,canDelete:false,createLabel:'Créer une option'}),
+    panel('contracts',contracts,{title:'Contrats',description:'Contrats de management, booking, release et signatures.',canCreate:canViewFinance,canEdit:canViewFinance,canDelete:false,createLabel:'Ajouter un contrat'}),
+    panel('image-rights',rights,{title:'Droits d’image',description:'Campagnes, territoires, supports et dates d’expiration.',canCreate:canViewFinance,canEdit:canViewFinance,canDelete:false,createLabel:'Ajouter des droits'}),
+    panel('payments',payments,{title:'Cotisations & paiements',description:'Objet, montant, moyen, référence, date et statut en lecture métier.',canCreate:canViewFinance,canDelete:false,canEdit:false,createLabel:'Déclarer un paiement',fixedValues:{model_id:id,status:'pending'}}),
+    panel('finance-transactions',ledger,{title:'Mouvements financiers',description:'Recettes, dépenses et transferts directement rattachés au talent.',canCreate:canViewFinance,canEdit:canViewFinance,canDelete:false,createLabel:'Ajouter un mouvement'}),
+  ]);
+  const [collaborationsPanel,eventsPanel,availabilityPanel,castingsPanel,bookingsPanel,optionsPanel,contractsPanel,rightsPanel,paymentsPanel,ledgerPanel]=panels;
+  const profilePanel:TalentResourcePanel={resource:'models',title:'Profil, informations personnelles & mensurations',description:'Toutes les informations professionnelles normalisées du talent.',rows:[model],fields:MODEL_ADMIN_FIELDS.filter((field)=>field.name!=='id'),columns:[...MODEL_ADMIN_COLUMNS],fixedValues:{},canCreate:false,canEdit:true,canDelete:false};
+  const resources={profile:profilePanel,collaborations:collaborationsPanel,events:eventsPanel,availability:availabilityPanel,castings:castingsPanel,bookings:bookingsPanel,options:optionsPanel,contracts:contractsPanel,rights:rightsPanel,payments:paymentsPanel,ledger:ledgerPanel};
+
+  const required:[string,string,unknown][]=[
+    ['name','nom',model.name],['email','e-mail',model.email],['phone','téléphone',model.phone],['birth_date','date de naissance',model.birth_date],['gender','genre',model.gender],['location','localisation',model.location],['height_cm','taille',model.height_cm],['chest_cm','poitrine',model.chest_cm],['waist_cm','tour de taille',model.waist_cm],['hips_cm','hanches',model.hips_cm],['shoe_size','pointure',model.shoe_size],['image_url','photo principale',model.image_url],['categories','catégories',model.categories],['experience','expérience',model.experience],['journey','parcours',model.journey],
+  ];
+  const completed=required.filter(([, ,value])=>hasValue(value)).length;
+  const missingFields=required.filter(([, ,value])=>!hasValue(value)).map(([,label])=>label);
+  const validatedPayments=payments.filter((row)=>row.status==='validated');
+  const stats={
+    completion:Math.round(completed/required.length*100),portfolio:portfolio.length,collaborations:collaborations.length,events:events.length,
+    castings:castingTalents.filter((row)=>!['rejected','declined'].includes(String(row.stage))).length,
+    bookings:bookings.length,
+    paymentsTotal:validatedPayments.reduce((sum,row)=>sum+Number(row.amount||0),0),
+    paymentsPending:payments.filter((row)=>row.status==='pending').length,
+    rightsExpiring:rights.filter((row)=>row.ends_on&&new Date(row.ends_on)>=now&&new Date(row.ends_on)<=in60&&['active','expiring'].includes(String(row.status))).length,
+  };
+
+  const raw=objectValue(model.raw_data);
+  const composite={url:String(raw.compCardUrl||''),isPublic:raw.compCardIsPublic===true};
+
+  const academyModules=list(academyModulesRes.data) as any[];
+  const academyChapters=list(academyChaptersRes.data) as any[];
+  const academyProgress=list(academyProgressRes.data) as any[];
+  const academyProgressMap=new Map(academyProgress.map((row)=>[String(row.chapter_id),row]));
+  let courses:TalentCourse[]=academyModules.map((module)=>{
+    const chapters=academyChapters.filter((chapter)=>String(chapter.module_id)===String(module.id));
+    const reading=chapters.length?Math.round(chapters.reduce((sum,chapter)=>sum+Math.min(100,Number(academyProgressMap.get(String(chapter.id))?.read_percent||0)),0)/chapters.length):0;
+    const passed=chapters.filter((chapter)=>academyProgressMap.get(String(chapter.id))?.status==='passed');
+    const latest=chapters.map((chapter)=>academyProgressMap.get(String(chapter.id))?.updated_at).filter(Boolean).sort().reverse()[0]||null;
+    return {id:String(module.id),title:String(module.title||module.slug||'Formation'),description:module.description?String(module.description):null,progress:chapters.length&&passed.length===chapters.length?100:reading,completedAt:chapters.length&&passed.length===chapters.length?latest:null,updatedAt:latest};
+  });
+  if(!courses.length){
+    const legacyProgress=list(progressRes.data) as any[];const map=new Map(legacyProgress.map((row)=>[String(row.course_id),row]));
+    courses=(list(coursesRes.data) as any[]).map((course)=>{const progress=map.get(String(course.id));return {id:String(course.id),title:String(course.title||course.id),description:course.description?String(course.description):null,progress:classroomPercent(progress?.progress,Boolean(progress?.completed_at)),completedAt:progress?.completed_at||null,updatedAt:progress?.updated_at||null};});
+  }
+
+  const documents:TalentDocument[]=[];
+  for(const contract of contracts)documents.push({id:`contract-${contract.id}`,title:String(contract.title||'Contrat'),type:'Contrat',status:contract.status,date:contract.signed_at||contract.updated_at,url:contract.document_url||null});
+  for(const casting of list(castingDossiers) as any[]){
+    for(const [index,document] of list(casting.documents).entries()){
+      const data=typeof document==='string'?{url:document,title:`Document ${index+1}`}:objectValue(document);
+      documents.push({id:`casting-${casting.id}-${index}`,title:String(data.title||data.name||`Document ${index+1}`),type:`Casting · ${casting.title||'Dossier'}`,status:casting.status,date:casting.starts_at||casting.updated_at,url:String(data.url||data.href||'')||null});
+    }
+  }
+
+  const activities:TalentActivity[]=[
+    {id:'model-updated',title:'Fiche talent mise à jour',meta:`Profil professionnel · ${model.name}`,date:model.updated_at,tab:'profil',status:model.status},
+    ...collaborations.map((row)=>({id:`collab-${row.id}`,title:'Collaboration',meta:`${row.collaborator_name}${row.project_title?` · ${row.project_title}`:''}`,date:timestamp(row),tab:'carriere',status:null})),
+    ...events.map((row)=>({id:`event-${row.id}`,title:formatEventType(row.event_type),meta:String(row.name||'Événement du palmarès'),date:timestamp(row),tab:'carriere',status:null})),
+    ...castingTalents.map((row)=>({id:`casting-${row.id}`,title:'Casting',meta:`${formatStatus(row.stage)} · ${row.match_score!=null?`${row.match_score}% de matching`:'matching non renseigné'}`,date:timestamp(row),tab:'planning',status:row.stage})),
+    ...bookings.map((row)=>({id:`booking-${row.id}`,title:'Booking',meta:`${row.title||formatProjectType(row.project_type)} · ${formatStatus(row.status)}`,date:timestamp(row),tab:'planning',status:row.status})),
+    ...contracts.map((row)=>({id:`contract-${row.id}`,title:'Contrat',meta:`${row.title||'Document'} · ${formatStatus(row.status)}`,date:timestamp(row),tab:'juridique',status:row.status})),
+    ...payments.map((row)=>({id:`payment-${row.id}`,title:formatPaymentType(row.transaction_type),meta:`${Number(row.amount||0).toLocaleString('fr-FR')} FCFA · ${formatStatus(row.status)}`,date:timestamp(row),tab:'finance',status:row.status})),
+    ...courses.filter((course)=>course.updatedAt).map((course)=>({id:`course-${course.id}`,title:'Progression Classroom',meta:`${course.title} · ${course.progress}%`,date:course.updatedAt,tab:'classroom',status:course.completedAt?'completed':'active'})),
+  ].sort((a,b)=>new Date(String(b.date||0)).getTime()-new Date(String(a.date||0)).getTime()).slice(0,60);
+
+  const account=accountRow?{uid:String(accountRow.user_id),email:String(accountRow.email||model.email||''),name:String(accountRow.display_name||model.name),identifier:String(accountRow.identifier||model.username||''),role:String(accountRow.role||'student'),isActive:accountRow.is_active!==false,mustChangePassword:Boolean(accountRow.must_change_password),updatedAt:accountRow.updated_at||null}:null;
+
+  return <Talent360Workspace model={model} initialTab={one(query.tab)} initialAction={one(query.action)} stats={stats} missingFields={missingFields} portfolio={portfolio.map((item)=>({id:String(item.id),url:String(item.url||''),position:Number(item.position||0),caption:item.caption?String(item.caption):null})).filter((item)=>item.url)} composite={composite} resources={resources} courses={courses} documents={documents} activity={activities} account={account} recoveryRequests={list(recoveryRes.data) as any[]} canManageAccess={profile.role==='admin'} capabilities={{castings:canViewCastings,bookings:canViewBookings,finance:canViewFinance,classroom:canViewClassroom,access:canViewAccess}}/>;
 }
-function Panel({id,title,rows,render}:{id:string,title:string,rows:any[],render:(r:any)=>React.ReactNode}){return <section id={id} className="control-card"><p className="control-kicker">{title}</p><h2 className="mt-1 font-playfair text-2xl font-semibold">{rows.length} dossier{rows.length!==1?'s':''}</h2><div className="mt-4 grid gap-2">{rows.length?rows.map((r:any)=><div key={r.id} className="flex flex-col gap-1 rounded-xl bg-pm-ivory p-3 text-sm">{render(r)}</div>):<p className="text-sm text-pm-ink/45">Aucune donnée.</p>}</div></section>}

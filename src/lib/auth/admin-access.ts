@@ -3,7 +3,7 @@ import type { ResourceName } from '@/lib/agency-resource-registry';
 import type { AppSessionProfile } from './profile';
 
 export const RESOURCE_PERMISSION_MAP: Partial<Record<ResourceName, keyof AdminPagePermissions>> = {
-  models: 'models', availability: 'models',
+  models: 'models', availability: 'models', 'model-collaborations': 'models', 'model-events': 'models',
   'casting-applications': 'castingApplications', 'casting-scores': 'castingResults', castings: 'castingApplications', 'casting-talents': 'castingResults',
   'booking-requests': 'bookings', bookings: 'bookings', 'booking-options': 'bookings', 'calendar-events': 'bookings',
   clients: 'bookings', 'client-contacts': 'bookings', 'client-selections': 'bookings', 'selection-items': 'bookings',
