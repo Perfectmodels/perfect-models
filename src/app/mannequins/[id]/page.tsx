@@ -41,13 +41,25 @@ export default async function Page({ params }: PageProps) {
     breadcrumbJsonLd([{ name: 'Accueil', path: '/' }, { name: 'Mannequins', path: '/mannequins' }, { name: model.name, path }]),
   ];
 
+  const extendedMeasurements = (model.measurements || {}) as Record<string, unknown>;
+  const extraValue = (key: string) => {
+    const value = extendedMeasurements[key];
+    return typeof value === 'string' || typeof value === 'number' ? String(value) : '';
+  };
+  const optionalFields = new Set(['Épaules', 'Manche', 'Longueur manche', 'Cuisse', 'Longueur pantalon', 'Confection']);
   const measurements = [
     ['Hauteur', model.height],
+    ['Épaules', extraValue('shoulders')],
     ['Poitrine', model.measurements?.chest],
     ['Tour de taille', model.measurements?.waist],
     ['Hanches', model.measurements?.hips],
     ['Pointure', model.measurements?.shoeSize],
-  ];
+    ['Manche', extraValue('sleeve')],
+    ['Longueur manche', extraValue('sleeveLength')],
+    ['Cuisse', extraValue('thigh')],
+    ['Longueur pantalon', extraValue('trouserLength')],
+    ['Confection', extraValue('confection')],
+  ].filter(([label, value]) => !optionalFields.has(String(label)) || Boolean(value));
 
   return (
     <main className="min-h-screen bg-pm-ivory text-pm-ink">
