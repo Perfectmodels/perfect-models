@@ -41,7 +41,7 @@ export async function provisionModelAccount(modelId: string): Promise<ProvisionR
   try {
     const siteUrl = String(process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'https://www.perfectmodels.online').replace(/\/$/, '');
     const { data: invited, error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, {
-      redirectTo: siteUrl + '/auth/confirm?next=/auth/set-password',
+      redirectTo: siteUrl + '/auth/complete?next=/auth/set-password',
       data: { name, model_id: model.id, onboarding_source: 'pmm-model-account-provision' },
     });
     if (inviteError || !invited?.user?.id) throw new Error('Invitation refusée : adresse déjà utilisée ou service e-mail indisponible.');
