@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Sélectionnez entre 1 et 10 mannequins.' }, { status: 400 });
   }
   const uniqueIds = [...new Set(ids.map((id: string) => id.trim()))];
-  const results = [];
+  const results: Array<Awaited<ReturnType<typeof provisionModelAccount>>> = [];
   for (const id of uniqueIds) results.push(await provisionModelAccount(id));
   return NextResponse.json({ results }, { headers: { 'Cache-Control': 'no-store' } });
 }
