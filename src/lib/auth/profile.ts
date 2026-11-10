@@ -2,6 +2,7 @@ import { auth } from './server';
 import { privilegedSupabaseSelect, privilegedSupabaseUpsert } from '../supabase-backend';
 import { defaultManagerPermissions } from '../manager-permissions';
 import type { AdminPagePermissions } from '@/types';
+import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 
 export type AppRole = 'admin' | 'manager' | 'student' | 'jury' | 'registration' | 'jury-contest';
 export interface AppSessionProfile {
@@ -114,6 +115,7 @@ export async function getCurrentAppProfile(): Promise<AppSessionProfile | null> 
 export async function ensureUserProfile(user: {
   id?: string;
   email?: string | null;
+  email_confirmed_at?: string | null;
   user_metadata?: Record<string, any>;
   app_metadata?: Record<string, any>;
 }): Promise<AppSessionProfile | null> {
@@ -121,7 +123,24 @@ export async function ensureUserProfile(user: {
   if (!uid) return null;
 
   const existing = await findProfile(user);
-  if (existing) return existing;
+  if (existing) {
+    // The Auth identity is the source of truth after Supabase confirms an e-mail change.
+    const confirmedEmail = user.email_confirmed_at ? String(user.email || '').trim().toLowerCase() : '';
+    if (confirmedEmail && confirmedEmail !== existing.email.toLowerCase()) {
+      const admin = createSupabaseAdminClient() as any;
+      const now = new Date().toISOString();
+      const { error } = await admin.from('profiles')
+        .update({ email: confirmedEmail, updated_at: now }).eq('user_id', uid);
+      if (!error) {
+        if (existing.role === 'student' && existing.profileId) {
+          await admin.from('models').update({ email: confirmedEmail, updated_at: now })
+            .eq('id', existing.profileId).eq('auth_user_id', uid);
+        }
+        return { ...existing, email: confirmedEmail };
+      }
+    }
+    return existing;
+  }
 
   const email = String(user?.email || '').trim().toLowerCase();
   const app = appMeta(user);
