@@ -4,6 +4,7 @@ import { RESOURCE_DEFINITIONS, isResourceName } from '@/lib/agency-resource-regi
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { hasResourcePermission } from '@/lib/auth/admin-access';
 import { CrudValidationError, sanitizeResourcePayload } from '@/lib/admin-crud';
+import { provisionModelAccount } from '@/lib/model-account-provisioning';
 
 export const dynamic = 'force-dynamic';
 type Context = { params: Promise<{ resource: string }> };
@@ -64,5 +65,9 @@ export async function POST(request: Request, context: Context) {
   const supabase = createSupabaseAdminClient() as any;
   const { data, error } = await supabase.from(access.definition.table).insert(row).select('*').single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  if (resource === 'models' && access.profile.role === 'admin' && data?.id) {
+    const account = await provisionModelAccount(String(data.id));
+    return NextResponse.json({ data, account }, { status: 201 });
+  }
   return NextResponse.json({ data }, { status: 201 });
 }
