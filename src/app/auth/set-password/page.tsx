@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Check, Eye, EyeOff, X } from 'lucide-react';
 
 const input = 'w-full rounded-xl border border-pm-ink/15 bg-white px-4 py-3 text-pm-ink outline-none transition focus:border-pm-coral focus:ring-4 focus:ring-pm-coral/10';
@@ -18,6 +18,8 @@ function rules(value: string) {
 
 export default function SetPasswordPage() {
   const [password, setPassword] = useState('');
+  const [currentEmail, setCurrentEmail] = useState('');
+  const [newEmail, setNewEmail] = useState('');
   const [confirmation, setConfirmation] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -27,6 +29,20 @@ export default function SetPasswordPage() {
   const validPassword = passwordRules.every(([, valid]) => valid);
   const matches = confirmation.length > 0 && password === confirmation;
 
+  useEffect(() => {
+    let active = true;
+    void fetch('/api/auth/profile', { credentials: 'include', cache: 'no-store' })
+      .then((response) => response.json())
+      .then((payload) => {
+        if (!active) return;
+        const verifiedEmail = String(payload?.user?.email || '').trim().toLowerCase();
+        setCurrentEmail(verifiedEmail);
+        setNewEmail(verifiedEmail);
+      })
+      .catch(() => undefined);
+    return () => { active = false; };
+  }, []);
+
   async function submit(event: FormEvent) {
     event.preventDefault();
     setError('');
@@ -35,13 +51,23 @@ export default function SetPasswordPage() {
 
     setLoading(true);
     try {
+      const requestedEmail = newEmail.trim().toLowerCase();
+      const emailChanged = Boolean(requestedEmail && requestedEmail !== currentEmail);
+      if (emailChanged) {
+        const changeResponse = await fetch('/api/auth/request-email-change', {
+          method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ newEmail: requestedEmail }),
+        });
+        const changePayload = await changeResponse.json().catch(() => ({}));
+        if (!changeResponse.ok) throw new Error(changePayload?.error || 'La nouvelle adresse e-mail n’a pas pu être vérifiée.');
+      }
       const response = await fetch('/api/auth/change-password', {
         method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ newPassword: password }),
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload?.error || 'Le mot de passe n’a pas pu être enregistré.');
       await fetch('/api/auth/sign-out', { method: 'POST', credentials: 'include' }).catch(() => undefined);
-      window.location.assign('/login?password_set=1');
+      window.location.assign('/login?password_set=1' + (emailChanged ? '&email_change_pending=1' : ''));
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Le mot de passe n’a pas pu être enregistré.');
     } finally {
@@ -61,6 +87,11 @@ export default function SetPasswordPage() {
           </aside>
 
           <form onSubmit={submit} className="p-6 sm:p-9" noValidate>
+            <div className="mb-6">
+              <label htmlFor="change-email" className="mb-2 block text-xs font-extrabold uppercase tracking-[.08em] text-pm-ink/60">Adresse e-mail de connexion</label>
+              <input id="change-email" type="email" autoComplete="email" value={newEmail} onChange={(event) => { setNewEmail(event.target.value); setError(''); }} className={input} placeholder="Votre adresse e-mail" />
+              <p className="mt-2 text-xs leading-5 text-pm-ink/55">Vous pouvez conserver cette adresse ou la remplacer. Toute nouvelle adresse devra être confirmée par e-mail avant son utilisation.</p>
+            </div>
             <div>
               <label htmlFor="new-password" className="mb-2 block text-xs font-extrabold uppercase tracking-[.08em] text-pm-ink/60">Nouveau mot de passe</label>
               <div className="relative"><input id="new-password" type={showPassword ? 'text' : 'password'} autoComplete="new-password" value={password} onChange={(event) => { setPassword(event.target.value); setError(''); }} required className={`${input} pr-12`} /><button type="button" onClick={() => setShowPassword((value) => !value)} className="absolute right-2 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full text-pm-ink/45 hover:bg-pm-peach" aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}>{showPassword ? <EyeOff size={17}/> : <Eye size={17}/>}</button></div>
