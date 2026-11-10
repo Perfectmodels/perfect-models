@@ -74,8 +74,8 @@ export async function provisionModelAccount(modelId: string): Promise<ProvisionR
   } catch (error) {
     // Only remove a user created by this attempt; never delete a preexisting account.
     if (invitedUserId) {
-      await admin.from('profiles').delete().eq('user_id', invitedUserId).eq('model_id', modelId).catch(() => undefined);
-      await admin.auth.admin.deleteUser(invitedUserId).catch(() => undefined);
+      try { await admin.from('profiles').delete().eq('user_id', invitedUserId).eq('model_id', modelId); } catch {}
+      try { await admin.auth.admin.deleteUser(invitedUserId); } catch {}
     }
     await admin.from('models').update({ claim_status: claimStatus || null })
       .eq('id', model.id).eq('claim_status', 'claim_in_progress').is('auth_user_id', null);
