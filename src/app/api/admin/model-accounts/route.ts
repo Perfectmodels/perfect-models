@@ -41,7 +41,7 @@ export async function POST(request: Request) {
   if (!ids.length || ids.length > 10 || ids.some((id: unknown) => typeof id !== 'string' || !id.trim())) {
     return NextResponse.json({ error: 'Sélectionnez entre 1 et 10 mannequins.' }, { status: 400 });
   }
-  const uniqueIds = [...new Set(ids.map((id: string) => id.trim()))];
+  const uniqueIds: string[] = Array.from(new Set<string>(ids.map((id: string) => id.trim())));
   const results: Array<Awaited<ReturnType<typeof provisionModelAccount>>> = [];
   for (const id of uniqueIds) results.push(await provisionModelAccount(id));
   return NextResponse.json({ results }, { headers: { 'Cache-Control': 'no-store' } });
