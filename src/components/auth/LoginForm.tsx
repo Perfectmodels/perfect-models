@@ -26,7 +26,7 @@ export default function LoginForm() {
   const [resetSent, setResetSent] = useState(false);
 
   const notice = useMemo<Notice>(() => {
-    if (search.get('password_set') === '1') return { kind: 'success', title: 'Mot de passe enregistré', body: 'Votre nouveau mot de passe est prêt. Connectez-vous avec vos identifiants PMM.' };
+    if (search.get('password_set') === '1') return { kind: 'success', title: 'Mot de passe enregistré', body: search.get('email_change_pending') === '1' ? 'Votre mot de passe est prêt. Confirmez également la nouvelle adresse e-mail depuis le message reçu avant de l’utiliser pour vous connecter.' : 'Votre nouveau mot de passe est prêt. Connectez-vous avec vos identifiants PMM.' };
     if (search.get('verified') === '1') return { kind: 'success', title: 'Adresse e-mail confirmée', body: 'Votre adresse a bien été validée. Vous pouvez maintenant vous connecter.' };
     if (search.get('auth_error') === 'expired_or_invalid_link') return { kind: 'warning', title: 'Lien expiré ou déjà utilisé', body: 'Demandez un nouveau lien de réinitialisation ou d’activation, puis utilisez le plus récent reçu.' };
     return null;

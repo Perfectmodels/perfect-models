@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import ModelClaimReview from '@/components/admin/ModelClaimReview';
+import ModelAccountProvisioningPanel from '@/components/admin/ModelAccountProvisioningPanel';
 import PaginatedResourceManager from '@/components/admin/PaginatedResourceManager';
 import { getCurrentAppProfile } from '@/lib/auth/profile';
 import { RESOURCE_DEFINITIONS } from '@/lib/resource-registry';
@@ -22,5 +23,5 @@ export default async function Page() {
   ]);
   if (error) throw new Error(error.message);
   if (claimsError) throw new Error(claimsError.message);
-  return <><ModelClaimReview initialClaims={Array.isArray(claims) ? claims : []}/><PaginatedResourceManager resource="models" title="Accès & comptes mannequins" primaryKey={definition.primaryKey} columns={definition.columns} fields={fields} initialRows={Array.isArray(data) ? data : []} initialTotal={Number(count || 0)} canCreate={definition.canCreate} canDelete={definition.canDelete}/></>;
+  return <><ModelAccountProvisioningPanel/><ModelClaimReview initialClaims={Array.isArray(claims) ? claims : []}/><PaginatedResourceManager resource="models" title="Accès & comptes mannequins" primaryKey={definition.primaryKey} columns={definition.columns} fields={fields} initialRows={Array.isArray(data) ? data : []} initialTotal={Number(count || 0)} canCreate={definition.canCreate} canDelete={definition.canDelete}/></>;
 }
